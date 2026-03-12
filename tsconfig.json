@@ -4,10 +4,7 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/wb-monorepo-e2e"
-    },
-    {
-      "path": "./apps/wb-monorepo"
+      "path": "./apps/frontend"
     }
   ]
 }
