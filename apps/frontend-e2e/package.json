@@ -1,0 +1,10 @@
+{
+  "name": "@wb-monorepo/wb-monorepo-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@wb-monorepo/wb-monorepo"
+    ]
+  }
+}
