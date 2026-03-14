@@ -1,18 +1,29 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "module": "commonjs",
-    "target": "ES2020",
-    "esModuleInterop": true,
+    "baseUrl": ".",
+    "target": "es2022",
+    "lib": ["es2022"],
     "strict": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "declaration": true,
-    "declarationMap": true
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "isolatedModules": true,
+    "importHelpers": true,
+    "paths": {
+      "@wb-monorepo/shared": ["../../libs/shared/src/index.ts"],
+      "@wb-monorepo/shared/*": ["../../libs/shared/src/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }
