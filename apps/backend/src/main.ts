@@ -1,18 +1,28 @@
-import express, { Request, Response } from 'express';
+/**
+ * WB Refactored API - Main Entry Point
+ * 
+ * This is the Express.js API server that replaces the Nuxt 3 server-side code.
+ * It provides the same business logic with a clean architecture:
+ * - Routes (Controllers) → Services → Prisma → Database
+ */
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+import { startServer } from './app';
+import { logger } from './utils/logger';
 
-app.use(express.json());
-
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  process.exit(1);
 });
 
-app.get('/api/hello', (req: Request, res: Response) => {
-  res.json({ message: 'Hello from Express backend!' });
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// Start the server
+startServer().catch((error) => {
+  logger.error('Failed to start server:', error);
+  process.exit(1);
 });
