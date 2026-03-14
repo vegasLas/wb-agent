@@ -1,6 +1,9 @@
 import { prisma } from '../config/database';
-import { UserEnvInfo } from '../types/wb';
+import { UserEnvInfo, SupplierResponse } from '../types/wb';
 import { logger } from '../utils/logger';
+import { wbAccountRequest } from '../utils/wb-request';
+import { getCookiesFromAccount } from '../utils/cookies';
+import type { Cookie } from 'playwright';
 
 export interface CreateAccountInput {
   userId: number;
@@ -35,10 +38,32 @@ export class AccountService {
     proxy?: UserEnvInfo['proxy'],
     supplierId: string = ''
   ): Promise<{ name: string; id: string }[]> {
-    // This will be implemented with wbRequest utility later
-    // For now, return empty array - the suppliers will be synced later
-    logger.info(`Getting suppliers for account ${accountId}`);
-    return [];
+    try {
+      const response = await wbAccountRequest<[SupplierResponse]>({
+        url: 'https://seller.wildberries.ru/ns/suppliers/suppliers-portal-core/suppliers',
+        accountId,
+        userAgent,
+        proxy,
+        supplierId: supplierId || undefined,
+        isJsonRpc: true,
+        body: [
+          { method: 'getUserSuppliers', params: {} },
+          { method: 'listCountries', params: {} },
+        ],
+      });
+
+      const suppliers =
+        response.find((item) => 'suppliers' in (item.result || {}))?.result
+          ?.suppliers || [];
+
+      return suppliers.map((supplier: { name: string; id: string }) => ({
+        name: supplier.name,
+        id: supplier.id,
+      }));
+    } catch (error) {
+      logger.error(`Error getting suppliers for account ${accountId}:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -51,6 +76,16 @@ export class AccountService {
         suppliers: true,
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Get a single account by ID
+   */
+  async getAccountById(accountId: string, userId: number) {
+    return prisma.account.findFirst({
+      where: { id: accountId, userId },
+      include: { suppliers: true },
     });
   }
 
@@ -73,6 +108,47 @@ export class AccountService {
     // Delete account (suppliers will be deleted via cascade)
     await prisma.account.delete({
       where: { id: accountId },
+    });
+
+    // If this was the selected account, clear it
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (user?.selectedAccountId === accountId) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { selectedAccountId: null },
+      });
+    }
+  }
+
+  /**
+   * Update the selected supplier for an account
+   */
+  async updateSelectedSupplier(
+    accountId: string,
+    supplierId: string,
+    userId: number
+  ) {
+    // Verify account belongs to user and contains supplier
+    const account = await prisma.account.findFirst({
+      where: {
+        id: accountId,
+        userId,
+        suppliers: {
+          some: { supplierId },
+        },
+      },
+    });
+
+    if (!account) {
+      throw new Error(
+        'Account not found or does not contain the specified supplier'
+      );
+    }
+
+    // Update selected supplier
+    return prisma.account.update({
+      where: { id: accountId },
+      data: { selectedSupplierId: supplierId },
     });
   }
 
@@ -199,33 +275,35 @@ export class AccountService {
         proxy
       );
 
-      if (allSuppliers.length > 0) {
-        // Add all suppliers to the account
-        for (const supplier of allSuppliers) {
-          await prisma.supplier.upsert({
-            where: {
-              supplierId_accountId: {
-                supplierId: supplier.id,
-                accountId: account.id,
-              },
-            },
-            update: {
-              supplierName: supplier.name,
-            },
-            create: {
+      if (allSuppliers.length === 0) {
+        throw new Error('No suppliers found for this account');
+      }
+
+      // Add all suppliers to the account
+      for (const supplier of allSuppliers) {
+        await prisma.supplier.upsert({
+          where: {
+            supplierId_accountId: {
               supplierId: supplier.id,
-              supplierName: supplier.name,
               accountId: account.id,
             },
-          });
-        }
-
-        // Set the first supplier as selected by default
-        await prisma.account.update({
-          where: { id: account.id },
-          data: { selectedSupplierId: allSuppliers[0].id },
+          },
+          update: {
+            supplierName: supplier.name,
+          },
+          create: {
+            supplierId: supplier.id,
+            supplierName: supplier.name,
+            accountId: account.id,
+          },
         });
       }
+
+      // Set the first supplier as selected by default
+      await prisma.account.update({
+        where: { id: account.id },
+        data: { selectedSupplierId: allSuppliers[0].id },
+      });
 
       // Check if user has no selected account and set this as the selected account
       const user = await prisma.user.findUnique({
@@ -283,6 +361,13 @@ export class AccountService {
       data,
       include: { suppliers: true },
     });
+  }
+
+  /**
+   * Get decrypted cookies for an account
+   */
+  async getAccountCookies(accountId: string): Promise<Cookie[]> {
+    return getCookiesFromAccount(accountId);
   }
 }
 
