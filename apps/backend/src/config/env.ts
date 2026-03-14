@@ -9,8 +9,8 @@ const envSchema = z.object({
   PORT: z.string().default('3001'),
   DATABASE_URL: z.string(),
   
-  // JWT Configuration
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  // JWT Configuration (optional, for future use)
+  JWT_SECRET: z.string().optional(),
   JWT_EXPIRES_IN: z.string().default('7d'),
   
   // Encryption
@@ -23,8 +23,8 @@ const envSchema = z.object({
   YOOKASSA_SHOP_ID: z.string().optional(),
   YOOKASSA_SECRET_KEY: z.string().optional(),
   
-  // Technical Mode
-  TECHNICAL_MODE_USER_ID: z.string().optional(),
+  // Technical Mode (comma-separated user IDs allowed during maintenance)
+  TECHNICAL_MODE_USER_IDS: z.string().optional(),
   
   // Frontend URL (for CORS)
   FRONTEND_URL: z.string().default('http://localhost:3000'),

@@ -24,6 +24,17 @@ export class UserService {
     });
   }
 
+  async findByIdWithChatId(id: number) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        telegramId: true,
+        chatId: true,
+      },
+    });
+  }
+
   async createUser(data: {
     telegramId: bigint;
     name: string;

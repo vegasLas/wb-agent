@@ -2,20 +2,17 @@ import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import { authService } from '../services/auth.service';
 import { userService } from '../services/user.service';
-import {
-  authenticateTelegram,
-  requireSubscription,
-} from '../middleware/auth.middleware';
+import { authenticate } from '../middleware/auth.middleware';
+import { sendLogoutNotification } from '../utils/TBOT';
 import { ApiError } from '../utils/errors';
 
 const router = Router();
 
 // POST /api/v1/auth/verify-phone
-// Requires subscription for adding new accounts
+// Requires subscription (checked in auth middleware)
 router.post(
   '/verify-phone',
-  authenticateTelegram,
-  requireSubscription,
+  authenticate,
   body('phoneNumber')
     .matches(/^\+\d{10,15}$/)
     .withMessage(
@@ -144,7 +141,7 @@ router.post('/cancel', async (req, res, next) => {
 });
 
 // POST /api/v1/auth/logout
-router.post('/logout', authenticateTelegram, async (req, res, next) => {
+router.post('/logout', authenticate, async (req, res, next) => {
   try {
     const { accountId } = req.body;
 
@@ -155,10 +152,11 @@ router.post('/logout', authenticateTelegram, async (req, res, next) => {
       // Logout all accounts
       await userService.logoutWb(BigInt(req.user!.telegramId));
       
-      // Send Telegram notification (this is the enhanced feature from original)
-      // Note: In the original, this was done only when chatId was available
-      // Since we're using Telegram auth, we should ideally store chatId separately
-      // For now, we skip the notification as we don't have chatId in req.user
+      // Send Telegram notification
+      const user = await userService.findByIdWithChatId(req.user!.id);
+      if (user?.chatId) {
+        await sendLogoutNotification(user.chatId);
+      }
     }
 
     res.json({ success: true, message: 'Logged out successfully' });
