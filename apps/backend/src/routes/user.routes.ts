@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { authenticateTelegram } from '../middleware/auth.middleware';
+import { authenticate } from '../middleware/auth.middleware';
 import { userService } from '../services/user.service';
 import { ApiError } from '../utils/errors';
 
 const router = Router();
 
 // GET /api/v1/user
-router.get('/', authenticateTelegram, async (req, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
   try {
     const user = await userService.findById(req.user!.id);
 
@@ -60,7 +60,7 @@ router.get('/', authenticateTelegram, async (req, res, next) => {
 // POST /api/v1/user/update
 router.post(
   '/update',
-  authenticateTelegram,
+  authenticate,
   body('agreeTerms').optional().isBoolean(),
   body('selectedAccountId').optional().isString(),
   async (req, res, next) => {
