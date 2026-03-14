@@ -12,9 +12,8 @@
     "composite": false,
     "declaration": false,
     "declarationMap": false,
-    "emitDeclarationOnly": false,
-    "customConditions": []
+    "emitDeclarationOnly": false
   },
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/**/__tests__/**/*"],
   "include": ["src/**/*"]
 }
