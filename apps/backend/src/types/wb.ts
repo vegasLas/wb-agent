@@ -169,3 +169,186 @@ export interface WBError {
   method?: string;
   url?: string;
 }
+
+// ============ Supplier Service Types ============
+
+export interface ListGoodsParams {
+  draftID: string;
+  search?: string;
+  brands?: string[];
+  subjects?: number[];
+  limit?: number;
+  offset?: number;
+  supplierId?: string;
+}
+
+export interface ListDraftsParams {
+  limit?: number;
+  offset?: number;
+  orderBy?: { createdAt?: number };
+  supplierId?: string;
+}
+
+export interface ValidateWarehouseGoodsParams {
+  draftID: string;
+  warehouseId: number;
+  transitWarehouseId: number | null;
+}
+
+export interface WarehouseRecommendationsParams {
+  draftId: string;
+}
+
+export interface ListSuppliesParams {
+  pageNumber: number;
+  pageSize: number;
+  sortBy: string;
+  sortDirection: string;
+  statusId: number;
+}
+
+export interface SupplyDetailsParams {
+  pageNumber: number;
+  pageSize: number;
+  preorderID: number | null;
+  search: string;
+  supplyID: number;
+}
+
+export interface BalancesParams {
+  limit: number;
+  offset: number;
+}
+
+// ============ WB API Response Types ============
+
+export interface ListGoodsResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    goods: Good[];
+  };
+}
+
+export interface Good {
+  nmID: number;
+  id: number;
+  chrtID: number;
+  draftID: string;
+  subjectId: number;
+  subjectName: string;
+  brand: string;
+  supplierArticle: string;
+  techSize: string;
+  productName: string;
+  barcode: string;
+  quantity: number;
+}
+
+export interface ListDraftsResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    drafts: Draft[];
+  };
+}
+
+export interface Draft {
+  id: string;
+  name: string;
+  supplierId: string;
+  totalQuantity: number;
+  totalGoods: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ValidateWarehouseGoodsResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    valid: boolean;
+    errors?: ValidationError[];
+  };
+}
+
+export interface ValidationError {
+  code: string;
+  message: string;
+  nmID?: number;
+}
+
+export interface WarehouseRecommendationsResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    recommendations: WarehouseRecommendation[];
+  };
+}
+
+export interface WarehouseRecommendation {
+  warehouseId: number;
+  warehouseName: string;
+  score: number;
+}
+
+export interface ListSuppliesResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    supplies: Supply[];
+    total: number;
+  };
+}
+
+export interface Supply {
+  id: number;
+  status: string;
+  statusId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupplyDetailsResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    supply: SupplyDetail;
+    goods: SupplyGood[];
+  };
+}
+
+export interface SupplyDetail {
+  id: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupplyGood {
+  nmID: number;
+  supplierArticle: string;
+  productName: string;
+  quantity: number;
+}
+
+export interface BalancesResponse {
+  data: {
+    table: {
+      headerFront: Array<{
+        cells: Array<{
+          value: string;
+        }>;
+      }>;
+      data: string[][];
+    };
+  };
+}
+
+export interface GoodBalance {
+  goodName: string;
+  brand: string;
+  subject: string;
+  supplierArticle: string;
+  quantity: number;
+}
