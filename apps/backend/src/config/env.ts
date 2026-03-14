@@ -13,6 +13,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   
+  // Encryption
+  COOKIE_ENCRYPTION_KEY: z.string().min(64, 'COOKIE_ENCRYPTION_KEY must be at least 64 characters (hex encoded 32 bytes)'),
+  
   // Telegram
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   
@@ -31,6 +34,9 @@ const envSchema = z.object({
   
   // Redis (optional)
   REDIS_URL: z.string().optional(),
+  
+  // Proxy list (optional, comma-separated: ip:port:user:pass:timezone)
+  PROXY_LIST: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
