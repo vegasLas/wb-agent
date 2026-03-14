@@ -4,6 +4,7 @@ import userRoutes from './user.routes';
 import accountRoutes from './accounts.routes';
 import supplierApiKeyRoutes from './supplier-api-keys.routes';
 import supplierRoutes from './suppliers.routes';
+import autobookingRoutes from './autobooking.routes';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -45,8 +46,10 @@ router.use('/supplier-api-keys', authenticate, supplierApiKeyRoutes);
 // Supplier routes (protected)
 router.use('/suppliers', authenticate, supplierRoutes);
 
+// Autobooking routes (protected)
+router.use('/autobooking', authenticate, autobookingRoutes);
+
 // Future routes (will be implemented in subsequent plans):
-// router.use('/autobooking', authenticate, autobookingRoutes);
 // router.use('/reschedule', authenticate, rescheduleRoutes);
 // router.use('/triggers', authenticate, triggerRoutes);
 // router.use('/warehouses', authenticate, warehouseRoutes);
