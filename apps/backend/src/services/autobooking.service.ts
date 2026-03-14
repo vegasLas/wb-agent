@@ -45,7 +45,7 @@ export interface UpdateAutobookingDto {
   customDates?: Date[];
   maxCoefficient?: number;
   monopalletCount?: number | null;
-  status?: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED' | 'ERROR';
+  status?: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
 }
 
 /**
@@ -232,6 +232,15 @@ export class AutobookingService {
     userId: number,
     data: UpdateAutobookingDto
   ): Promise<Autobooking> {
+    // Check if there's any data to update
+    if (Object.keys(data).length === 0 || (Object.keys(data).length === 1 && 'id' in data)) {
+      throw new AutobookingUpdateError(
+        'No valid update data provided',
+        'NO_UPDATE_DATA',
+        400
+      );
+    }
+
     // Validate ownership
     const existing = await prisma.autobooking.findFirst({
       where: { id: data.id, userId },
@@ -239,7 +248,7 @@ export class AutobookingService {
 
     if (!existing) {
       throw new AutobookingUpdateError(
-        'Autobooking not found',
+        'Autobooking not found or access denied',
         'AUTOBOOKING_NOT_FOUND',
         404
       );
@@ -272,35 +281,71 @@ export class AutobookingService {
       }
     }
 
-    // Build update data
+    // Build update data with validation
     const updateData: Partial<Autobooking> = {};
-    if (data.draftId !== undefined) updateData.draftId = data.draftId;
-    if (data.warehouseId !== undefined) updateData.warehouseId = data.warehouseId;
-    if (data.transitWarehouseId !== undefined)
+    
+    if (data.draftId !== undefined) {
+      this.validateDraftId(data.draftId);
+      updateData.draftId = data.draftId;
+    }
+    
+    if (data.warehouseId !== undefined) {
+      this.validateWarehouseId(data.warehouseId);
+      updateData.warehouseId = data.warehouseId;
+    }
+    
+    if (data.transitWarehouseId !== undefined) {
       updateData.transitWarehouseId = data.transitWarehouseId;
-    if (data.transitWarehouseName !== undefined)
+    }
+    
+    if (data.transitWarehouseName !== undefined) {
       updateData.transitWarehouseName = data.transitWarehouseName;
-    if (data.supplyType !== undefined) updateData.supplyType = data.supplyType;
-    if (data.dateType !== undefined) updateData.dateType = data.dateType;
+    }
+    
+    if (data.supplyType !== undefined) {
+      this.validateSupplyType(data.supplyType);
+      updateData.supplyType = data.supplyType;
+    }
+    
+    if (data.dateType !== undefined) {
+      this.validateDateType(data.dateType);
+      updateData.dateType = data.dateType;
+    }
+    
     if (data.startDate !== undefined) {
       updateData.startDate = data.startDate
         ? new Date(Date.UTC(data.startDate.getFullYear(), data.startDate.getMonth(), data.startDate.getDate()))
         : null;
     }
+    
     if (data.endDate !== undefined) {
       updateData.endDate = data.endDate
         ? new Date(Date.UTC(data.endDate.getFullYear(), data.endDate.getMonth(), data.endDate.getDate()))
         : null;
     }
+    
     if (data.customDates !== undefined) {
       updateData.customDates = data.customDates.map((date) =>
         new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
       );
     }
-    if (data.maxCoefficient !== undefined) updateData.maxCoefficient = data.maxCoefficient;
-    if (data.monopalletCount !== undefined)
+    
+    if (data.maxCoefficient !== undefined) {
+      this.validateMaxCoefficient(data.maxCoefficient);
+      updateData.maxCoefficient = data.maxCoefficient;
+    }
+    
+    if (data.monopalletCount !== undefined) {
+      if (data.monopalletCount !== null) {
+        this.validateMonopalletCount(data.monopalletCount);
+      }
       updateData.monopalletCount = data.monopalletCount;
-    if (data.status !== undefined) updateData.status = data.status;
+    }
+    
+    if (data.status !== undefined) {
+      this.validateStatus(data.status);
+      updateData.status = data.status;
+    }
 
     // Validate business rules
     this.validateBusinessRules(updateData, data);
@@ -430,6 +475,86 @@ export class AutobookingService {
         return 1;
       default:
         return 1;
+    }
+  }
+
+  /**
+   * Validate draft ID
+   */
+  private validateDraftId(draftId: string): void {
+    if (!draftId || typeof draftId !== 'string' || draftId.trim().length === 0) {
+      throw new AutobookingUpdateError(
+        'Draft ID must be a non-empty string',
+        'INVALID_DRAFT_ID',
+        400
+      );
+    }
+  }
+
+  /**
+   * Validate warehouse ID
+   */
+  private validateWarehouseId(warehouseId: number): void {
+    if (!Number.isInteger(warehouseId) || warehouseId <= 0) {
+      throw new AutobookingUpdateError(
+        'Warehouse ID must be a positive integer',
+        'INVALID_WAREHOUSE_ID',
+        400
+      );
+    }
+  }
+
+  /**
+   * Validate supply type
+   */
+  private validateSupplyType(supplyType: string): void {
+    const validTypes = ['BOX', 'MONOPALLETE', 'SUPERSAFE'];
+    if (!validTypes.includes(supplyType)) {
+      throw new AutobookingUpdateError(
+        `Supply type must be one of: ${validTypes.join(', ')}`,
+        'INVALID_SUPPLY_TYPE',
+        400
+      );
+    }
+  }
+
+  /**
+   * Validate max coefficient
+   */
+  private validateMaxCoefficient(maxCoefficient: number): void {
+    if (typeof maxCoefficient !== 'number' || maxCoefficient < 0 || maxCoefficient > 20) {
+      throw new AutobookingUpdateError(
+        'Max coefficient must be a number between 0 and 20',
+        'INVALID_MAX_COEFFICIENT',
+        400
+      );
+    }
+  }
+
+  /**
+   * Validate monopallet count
+   */
+  private validateMonopalletCount(monopalletCount: number): void {
+    if (!Number.isInteger(monopalletCount) || monopalletCount <= 0 || monopalletCount > 100) {
+      throw new AutobookingUpdateError(
+        'Monopallet count must be an integer between 1 and 100',
+        'INVALID_MONOPALLET_COUNT',
+        400
+      );
+    }
+  }
+
+  /**
+   * Validate status
+   */
+  private validateStatus(status: string): void {
+    const validStatuses = ['ACTIVE', 'COMPLETED', 'ARCHIVED'];
+    if (!validStatuses.includes(status)) {
+      throw new AutobookingUpdateError(
+        `Status must be one of: ${validStatuses.join(', ')}`,
+        'INVALID_STATUS',
+        400
+      );
     }
   }
 
