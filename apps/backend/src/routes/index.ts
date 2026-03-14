@@ -1,21 +1,10 @@
 import { Router } from 'express';
+import authRoutes from './auth.routes';
+import userRoutes from './user.routes';
 
 const router = Router();
 
-// Placeholder routes - will be implemented in subsequent plans
-// router.use('/auth', authRoutes);
-// router.use('/accounts', authenticate, accountRoutes);
-// router.use('/suppliers', authenticate, supplierRoutes);
-// router.use('/autobooking', authenticate, autobookingRoutes);
-// router.use('/reschedule', authenticate, rescheduleRoutes);
-// router.use('/triggers', authenticate, triggerRoutes);
-// router.use('/warehouses', authenticate, warehouseRoutes);
-// router.use('/supplies', authenticate, supplyRoutes);
-// router.use('/payments', authenticate, paymentRoutes);
-// router.use('/user', authenticate, userRoutes);
-// router.use('/webhooks', webhookRoutes);
-
-// Test route
+// Health check and API info
 router.get('/', (req, res) => {
   res.json({
     success: true,
@@ -35,5 +24,22 @@ router.get('/', (req, res) => {
     },
   });
 });
+
+// Auth routes (public)
+router.use('/auth', authRoutes);
+
+// User routes (protected)
+router.use('/user', userRoutes);
+
+// Future routes (will be implemented in subsequent plans):
+// router.use('/accounts', authenticate, accountRoutes);
+// router.use('/suppliers', authenticate, supplierRoutes);
+// router.use('/autobooking', authenticate, autobookingRoutes);
+// router.use('/reschedule', authenticate, rescheduleRoutes);
+// router.use('/triggers', authenticate, triggerRoutes);
+// router.use('/warehouses', authenticate, warehouseRoutes);
+// router.use('/supplies', authenticate, supplyRoutes);
+// router.use('/payments', authenticate, paymentRoutes);
+// router.use('/webhooks', webhookRoutes);
 
 export default router;
