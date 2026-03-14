@@ -148,8 +148,10 @@ router.put(
   authenticate,
   body('id').isUUID().withMessage('Valid autobooking ID is required'),
   async (req, res, next) => {
+    const userId = req.user!.id;
+    
     // Check queue - prevent concurrent operations
-    if (userQueue.has(req.user!.id)) {
+    if (userQueue.has(userId)) {
       return res.status(429).json({
         success: false,
         error: 'Подождите завершения предыдущей операции',
@@ -157,7 +159,7 @@ router.put(
       });
     }
 
-    userQueue.add(req.user!.id);
+    userQueue.add(userId);
 
     try {
       const errors = validationResult(req);
@@ -191,7 +193,7 @@ router.put(
               : transitWarehouseId
           : undefined;
 
-      const updated = await autobookingService.updateAutobooking(req.user!.id, {
+      const updated = await autobookingService.updateAutobooking(userId, {
         id,
         draftId,
         warehouseId,
@@ -202,8 +204,8 @@ router.put(
         startDate: startDate !== undefined ? parseDateField(startDate) : undefined,
         endDate: endDate !== undefined ? parseDateField(endDate) : undefined,
         customDates: customDates ? parseDateArray(customDates) : undefined,
-        maxCoefficient,
-        monopalletCount,
+        maxCoefficient: maxCoefficient !== undefined ? Number(maxCoefficient) : undefined,
+        monopalletCount: monopalletCount !== undefined ? Number(monopalletCount) : undefined,
         status,
       });
 
@@ -218,7 +220,7 @@ router.put(
       }
       return next(error);
     } finally {
-      userQueue.delete(req.user!.id);
+      userQueue.delete(userId);
     }
   }
 );
@@ -229,8 +231,10 @@ router.delete(
   authenticate,
   body('id').isUUID().withMessage('Valid autobooking ID is required'),
   async (req, res, next) => {
+    const userId = req.user!.id;
+    
     // Check queue - prevent concurrent operations
-    if (userQueue.has(req.user!.id)) {
+    if (userQueue.has(userId)) {
       return res.status(429).json({
         success: false,
         error: 'Подождите завершения предыдущей операции',
@@ -238,7 +242,7 @@ router.delete(
       });
     }
 
-    userQueue.add(req.user!.id);
+    userQueue.add(userId);
 
     try {
       const errors = validationResult(req);
@@ -248,7 +252,7 @@ router.delete(
 
       const { id } = req.body;
 
-      const result = await autobookingService.deleteAutobooking(req.user!.id, id);
+      const result = await autobookingService.deleteAutobooking(userId, id);
 
       res.json({
         success: true,
@@ -265,7 +269,7 @@ router.delete(
       }
       return next(error);
     } finally {
-      userQueue.delete(req.user!.id);
+      userQueue.delete(userId);
     }
   }
 );
