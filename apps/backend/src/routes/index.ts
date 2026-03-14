@@ -3,6 +3,7 @@ import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import accountRoutes from './accounts.routes';
 import supplierApiKeyRoutes from './supplier-api-keys.routes';
+import supplierRoutes from './suppliers.routes';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -41,8 +42,10 @@ router.use('/accounts', authenticate, accountRoutes);
 // Supplier API Key routes (protected)
 router.use('/supplier-api-keys', authenticate, supplierApiKeyRoutes);
 
+// Supplier routes (protected)
+router.use('/suppliers', authenticate, supplierRoutes);
+
 // Future routes (will be implemented in subsequent plans):
-// router.use('/suppliers', authenticate, supplierRoutes);
 // router.use('/autobooking', authenticate, autobookingRoutes);
 // router.use('/reschedule', authenticate, rescheduleRoutes);
 // router.use('/triggers', authenticate, triggerRoutes);
