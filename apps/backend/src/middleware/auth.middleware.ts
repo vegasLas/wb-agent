@@ -7,6 +7,11 @@ import { logger } from '../utils/logger';
 export interface AuthUser {
   id: number;
   telegramId: string;
+  subscriptionExpiresAt?: Date | null;
+}
+
+export interface AuthenticatedRequest extends Request {
+  user: AuthUser;
 }
 
 declare global {
