@@ -296,12 +296,12 @@ export interface ListSuppliesResponse {
   id: string;
   jsonrpc: string;
   result: {
-    supplies: Supply[];
+    supplies: WBDraftSupply[];
     total: number;
   };
 }
 
-export interface Supply {
+export interface WBDraftSupply {
   id: number;
   status: string;
   statusId: number;
@@ -351,4 +351,28 @@ export interface GoodBalance {
   subject: string;
   supplierArticle: string;
   quantity: number;
+}
+
+// ============ Coefficient/Trigger Types ============
+
+/**
+ * Supply/Coefficient from WB API coefficients endpoint
+ * Used for trigger monitoring to find available slots
+ * Matches the original type from deprecated project
+ */
+export interface Supply {
+  /** Date in YYYY-MM-DD format */
+  date: string;
+  /** Coefficient value (0 = free, higher = more expensive) */
+  coefficient: number;
+  /** Warehouse ID */
+  warehouseID: number;
+  /** Warehouse name */
+  warehouseName: string;
+  /** Box type name (in Russian) */
+  boxTypeName: 'Короба' | 'Суперсейф' | 'Монопаллеты' | 'QR-поставка с коробами';
+  /** Box type ID */
+  boxTypeID?: 2 | 5 | 6;
+  /** Whether unloading is allowed */
+  allowUnload: boolean;
 }
