@@ -296,7 +296,7 @@ export interface ListSuppliesResponse {
   id: string;
   jsonrpc: string;
   result: {
-    supplies: WBDraftSupply[];
+    data: WBDraftSupply[];
     total: number;
   };
 }
@@ -314,7 +314,8 @@ export interface SupplyDetailsResponse {
   jsonrpc: string;
   result: {
     supply: SupplyDetail;
-    goods: SupplyGood[];
+    data: SupplyGood[];
+    totalCount: number;
   };
 }
 

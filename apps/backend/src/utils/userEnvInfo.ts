@@ -201,4 +201,4 @@ export const generateUserEnvInfo = async (): Promise<UserEnvInfo> => {
       password: proxy.password,
     },
   };
-};
+}
