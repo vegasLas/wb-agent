@@ -353,6 +353,147 @@ export interface GoodBalance {
   quantity: number;
 }
 
+// ============ Warehouse Types ============
+
+export interface TransitResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    items: TransitItem[];
+  };
+}
+
+export interface TransitItem {
+  transitWarehouseId: number;
+  transitWarehouseName: string;
+  destinationWarehouseId: number;
+  destinationWarehouseName: string;
+  currentTariff: number;
+  tariffTable: {
+    perVolume: Array<{
+      from: number;
+      to: number;
+      value: number;
+    }>;
+    perWeight: number;
+  };
+  storeBox: boolean;
+  storePallet: boolean;
+  storeSupersafe: boolean;
+  transitActiveFrom: string;
+}
+
+export interface WarehousesRoot {
+  id: string;
+  jsonrpc: string;
+  result: {
+    resp: {
+      data: WarehouseData[];
+      counters: {
+        isFbw: number;
+        isFbs: number;
+        isDistribution: number;
+        isPickPoints: number;
+        isService: number;
+        isInternational: number;
+        total: number;
+      };
+      filters: {
+        isViewAcceptsQRScan: boolean;
+      };
+      sort: Array<{
+        id: string;
+        title: string;
+      }>;
+      officeType: unknown[];
+      error: boolean;
+      errorText: string;
+      additionalErrors: Record<string, unknown>;
+    };
+  };
+}
+
+export interface WarehouseData {
+  id: number;
+  origid: number;
+  warehouse: string;
+  loadingSchedule: string;
+  workTime: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  passText: string;
+  isPassNeeded: boolean;
+  nearCityId: number;
+  nearCity: {
+    id: number;
+    title: string;
+  };
+  sortingTime: number;
+  photos: string[];
+  isFbw: boolean;
+  isFbwRestrictionCargo: string;
+  isFbs: boolean;
+  isFbsRestrictionCargo: string;
+  isDistribution: boolean;
+  isDistributionRestrictionCargo: string;
+  isPickPoints: boolean;
+  isPickPointsRestrictionCargo: string;
+  isService: boolean;
+  isServiceRestrictionCargo: string;
+  isInternational: boolean;
+  restrictions: string;
+  rating: number;
+  isAcceptsQRScan: boolean;
+  isDontCheckDeliveryPeriod: boolean;
+  isDontCheckSortingTime: boolean;
+  isDefaultPaidAcceptance: boolean;
+  isDefaultPaidAcceptanceOfSupply: boolean;
+  deliveryPeriodToShelfInt?: number;
+  deliveryPeriodToShelf?: string;
+  boxTypeMask: number;
+  noPassEqueueAllowed: boolean;
+  gates?: string;
+  officeTimeOffset?: number;
+}
+
+// Simplified warehouse type for API response
+export interface Warehouse {
+  ID: number;
+  name: string;
+  address: string;
+  workTime: string;
+  acceptsQr: boolean;
+}
+
+export enum AcceptanceType {
+  box = 6,
+  pallet = 4,
+  supersafe = 5,
+}
+
+export interface AcceptanceCoefficientsResponse {
+  id: string;
+  jsonrpc: string;
+  result: {
+    report: Array<{
+      date: string;
+      acceptanceType: AcceptanceType;
+      coefficient: number;
+      warehouseID: number;
+      warehouseName: string;
+      allowUnload: boolean;
+      isSortingCenter: boolean;
+      deliveryCoefficient?: string;
+      storageCoefficient?: string;
+      deliveryBaseLiter?: string;
+      deliveryAdditionalLiter?: string;
+      storageBaseLiter?: string;
+      storageAdditionalLiter?: string;
+    }>;
+  };
+}
+
 // ============ Coefficient/Trigger Types ============
 
 /**

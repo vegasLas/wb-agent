@@ -28,7 +28,7 @@ export interface WBAccountRequestParams {
   proxy?: ProxyConfig;
   supplierId?: string;
   method?: string;
-  body?: JsonRpcBody | JsonRpcBody[];
+  body?: JsonRpcBody | JsonRpcBody[] | Record<string, unknown>;
   headers?: Record<string, string>;
   isJsonRpc?: boolean;
   order?: number;
@@ -294,11 +294,14 @@ export async function wbAccountRequest<T>({
       ...headers,
     };
 
-    const requestBody = body
-      ? isJsonRpc
-        ? JSON.stringify(buildJsonRpcBody(body, order))
-        : JSON.stringify(body)
-      : undefined;
+    let requestBody: string | undefined = undefined;
+    if (body) {
+      if (isJsonRpc) {
+        requestBody = JSON.stringify(buildJsonRpcBody(body as JsonRpcBody | JsonRpcBody[], order));
+      } else {
+        requestBody = JSON.stringify(body);
+      }
+    }
 
     const responseData = await makeHttpRequest(
       url,
