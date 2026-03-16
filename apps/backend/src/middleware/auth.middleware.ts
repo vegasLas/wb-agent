@@ -8,6 +8,7 @@ export interface AuthUser {
   id: number;
   telegramId: string;
   subscriptionExpiresAt?: Date | null;
+  selectedAccountId?: string | null;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -61,6 +62,7 @@ export const authenticate = async (
             req.user = {
               id: user.id,
               telegramId: initData.user.id.toString(),
+              selectedAccountId: user.selectedAccountId,
             };
           }
           return next();
@@ -120,6 +122,7 @@ export const authenticate = async (
     req.user = {
       id: user.id,
       telegramId: initData.user.id.toString(),
+      selectedAccountId: user.selectedAccountId,
     };
 
     next();
