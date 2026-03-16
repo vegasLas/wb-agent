@@ -7,6 +7,21 @@ export interface CookieUpdate {
   value: string;
 }
 
+export interface CookieProps {
+  WBTokenV3: string;
+  zzatw: string;
+  cfidsw: string;
+  currentFeatureVersion: string;
+  externalLocale: string;
+  locale: string;
+  wbxValidationKey: string;
+  supplierId: string;
+  supplierIdExternal: string;
+  _wbauid?: string;
+  landing_version_ru?: string;
+  landing_version?: string;
+}
+
 /**
  * Encodes cookies by encrypting them
  * @param cookies - Array of Playwright cookies
@@ -157,4 +172,34 @@ export async function getCookieByName(
 ): Promise<Cookie | null> {
   const cookies = await getCookiesFromAccount(accountId);
   return cookies.find((cookie) => cookie.name === cookieName) || null;
+}
+
+/**
+ * Parse cookies from an encrypted cookie string
+ * @param cookiesString - Encrypted cookie string from account
+ * @returns CookieProps object with extracted cookie values
+ */
+export function getCookiesFromString(cookiesString: string): CookieProps {
+  const decodedCookies = decodeCookies(cookiesString);
+  const cookieMap = new Map(decodedCookies.map((c) => [c.name, c.value]));
+
+  const locale = cookieMap.get('locale') || '';
+  const isRussianLocale = locale === 'ru';
+  const landingVersionKey = isRussianLocale
+    ? 'landing_version_ru'
+    : 'landing_version';
+
+  return {
+    WBTokenV3: cookieMap.get('WBTokenV3') || '',
+    zzatw: cookieMap.get('__zzatw-wb') || '',
+    cfidsw: cookieMap.get('cfidsw-wb') || '',
+    currentFeatureVersion: cookieMap.get('current_feature_version') || '',
+    externalLocale: cookieMap.get('external-locale') || '',
+    locale: locale,
+    [landingVersionKey]: cookieMap.get(landingVersionKey) || '',
+    wbxValidationKey: cookieMap.get('wbx-validation-key') || '',
+    supplierId: cookieMap.get('x-supplier-id') || '',
+    supplierIdExternal: cookieMap.get('x-supplier-id-external') || '',
+    _wbauid: cookieMap.get('_wbauid') || '',
+  } as CookieProps;
 }
