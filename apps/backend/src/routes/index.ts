@@ -7,6 +7,7 @@ import supplierRoutes from './suppliers.routes';
 import autobookingRoutes from './autobooking.routes';
 import rescheduleRoutes from './reschedule.routes';
 import triggerRoutes from './triggers.routes';
+import warehouseRoutes from './warehouses.routes';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -57,8 +58,10 @@ router.use('/reschedule', authenticate, rescheduleRoutes);
 // Trigger routes (protected)
 router.use('/triggers', authenticate, triggerRoutes);
 
+// Warehouse routes (protected)
+router.use('/warehouses', authenticate, warehouseRoutes);
+
 // Future routes (will be implemented in subsequent plans):
-// router.use('/warehouses', authenticate, warehouseRoutes);
 // router.use('/supplies', authenticate, supplyRoutes);
 // router.use('/payments', authenticate, paymentRoutes);
 // router.use('/webhooks', webhookRoutes);
