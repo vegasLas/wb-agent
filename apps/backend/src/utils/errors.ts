@@ -7,18 +7,25 @@ export class ApiError extends Error {
     public statusCode: number,
     message: string,
     public code?: string,
-    public details?: Record<string, unknown>
+    public details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'ApiError';
     Object.setPrototypeOf(this, ApiError.prototype);
   }
 
-  static badRequest(message: string, code?: string, details?: Record<string, unknown>): ApiError {
+  static badRequest(
+    message: string,
+    code?: string,
+    details?: Record<string, unknown>,
+  ): ApiError {
     return new ApiError(400, message, code || 'BAD_REQUEST', details);
   }
 
-  static unauthorized(message: string = 'Unauthorized', code?: string): ApiError {
+  static unauthorized(
+    message: string = 'Unauthorized',
+    code?: string,
+  ): ApiError {
     return new ApiError(401, message, code || 'UNAUTHORIZED');
   }
 
@@ -34,7 +41,10 @@ export class ApiError extends Error {
     return new ApiError(409, message, code || 'CONFLICT');
   }
 
-  static validation(message: string, details?: Record<string, unknown>): ApiError {
+  static validation(
+    message: string,
+    details?: Record<string, unknown>,
+  ): ApiError {
     return new ApiError(422, message, 'VALIDATION_ERROR', details);
   }
 

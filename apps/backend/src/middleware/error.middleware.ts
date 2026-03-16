@@ -1,4 +1,5 @@
 import { ErrorRequestHandler, Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
 import { ApiError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
@@ -116,4 +117,25 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
     error: `Route ${req.method} ${req.path} not found`,
     code: 'ROUTE_NOT_FOUND',
   });
+};
+
+/**
+ * Validation middleware for express-validator
+ * Handles validation errors from request body/query/params
+ */
+export const validationMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map(err => `${err.type === 'field' ? err.path : err.type}: ${err.msg}`);
+    res.status(422).json({
+      success: false,
+      error: 'Validation failed',
+      code: 'VALIDATION_ERROR',
+      details: errorMessages,
+    });
+    return;
+  }
+  
+  next();
 };
