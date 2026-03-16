@@ -9,6 +9,8 @@ import rescheduleRoutes from './reschedule.routes';
 import triggerRoutes from './triggers.routes';
 import warehouseRoutes from './warehouses.routes';
 import suppliesRoutes from './supplies.routes';
+import paymentRoutes from './payments.routes';
+import webhookRoutes from './webhooks.routes';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -65,8 +67,10 @@ router.use('/warehouses', authenticate, warehouseRoutes);
 // Supplies routes (protected)
 router.use('/supplies', authenticate, suppliesRoutes);
 
-// Future routes (will be implemented in subsequent plans):
-// router.use('/payments', authenticate, paymentRoutes);
-// router.use('/webhooks', webhookRoutes);
+// Payment routes (protected)
+router.use('/payments', authenticate, paymentRoutes);
+
+// Webhook routes (public - called by YooKassa)
+router.use('/webhooks', webhookRoutes);
 
 export default router;
