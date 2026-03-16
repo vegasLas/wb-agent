@@ -18,6 +18,8 @@ export class ApiKeyRateLimiterService {
   private apiKeys: Map<number, ApiKeyInfo> = new Map();
   private lastLoadTime: Date | null = null;
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly MIN_REQUEST_INTERVAL_MS = 100; // Minimum 100ms between requests
+  private lastRequestTime: number = 0;
 
   /**
    * Get next available API key using round-robin
@@ -171,6 +173,57 @@ export class ApiKeyRateLimiterService {
   async refreshKeys(): Promise<void> {
     this.lastLoadTime = null;
     await this.loadApiKeys();
+  }
+
+  /**
+   * Check if we should wait before making the next request
+   * Used by free warehouse service to avoid rate limiting
+   */
+  async shouldWaitBeforeNextRequest(): Promise<{
+    shouldWait: boolean;
+    waitTime?: number;
+  }> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+
+    if (timeSinceLastRequest < this.MIN_REQUEST_INTERVAL_MS) {
+      const waitTime = this.MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest;
+      return { shouldWait: true, waitTime };
+    }
+
+    // Reload API keys if cache expired
+    if (!this.lastLoadTime || Date.now() - this.lastLoadTime.getTime() > this.CACHE_TTL_MS) {
+      await this.loadApiKeys();
+    }
+
+    // Check if all keys are blocked
+    const nowDate = new Date();
+    const hasAvailableKey = Array.from(this.apiKeys.values()).some((keyInfo) => {
+      if (keyInfo.isBlocked && keyInfo.blockedUntil && keyInfo.blockedUntil > nowDate) {
+        return false;
+      }
+      return true;
+    });
+
+    if (!hasAvailableKey && this.apiKeys.size > 0) {
+      const nextAvailableTime = this.getNextAvailableTime();
+      return { shouldWait: true, waitTime: nextAvailableTime || 5000 };
+    }
+
+    this.lastRequestTime = now;
+    return { shouldWait: false };
+  }
+
+  /**
+   * Get optimal interval between requests based on number of API keys
+   */
+  getOptimalInterval(): number {
+    const keyCount = this.apiKeys.size;
+    if (keyCount === 0) {
+      return this.MIN_REQUEST_INTERVAL_MS;
+    }
+    // Distribute requests evenly across keys
+    return Math.max(this.MIN_REQUEST_INTERVAL_MS, Math.floor(1000 / keyCount));
   }
 }
 
