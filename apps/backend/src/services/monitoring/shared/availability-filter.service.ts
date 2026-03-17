@@ -8,6 +8,7 @@
  * NOTE: Uses regular local dates (NOT Moscow timezone) - same as deprecated project
  */
 
+import { sharedBanService } from './ban.service';
 import type {
   SchedulableItem,
   ISharedAvailabilityFilterService,
@@ -256,6 +257,17 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
 
       // Check date match and coefficient limit
       if (!dateMatches || d.coefficient > item.maxCoefficient) return false;
+
+      // Check if this coefficient is banned for this warehouse/date/supply
+      const isCoefficientBanned = sharedBanService.isBanned({
+        warehouseId: item.warehouseId,
+        date: effectiveDate,
+        supplyType: item.supplyType,
+        coefficient: d.coefficient,
+      });
+      if (isCoefficientBanned) {
+        return false;
+      }
 
       return true;
     });
