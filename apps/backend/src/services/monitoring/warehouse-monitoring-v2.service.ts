@@ -14,6 +14,7 @@ import { freeWarehouseService } from '../free-warehouse.service';
 import { closeApiService } from '../close-api.service';
 import { fakeDataDetectionService } from './fake-data-detection.service';
 import { supplyTriggerMonitoringService } from './supply-trigger-monitoring.service';
+import { autobookingMonitoringService } from './autobooking/autobooking-monitoring.service';
 import { isAutobookingProcessingActive } from '../autobooking-control.service';
 import type {
   MonitoringUser,
@@ -709,22 +710,14 @@ export class WarehouseMonitoringV2Service {
 
   /**
    * Process autobookings
-   * TODO: Migrate autobookingMonitoringService from deprecated project
-   * Source: /Users/muhammad/Documents/wb/server/services/monitoring/autobookingMonitoring/
-   * Required files:
-   *   - autobookingMonitoring.service.ts
-   *   - autobookingExecutor.service.ts
-   *   - autobookingNotification.service.ts
-   *   - autobookingOrderOptimization.service.ts
-   *   - autobookingSupplyIdCache.service.ts
+   * Phase 5: Autobooking Core - Now implemented
    */
   private async processAutobookings(
-    _monitoringUsers: MonitoringUser[],
-    _availabilities: WarehouseAvailability[]
+    monitoringUsers: MonitoringUser[],
+    availabilities: WarehouseAvailability[]
   ): Promise<void> {
-    logger.warn('[WarehouseMonitoringV2] Autobooking processing skipped - service not yet migrated');
-    // TODO: Import and call autobookingMonitoringService once migrated
-    // await autobookingMonitoringService.processAvailabilities(monitoringUsers, availabilities);
+    logger.info('[WarehouseMonitoringV2] Processing autobookings');
+    await autobookingMonitoringService.processAvailabilities(monitoringUsers, availabilities);
   }
 }
 
