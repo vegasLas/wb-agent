@@ -40,6 +40,9 @@ export class SupplyTriggerMonitoringService {
       // Skip if trigger is not relevant
       if (trigger.status !== 'RELEVANT') continue;
 
+      // Check if enough time has passed since last notification (rate limiting)
+      if (!this.shouldNotifyTrigger(trigger)) continue;
+
       const matchingAvailabilities = this.filterMatchingAvailabilities(
         trigger,
         availabilities
@@ -55,6 +58,21 @@ export class SupplyTriggerMonitoringService {
         await this.sendNotification(user.chatId as string, matchingAvailabilities);
       }
     }
+  }
+
+  /**
+   * Check if trigger should notify based on checkInterval
+   * Implements rate limiting to prevent notification spam
+   */
+  private shouldNotifyTrigger(trigger: { 
+    lastNotificationAt: Date | null; 
+    checkInterval: number;
+  }): boolean {
+    return (
+      !trigger.lastNotificationAt ||
+      Date.now() - trigger.lastNotificationAt.getTime() >=
+        trigger.checkInterval * 60 * 1000
+    );
   }
 
   /**

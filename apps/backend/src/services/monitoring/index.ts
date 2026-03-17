@@ -25,6 +25,11 @@ export {
   supplyTriggerMonitoringService,
 } from './supply-trigger-monitoring.service';
 
+export {
+  TriggerDateManagerService,
+  triggerDateManagerService,
+} from './trigger-date-manager.service';
+
 // Shared services
 export * from './shared';
 
