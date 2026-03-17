@@ -170,6 +170,8 @@ export interface CategorizedError {
   type: 'date_unavailable' | 'too_active' | 'critical' | 'non_critical' | 'order_not_exist';
   shouldStop: boolean;
   duration?: number;
+  shouldBlacklistUser?: boolean;
+  shouldClearCache?: boolean;
 }
 
 export interface ISharedErrorHandlingService {
@@ -310,30 +312,49 @@ export interface WarehouseDateTask<TBooking, TUser> {
   availability: WarehouseAvailability;
 }
 
+export interface TaskOrganizerAvailability {
+  warehouseId: number;
+  warehouseName: string;
+  boxTypeID: 2 | 5 | 6;
+  availableDates: Array<{ date: string; coefficient: number }>;
+}
+
 export interface ISharedTaskOrganizerService {
-  groupTasksByProxy<T extends { user: { proxy?: TaskOrganizerUser['proxy'] } }>(
+  groupTasksByProxy<T extends { user: { proxy?: any } }>(
     warehouseDateTasksMap: Map<string, T[]>
   ): Map<string, T[][]>;
-  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: TaskOrganizerUser['proxy'] } }>(
+  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: any } }>(
     tasks: T[]
   ): T[];
-  getProxyString<T extends { user: { proxy?: TaskOrganizerUser['proxy'] } }>(task: T): string;
+  getProxyString<T extends { user: { proxy?: any } }>(task: T): string;
   organizeBookingsByWarehouseDate<
     TBooking extends TaskOrganizerBookingItem,
     TUser extends TaskOrganizerUser
   >(
     monitoringUsers: Array<TUser & { autobookings: TBooking[] }>,
-    availabilities: WarehouseAvailability[],
-    availabilityFilterFn: (booking: TBooking, availabilities: WarehouseAvailability[]) => FilteredMatch[]
-  ): Map<string, WarehouseDateTask<TBooking, TUser>[]>;
+    availabilities: TaskOrganizerAvailability[]
+  ): Map<string, Array<{
+    booking?: TBooking;
+    reschedule?: TBooking;
+    user: TUser;
+    warehouseName: string;
+    coefficient: number;
+    availability: TaskOrganizerAvailability;
+  }>[]>;
   organizeReschedulesByWarehouseDate<
     TReschedule extends TaskOrganizerBookingItem & { status: string },
     TUser extends TaskOrganizerUser
   >(
     monitoringUsers: Array<TUser & { reschedules?: TReschedule[] }>,
-    availabilities: WarehouseAvailability[],
-    availabilityFilterFn: (reschedule: TReschedule, availabilities: WarehouseAvailability[]) => FilteredMatch[]
-  ): Map<string, WarehouseDateTask<TReschedule, TUser>[]>;
+    availabilities: TaskOrganizerAvailability[]
+  ): Map<string, Array<{
+    booking?: TReschedule;
+    reschedule?: TReschedule;
+    user: TUser;
+    warehouseName: string;
+    coefficient: number;
+    availability: TaskOrganizerAvailability;
+  }>[]>;
 }
 
 // ============== Ban Service ==============
