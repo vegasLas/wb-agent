@@ -33,6 +33,37 @@ export {
 // Shared services
 export * from './shared';
 
+// Autobooking services (Phase 5)
+export {
+  autobookingMonitoringService,
+  AutobookingMonitoringService,
+} from './autobooking/autobooking-monitoring.service';
+
+export {
+  autobookingExecutorService,
+  AutobookingExecutorService,
+} from './autobooking/autobooking-executor.service';
+
+export {
+  autobookingSupplyIdCacheService,
+  AutobookingSupplyIdCacheService,
+} from './autobooking/autobooking-supply-id-cache.service';
+
+export {
+  autobookingNotificationService,
+  AutobookingNotificationService,
+} from './autobooking/autobooking-notification.service';
+
+// Autobooking types
+export type {
+  BookingTask,
+  SuccessfulBooking,
+  IAutobookingMonitoringService,
+  IAutobookingExecutorService,
+  IAutobookingSupplyIdCacheService,
+  IAutobookingNotificationService,
+} from './autobooking/autobooking.interfaces';
+
 // Interfaces
 export type {
   WarehouseAvailability,
