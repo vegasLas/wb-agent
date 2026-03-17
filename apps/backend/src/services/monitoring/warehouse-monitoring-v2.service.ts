@@ -708,15 +708,22 @@ export class WarehouseMonitoringV2Service {
   }
 
   /**
-   * Process autobookings (placeholder for Phase 5)
+   * Process autobookings
+   * TODO: Migrate autobookingMonitoringService from deprecated project
+   * Source: /Users/muhammad/Documents/wb/server/services/monitoring/autobookingMonitoring/
+   * Required files:
+   *   - autobookingMonitoring.service.ts
+   *   - autobookingExecutor.service.ts
+   *   - autobookingNotification.service.ts
+   *   - autobookingOrderOptimization.service.ts
+   *   - autobookingSupplyIdCache.service.ts
    */
   private async processAutobookings(
     _monitoringUsers: MonitoringUser[],
     _availabilities: WarehouseAvailability[]
   ): Promise<void> {
-    // This will be implemented in Phase 5: Autobooking Core
-    logger.info('[WarehouseMonitoringV2] Autobooking processing - placeholder for Phase 5');
-    // TODO: Implement in Phase 5
+    logger.warn('[WarehouseMonitoringV2] Autobooking processing skipped - service not yet migrated');
+    // TODO: Import and call autobookingMonitoringService once migrated
     // await autobookingMonitoringService.processAvailabilities(monitoringUsers, availabilities);
   }
 }
