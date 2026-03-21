@@ -23,19 +23,9 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
    * Checks if a cached supply ID is still valid (exists and not older than 24 hours)
    */
   isSupplyIdValid(booking: { supplyId: string | null; supplyIdUpdatedAt: Date | null }): boolean {
-    if (!booking.supplyId || !booking.supplyIdUpdatedAt) {
-      return false;
-    }
-
-    const now = Date.now();
-    const updatedAt = new Date(booking.supplyIdUpdatedAt).getTime();
-    const isExpired = now - updatedAt > SUPPLY_ID_CACHE_DURATION_MS;
-
-    logger.debug(
-      `[SupplyIdCache] Supply ID ${booking.supplyId} is ${isExpired ? 'expired' : 'valid'}`
-    );
-
-    return !isExpired;
+    if (!booking.supplyId || !booking.supplyIdUpdatedAt) return false;
+    const age = Date.now() - new Date(booking.supplyIdUpdatedAt).getTime();
+    return age <= SUPPLY_ID_CACHE_DURATION_MS;
   }
 
   /**
@@ -60,18 +50,13 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
       isBoxOnPallet,
     } = params;
 
-    // Check if we have a valid cached supply ID
+    // Use cached supply ID if valid
     if (this.isSupplyIdValid(booking)) {
-      const preorderId = parseInt(booking.supplyId as string);
-      logger.info(
-        `[SupplyIdCache] Using cached supply ID ${preorderId} for booking ${booking.id}`
-      );
-      return preorderId;
+      return parseInt(booking.supplyId as string);
     }
 
-    // Clear expired supply ID if it exists
+    // Clear expired supply ID if exists
     if (booking.supplyId) {
-      logger.info(`[SupplyIdCache] Clearing expired supply ID: ${booking.supplyId}`);
       await this.clearExpiredSupplyId(booking, account, user, parseInt(booking.supplyId));
     }
 
@@ -88,7 +73,6 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
 
     const preorderId = supply.result?.ids[0]?.Id;
     if (preorderId) {
-      logger.info(`[SupplyIdCache] Caching new supply ID ${preorderId} for booking ${booking.id}`);
       await this.cacheSupplyId(booking.id, preorderId.toString());
     }
 
@@ -113,7 +97,6 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
    */
   async cacheSupplyId(bookingId: string, supplyId: string): Promise<void> {
     try {
-      logger.debug(`[SupplyIdCache] Caching supply ID ${supplyId} for booking ${bookingId}`);
       await prisma.autobooking.update({
         where: { id: bookingId },
         data: {
@@ -134,7 +117,6 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
    */
   async clearSupplyIdFromCache(bookingId: string): Promise<void> {
     try {
-      logger.debug(`[SupplyIdCache] Clearing supply ID cache for booking ${bookingId}`);
       await prisma.autobooking.update({
         where: { id: bookingId },
         data: {
@@ -175,7 +157,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
     // Box type mask mapping using constants
     const BOX_TYPE_MASK_MAPPINGS: Record<string, number> = {
       [SUPPLY_TYPES.BOX]: 2,
-      [SUPPLY_TYPES.MONOPALLETE]: 32,
+      [SUPPLY_TYPES.MONOPALLETE]: 5,
       [SUPPLY_TYPES.SUPERSAFE]: 6,
     };
     const boxTypeMask = BOX_TYPE_MASK_MAPPINGS[booking.supplyType] || 4;
@@ -190,7 +172,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
       rpc_order: randomNumber,
       params: {
         boxTypeID: boxTypeMask,
-        isBoxOnPallet,
+        isBoxOnPallet: false,
         draftID: booking.draftId,
         warehouseId: booking.warehouseId,
         transitWarehouseId: booking.transitWarehouseId || null,
@@ -209,7 +191,6 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
     preorderId: number
   ): Promise<void> {
     try {
-      logger.info(`[SupplyIdCache] Deleting preorder: ${preorderId}`);
       await supplyService.deletePreorder({
         accountId: account.id,
         supplierId: booking.supplierId,
@@ -217,7 +198,6 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
         userAgent: user.userAgent,
         proxy: user.proxy,
       });
-      logger.info(`[SupplyIdCache] Successfully deleted preorder ${preorderId}`);
     } catch (deleteError) {
       await this.handlePreorderDeletionError(
         deleteError as Error,
@@ -236,9 +216,6 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
     preorderId: number
   ): Promise<void> {
     if (error.message?.includes('Предзаказ не существует')) {
-      logger.info(
-        `[SupplyIdCache] Preorder ${preorderId} doesn't exist, clearing from cache`
-      );
       await this.clearSupplyIdFromCache(booking.id);
     } else {
       logger.warn(`[SupplyIdCache] Failed to delete preorder ${preorderId}:`, error.message);

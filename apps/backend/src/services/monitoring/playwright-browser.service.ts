@@ -12,11 +12,16 @@ import {
   browserFingerprintService,
   type Fingerprint,
 } from './browser-fingerprint.service';
-import { decodeCookies, getCookiesFromAccount, saveCookiesToAccount } from '../../utils/cookies';
+import {
+  decodeCookies,
+  getCookiesFromAccount,
+  saveCookiesToAccount,
+} from '../../utils/cookies';
 import {
   getLocalStorageFromAccount,
   mergeLocalStorageToAccount,
 } from '../../utils/localStorage';
+import { logger } from '../../utils/logger';
 
 // Browser error codes
 export enum BrowserErrorCode {
@@ -79,7 +84,7 @@ export class PlaywrightBrowserService {
   private createError(
     code: BrowserErrorCode,
     message: string,
-    originalError?: Error
+    originalError?: Error,
   ): Error {
     // Add unavailable date text to all errors except login-related ones
     const isLoginError = code === BrowserErrorCode.LOGIN_FORM_DETECTED;
@@ -168,7 +173,7 @@ export class PlaywrightBrowserService {
   async initialize(
     proxy?: Proxy,
     userAgent?: string,
-    fingerprint?: Fingerprint
+    fingerprint?: Fingerprint,
   ): Promise<void> {
     try {
       const options = PlaywrightBrowserService.getPlaywrightOptions(proxy);
@@ -180,7 +185,7 @@ export class PlaywrightBrowserService {
       throw this.createError(
         BrowserErrorCode.BROWSER_INIT_FAILED,
         `Failed to initialize browser: ${err.message}`,
-        err
+        err,
       );
     }
   }
@@ -190,7 +195,7 @@ export class PlaywrightBrowserService {
       if (!this.browser) {
         throw this.createError(
           BrowserErrorCode.BROWSER_INIT_FAILED,
-          'Browser not initialized. Call initialize() first.'
+          'Browser not initialized. Call initialize() first.',
         );
       }
 
@@ -230,7 +235,7 @@ export class PlaywrightBrowserService {
       throw this.createError(
         BrowserErrorCode.CONTEXT_CREATION_FAILED,
         `Failed to create context: ${err.message}`,
-        err
+        err,
       );
     }
   }
@@ -240,7 +245,7 @@ export class PlaywrightBrowserService {
       if (!this.context) {
         throw this.createError(
           BrowserErrorCode.CONTEXT_CREATION_FAILED,
-          'Context not created. Call createContext() first.'
+          'Context not created. Call createContext() first.',
         );
       }
 
@@ -266,19 +271,56 @@ export class PlaywrightBrowserService {
       throw this.createError(
         BrowserErrorCode.PAGE_CREATION_FAILED,
         `Failed to create page: ${err.message}`,
-        err
+        err,
+      );
+    }
+  }
+
+  /**
+   * Sets the monopallet count in the amountPallet input field
+   */
+  async setMonopalletCount(count: number): Promise<void> {
+    try {
+      if (!this.page) {
+        throw new Error('Page not created.');
+      }
+
+      const amountInput = this.page
+        .locator('input#amountPallet[data-testid="input"]')
+        .first();
+      await amountInput.waitFor({ state: 'visible', timeout: 5000 });
+
+      // Clear existing value and type the new value
+      await amountInput.fill(String(count));
+
+      // Trigger input/change events to ensure React picks up the value
+      await amountInput.evaluate((el, value) => {
+        const input = el as HTMLInputElement;
+        input.value = String(value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }, count);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(
+        `[Navigator] Failed to set monopallet count: ${err.message}`,
+      );
+      throw this.createError(
+        BrowserErrorCode.DATE_SELECTION_FAILED,
+        `Failed to set monopallet count: ${err.message}`,
+        err,
       );
     }
   }
 
   async navigateToSupplyManagement(
-    options: BrowserServiceOptions
+    options: BrowserServiceOptions,
   ): Promise<void> {
     try {
       if (!this.page) {
         throw this.createError(
           BrowserErrorCode.PAGE_CREATION_FAILED,
-          'Page not created. Call createPage() first.'
+          'Page not created. Call createPage() first.',
         );
       }
 
@@ -294,13 +336,13 @@ export class PlaywrightBrowserService {
           throw this.createError(
             BrowserErrorCode.NAVIGATION_TIMEOUT,
             `Navigation timeout while loading URL: ${url}`,
-            err
+            err,
           );
         }
         throw this.createError(
           BrowserErrorCode.NAVIGATION_FAILED,
           `Failed to navigate to supply management page: ${err.message}`,
-          err
+          err,
         );
       }
 
@@ -309,7 +351,7 @@ export class PlaywrightBrowserService {
         await Promise.race([
           this.page.waitForSelector(
             '[class*="Calendar-cell__cell-content__"]',
-            { timeout: 15000 }
+            { timeout: 15000 },
           ),
           (async () => {
             if (!this.page) return;
@@ -321,12 +363,12 @@ export class PlaywrightBrowserService {
               const notificationsSummary = errorNotifications
                 .map(
                   (n) =>
-                    `"${n.title}"${n.description ? ` - ${n.description}` : ''}`
+                    `"${n.title}"${n.description ? ` - ${n.description}` : ''}`,
                 )
                 .join('; ');
               throw this.createError(
                 BrowserErrorCode.PAGE_ERROR_NOTIFICATION,
-                `Page error notifications detected: ${notificationsSummary}`
+                `Page error notifications detected: ${notificationsSummary}`,
               );
             }
           })(),
@@ -339,7 +381,7 @@ export class PlaywrightBrowserService {
         throw this.createError(
           BrowserErrorCode.CALENDAR_LOAD_TIMEOUT,
           `Timeout waiting for calendar to load: ${err.message}`,
-          err
+          err,
         );
       }
     } catch (error) {
@@ -348,21 +390,18 @@ export class PlaywrightBrowserService {
       }
       throw this.createError(
         BrowserErrorCode.UNKNOWN_ERROR,
-        `Unknown error in navigateToSupplyManagement: ${error instanceof Error ? error.message : String(error)}`
+        `Unknown error in navigateToSupplyManagement: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
-  async selectDateByDateString(
-    dateString: string,
-    supplyType?: string,
-    monopalletCount?: number | null
-  ): Promise<void> {
+  async selectDateByDateString(dateString: string): Promise<void> {
     try {
       if (!this.page) {
+        logger.error(`[Navigator] Page not created`);
         throw this.createError(
           BrowserErrorCode.PAGE_CREATION_FAILED,
-          'Page not created.'
+          'Page not created.',
         );
       }
 
@@ -373,98 +412,138 @@ export class PlaywrightBrowserService {
           .all();
 
         if (dateElements.length === 0) {
+          logger.error(
+            `[Navigator] No date elements found for "${dateString}"`,
+          );
           throw this.createError(
             BrowserErrorCode.DATE_ELEMENT_NOT_FOUND,
-            `Date element with text "${dateString}" not found`
+            `Date element with text "${dateString}" not found`,
           );
         }
 
-        // Check if the parent calendar cell is disabled
-        const dateElement = dateElements[0];
-        const parentCell = dateElement.locator(
-          'xpath=ancestor::td[@data-testid]'
-        );
-        const classAttribute = await parentCell.getAttribute('class');
+        let dateSelected = false;
 
-        if (
-          classAttribute &&
-          classAttribute.includes('Calendar-cell--is-disabled__')
-        ) {
-          throw this.createError(
-            BrowserErrorCode.DATE_ELEMENT_NOT_FOUND,
-            `Date "${dateString}" is disabled and cannot be selected`
+        // Iterate through all date elements to find and select the correct one
+        for (let i = 0; i < dateElements.length; i++) {
+          const dateElement = dateElements[i];
+
+          const parentCell = dateElement.locator(
+            'xpath=ancestor::td[@data-testid]',
           );
-        }
+          const classAttribute = await parentCell.getAttribute('class');
 
-        // Hover and click choose date button
-        await dateElement.hover();
-        const chooseDateButton = this.page
-          .locator('[data-testid^="calendar-cell-choose-date-"]')
-          .first();
-        await chooseDateButton.waitFor({ state: 'visible', timeout: 5000 });
-        await chooseDateButton.click({ force: true });
-
-        // Fill monopallet count for MONOPALLETE type
-        if (supplyType === 'MONOPALLETE' && monopalletCount) {
-          try {
-            const amountPalletInput = this.page.locator('input#amountPallet');
-            await amountPalletInput.waitFor({ state: 'visible', timeout: 5000 });
-
-            // Direct DOM manipulation to trigger JS event handlers
-            const inputHandle = await amountPalletInput.elementHandle();
-            if (inputHandle) {
-              await inputHandle.evaluate((el, value) => {
-                const input = el as HTMLInputElement;
-                input.value = String(value);
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-                input.dispatchEvent(new Event('blur', { bubbles: true }));
-              }, monopalletCount);
-              await inputHandle.dispose();
-            }
-
-            // Wait for JavaScript to process and enable the button
-            await new Promise((r) => setTimeout(r, 300));
-          } catch (error) {
-            // Non-critical - continue
+          // Skip disabled cells
+          if (
+            classAttribute &&
+            classAttribute.includes('Calendar-cell--is-disabled__')
+          ) {
+            continue;
           }
+
+          // Hover on the parent td element to reveal choose date button
+          await parentCell.hover();
+
+          // Get the choose date button and click it
+          try {
+            const chooseDateButton = this.page
+              .locator('[data-testid^="calendar-cell-choose-date-"]')
+              .first();
+            await chooseDateButton.waitFor({ state: 'visible', timeout: 5000 });
+
+            // Use evaluate to click without moving mouse (keeps hover active)
+            await chooseDateButton.evaluate((el) => {
+              (el as HTMLElement).click();
+            });
+          } catch (error) {
+            continue;
+          }
+
+          // Check if "Отмена" button appears - this confirms the date was selected successfully
+          try {
+            const cancelButton = this.page
+              .locator('[data-testid^="calendar-cell-cancel-date-"]')
+              .first();
+            await cancelButton.waitFor({ state: 'visible', timeout: 1000 });
+
+            dateSelected = true;
+            break;
+          } catch {}
+        }
+
+        if (!dateSelected) {
+          logger.error(
+            `[Navigator] Could not select any date element for "${dateString}"`,
+          );
+          throw this.createError(
+            BrowserErrorCode.DATE_ELEMENT_NOT_FOUND,
+            `Could not select any date element for "${dateString}"`,
+          );
         }
       } catch (error) {
         if ((error as any).code === BrowserErrorCode.DATE_ELEMENT_NOT_FOUND) {
           throw error;
         }
         const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`[Navigator] Date selection failed: ${err.message}`);
         throw this.createError(
           BrowserErrorCode.DATE_SELECTION_FAILED,
           `Failed to select date: ${err.message}`,
-          err
+          err,
         );
       }
 
       try {
         // Click the next button to proceed
         const nextButton = this.page.locator(
-          '[data-testid="steps-next-button-primary"]'
+          '[data-testid="steps-next-button-primary"]',
         );
         await nextButton.waitFor({ state: 'visible', timeout: 5000 });
 
-        // Wait for button to be enabled (React needs time to re-render after input)
-        await nextButton.waitFor({ state: 'enabled', timeout: 10000 });
+        // Wait for disabled attribute to be removed (React needs time to re-render after input)
+        let attempts = 0;
+        let isEnabled = false;
+        let lastError: string | null = null;
+
+        while (attempts < 100) {
+          try {
+            // Check if button is enabled
+            const hasDisabled = await nextButton.evaluate((el) =>
+              el.hasAttribute('disabled'),
+            );
+
+            if (!hasDisabled) {
+              isEnabled = true;
+              break;
+            }
+          } catch (err) {
+            lastError = err instanceof Error ? err.message : String(err);
+          }
+          await new Promise((r) => setTimeout(r, 100));
+          attempts++;
+        }
+
+        if (!isEnabled) {
+          logger.error(
+            `[Navigator] Button still disabled after 10s. Last error: ${lastError || 'none'}`,
+          );
+          throw new Error('Next button is still disabled after 10s');
+        }
 
         await nextButton.click();
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`[Navigator] Next button error: ${err.message}`);
         if (err.message.includes('not found')) {
           throw this.createError(
             BrowserErrorCode.NEXT_BUTTON_NOT_FOUND,
             `Next button not found: ${err.message}`,
-            err
+            err,
           );
         }
         throw this.createError(
           BrowserErrorCode.NEXT_BUTTON_CLICK_FAILED,
           `Failed to click next button: ${err.message}`,
-          err
+          err,
         );
       }
 
@@ -473,7 +552,7 @@ export class PlaywrightBrowserService {
         await Promise.race([
           this.page!.waitForSelector(
             '[class*="Packaging-view__header-container__"]',
-            { timeout: 30000 }
+            { timeout: 30000 },
           ),
           (async () => {
             await this.page!.waitForSelector('.Notification-modal--error', {
@@ -484,12 +563,15 @@ export class PlaywrightBrowserService {
               const summary = errorNotifications
                 .map(
                   (n) =>
-                    `"${n.title}"${n.description ? ` - ${n.description}` : ''}`
+                    `"${n.title}"${n.description ? ` - ${n.description}` : ''}`,
                 )
                 .join('; ');
+              logger.error(
+                `[Navigator] Error notification detected: ${summary}`,
+              );
               throw this.createError(
                 BrowserErrorCode.PAGE_ERROR_NOTIFICATION,
-                `Page error: ${summary}`
+                `Page error: ${summary}`,
               );
             }
           })(),
@@ -498,17 +580,21 @@ export class PlaywrightBrowserService {
         if ((error as any).code === BrowserErrorCode.PAGE_ERROR_NOTIFICATION)
           throw error;
         const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`[Navigator] Packaging view timeout: ${err.message}`);
         throw this.createError(
           BrowserErrorCode.PACKAGING_VIEW_TIMEOUT,
           `Timeout: ${err.message}`,
-          err
+          err,
         );
       }
     } catch (error) {
       if ((error as any).code) throw error;
+      logger.error(
+        `[Navigator] Unknown error in selectDateByDateString: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw this.createError(
         BrowserErrorCode.UNKNOWN_ERROR,
-        `Unknown error in selectDateByDateString: ${error instanceof Error ? error.message : String(error)}`
+        `Unknown error in selectDateByDateString: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -533,7 +619,7 @@ export class PlaywrightBrowserService {
   }
 
   private extractRelevantStorage(
-    storage: Record<string, string>
+    storage: Record<string, string>,
   ): Record<string, string> {
     const relevant: Record<string, string> = {};
     const relevantKeyPatterns = ['access-token', 'successful_login'];
@@ -562,7 +648,7 @@ export class PlaywrightBrowserService {
 
             // Replace/update relevant cookie keys in existing cookies
             const mergedCookies = existingCookies.filter(
-              (c) => !relevantCookies.some((rc) => rc.name === c.name)
+              (c) => !relevantCookies.some((rc) => rc.name === c.name),
             );
             mergedCookies.push(...relevantCookies);
 
@@ -587,7 +673,7 @@ export class PlaywrightBrowserService {
             this.extractRelevantStorage(currentLocalStorage);
           if (Object.keys(relevantStorage).length > 0) {
             const existingStorage = await getLocalStorageFromAccount(
-              this.accountId
+              this.accountId,
             );
 
             // Replace/update relevant storage keys in existing storage
@@ -656,7 +742,7 @@ export class PlaywrightBrowserService {
    */
   async decodeCookiesFromString(
     cookiesString: string,
-    supplierId: string
+    supplierId: string,
   ): Promise<Cookie[]> {
     const cookies = decodeCookies(cookiesString);
 
@@ -673,7 +759,7 @@ export class PlaywrightBrowserService {
   }
 
   /**
-   * Formats date to Russian calendar format (e.g., "4 декабря, чт")
+   * Formats date to Russian calendar format (e.g., "4 декабря")
    */
   formatDateToRussian(date: Date): string {
     const months = [
@@ -690,17 +776,15 @@ export class PlaywrightBrowserService {
       'ноября',
       'декабря',
     ];
-    const days = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 
     const day = date.getDate();
     const month = months[date.getMonth()];
-    const dayOfWeek = days[date.getDay()];
 
-    return `${day} ${month}, ${dayOfWeek}`;
+    return `${day} ${month}`;
   }
 
   /**
-   * Formats date to English calendar format (e.g., "4 December, We")
+   * Formats date to English calendar format (e.g., "4 December")
    */
   formatDateToEnglish(date: Date): string {
     const months = [
@@ -717,13 +801,11 @@ export class PlaywrightBrowserService {
       'November',
       'December',
     ];
-    const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
     const day = date.getDate();
     const month = months[date.getMonth()];
-    const dayOfWeek = days[date.getDay()];
 
-    return `${day} ${month}, ${dayOfWeek}`;
+    return `${day} ${month}`;
   }
 
   /**
@@ -776,12 +858,16 @@ export class PlaywrightBrowserService {
 
       const cookiesFromString = await this.decodeCookiesFromString(
         options.cookiesString,
-        options.supplierId
+        options.supplierId,
       );
       const russianDateString = this.formatDateToRussian(options.effectiveDate);
       const englishDateString = this.formatDateToEnglish(options.effectiveDate);
 
-      await this.initialize(options.proxy, options.userAgent, options.fingerprint);
+      await this.initialize(
+        options.proxy,
+        options.userAgent,
+        options.fingerprint,
+      );
       await this.createContext(cookiesFromString);
       await this.createPage();
 
@@ -802,26 +888,30 @@ export class PlaywrightBrowserService {
           dateString: russianDateString,
         });
 
+        // Set monopallet count before navigating (if MONOPALLETE)
+        if (
+          options.supplyType === 'MONOPALLETE' &&
+          options.monopalletCount &&
+          options.monopalletCount > 0
+        ) {
+          await this.setMonopalletCount(options.monopalletCount);
+        }
+
         try {
-          await this.selectDateByDateString(
-            russianDateString,
-            options.supplyType,
-            options.monopalletCount
-          );
-        } catch {
-          await this.selectDateByDateString(
-            englishDateString,
-            options.supplyType,
-            options.monopalletCount
-          );
+          await this.selectDateByDateString(russianDateString);
+        } catch (err) {
+          await this.selectDateByDateString(englishDateString);
         }
       }
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      logger.error(`[Navigator] Error in selectDateAndNavigate: ${errMsg}`);
+
       // Check if LoginFormView is present (indicating deprecated credentials)
       if (await this.isLoginFormDetected()) {
         throw this.createError(
           BrowserErrorCode.LOGIN_FORM_DETECTED,
-          'Cookies and localStorage are deprecated - login form detected'
+          'Cookies and localStorage are deprecated - login form detected',
         );
       }
 
@@ -832,20 +922,4 @@ export class PlaywrightBrowserService {
   }
 }
 
-// Singleton instance
-let playwrightBrowserServiceInstance: PlaywrightBrowserService | null = null;
-
-export const getPlaywrightBrowserService = (): PlaywrightBrowserService => {
-  if (!playwrightBrowserServiceInstance) {
-    playwrightBrowserServiceInstance = new PlaywrightBrowserService();
-  }
-  return playwrightBrowserServiceInstance;
-};
-
-export const resetPlaywrightBrowserService = (): void => {
-  playwrightBrowserServiceInstance = null;
-};
-
-// Default export for convenience
 export const playwrightBrowserService = new PlaywrightBrowserService();
-export default playwrightBrowserService;
