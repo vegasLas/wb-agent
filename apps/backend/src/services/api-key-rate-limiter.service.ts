@@ -1,230 +1,332 @@
 import { prisma } from '../config/database';
+import { safeDecrypt } from '../utils/encryption';
 import { logger } from '../utils/logger';
 
-interface ApiKeyInfo {
+interface ApiKeyUsage {
   userId: number;
   apiKey: string;
-  lastUsed: Date;
-  requestCount: number;
-  isBlocked: boolean;
-  blockedUntil?: Date;
+  requestTimes: number[];
+  lastUsed: number;
+  blockedUntil?: number;
 }
 
 /**
  * Service for managing API key rotation and rate limiting
  * Uses singleton pattern to maintain state across requests
+ * 
+ * Rate limiting rules:
+ * - Max 6 requests per minute per API key
+ * - Round-robin selection for load distribution
+ * - Automatic cleanup of old request times
+ * - Temporary blocking for rate limit violations
  */
 export class ApiKeyRateLimiterService {
-  private apiKeys: Map<number, ApiKeyInfo> = new Map();
-  private lastLoadTime: Date | null = null;
-  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-  private readonly MIN_REQUEST_INTERVAL_MS = 100; // Minimum 100ms between requests
-  private lastRequestTime = 0;
+  private static instance: ApiKeyRateLimiterService;
+  private apiKeyUsage = new Map<number, ApiKeyUsage>();
+  private readonly MAX_REQUESTS_PER_MINUTE = 6;
+  private readonly MINUTE_IN_MS = 60 * 1000;
+  private currentKeyIndex = 0;
 
-  /**
-   * Get next available API key using round-robin
-   */
-  async getAvailableApiKey(): Promise<{ userId: number; apiKey: string } | null> {
-    // Reload API keys if cache expired or not loaded
-    if (!this.lastLoadTime || Date.now() - this.lastLoadTime.getTime() > this.CACHE_TTL_MS) {
-      await this.loadApiKeys();
+  static getInstance(): ApiKeyRateLimiterService {
+    if (!this.instance) {
+      this.instance = new ApiKeyRateLimiterService();
     }
-
-    const now = new Date();
-
-    // Find first available (non-blocked) key
-    for (const [userId, keyInfo] of this.apiKeys) {
-      // Skip blocked keys
-      if (keyInfo.isBlocked && keyInfo.blockedUntil && keyInfo.blockedUntil > now) {
-        continue;
-      }
-
-      // Unblock if block period expired
-      if (keyInfo.isBlocked && keyInfo.blockedUntil && keyInfo.blockedUntil <= now) {
-        keyInfo.isBlocked = false;
-        keyInfo.blockedUntil = undefined;
-        keyInfo.requestCount = 0;
-        logger.info(`Unblocked API key for user ${userId}`);
-      }
-
-      return { userId, apiKey: keyInfo.apiKey };
-    }
-
-    return null;
+    return this.instance;
   }
 
   /**
-   * Load all active API keys from database
+   * Load active API keys from database
    */
-  private async loadApiKeys(): Promise<void> {
+  private async loadActiveApiKeys(): Promise<ApiKeyUsage[]> {
     try {
-      const apiKeys = await prisma.supplierApiKey.findMany({
-        where: { isActive: true },
-      });
+      const technicalModeUserIds = process.env.TECHNICAL_MODE_USER_IDS;
 
-      // Preserve existing key info (block status, etc.) while reloading
-      const existingKeys = new Map(this.apiKeys);
-      this.apiKeys.clear();
+      let whereCondition: any = { isActive: true };
 
-      for (const key of apiKeys) {
-        const existing = existingKeys.get(key.userId);
-        this.apiKeys.set(key.userId, {
-          userId: key.userId,
-          apiKey: key.apiKey,
-          lastUsed: existing?.lastUsed || new Date(),
-          requestCount: existing?.requestCount || 0,
-          isBlocked: existing?.isBlocked || false,
-          blockedUntil: existing?.blockedUntil,
+      // In technical mode, only load specified users' API keys
+      if (technicalModeUserIds) {
+        logger.info(`Technical mode enabled for user IDs: ${technicalModeUserIds}`);
+        whereCondition = {
+          userId: {
+            in: technicalModeUserIds.split(',').map((id) => parseInt(id)),
+          },
+          isActive: true,
+        };
+      }
+
+      let apiKeys;
+      try {
+        apiKeys = await prisma.supplierApiKey.findMany({
+          where: whereCondition,
+          orderBy: { updatedAt: 'asc' },
+        });
+      } catch (error) {
+        // Fallback if isActive field doesn't exist
+        const fallbackWhere = technicalModeUserIds
+          ? {
+              userId: {
+                in: technicalModeUserIds.split(',').map((id) => parseInt(id)),
+              },
+            }
+          : {};
+        apiKeys = await prisma.supplierApiKey.findMany({
+          where: fallbackWhere,
+          orderBy: { updatedAt: 'asc' },
         });
       }
 
-      this.lastLoadTime = new Date();
-      logger.info(`Loaded ${apiKeys.length} API keys for rate limiting`);
+      return apiKeys
+        .map((key) => {
+          const decryptedKey = safeDecrypt(key.apiKey);
+          if (!decryptedKey) {
+            logger.warn(`Failed to decrypt API key for user ${key.userId}`);
+            return null;
+          }
+
+          return {
+            userId: key.userId,
+            apiKey: decryptedKey,
+            requestTimes: [],
+            lastUsed: 0,
+          };
+        })
+        .filter(Boolean) as ApiKeyUsage[];
     } catch (error) {
       logger.error('Error loading API keys:', error);
+      return [];
     }
   }
 
   /**
-   * Deactivate an API key permanently
+   * Clean old requests outside the time window
    */
-  async deactivateApiKey(userId: number): Promise<void> {
-    this.apiKeys.delete(userId);
-
-    try {
-      await prisma.supplierApiKey.update({
-        where: { userId },
-        data: { isActive: false },
-      });
-      logger.info(`Deactivated API key for user ${userId}`);
-    } catch (error) {
-      logger.error(`Error deactivating API key for user ${userId}:`, error);
-    }
+  private cleanOldRequests(usage: ApiKeyUsage): void {
+    const now = Date.now();
+    usage.requestTimes = usage.requestTimes.filter(
+      (time) => now - time < this.MINUTE_IN_MS
+    );
   }
 
   /**
-   * Temporarily block an API key for specified seconds
+   * Check if a request can be made with this key
    */
-  temporarilyBlockApiKey(userId: number, seconds: number): void {
-    const keyInfo = this.apiKeys.get(userId);
-    if (keyInfo) {
-      keyInfo.isBlocked = true;
-      keyInfo.blockedUntil = new Date(Date.now() + seconds * 1000);
-      logger.info(`Temporarily blocked API key for user ${userId} for ${seconds}s`);
+  private canMakeRequest(usage: ApiKeyUsage): boolean {
+    // Check if key is temporarily blocked
+    if (usage.blockedUntil && Date.now() < usage.blockedUntil) {
+      return false;
     }
+
+    this.cleanOldRequests(usage);
+    return usage.requestTimes.length < this.MAX_REQUESTS_PER_MINUTE;
   }
 
   /**
-   * Get next available time for any blocked key
-   * Returns milliseconds until next key is available, or null if no keys are blocked
+   * Record a request for tracking
    */
-  getNextAvailableTime(): number | null {
-    const now = new Date();
-    let earliestUnblock: Date | null = null;
+  private recordRequest(usage: ApiKeyUsage): void {
+    const now = Date.now();
+    usage.requestTimes.push(now);
+    usage.lastUsed = now;
+  }
 
-    for (const keyInfo of this.apiKeys.values()) {
-      if (keyInfo.isBlocked && keyInfo.blockedUntil) {
-        if (!earliestUnblock || keyInfo.blockedUntil < earliestUnblock) {
-          earliestUnblock = keyInfo.blockedUntil;
-        }
+  /**
+   * Get an available API key using round-robin
+   */
+  async getAvailableApiKey(): Promise<{
+    userId: number;
+    apiKey: string;
+  } | null> {
+    await this.loadAndUpdateKeys();
+
+    if (this.apiKeyUsage.size === 0) {
+      return null;
+    }
+
+    const usageArray = Array.from(this.apiKeyUsage.values());
+    const startIndex = this.currentKeyIndex;
+
+    for (let i = 0; i < usageArray.length; i++) {
+      const index = (startIndex + i) % usageArray.length;
+      const usage = usageArray[index];
+
+      if (this.canMakeRequest(usage)) {
+        this.recordRequest(usage);
+        this.currentKeyIndex = (index + 1) % usageArray.length;
+        return {
+          userId: usage.userId,
+          apiKey: usage.apiKey,
+        };
       }
-    }
-
-    if (earliestUnblock) {
-      return Math.max(0, earliestUnblock.getTime() - now.getTime());
     }
 
     return null;
   }
 
   /**
-   * Mark key as used (update lastUsed timestamp)
+   * Deactivate an API key
    */
-  markKeyAsUsed(userId: number): void {
-    const keyInfo = this.apiKeys.get(userId);
-    if (keyInfo) {
-      keyInfo.lastUsed = new Date();
-      keyInfo.requestCount++;
+  async deactivateApiKey(userId: number): Promise<void> {
+    try {
+      try {
+        await prisma.supplierApiKey.update({
+          where: { userId },
+          data: { isActive: false },
+        });
+      } catch (error) {
+        // Fallback to delete if isActive doesn't exist
+        await prisma.supplierApiKey.delete({
+          where: { userId },
+        });
+      }
+
+      this.apiKeyUsage.delete(userId);
+      logger.info(`Deactivated API key for user ${userId}`);
+    } catch (error) {
+      logger.error(`Failed to deactivate/delete API key for user ${userId}:`, error);
     }
   }
 
   /**
-   * Get stats for all API keys (for monitoring)
+   * Temporarily block an API key
    */
-  getKeyStats(): Array<{
+  temporarilyBlockApiKey(userId: number, durationHours: number = 72): void {
+    const usage = this.apiKeyUsage.get(userId);
+    if (usage) {
+      usage.blockedUntil = Date.now() + durationHours * 60 * 60 * 1000;
+      logger.info(`Temporarily blocked API key for user ${userId} for ${durationHours} hours`);
+    }
+  }
+
+  /**
+   * Get usage statistics
+   */
+  getUsageStats(): {
     userId: number;
-    isBlocked: boolean;
-    blockedUntil?: Date;
-    requestCount: number;
-    lastUsed: Date;
-  }> {
-    return Array.from(this.apiKeys.values()).map((key) => ({
-      userId: key.userId,
-      isBlocked: key.isBlocked,
-      blockedUntil: key.blockedUntil,
-      requestCount: key.requestCount,
-      lastUsed: key.lastUsed,
-    }));
+    requestsInLastMinute: number;
+    lastUsed: number;
+  }[] {
+    return Array.from(this.apiKeyUsage.values()).map((usage) => {
+      this.cleanOldRequests(usage);
+      return {
+        userId: usage.userId,
+        requestsInLastMinute: usage.requestTimes.length,
+        lastUsed: usage.lastUsed,
+      };
+    });
   }
 
   /**
-   * Force refresh API keys from database
+   * Get count of active keys
    */
-  async refreshKeys(): Promise<void> {
-    this.lastLoadTime = null;
-    await this.loadApiKeys();
+  getActiveKeyCount(): number {
+    return this.apiKeyUsage.size;
   }
 
   /**
-   * Check if we should wait before making the next request
-   * Used by free warehouse service to avoid rate limiting
+   * Get optimal interval between requests
+   */
+  getOptimalInterval(): number {
+    const activeKeyCount = this.apiKeyUsage.size;
+
+    if (activeKeyCount === 0) {
+      return 10000; // Default 10 seconds if no keys
+    }
+
+    // Calculate optimal interval: 60 seconds / (6 requests per key * number of keys)
+    const totalRequestsPerMinute = this.MAX_REQUESTS_PER_MINUTE * activeKeyCount;
+    const optimalIntervalMs = (60 * 1000) / totalRequestsPerMinute;
+
+    // Ensure minimum interval of 150ms
+    return Math.max(150, Math.ceil(optimalIntervalMs));
+  }
+
+  /**
+   * Check if should wait before next request
    */
   async shouldWaitBeforeNextRequest(): Promise<{
     shouldWait: boolean;
-    waitTime?: number;
+    waitTime: number;
   }> {
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
+    await this.loadAndUpdateKeys();
 
-    if (timeSinceLastRequest < this.MIN_REQUEST_INTERVAL_MS) {
-      const waitTime = this.MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest;
-      return { shouldWait: true, waitTime };
+    const availableKey = this.getAvailableApiKeySync();
+
+    if (availableKey) {
+      return { shouldWait: false, waitTime: 0 };
     }
 
-    // Reload API keys if cache expired
-    if (!this.lastLoadTime || Date.now() - this.lastLoadTime.getTime() > this.CACHE_TTL_MS) {
-      await this.loadApiKeys();
+    const nextAvailableTime = this.getNextAvailableTime();
+    if (nextAvailableTime === null) {
+      return { shouldWait: true, waitTime: 10000 };
     }
 
-    // Check if all keys are blocked
-    const nowDate = new Date();
-    const hasAvailableKey = Array.from(this.apiKeys.values()).some((keyInfo) => {
-      if (keyInfo.isBlocked && keyInfo.blockedUntil && keyInfo.blockedUntil > nowDate) {
-        return false;
-      }
-      return true;
-    });
-
-    if (!hasAvailableKey && this.apiKeys.size > 0) {
-      const nextAvailableTime = this.getNextAvailableTime();
-      return { shouldWait: true, waitTime: nextAvailableTime || 5000 };
-    }
-
-    this.lastRequestTime = now;
-    return { shouldWait: false };
+    return {
+      shouldWait: true,
+      waitTime: Math.max(150, nextAvailableTime),
+    };
   }
 
-  /**
-   * Get optimal interval between requests based on number of API keys
-   */
-  getOptimalInterval(): number {
-    const keyCount = this.apiKeys.size;
-    if (keyCount === 0) {
-      return this.MIN_REQUEST_INTERVAL_MS;
+  private getNextAvailableTime(): number | null {
+    const usageArray = Array.from(this.apiKeyUsage.values());
+
+    if (usageArray.length === 0) {
+      return null;
     }
-    // Distribute requests evenly across keys
-    return Math.max(this.MIN_REQUEST_INTERVAL_MS, Math.floor(1000 / keyCount));
+
+    let earliestAvailable = Infinity;
+
+    for (const usage of usageArray) {
+      this.cleanOldRequests(usage);
+
+      if (usage.requestTimes.length < this.MAX_REQUESTS_PER_MINUTE) {
+        return 0;
+      }
+
+      const oldestRequest = Math.min(...usage.requestTimes);
+      const availableAt = oldestRequest + this.MINUTE_IN_MS;
+      earliestAvailable = Math.min(earliestAvailable, availableAt);
+    }
+
+    return earliestAvailable === Infinity
+      ? null
+      : earliestAvailable - Date.now();
+  }
+
+  private async loadAndUpdateKeys(): Promise<void> {
+    const activeKeys = await this.loadActiveApiKeys();
+
+    for (const key of activeKeys) {
+      if (!this.apiKeyUsage.has(key.userId)) {
+        this.apiKeyUsage.set(key.userId, key);
+      }
+    }
+
+    // Remove keys that are no longer active
+    for (const [userId] of this.apiKeyUsage) {
+      if (!activeKeys.find((key) => key.userId === userId)) {
+        this.apiKeyUsage.delete(userId);
+      }
+    }
+  }
+
+  private getAvailableApiKeySync(): { userId: number; apiKey: string } | null {
+    const usageArray = Array.from(this.apiKeyUsage.values());
+    const startIndex = this.currentKeyIndex;
+
+    for (let i = 0; i < usageArray.length; i++) {
+      const index = (startIndex + i) % usageArray.length;
+      const usage = usageArray[index];
+
+      if (this.canMakeRequest(usage)) {
+        return {
+          userId: usage.userId,
+          apiKey: usage.apiKey,
+        };
+      }
+    }
+
+    return null;
   }
 }
 
-export const apiKeyRateLimiterService = new ApiKeyRateLimiterService();
+export const apiKeyRateLimiterService = ApiKeyRateLimiterService.getInstance();
