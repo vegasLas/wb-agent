@@ -30,6 +30,12 @@ export {
   triggerDateManagerService,
 } from './trigger-date-manager.service';
 
+// Phase 8: Date Management
+export {
+  AutobookingDateManagerService,
+  autobookingDateManagerService,
+} from './autobooking-date-manager.service';
+
 // Shared services
 export * from './shared';
 

@@ -122,15 +122,9 @@ export class TriggerDateManagerService {
         },
       });
 
-      logger.info(
-        `[TriggerDateManager] Cleaning ${activeTriggers.length} active triggers`
-      );
-
       for (const trigger of activeTriggers) {
         await this.cleanTrigger(trigger);
       }
-
-      logger.info('[TriggerDateManager] Trigger cleanup completed');
     } catch (error) {
       logger.error('[TriggerDateManager] Error cleaning triggers:', error);
     }
@@ -148,9 +142,6 @@ export class TriggerDateManagerService {
           isActive: false,
         },
       });
-      logger.info(
-        `[TriggerDateManager] Marked trigger ${trigger.id} as EXPIRED`
-      );
     } catch (error) {
       logger.error(
         `[TriggerDateManager] Error updating trigger status for ${trigger.id}:`,
@@ -196,9 +187,6 @@ export class TriggerDateManagerService {
         disable_notification: true, // Send without sound
       });
 
-      logger.info(
-        `[TriggerDateManager] Sent expiration notification to user ${user.id} for trigger ${trigger.id}`
-      );
     } catch (error) {
       logger.error(
         '[TriggerDateManager] Error sending expired trigger notification:',
