@@ -64,6 +64,31 @@ export type {
   IAutobookingNotificationService,
 } from './autobooking/autobooking.interfaces';
 
+// Autobooking Reschedule services (Phase 7)
+export {
+  autobookingRescheduleMonitoringService,
+  AutobookingRescheduleMonitoringService,
+} from './autobooking-reschedule/autobooking-reschedule-monitoring.service';
+
+export {
+  autobookingRescheduleExecutorService,
+  AutobookingRescheduleExecutorService,
+} from './autobooking-reschedule/autobooking-reschedule-executor.service';
+
+export {
+  autobookingRescheduleNotificationService,
+  AutobookingRescheduleNotificationService,
+} from './autobooking-reschedule/autobooking-reschedule-notification.service';
+
+// Reschedule types
+export type {
+  RescheduleBookingTask,
+  SuccessfulReschedule,
+  IRescheduleMonitoringService,
+  IRescheduleExecutorService,
+  IRescheduleNotificationService,
+} from './interfaces/reschedule.interfaces';
+
 // Phase 6: Browser Automation
 export {
   BrowserFingerprintService,
