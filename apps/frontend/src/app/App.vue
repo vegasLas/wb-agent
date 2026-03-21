@@ -21,14 +21,14 @@ const counter = useCounterStore();
         
         <div class="flex gap-4 justify-center">
           <button 
-            @click="counter.decrement"
             class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+            @click="counter.decrement"
           >
             -
           </button>
           <button 
-            @click="counter.increment"
             class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+            @click="counter.increment"
           >
             +
           </button>

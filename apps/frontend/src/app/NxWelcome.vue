@@ -14,7 +14,10 @@ defineProps<{
         </h1>
       </div>
 
-      <div id="hero" class="rounded">
+      <div
+        id="hero"
+        class="rounded"
+      >
         <div class="text-container">
           <h2>
             <svg
@@ -50,7 +53,10 @@ defineProps<{
 
       <div id="middle-content">
         <div id="middle-left-content">
-          <div id="learning-materials" class="rounded shadow">
+          <div
+            id="learning-materials"
+            class="rounded shadow"
+          >
             <h2>Learning materials</h2>
             <a
               href="https://nx.dev/getting-started/intro?utm_source=nx-project"
@@ -294,7 +300,10 @@ defineProps<{
               </span>
             </span>
           </a>
-          <div id="nx-cloud" class="rounded shadow">
+          <div
+            id="nx-cloud"
+            class="rounded shadow"
+          >
             <div>
               <svg
                 id="nx-cloud-logo"
@@ -334,7 +343,10 @@ defineProps<{
         </div>
       </div>
 
-      <div id="commands" class="rounded shadow">
+      <div
+        id="commands"
+        class="rounded shadow"
+      >
         <h2>Next steps</h2>
         <p>Here are some things you can do with Nx:</p>
         <details>
