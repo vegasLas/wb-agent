@@ -64,6 +64,26 @@ export type {
   IAutobookingNotificationService,
 } from './autobooking/autobooking.interfaces';
 
+// Phase 6: Browser Automation
+export {
+  BrowserFingerprintService,
+  browserFingerprintService,
+  type Fingerprint,
+  type FingerprintOptions,
+  type FingerprintInjectionConfig,
+} from './browser-fingerprint.service';
+
+export {
+  PlaywrightBrowserService,
+  playwrightBrowserService,
+  getPlaywrightBrowserService,
+  resetPlaywrightBrowserService,
+  BrowserErrorCode,
+  type SelectDateOptions,
+  type BrowserServiceOptions,
+  type ErrorNotification,
+} from './playwright-browser.service';
+
 // Interfaces
 export type {
   WarehouseAvailability,

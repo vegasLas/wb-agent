@@ -1,10 +1,9 @@
 /**
  * Autobooking Executor Service
- * Phase 5: Autobooking Core
+ * Phase 5: Autobooking Core + Phase 6: Browser Automation
  *
  * Handles the actual booking execution and error handling.
- * Note: Browser automation (Playwright) is implemented in Phase 6.
- * For Phase 5, we implement the API-only flow (supply creation).
+ * Integrates with Playwright browser automation for date selection.
  */
 
 import { sharedBanService } from '../shared/ban.service';
@@ -14,6 +13,8 @@ import { autobookingSupplyIdCacheService } from './autobooking-supply-id-cache.s
 import { supplyService } from '../../supply.service';
 import { prisma } from '../../../config/database';
 import { logger } from '../../../utils/logger';
+import { playwrightBrowserService, BrowserErrorCode } from '../playwright-browser.service';
+import { browserFingerprintService } from '../browser-fingerprint.service';
 import type {
   IAutobookingExecutorService,
   SuccessfulBooking,
@@ -33,13 +34,13 @@ const DEFAULT_BAN_DURATION_MS = 60 * 1000; // 60 seconds
 export class AutobookingExecutorService implements IAutobookingExecutorService {
   /**
    * Creates a booking task for the monitoring system
-   * Phase 5: Only creates the supply/preorder (API flow)
-   * Phase 6: Will add browser automation for date selection
+   * Phase 5: Creates the supply/preorder (API flow)
+   * Phase 6: Adds browser automation for date selection when draftId exists
    */
   async createBookingTask(params: {
     booking: SchedulableItem;
     effectiveDate: Date;
-    account: { id: string };
+    account: { id: string; wbCookies?: string | null };
     user: MonitoringUser;
     latency: number;
   }): Promise<void> {
@@ -71,10 +72,84 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
       `[AutobookingExecutor] Successfully created preorder ${preorderId} for booking ${booking.id}`
     );
 
-    // Step 2: Browser automation for date selection will be added in Phase 6
-    // if (booking.draftId) {
-    //   await this.executeBrowserAutomation({ ... });
-    // }
+    // Step 2: Browser automation for date selection (Phase 6)
+    if (booking.draftId && account.wbCookies) {
+      await this.executeBrowserAutomation({
+        booking,
+        effectiveDate,
+        account,
+        user,
+        preorderId: preorderId.toString(),
+      });
+    }
+  }
+
+  /**
+   * Execute browser automation for date selection
+   * Phase 6: Browser Automation
+   */
+  private async executeBrowserAutomation(params: {
+    booking: SchedulableItem;
+    effectiveDate: Date;
+    account: { id: string; wbCookies?: string | null };
+    user: MonitoringUser;
+    preorderId: string;
+  }): Promise<void> {
+    const { booking, effectiveDate, account, user, preorderId } = params;
+
+    logger.info(
+      `[AutobookingExecutor] Starting browser automation for booking ${booking.id}`
+    );
+
+    try {
+      // Generate fingerprint from user env info
+      const fingerprint = browserFingerprintService.generateFromEnvInfo(
+        user as unknown as import('../../../types/wb').UserEnvInfo
+      );
+
+      // Get monopallet count if applicable
+      const monopalletCount = booking.supplyType === 'MONOPALLETE' 
+        ? (booking as any).monopalletCount || 1 
+        : null;
+
+      await playwrightBrowserService.selectDateAndNavigate({
+        warehouseId: booking.warehouseId.toString(),
+        draftId: booking.draftId!,
+        preorderId,
+        effectiveDate,
+        cookiesString: account.wbCookies!,
+        accountId: account.id,
+        supplierId: booking.supplierId,
+        proxy: user.proxy,
+        userAgent: user.userAgent,
+        fingerprint,
+        transitWarehouseId: booking.transitWarehouseId,
+        supplyType: booking.supplyType,
+        monopalletCount,
+      });
+
+      logger.info(
+        `[AutobookingExecutor] Browser automation completed successfully for booking ${booking.id}`
+      );
+    } catch (error) {
+      const browserError = error as Error & { code?: BrowserErrorCode };
+      
+      logger.error(
+        `[AutobookingExecutor] Browser automation failed for booking ${booking.id}:`,
+        browserError.message
+      );
+
+      // Handle specific browser errors
+      if (browserError.code === BrowserErrorCode.LOGIN_FORM_DETECTED) {
+        // Credentials expired - this is a critical error
+        throw new Error(
+          `Credentials expired for account ${account.id}. Please re-authenticate.`
+        );
+      }
+
+      // For other errors, re-throw to be handled by error categorization
+      throw error;
+    }
   }
 
   /**
