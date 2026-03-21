@@ -189,7 +189,7 @@ export class ApiKeyRateLimiterService {
   /**
    * Temporarily block an API key
    */
-  temporarilyBlockApiKey(userId: number, durationHours: number = 72): void {
+  temporarilyBlockApiKey(userId: number, durationHours = 72): void {
     const usage = this.apiKeyUsage.get(userId);
     if (usage) {
       usage.blockedUntil = Date.now() + durationHours * 60 * 60 * 1000;
