@@ -10,7 +10,7 @@ class RateLimiter {
     private windowMs: number,
     private maxRequests: number,
     // @ts-expect-error - type parameter is kept for compatibility but not used
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     private _type: string
   ) {}
 

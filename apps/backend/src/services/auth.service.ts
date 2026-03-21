@@ -95,7 +95,7 @@ export class AuthService {
     for (let i = 0; i < digits.length; i++) {
       // This function runs in browser context via Playwright
       // @ts-ignore - browser context has DOM types not available in Node
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await page.evaluate(({ digit, index }: { digit: string; index: number }) => {
         // @ts-ignore - document is available in browser context
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -655,7 +655,7 @@ export class AuthService {
       console.log('[AuthService] Collecting localStorage data...');
       // Collect localStorage data from browser context via Playwright
       // @ts-ignore - browser context has DOM types not available in Node
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const localStorage = await session.page.evaluate(() => {
         const storage: Record<string, string> = {};
         // @ts-ignore - window is available in browser context

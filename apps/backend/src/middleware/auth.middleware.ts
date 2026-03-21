@@ -91,7 +91,7 @@ export const authenticate = async (
     const initData = parseInitData(req);
     
     // Find user
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { telegramId: BigInt(initData.user.id) },
     });
 

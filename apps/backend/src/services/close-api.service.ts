@@ -158,7 +158,7 @@ export class CloseApiService {
     supplierId: string,
     userAgent: string,
     proxy: unknown,
-    needsExtendedDates: boolean = false
+    needsExtendedDates = false
   ): Promise<Supply[]> {
     // Return cached data if fresh
     // if (this.isCacheFresh()) {

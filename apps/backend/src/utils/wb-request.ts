@@ -133,7 +133,7 @@ async function makeHttpRequest(
   headers: Record<string, string>,
   body: string | undefined,
   proxy?: ProxyConfig,
-  parseResponse: boolean = true
+  parseResponse = true
 ): Promise<unknown> {
   let response: Response;
 

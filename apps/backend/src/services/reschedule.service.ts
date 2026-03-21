@@ -52,8 +52,8 @@ export class RescheduleService {
    */
   async getUserReschedules(
     userId: number,
-    page: number = 1,
-    limit: number = 20
+    page = 1,
+    limit = 20
   ): Promise<{
     success: boolean;
     counts: Record<string, number>;

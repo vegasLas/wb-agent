@@ -20,6 +20,11 @@ export interface CreateSupplyParams {
   transitWarehouseId?: number | null;
 }
 
+export interface UpdateSupplyPlanParams {
+  supplyId: number;
+  deliveryDate: string;
+}
+
 export interface CreateSupplyResponse {
   id: string;
   jsonrpc: string;
@@ -29,6 +34,18 @@ export interface CreateSupplyResponse {
 }
 
 export interface DeletePreorderResponse {
+  id: string;
+  jsonrpc: string;
+  result?: {
+    success?: boolean;
+  };
+  error?: {
+    message: string;
+    code: number;
+  };
+}
+
+export interface UpdateSupplyPlanResponse {
   id: string;
   jsonrpc: string;
   result?: {
@@ -57,6 +74,17 @@ export interface DeletePreorderOptions {
   supplierId: string;
   preorderId: number;
   userAgent: string;
+  proxy: ProxyConfig;
+}
+
+export interface UpdateSupplyPlanOptions {
+  accountId: string;
+  supplierId: string;
+  userId: number;
+  params: UpdateSupplyPlanParams;
+  userAgent: string;
+  latency: number;
+  rpc_order: number;
   proxy: ProxyConfig;
 }
 
@@ -165,6 +193,45 @@ export class SupplyService {
    */
   getBoxTypeMask(supplyType: string): number {
     return BOX_TYPE_MASK_MAPPINGS[supplyType] || 2; // Default to BOX (2)
+  }
+
+  /**
+   * Update supply plan (delivery date) for an existing supply
+   * Used by reschedule monitoring to change delivery dates
+   */
+  async updateSupplyPlan(options: UpdateSupplyPlanOptions): Promise<UpdateSupplyPlanResponse> {
+    const {
+      accountId,
+      supplierId,
+      params,
+      userAgent,
+      proxy,
+    } = options;
+
+    logger.info(`[SupplyService] Updating supply plan for supply ${params.supplyId}, date ${params.deliveryDate}`);
+
+    const response = await wbAccountRequest<UpdateSupplyPlanResponse>({
+      url: 'https://seller-supply.wildberries.ru/ns/sm-plan/supply-manager/api/v1/plan/update',
+      accountId,
+      supplierId,
+      userAgent,
+      proxy,
+      isJsonRpc: true,
+      body: {
+        params: {
+          supplyId: params.supplyId,
+          deliveryDate: params.deliveryDate,
+        },
+      },
+    });
+
+    if (response.error) {
+      logger.warn(`[SupplyService] Supply plan update returned error: ${response.error.message}`);
+      throw new Error(response.error.message);
+    }
+
+    logger.info(`[SupplyService] Supply plan updated successfully for supply ${params.supplyId}`);
+    return response;
   }
 }
 

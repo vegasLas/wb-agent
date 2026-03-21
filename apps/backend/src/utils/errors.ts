@@ -23,17 +23,17 @@ export class ApiError extends Error {
   }
 
   static unauthorized(
-    message: string = 'Unauthorized',
+    message = 'Unauthorized',
     code?: string,
   ): ApiError {
     return new ApiError(401, message, code || 'UNAUTHORIZED');
   }
 
-  static forbidden(message: string = 'Forbidden', code?: string): ApiError {
+  static forbidden(message = 'Forbidden', code?: string): ApiError {
     return new ApiError(403, message, code || 'FORBIDDEN');
   }
 
-  static notFound(message: string = 'Not found', code?: string): ApiError {
+  static notFound(message = 'Not found', code?: string): ApiError {
     return new ApiError(404, message, code || 'NOT_FOUND');
   }
 
@@ -48,11 +48,11 @@ export class ApiError extends Error {
     return new ApiError(422, message, 'VALIDATION_ERROR', details);
   }
 
-  static tooManyRequests(message: string = 'Too many requests'): ApiError {
+  static tooManyRequests(message = 'Too many requests'): ApiError {
     return new ApiError(429, message, 'RATE_LIMITED');
   }
 
-  static internal(message: string = 'Internal server error'): ApiError {
+  static internal(message = 'Internal server error'): ApiError {
     return new ApiError(500, message, 'INTERNAL_ERROR');
   }
 }

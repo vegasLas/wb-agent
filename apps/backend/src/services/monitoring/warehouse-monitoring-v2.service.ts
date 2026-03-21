@@ -1,7 +1,7 @@
 /**
  * Warehouse Monitoring V2 Service
  * Phase 1: Foundation - Central orchestrator for all monitoring activities
- * 
+ *
  * Purpose: Coordinates the entire monitoring cycle including:
  * - Collecting active monitoring users
  * - Fetching warehouse availability data
@@ -15,6 +15,7 @@ import { closeApiService } from '../close-api.service';
 import { fakeDataDetectionService } from './fake-data-detection.service';
 import { supplyTriggerMonitoringService } from './supply-trigger-monitoring.service';
 import { autobookingMonitoringService } from './autobooking/autobooking-monitoring.service';
+import { autobookingRescheduleMonitoringService } from './autobooking-reschedule/autobooking-reschedule-monitoring.service';
 import { isAutobookingProcessingActive } from '../autobooking-control.service';
 import type {
   MonitoringUser,
@@ -23,7 +24,11 @@ import type {
   Proxy,
   Supply,
 } from './shared/interfaces/sharedInterfaces';
-import type { Autobooking, AutobookingReschedule, SupplyTrigger } from '@prisma/client';
+import type {
+  Autobooking,
+  AutobookingReschedule,
+  SupplyTrigger,
+} from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/library';
 
 // ============== Type Definitions ==============
@@ -46,13 +51,9 @@ interface UserData {
   accounts: AccountData[];
 }
 
-interface UserWithBookings extends UserData {
-  // Used for autobooking queries
-}
+type UserWithBookings = UserData
 
-interface UserWithTriggers extends UserData {
-  // Used for supply trigger queries
-}
+type UserWithTriggers = UserData
 
 type BoxTypeId = 2 | 5 | 6;
 
@@ -72,7 +73,7 @@ interface GroupUserBookingsAndTriggersParams {
 interface ProcessItemsParams<TInput, TProcessed> {
   items: TInput[];
   processor: (
-    item: TInput
+    item: TInput,
   ) => { user: UserData; processedItem: TProcessed } | null;
   userMap: Map<number, MonitoringUser>;
   arrayKey: keyof MonitoringUser & keyof CreateMonitoringUserParams;
@@ -133,7 +134,9 @@ export class WarehouseMonitoringV2Service {
         logger.info('[WarehouseMonitoringV2] No monitoring users found');
         return;
       }
-      logger.info(`[WarehouseMonitoringV2] Found ${monitoringUsers.length} monitoring users`);
+      logger.info(
+        `[WarehouseMonitoringV2] Found ${monitoringUsers.length} monitoring users`,
+      );
 
       // 2. Collect required warehouse data
       const warehouses = this.collectWarehouseData(monitoringUsers);
@@ -141,12 +144,16 @@ export class WarehouseMonitoringV2Service {
         logger.info('[WarehouseMonitoringV2] No warehouses to monitor');
         return;
       }
-      logger.info(`[WarehouseMonitoringV2] Monitoring ${warehouses.length} warehouse-boxtype combinations`);
+      logger.info(
+        `[WarehouseMonitoringV2] Monitoring ${warehouses.length} warehouse-boxtype combinations`,
+      );
 
       // 3. Fetch availability from APIs
       const validatedWarehouses = this.fetchAllWarehouses(warehouses);
       if (validatedWarehouses.length === 0) {
-        logger.info('[WarehouseMonitoringV2] No validated warehouses available');
+        logger.info(
+          '[WarehouseMonitoringV2] No validated warehouses available',
+        );
         return;
       }
 
@@ -155,14 +162,19 @@ export class WarehouseMonitoringV2Service {
 
       // 5. Process into availability format
       const availabilities = this.processWarehouseData(validatedWarehouses);
-      logger.info(`[WarehouseMonitoringV2] Processed ${availabilities.length} warehouse availabilities`);
+      logger.info(
+        `[WarehouseMonitoringV2] Processed ${availabilities.length} warehouse availabilities`,
+      );
 
       // 6. Delegate to processing services
       await this.processMonitoringServices(monitoringUsers, availabilities);
 
       logger.info('[WarehouseMonitoringV2] Monitoring cycle completed');
     } catch (error) {
-      logger.error('[WarehouseMonitoringV2] Error in warehouse monitoring:', error);
+      logger.error(
+        '[WarehouseMonitoringV2] Error in warehouse monitoring:',
+        error,
+      );
     }
   }
 
@@ -187,7 +199,9 @@ export class WarehouseMonitoringV2Service {
         const userId = parseInt(technicalModeUserId);
         if (!isNaN(userId)) {
           activeUserCondition = { id: userId };
-          logger.info(`[WarehouseMonitoringV2] Technical mode: processing only user ${userId}`);
+          logger.info(
+            `[WarehouseMonitoringV2] Technical mode: processing only user ${userId}`,
+          );
         }
       }
 
@@ -225,7 +239,9 @@ export class WarehouseMonitoringV2Service {
         }),
       ]);
 
-      logger.info(`[WarehouseMonitoringV2] Raw counts - Autobookings: ${autobookings.length}, Triggers: ${supplyTriggers.length}, Reschedules: ${reschedules.length}`);
+      logger.info(
+        `[WarehouseMonitoringV2] Raw counts - Autobookings: ${autobookings.length}, Triggers: ${supplyTriggers.length}, Reschedules: ${reschedules.length}`,
+      );
 
       return this.groupUserBookingsAndTriggers({
         autobookings,
@@ -233,7 +249,10 @@ export class WarehouseMonitoringV2Service {
         reschedules,
       });
     } catch (error) {
-      logger.error('[WarehouseMonitoringV2] Error collecting monitoring users:', error);
+      logger.error(
+        '[WarehouseMonitoringV2] Error collecting monitoring users:',
+        error,
+      );
       return [];
     }
   }
@@ -242,7 +261,7 @@ export class WarehouseMonitoringV2Service {
    * Groups autobookings, triggers, and reschedules by user
    */
   private groupUserBookingsAndTriggers(
-    params: GroupUserBookingsAndTriggersParams
+    params: GroupUserBookingsAndTriggersParams,
   ): MonitoringUser[] {
     const { autobookings, supplyTriggers, reschedules } = params;
     const userMap = new Map<number, MonitoringUser>();
@@ -276,7 +295,7 @@ export class WarehouseMonitoringV2Service {
    * Generic helper to validate entity - no longer pre-calculates dates
    */
   private validateEntityForMonitoring<
-    T extends DateTypeEntity & EntityWithUser<T>
+    T extends DateTypeEntity & EntityWithUser<T>,
   >(entity: T): { user: UserData; processedItem: T } | null {
     const { user } = entity;
 
@@ -296,7 +315,7 @@ export class WarehouseMonitoringV2Service {
    */
   private hasValidAccount(
     accounts: AccountData[],
-    supplierId: string
+    supplierId: string,
   ): boolean {
     const matchingAccount = this.findMatchingAccount(accounts, supplierId);
     return !!matchingAccount?.wbCookies;
@@ -307,12 +326,12 @@ export class WarehouseMonitoringV2Service {
    */
   private findMatchingAccount(
     accounts: AccountData[],
-    supplierId: string
+    supplierId: string,
   ): AccountData | undefined {
-    return accounts?.find(account =>
+    return accounts?.find((account) =>
       account.suppliers.some(
-        (supplier: SupplierData) => supplier.supplierId === supplierId
-      )
+        (supplier: SupplierData) => supplier.supplierId === supplierId,
+      ),
     );
   }
 
@@ -330,7 +349,7 @@ export class WarehouseMonitoringV2Service {
         this.createMonitoringUser({
           user,
           ...createUserParams,
-        })
+        }),
       );
     }
   }
@@ -339,7 +358,7 @@ export class WarehouseMonitoringV2Service {
    * Generic helper to process items with map-filter-forEach pattern
    */
   private processItems<TInput, TProcessed>(
-    params: ProcessItemsParams<TInput, TProcessed>
+    params: ProcessItemsParams<TInput, TProcessed>,
   ): void {
     const { items, processor, userMap, arrayKey } = params;
 
@@ -363,7 +382,7 @@ export class WarehouseMonitoringV2Service {
    * Prepares a supply trigger if it meets all requirements
    */
   private prepareSupplyTrigger(
-    trigger: SupplyTrigger & { user: UserWithTriggers }
+    trigger: SupplyTrigger & { user: UserWithTriggers },
   ): { user: UserData; processedItem: SupplyTrigger } | null {
     const { user } = trigger;
 
@@ -403,7 +422,7 @@ export class WarehouseMonitoringV2Service {
    * Creates a MonitoringUser from user data
    */
   private createMonitoringUser(
-    params: CreateMonitoringUserParams
+    params: CreateMonitoringUserParams,
   ): MonitoringUser {
     const {
       user,
@@ -412,14 +431,17 @@ export class WarehouseMonitoringV2Service {
       reschedules = [],
     } = params;
 
-    const envInfo = user.envInfo as unknown as { userAgent: string; proxy: Proxy };
+    const envInfo = user.envInfo as unknown as {
+      userAgent: string;
+      proxy: Proxy;
+    };
 
     // Transform accounts to {accountId: supplierId[]} format
     const accounts: { [accountId: string]: string[] } = {};
     if (user.accounts && user.accounts.length > 0) {
       user.accounts.forEach((account: AccountData) => {
         accounts[account.id] = account.suppliers.map(
-          (supplier: SupplierData) => supplier.supplierId
+          (supplier: SupplierData) => supplier.supplierId,
         );
       });
     }
@@ -442,21 +464,21 @@ export class WarehouseMonitoringV2Service {
   private collectWarehouseData(users: MonitoringUser[]): WarehouseMonitoring[] {
     const warehouseMap = new Map<number, Set<BoxTypeId>>();
 
-    users.forEach(user => {
+    users.forEach((user) => {
       this.collectWarehouseDataFromItems(
         user.autobookings,
         warehouseMap,
-        this.extractAutobookingWarehouseData
+        this.extractAutobookingWarehouseData,
       );
       this.collectWarehouseDataFromItems(
         user.supplyTriggers,
         warehouseMap,
-        this.extractTriggerWarehouseData
+        this.extractTriggerWarehouseData,
       );
       this.collectWarehouseDataFromItems(
         user.reschedules,
         warehouseMap,
-        this.extractRescheduleWarehouseData
+        this.extractRescheduleWarehouseData,
       );
     });
 
@@ -464,7 +486,7 @@ export class WarehouseMonitoringV2Service {
       ([warehouseId, boxTypes]) => ({
         warehouseId,
         boxTypes: Array.from(boxTypes),
-      })
+      }),
     );
   }
 
@@ -474,7 +496,7 @@ export class WarehouseMonitoringV2Service {
   private collectWarehouseDataFromItems<T>(
     items: T[],
     warehouseMap: Map<number, Set<BoxTypeId>>,
-    extractor: WarehouseDataExtractor<T>
+    extractor: WarehouseDataExtractor<T>,
   ): void {
     items.flatMap(extractor).forEach(({ warehouseId, boxTypeId }) => {
       this.addWarehouseToMap(warehouseMap, warehouseId, boxTypeId);
@@ -482,7 +504,7 @@ export class WarehouseMonitoringV2Service {
   }
 
   private extractAutobookingWarehouseData = (
-    booking: Autobooking
+    booking: Autobooking,
   ): { warehouseId: number; boxTypeId: BoxTypeId }[] => {
     if (!booking.warehouseId) return [];
     return [
@@ -494,18 +516,18 @@ export class WarehouseMonitoringV2Service {
   };
 
   private extractTriggerWarehouseData = (
-    trigger: SupplyTrigger
+    trigger: SupplyTrigger,
   ): { warehouseId: number; boxTypeId: BoxTypeId }[] => {
-    return trigger.warehouseIds.flatMap(warehouseId =>
-      trigger.supplyTypes.map(type => ({
+    return trigger.warehouseIds.flatMap((warehouseId) =>
+      trigger.supplyTypes.map((type) => ({
         warehouseId,
         boxTypeId: getBoxTypeFromSupplyType(type),
-      }))
+      })),
     );
   };
 
   private extractRescheduleWarehouseData = (
-    reschedule: AutobookingReschedule
+    reschedule: AutobookingReschedule,
   ): { warehouseId: number; boxTypeId: BoxTypeId }[] => {
     if (!reschedule.warehouseId) return [];
     return [
@@ -519,7 +541,7 @@ export class WarehouseMonitoringV2Service {
   private addWarehouseToMap(
     warehouseMap: Map<number, Set<BoxTypeId>>,
     warehouseId: number,
-    boxTypeId: BoxTypeId
+    boxTypeId: BoxTypeId,
   ): void {
     if (!warehouseMap.has(warehouseId)) {
       warehouseMap.set(warehouseId, new Set());
@@ -541,20 +563,23 @@ export class WarehouseMonitoringV2Service {
         fakeDataDetectionService.checkProblematicWarehouses(freeApiWarehouses);
 
       if (problematicCheck.shouldSkip) {
-        logger.warn('[WarehouseMonitoringV2] Skipping due to problematic warehouse pattern:', problematicCheck.reason);
+        logger.warn(
+          '[WarehouseMonitoringV2] Skipping due to problematic warehouse pattern:',
+          problematicCheck.reason,
+        );
         return [];
       }
 
       // Merge and deduplicate
       const mergedWarehouses = this.mergeAndDeduplicateWarehouses(
         freeApiWarehouses,
-        closeApiWarehouses
+        closeApiWarehouses,
       );
 
       // Now filter by user requirements (warehouseIds and boxTypes)
       const userFilteredWarehouses = this.filterByUserRequirements(
         mergedWarehouses,
-        warehouseIds
+        warehouseIds,
       );
 
       return this.filterValidWarehouses(userFilteredWarehouses);
@@ -569,10 +594,10 @@ export class WarehouseMonitoringV2Service {
     const warehouses = freeWarehouseService.getAllCachedWarehouses();
 
     return warehouses.filter(
-      warehouse =>
+      (warehouse) =>
         warehouse?.boxTypeID &&
         warehouse.allowUnload === true &&
-        warehouse.coefficient >= 0
+        warehouse.coefficient >= 0,
     );
   }
 
@@ -581,10 +606,10 @@ export class WarehouseMonitoringV2Service {
     const closeApiData = closeApiService.getCachedData();
 
     return closeApiData.filter(
-      warehouse =>
+      (warehouse) =>
         warehouse?.boxTypeID &&
         warehouse.allowUnload === true &&
-        warehouse.coefficient >= 0
+        warehouse.coefficient >= 0,
     );
   }
 
@@ -595,18 +620,18 @@ export class WarehouseMonitoringV2Service {
    */
   private mergeAndDeduplicateWarehouses(
     freeApiWarehouses: Supply[],
-    closeApiWarehouses: Supply[]
+    closeApiWarehouses: Supply[],
   ): Supply[] {
     const warehouseMap = new Map<string, Supply>();
 
     // Add free API warehouses first (they take precedence)
-    freeApiWarehouses.forEach(warehouse => {
+    freeApiWarehouses.forEach((warehouse) => {
       const key = `${warehouse.warehouseID}-${warehouse.boxTypeID}-${warehouse.date}`;
       warehouseMap.set(key, warehouse);
     });
 
     // Add close API warehouses only if not already present
-    closeApiWarehouses.forEach(warehouse => {
+    closeApiWarehouses.forEach((warehouse) => {
       const key = `${warehouse.warehouseID}-${warehouse.boxTypeID}-${warehouse.date}`;
       if (!warehouseMap.has(key)) {
         warehouseMap.set(key, warehouse);
@@ -621,13 +646,13 @@ export class WarehouseMonitoringV2Service {
    */
   private filterByUserRequirements(
     warehouses: Supply[],
-    warehouseIds: WarehouseMonitoring[]
+    warehouseIds: WarehouseMonitoring[],
   ): Supply[] {
-    return warehouses.filter(warehouse => {
+    return warehouses.filter((warehouse) => {
       if (!warehouse?.boxTypeID) return false;
 
       const userRequirement = warehouseIds.find(
-        w => w.warehouseId === warehouse.warehouseID
+        (w) => w.warehouseId === warehouse.warehouseID,
       );
       return userRequirement?.boxTypes?.includes(warehouse.boxTypeID) || false;
     });
@@ -635,19 +660,22 @@ export class WarehouseMonitoringV2Service {
 
   private filterValidWarehouses(warehouses: Supply[]): Supply[] {
     return warehouses.filter(
-      warehouse =>
-        warehouse.coefficient >= 0 && warehouse.allowUnload === true
+      (warehouse) =>
+        warehouse.coefficient >= 0 && warehouse.allowUnload === true,
     );
   }
 
   private handleFetchError(error: unknown): void {
     const errorMessage = (error as Error)?.message || '';
     const isKnownError = errorMessage.includes(
-      'ошибка получения коэффициентов: internal error: error getting acceptance coefficient report: fail to request supply-manager'
+      'ошибка получения коэффициентов: internal error: error getting acceptance coefficient report: fail to request supply-manager',
     );
 
     if (!isKnownError) {
-      logger.error('[WarehouseMonitoringV2] Error fetching warehouse data:', error);
+      logger.error(
+        '[WarehouseMonitoringV2] Error fetching warehouse data:',
+        error,
+      );
     }
   }
 
@@ -655,11 +683,11 @@ export class WarehouseMonitoringV2Service {
    * Processes warehouse data into availability format
    */
   private processWarehouseData(
-    validatedWarehouses: Supply[]
+    validatedWarehouses: Supply[],
   ): WarehouseAvailability[] {
     const warehouseMap = new Map<string, WarehouseAvailability>();
 
-    validatedWarehouses.forEach(warehouse => {
+    validatedWarehouses.forEach((warehouse) => {
       const key = `${warehouse.warehouseID}-${warehouse.boxTypeID}`;
 
       if (!warehouseMap.has(key)) {
@@ -679,31 +707,38 @@ export class WarehouseMonitoringV2Service {
     });
 
     // Sort dates chronologically
-    return Array.from(warehouseMap.values()).map(warehouse => ({
+    return Array.from(warehouseMap.values()).map((warehouse) => ({
       ...warehouse,
       availableDates: warehouse.availableDates.sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       ),
     }));
   }
 
   /**
-   * Processes autobookings and supply triggers
+   * Processes autobookings, reschedules, and supply triggers
    */
   private async processMonitoringServices(
     monitoringUsers: MonitoringUser[],
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void> {
     // Process autobookings only if enabled globally
     const autobookingPromise = isAutobookingProcessingActive()
       ? this.processAutobookings(monitoringUsers, availabilities)
       : Promise.resolve();
 
+    // Process reschedules (always active)
+    const reschedulePromise = this.processReschedules(
+      monitoringUsers,
+      availabilities,
+    );
+
     await Promise.all([
       autobookingPromise,
+      reschedulePromise,
       supplyTriggerMonitoringService.processAvailabilities(
         monitoringUsers,
-        availabilities
+        availabilities,
       ),
     ]);
   }
@@ -714,10 +749,26 @@ export class WarehouseMonitoringV2Service {
    */
   private async processAutobookings(
     monitoringUsers: MonitoringUser[],
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void> {
-    logger.info('[WarehouseMonitoringV2] Processing autobookings');
-    await autobookingMonitoringService.processAvailabilities(monitoringUsers, availabilities);
+    await autobookingMonitoringService.processAvailabilities(
+      monitoringUsers,
+      availabilities,
+    );
+  }
+
+  /**
+   * Process autobooking reschedules
+   * Phase 7: Autobooking Reschedule - Now implemented
+   */
+  private async processReschedules(
+    monitoringUsers: MonitoringUser[],
+    availabilities: WarehouseAvailability[],
+  ): Promise<void> {
+    await autobookingRescheduleMonitoringService.processRescheduleAvailabilities(
+      monitoringUsers,
+      availabilities,
+    );
   }
 }
 
