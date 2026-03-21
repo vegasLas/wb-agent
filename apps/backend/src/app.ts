@@ -7,6 +7,7 @@ import { logger } from './utils/logger';
 import { requestLogger } from './middleware/request-logger.middleware';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import routes from './routes';
+import { initializeMonitoringCleanupJobs } from './cron/monitoring-cleanup';
 
 /**
  * Create and configure the Express application
@@ -70,5 +71,8 @@ export async function startServer(): Promise<void> {
     logger.info(`🚀 Server running on port ${port}`);
     logger.info(`📡 Environment: ${env.NODE_ENV}`);
     logger.info(`🔗 Health check: http://localhost:${port}/health`);
+    
+    // Initialize monitoring cleanup cron jobs
+    initializeMonitoringCleanupJobs();
   });
 }
