@@ -39,7 +39,7 @@ export class ChannelSubscriptionService {
    */
   async sendSubscriptionRequest(
     chatId: number | string,
-    isNotNewUser: boolean = false
+    isNotNewUser = false
   ): Promise<void> {
     if (!TBOT) {
       logger.warn('TBOT not initialized, cannot send subscription request');
