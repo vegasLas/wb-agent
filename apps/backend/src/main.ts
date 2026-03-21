@@ -7,6 +7,7 @@
  */
 
 import { startServer } from './app';
+import { setupTelegramPlugin } from './plugins/telegram.plugin';
 import { logger } from './utils/logger';
 
 // Handle uncaught exceptions
@@ -20,6 +21,9 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
+
+// Setup Telegram bot plugin
+setupTelegramPlugin();
 
 // Start the server
 startServer().catch((error) => {
