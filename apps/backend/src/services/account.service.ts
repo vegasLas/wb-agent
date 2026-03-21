@@ -36,7 +36,7 @@ export class AccountService {
     accountId: string,
     userAgent: string,
     proxy?: UserEnvInfo['proxy'],
-    supplierId: string = ''
+    supplierId = ''
   ): Promise<{ name: string; id: string }[]> {
     try {
       const response = await wbAccountRequest<[SupplierResponse]>({

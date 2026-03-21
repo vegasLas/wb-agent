@@ -53,7 +53,7 @@ router.post(
       const { accountId, supplierId: bodySupplierId } = req.body;
 
       // If no accountId provided in body, use user's selectedAccountId
-      let targetAccountId = accountId || user.selectedAccountId;
+      const targetAccountId = accountId || user.selectedAccountId;
       
       if (!targetAccountId) {
         throw new ApiError(400, 'No account selected for user');

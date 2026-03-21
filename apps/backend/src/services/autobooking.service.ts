@@ -55,7 +55,7 @@ export class AutobookingUpdateError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly statusCode: number = 400
+    public readonly statusCode = 400
   ) {
     super(message);
     this.name = 'AutobookingUpdateError';
@@ -72,8 +72,8 @@ export class AutobookingService {
    */
   async getUserAutobookings(
     userId: number,
-    page: number = 1,
-    limit: number = 20
+    page = 1,
+    limit = 20
   ): Promise<{
     success: boolean;
     counts: Record<string, number>;

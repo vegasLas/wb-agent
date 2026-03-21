@@ -51,7 +51,7 @@ export class UserRepository {
     });
   }
 
-  async decrementAutobookingCount(userId: number, count: number = 1): Promise<User> {
+  async decrementAutobookingCount(userId: number, count = 1): Promise<User> {
     return this.prismaClient.user.update({
       where: { id: userId },
       data: {
@@ -60,7 +60,7 @@ export class UserRepository {
     });
   }
 
-  async incrementAutobookingCount(userId: number, count: number = 1): Promise<User> {
+  async incrementAutobookingCount(userId: number, count = 1): Promise<User> {
     return this.prismaClient.user.update({
       where: { id: userId },
       data: {

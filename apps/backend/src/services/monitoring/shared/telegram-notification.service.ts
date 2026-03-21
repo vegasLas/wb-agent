@@ -148,7 +148,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     date: Date,
     coefficient: number,
     transitWarehouseName?: string | null,
-    isReschedule: boolean = false
+    isReschedule = false
   ): string {
     const action = isReschedule ? 'перенесена' : 'забронирована';
     const icon = isReschedule ? '🎯' : '✅';
@@ -192,7 +192,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     date: Date | null,
     supplyType: string,
     error?: TelegramError | Error | unknown,
-    isReschedule: boolean = false
+    isReschedule = false
   ): string {
     const action = isReschedule ? 'переноса' : 'бронирования';
 

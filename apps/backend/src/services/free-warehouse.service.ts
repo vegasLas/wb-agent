@@ -12,7 +12,7 @@ import { logger } from '../utils/logger';
 export class FreeWarehouseService {
   private static instance: FreeWarehouseService;
   private cachedWarehouses: Supply[] = [];
-  private lastUpdateTimestamp: number = 0;
+  private lastUpdateTimestamp = 0;
   private readonly CACHE_FRESHNESS_MS = 5000; // Only return cache if updated within last 5 seconds
 
   static getInstance(): FreeWarehouseService {

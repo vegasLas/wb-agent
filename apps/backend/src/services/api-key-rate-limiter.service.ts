@@ -19,7 +19,7 @@ export class ApiKeyRateLimiterService {
   private lastLoadTime: Date | null = null;
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
   private readonly MIN_REQUEST_INTERVAL_MS = 100; // Minimum 100ms between requests
-  private lastRequestTime: number = 0;
+  private lastRequestTime = 0;
 
   /**
    * Get next available API key using round-robin

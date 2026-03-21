@@ -436,7 +436,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
     // Interleave tasks from different proxy groups
     const result: T[] = [];
     const proxies = Array.from(proxyGroups.keys());
-    let maxLength = Math.max(
+    const maxLength = Math.max(
       ...Array.from(proxyGroups.values()).map((group) => group.length),
     );
 

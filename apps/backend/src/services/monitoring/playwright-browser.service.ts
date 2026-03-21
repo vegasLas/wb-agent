@@ -72,7 +72,7 @@ export class PlaywrightBrowserService {
   private refreshInterval: NodeJS.Timeout | null = null;
   private accountId: string | null = null; // Track account ID for localStorage refresh
   private fingerprint: Fingerprint | null = null; // Store fingerprint for injection
-  private useFingerprintInjection: boolean = true; // Enable fingerprint injection by default
+  private useFingerprintInjection = true; // Enable fingerprint injection by default
   private transitWarehouseId: number | null = null; // Store transit warehouse ID for URL building
   private userAgent: string | undefined;
 
