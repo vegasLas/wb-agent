@@ -37,6 +37,9 @@ const envSchema = z.object({
   
   // Proxy list (optional, comma-separated: ip:port:user:pass:timezone)
   PROXY_LIST: z.string().optional(),
+  
+  // Monitoring cleanup (set to 'false' to disable scheduled cleanup jobs)
+  RUN_MONITORING_CLEANUP: z.string().default('true'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
