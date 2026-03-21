@@ -75,7 +75,7 @@ const CRITICAL_BOOKING_ERRORS: Record<string, ErrorConfig> = {
   },
   "An error occurred. We're sorry for the inconvenience": {
     status: 'ERROR',
-    message: "An error occurred. We're sorry for the inconvenience",
+    message: 'Произошла не объяснимая ошибка, может быть вы не приняли оферту, или склад не принимает ваш товар',
   },
 };
 
