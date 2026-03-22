@@ -69,6 +69,7 @@ describe('AutobookingRescheduleNotificationService', () => {
     targetDateTo: new Date(),
     coefficient: 5,
     status: 'ACTIVE',
+    dateType: 'CUSTOM_DATES',
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

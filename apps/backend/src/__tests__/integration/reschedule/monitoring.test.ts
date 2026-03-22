@@ -14,6 +14,7 @@ import { autobookingRescheduleExecutorService } from '../../../services/monitori
 import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
 import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
 import { sharedProcessingStateService } from '../../../services/monitoring/shared/processing-state.service';
+import { sharedTaskOrganizerService } from '../../../services/monitoring/shared/task-organizer.service';
 import {
   createMonitoringUser,
   getFutureDate,
@@ -52,6 +53,21 @@ jest.mock('../../../utils/logger', () => ({
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
+  },
+}));
+
+// Mock task organizer service
+jest.mock('../../../services/monitoring/shared/task-organizer.service', () => ({
+  sharedTaskOrganizerService: {
+    organizeReschedulesByWarehouseDateTyped: jest.fn(),
+    getProxyString: jest.fn().mockReturnValue('proxy-string'),
+  },
+}));
+
+// Mock latency service
+jest.mock('../../../services/monitoring/shared/latency.service', () => ({
+  sharedLatencyService: {
+    generateLatency: jest.fn().mockReturnValue(1000),
   },
 }));
 
@@ -94,6 +110,11 @@ describe('AutobookingRescheduleMonitoringService', () => {
       (availabilities) => availabilities,
     );
 
+    // Default: empty map for task organizer (no reschedules to process)
+    (sharedTaskOrganizerService.organizeReschedulesByWarehouseDateTyped as jest.Mock).mockReturnValue(
+      new Map()
+    );
+
     // Clear shared service states
     sharedBanService.clearAllBannedDates();
     sharedBanService.clearAllBlacklistedUsers();
@@ -129,12 +150,11 @@ describe('AutobookingRescheduleMonitoringService', () => {
     test('should process reschedule availabilities with single reschedule', async () => {
       // Arrange
       const reschedule = createReschedule();
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule],
-        }),
-      ];
+      const monitoringUser = createMonitoringUser({
+        userId: 1,
+        reschedules: [reschedule],
+      });
+      const monitoringUsers: MonitoringUser[] = [monitoringUser];
 
       const availabilities: WarehouseAvailability[] = [
         {
@@ -144,6 +164,19 @@ describe('AutobookingRescheduleMonitoringService', () => {
           availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
         },
       ];
+
+      // Set up task organizer to return a reschedule task
+      const warehouseDateKey = `123-${getFutureDate(7).toDateString()}-BOX`;
+      const rescheduleTask = {
+        reschedule,
+        user: monitoringUser,
+        warehouseName: 'Test WH',
+        coefficient: 2,
+        availability: availabilities[0],
+      };
+      (sharedTaskOrganizerService.organizeReschedulesByWarehouseDateTyped as jest.Mock).mockReturnValue(
+        new Map([[warehouseDateKey, [[rescheduleTask]]]])
+      );
 
       // Act
       await service.processRescheduleAvailabilities(
@@ -286,8 +319,8 @@ describe('AutobookingRescheduleMonitoringService', () => {
         },
       ];
 
-      // Mark user as running
-      sharedUserTrackingService.markUserAsRunning(1);
+      // Mark user as running (userId 1 is running, so reschedule should be skipped)
+      sharedUserTrackingService.trackUsersAsRunning([1]);
 
       // Act
       await service.processRescheduleAvailabilities(
@@ -295,8 +328,9 @@ describe('AutobookingRescheduleMonitoringService', () => {
         availabilities,
       );
 
-      // Assert
+      // Assert - verify user is running and executor wasn't called
       expect(sharedUserTrackingService.isUserRunning(1)).toBe(true);
+      expect(mockExecutor.createRescheduleTask).not.toHaveBeenCalled();
     });
 
     test('should skip banned warehouse-date combinations', async () => {
