@@ -1,7 +1,11 @@
+import type { AxiosRequestConfig } from 'axios';
 import apiClient from './client';
 
 // Re-export the client for direct use
 export { apiClient };
+
+// Export auth API
+export * from './auth';
 
 // Generic API methods
 export const api = {
@@ -20,6 +24,3 @@ export const api = {
   delete: <T>(url: string, config?: AxiosRequestConfig) => 
     apiClient.delete<T>(url, config).then(res => res.data),
 };
-
-// Import type for config
-import type { AxiosRequestConfig } from 'axios';
