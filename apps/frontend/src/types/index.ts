@@ -3,6 +3,25 @@
 // =============================================================================
 
 // -----------------------------------------------------------------------------
+// View Types
+// -----------------------------------------------------------------------------
+export type ViewType =
+  | 'triggers-main'
+  | 'triggers-form'
+  | 'autobookings-form'
+  | 'autobookings-update'
+  | 'autobookings-main'
+  | 'reschedules-main'
+  | 'reschedules-form'
+  | 'reschedules-update'
+  | 'store'
+  | 'account'
+  | 'store-subscription'
+  | 'store-bookings'
+  | 'report'
+  | 'auth';
+
+// -----------------------------------------------------------------------------
 // User & Authentication Types
 // -----------------------------------------------------------------------------
 export interface User {
