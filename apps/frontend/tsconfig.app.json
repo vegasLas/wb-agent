@@ -2,12 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "rootDir": "src",
     "jsx": "preserve",
     "jsxImportSource": "vue",
     "resolveJsonModule": true,
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "noUnusedLocals": false
   },
   "exclude": [
     "out-tsc",
