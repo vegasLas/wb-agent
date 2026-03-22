@@ -8,20 +8,16 @@
  * - Same test logic preserved
  */
 
+import { SubscriptionNotificationService } from '../../services/subscription-notification.service';
 import { prisma } from '../../config/database';
+import * as schedule from "node-schedule";
 import { TBOT } from '../../utils/TBOT';
 
 // Mock dependencies
 jest.mock('../../config/database', () => ({
   prisma: {
-    monitoringSubscription: {
-      findMany: jest.fn(),
-    },
     user: {
       findMany: jest.fn(),
-    },
-    warehouseCoefficient: {
-      findFirst: jest.fn(),
     },
   },
 }));
@@ -30,6 +26,10 @@ jest.mock('../../utils/TBOT', () => ({
   TBOT: {
     sendMessage: jest.fn(),
   },
+}));
+
+jest.mock('node-schedule', () => ({
+  scheduleJob: jest.fn(),
 }));
 
 jest.mock('../../utils/logger', () => ({
@@ -41,159 +41,572 @@ jest.mock('../../utils/logger', () => ({
   },
 }));
 
-describe('Subscription Notification Service', () => {
-  let mockPrisma: jest.Mocked<typeof prisma>;
-  let mockTBOT: jest.Mocked<typeof TBOT>;
+describe('SubscriptionNotificationService', () => {
+  let service: SubscriptionNotificationService;
+  const mockPrismaVar = prisma as jest.Mocked<typeof prisma>;
+  const mockSchedule = schedule as jest.Mocked<typeof schedule>;
+  const mockTBOT = TBOT as jest.Mocked<typeof TBOT>;
 
   beforeEach(() => {
-    mockPrisma = prisma as jest.Mocked<typeof prisma>;
-    mockTBOT = TBOT as jest.Mocked<typeof TBOT>;
     jest.clearAllMocks();
-
-    // Default mock implementations
-    (mockPrisma.monitoringSubscription.findMany as jest.Mock).mockResolvedValue([]);
-    (mockPrisma.user.findMany as jest.Mock).mockResolvedValue([]);
-    (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockResolvedValue({
-      warehouseId: 123,
-      warehouseName: 'Test Warehouse',
-      coefficient: 2,
-    });
-    mockTBOT.sendMessage.mockResolvedValue({ message_id: 1 });
+    // Reset singleton instance to ensure clean state
+    (SubscriptionNotificationService as any)['instance'] = undefined;
+    service = SubscriptionNotificationService.getInstance();
+    // Reset notifications sent set
+    (service as any)['notificationsSent'].clear();
+    // Mock environment
+    process.env.URL = 'https://test.com';
+    // Ensure mock is properly reset
+    mockTBOT.sendMessage.mockClear();
   });
 
-  describe('notifySubscribers', () => {
-    test('should find all active subscriptions', async () => {
-      // Arrange
-      (mockPrisma.monitoringSubscription.findMany as jest.Mock).mockResolvedValue([
-        { userId: 1, warehouseId: 123, coefficient: 2 },
-      ]);
-      (mockPrisma.user.findMany as jest.Mock).mockResolvedValue([
-        { id: 1, chatId: '123456' },
-      ]);
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-      // Act - Since this is an integration test, we test the behavior
-      const subscriptions = await mockPrisma.monitoringSubscription.findMany({
-        where: { active: true },
-      });
-
-      // Assert
-      expect(subscriptions).toHaveLength(1);
-    });
-
-    test('should send notification to subscribed users', async () => {
-      // Arrange
-      const chatId = '123456';
-      const message = 'Warehouse coefficient updated!';
-
-      // Act
-      await mockTBOT.sendMessage(chatId, message);
-
-      // Assert
-      expect(mockTBOT.sendMessage).toHaveBeenCalledWith(chatId, message);
-    });
-
-    test('should not notify users with coefficient above threshold', async () => {
-      // Arrange
-      (mockPrisma.monitoringSubscription.findMany as jest.Mock).mockResolvedValue([
-        { userId: 1, warehouseId: 123, coefficient: 2 },
-      ]);
-      (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockResolvedValue({
-        warehouseId: 123,
-        warehouseName: 'Test Warehouse',
-        coefficient: 5, // Above threshold
-      });
-
-      // Act
-      const warehouse = await mockPrisma.warehouseCoefficient.findFirst({
-        where: { warehouseId: 123 },
-      });
-
-      // Assert
-      expect(warehouse?.coefficient).toBeGreaterThan(2);
-    });
-
-    test('should handle users without chatId', async () => {
-      // Arrange
-      (mockPrisma.user.findMany as jest.Mock).mockResolvedValue([
-        { id: 1, chatId: null },
-      ]);
-
-      // Act
-      const users = await mockPrisma.user.findMany();
-      const usersWithChatId = users.filter((u) => u.chatId);
-
-      // Assert
-      expect(usersWithChatId).toHaveLength(0);
-    });
-
-    test('should handle database errors gracefully', async () => {
-      // Arrange
-      (mockPrisma.monitoringSubscription.findMany as jest.Mock).mockRejectedValue(new Error('DB error'));
-
-      // Act & Assert
-      await expect(
-        mockPrisma.monitoringSubscription.findMany()
-      ).rejects.toThrow('DB error');
+  describe('getInstance', () => {
+    test('should return singleton instance', () => {
+      const instance1 = SubscriptionNotificationService.getInstance();
+      const instance2 = SubscriptionNotificationService.getInstance();
+      expect(instance1).toBe(instance2);
     });
   });
 
-  describe('buildNotificationMessage', () => {
-    test('should include warehouse name in message', () => {
-      // Arrange
-      const warehouseName = 'Test Warehouse';
-      const coefficient = 2;
+  describe('init', () => {
+    test('should schedule daily job at 09:00', () => {
+      service.init();
 
-      // Act
-      const message = `Warehouse ${warehouseName} coefficient is now ${coefficient}`;
-
-      // Assert
-      expect(message).toContain(warehouseName);
-      expect(message).toContain(String(coefficient));
+      expect(mockSchedule.scheduleJob).toHaveBeenCalledWith(
+        '0 9 * * *',
+        expect.any(Function),
+      );
     });
 
-    test('should format coefficient correctly', () => {
-      // Arrange
-      const coefficient = 2.5;
+    test('should handle errors in scheduled job', async () => {
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
-      // Act
-      const message = `Coefficient: ${coefficient.toFixed(1)}`;
+      service.init();
 
-      // Assert
-      expect(message).toBe('Coefficient: 2.5');
+      // Get the scheduled function
+      const scheduledFn = (mockSchedule.scheduleJob as jest.Mock).mock.calls[0][1] as Function;
+
+      // Mock checkSubscriptionExpirations to throw error
+      jest.spyOn(service, 'checkSubscriptionExpirations').mockRejectedValue(
+        new Error('Test error'),
+      );
+
+      await scheduledFn();
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error in subscription expiration check:',
+        expect.any(Error),
+      );
+      consoleSpy.mockRestore();
     });
   });
 
-  describe('subscription filtering', () => {
-    test('should only notify for matching warehouse subscriptions', async () => {
-      // Arrange
-      (mockPrisma.monitoringSubscription.findMany as jest.Mock).mockResolvedValue([
-        { userId: 1, warehouseId: 123, active: true },
-        { userId: 2, warehouseId: 456, active: true },
-      ]);
+  describe('checkSubscriptionExpirations', () => {
+    test('should find users with expiring subscriptions', async () => {
+      const mockUsers = [
+        {
+          id: 1,
+          chatId: '12345',
+          subscriptionExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        },
+        {
+          id: 2,
+          chatId: '67890',
+          subscriptionExpiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        },
+      ];
 
-      // Act
-      const subscriptions = await mockPrisma.monitoringSubscription.findMany({
-        where: { warehouseId: 123, active: true },
+      (mockPrismaVar.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      const sendNotificationSpy = jest
+        .spyOn(service as any, 'sendExpirationNotification')
+        .mockResolvedValue(undefined);
+
+      await service.checkSubscriptionExpirations();
+
+      expect(mockPrismaVar.user.findMany).toHaveBeenCalledWith({
+        where: {
+          subscriptionExpiresAt: {
+            gte: expect.any(Date),
+            lte: expect.any(Date),
+          },
+          chatId: { not: null },
+        },
+        select: {
+          id: true,
+          chatId: true,
+          subscriptionExpiresAt: true,
+        },
       });
-
-      // Assert
-      expect(subscriptions.every((s) => s.warehouseId === 123)).toBe(true);
     });
 
-    test('should respect user notification preferences', async () => {
-      // Arrange
-      (mockPrisma.monitoringSubscription.findMany as jest.Mock).mockResolvedValue([
-        { userId: 1, warehouseId: 123, notificationsEnabled: true },
-        { userId: 2, warehouseId: 123, notificationsEnabled: false },
-      ]);
+    test('should send notifications for 7, 3, and 1 day expiration', async () => {
+      const now = new Date();
+      const mockUsers = [
+        {
+          id: 1,
+          chatId: '12345',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 7 * 24 * 60 * 60 * 1000,
+          ), // 7 days
+        },
+        {
+          id: 2,
+          chatId: '67890',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 3 * 24 * 60 * 60 * 1000,
+          ), // 3 days
+        },
+        {
+          id: 3,
+          chatId: '11111',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 1 * 24 * 60 * 60 * 1000,
+          ), // 1 day
+        },
+        {
+          id: 4,
+          chatId: '22222',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 5 * 24 * 60 * 60 * 1000,
+          ), // 5 days (should not send)
+        },
+      ];
 
-      // Act
-      const subscriptions = await mockPrisma.monitoringSubscription.findMany({
-        where: { notificationsEnabled: true },
+      (mockPrismaVar.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      const sendNotificationSpy = jest
+        .spyOn(service as any, 'sendExpirationNotification')
+        .mockResolvedValue(undefined);
+
+      await service.checkSubscriptionExpirations();
+
+      // Should send notifications for 7, 3, and 1 day expiration only
+      expect(sendNotificationSpy).toHaveBeenCalledTimes(3);
+      expect(sendNotificationSpy).toHaveBeenCalledWith({
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 7,
+        subscriptionExpiresAt: mockUsers[0].subscriptionExpiresAt,
+      });
+      expect(sendNotificationSpy).toHaveBeenCalledWith({
+        userId: 2,
+        chatId: '67890',
+        daysLeft: 3,
+        subscriptionExpiresAt: mockUsers[1].subscriptionExpiresAt,
+      });
+      expect(sendNotificationSpy).toHaveBeenCalledWith({
+        userId: 3,
+        chatId: '11111',
+        daysLeft: 1,
+        subscriptionExpiresAt: mockUsers[2].subscriptionExpiresAt,
+      });
+    });
+
+    test('should not send duplicate notifications', async () => {
+      const mockUsers = [
+        {
+          id: 1,
+          chatId: '12345',
+          subscriptionExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      ];
+
+      (mockPrismaVar.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      const sendNotificationSpy = jest
+        .spyOn(service as any, 'sendExpirationNotification')
+        .mockResolvedValue(undefined);
+
+      // First call
+      await service.checkSubscriptionExpirations();
+      expect(sendNotificationSpy).toHaveBeenCalledTimes(1);
+
+      // Second call should not send duplicate
+      await service.checkSubscriptionExpirations();
+      expect(sendNotificationSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('should prevent spam by only sending notifications on specific days (7, 3, 1) and not on intermediate days', async () => {
+      const now = new Date();
+      const sendNotificationSpy = jest
+        .spyOn(service as any, 'sendExpirationNotification')
+        .mockResolvedValue(undefined);
+
+      // Test all days from 7 down to 1
+      const daysToTest = [7, 6, 5, 4, 3, 2, 1];
+
+      for (const daysLeft of daysToTest) {
+        // Reset spy for each test
+        sendNotificationSpy.mockClear();
+        // Reset notifications sent
+        (service as any)['notificationsSent'].clear();
+
+        const mockUsers = [
+          {
+            id: 1,
+            chatId: '12345',
+            subscriptionExpiresAt: new Date(
+              now.getTime() + daysLeft * 24 * 60 * 60 * 1000,
+            ),
+          },
+        ];
+
+        (mockPrismaVar.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+
+        await service.checkSubscriptionExpirations();
+
+        if (daysLeft === 7 || daysLeft === 3 || daysLeft === 1) {
+          // Should send notification for 7, 3, and 1 days
+          expect(sendNotificationSpy).toHaveBeenCalledTimes(1);
+          expect(sendNotificationSpy).toHaveBeenCalledWith({
+            userId: 1,
+            chatId: '12345',
+            daysLeft,
+            subscriptionExpiresAt: mockUsers[0].subscriptionExpiresAt,
+          });
+        } else {
+          // Should NOT send notification for 6, 5, 4, and 2 days (spam prevention)
+          expect(sendNotificationSpy).not.toHaveBeenCalled();
+        }
+      }
+    });
+
+    test('should handle multiple users with different expiration days correctly', async () => {
+      const now = new Date();
+      const sendNotificationSpy = jest
+        .spyOn(service as any, 'sendExpirationNotification')
+        .mockResolvedValue(undefined);
+
+      // Create users with expiration dates for each day from 7 to 1
+      const mockUsers = [
+        {
+          id: 1,
+          chatId: '11111',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 7 * 24 * 60 * 60 * 1000,
+          ),
+        }, // 7 days - should notify
+        {
+          id: 2,
+          chatId: '22222',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 6 * 24 * 60 * 60 * 1000,
+          ),
+        }, // 6 days - should NOT notify
+        {
+          id: 3,
+          chatId: '33333',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 5 * 24 * 60 * 60 * 1000,
+          ),
+        }, // 5 days - should NOT notify
+        {
+          id: 4,
+          chatId: '44444',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 4 * 24 * 60 * 60 * 1000,
+          ),
+        }, // 4 days - should NOT notify
+        {
+          id: 5,
+          chatId: '55555',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 3 * 24 * 60 * 60 * 1000,
+          ),
+        }, // 3 days - should notify
+        {
+          id: 6,
+          chatId: '66666',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 2 * 24 * 60 * 60 * 1000,
+          ),
+        }, // 2 days - should NOT notify
+        {
+          id: 7,
+          chatId: '77777',
+          subscriptionExpiresAt: new Date(
+            now.getTime() + 1 * 24 * 60 * 60 * 1000,
+          ),
+        }, // 1 day - should notify
+      ];
+
+      (mockPrismaVar.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+
+      await service.checkSubscriptionExpirations();
+
+      // Should only send notifications for users with 7, 3, and 1 days left
+      expect(sendNotificationSpy).toHaveBeenCalledTimes(3);
+
+      // Verify the specific calls
+      expect(sendNotificationSpy).toHaveBeenCalledWith({
+        userId: 1,
+        chatId: '11111',
+        daysLeft: 7,
+        subscriptionExpiresAt: mockUsers[0].subscriptionExpiresAt,
       });
 
-      // Assert
-      expect(subscriptions.every((s) => s.notificationsEnabled)).toBe(true);
+      expect(sendNotificationSpy).toHaveBeenCalledWith({
+        userId: 5,
+        chatId: '55555',
+        daysLeft: 3,
+        subscriptionExpiresAt: mockUsers[4].subscriptionExpiresAt,
+      });
+
+      expect(sendNotificationSpy).toHaveBeenCalledWith({
+        userId: 7,
+        chatId: '77777',
+        daysLeft: 1,
+        subscriptionExpiresAt: mockUsers[6].subscriptionExpiresAt,
+      });
+
+      // Verify users with 6, 5, 4, 2 days were NOT called
+      expect(sendNotificationSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 2, daysLeft: 6 }),
+      );
+      expect(sendNotificationSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 3, daysLeft: 5 }),
+      );
+      expect(sendNotificationSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 4, daysLeft: 4 }),
+      );
+      expect(sendNotificationSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 6, daysLeft: 2 }),
+      );
+    });
+
+    test('should skip users without chatId or subscriptionExpiresAt', async () => {
+      const mockUsers = [
+        {
+          id: 1,
+          chatId: null,
+          subscriptionExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: 2,
+          chatId: '12345',
+          subscriptionExpiresAt: null,
+        },
+      ];
+
+      (mockPrismaVar.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      const sendNotificationSpy = jest
+        .spyOn(service as any, 'sendExpirationNotification')
+        .mockResolvedValue(undefined);
+
+      await service.checkSubscriptionExpirations();
+
+      expect(sendNotificationSpy).not.toHaveBeenCalled();
+    });
+
+    test('should handle errors gracefully', async () => {
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      (mockPrismaVar.user.findMany as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
+
+      await service.checkSubscriptionExpirations();
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error checking subscription expirations:',
+        expect.any(Error),
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('sendExpirationNotification', () => {
+    test('should send 7-day expiration notification', async () => {
+      // Reset mock explicitly
+      mockTBOT.sendMessage.mockClear();
+
+      const notification = {
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 7,
+        subscriptionExpiresAt: new Date('2024-01-15'),
+      };
+
+      await (service as any)['sendExpirationNotification'](notification);
+
+      expect(mockTBOT.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockTBOT.sendMessage).toHaveBeenCalledWith(
+        '12345',
+        expect.stringContaining('📅 <b>Подписка истекает через 7 дней</b>'),
+        expect.objectContaining({
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '📝 Подписка и оплата',
+                  web_app: { url: `${process.env.URL}?view=store` },
+                },
+              ],
+              [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
+            ],
+          },
+        }),
+      );
+    });
+
+    test('should send 3-day expiration notification', async () => {
+      // Reset mock explicitly
+      mockTBOT.sendMessage.mockClear();
+
+      const notification = {
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 3,
+        subscriptionExpiresAt: new Date('2024-01-15'),
+      };
+
+      await (service as any)['sendExpirationNotification'](notification);
+
+      expect(mockTBOT.sendMessage).toHaveBeenCalledWith(
+        '12345',
+        expect.stringContaining('⚠️ <b>Подписка истекает через 3 дня</b>'),
+        expect.any(Object),
+      );
+    });
+
+    test('should send 1-day expiration notification', async () => {
+      // Reset mock explicitly
+      mockTBOT.sendMessage.mockClear();
+
+      const notification = {
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 1,
+        subscriptionExpiresAt: new Date('2024-01-15'),
+      };
+
+      await (service as any)['sendExpirationNotification'](notification);
+
+      expect(mockTBOT.sendMessage).toHaveBeenCalledWith(
+        '12345',
+        expect.stringContaining('🚨 <b>Подписка истекает завтра!</b>'),
+        expect.any(Object),
+      );
+    });
+
+    test('should not send notification for non-matching days', async () => {
+      const notification = {
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 5,
+        subscriptionExpiresAt: new Date('2024-01-15'),
+      };
+
+      await (service as any)['sendExpirationNotification'](notification);
+
+      expect(mockTBOT.sendMessage).not.toHaveBeenCalled();
+    });
+
+    test('should handle bot blocked by user error', async () => {
+      // Reset mock explicitly
+      mockTBOT.sendMessage.mockClear();
+
+      const notification = {
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 7,
+        subscriptionExpiresAt: new Date('2024-01-15'),
+      };
+
+      const error = {
+        response: {
+          body: {
+            error_code: 403,
+            description: 'Forbidden: bot was blocked by the user',
+          },
+        },
+      };
+
+      mockTBOT.sendMessage.mockRejectedValue(error);
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      await (service as any)['sendExpirationNotification'](notification);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'User 1 has blocked the bot - cannot send expiration notification',
+      );
+      consoleSpy.mockRestore();
+    });
+
+    test('should handle chat not found error', async () => {
+      // Reset mock explicitly
+      mockTBOT.sendMessage.mockClear();
+
+      const notification = {
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 7,
+        subscriptionExpiresAt: new Date('2024-01-15'),
+      };
+
+      const error = {
+        response: {
+          body: {
+            error_code: 400,
+            description: 'Bad Request: chat not found',
+          },
+        },
+      };
+
+      mockTBOT.sendMessage.mockRejectedValue(error);
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      await (service as any)['sendExpirationNotification'](notification);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Chat not found for user 1 - user may have deleted the chat',
+      );
+      consoleSpy.mockRestore();
+    });
+
+    test('should handle other errors', async () => {
+      // Reset mock explicitly
+      mockTBOT.sendMessage.mockClear();
+
+      const notification = {
+        userId: 1,
+        chatId: '12345',
+        daysLeft: 7,
+        subscriptionExpiresAt: new Date('2024-01-15'),
+      };
+
+      const error = new Error('Network error');
+      mockTBOT.sendMessage.mockRejectedValue(error);
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      await (service as any)['sendExpirationNotification'](notification);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to send expiration notification to user 1:',
+        error,
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('triggerManualCheck', () => {
+    test('should call checkSubscriptionExpirations', async () => {
+      const checkSpy = jest
+        .spyOn(service, 'checkSubscriptionExpirations')
+        .mockResolvedValue(undefined);
+
+      await service.triggerManualCheck();
+
+      expect(checkSpy).toHaveBeenCalledTimes(1);
     });
   });
 });
