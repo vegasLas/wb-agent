@@ -133,11 +133,6 @@ export class SupplyService {
 
     logger.info(`[SupplyService] Supply created successfully, preorder ID: ${response.result?.ids?.[0]?.Id}`);
 
-    // TODO: Phase 5.5 - Add sendShipment call for full parity with deprecated project
-    // The deprecated project calls sendShipment after createSupply (lines 72-103 in supplyService.ts)
-    // This requires migrating initializeBrowser and proxyRequestFetch utilities
-    // For now, this is acceptable as Phase 5 focuses on core autobooking without full shipment tracking
-
     return response;
   }
 
