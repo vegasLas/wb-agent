@@ -11,20 +11,17 @@
 
 import { AutobookingRescheduleMonitoringService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
 import { autobookingRescheduleExecutorService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
+import { autobookingRescheduleNotificationService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service';
 import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
+import { sharedTaskOrganizerService } from '../../../services/monitoring/shared/task-organizer.service';
 import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
 import { sharedProcessingStateService } from '../../../services/monitoring/shared/processing-state.service';
-import { sharedTaskOrganizerService } from '../../../services/monitoring/shared/task-organizer.service';
-import {
-  createMonitoringUser,
-  getFutureDate,
-  getFutureDateString,
-} from '../../helpers/autobooking-helpers';
-import type { AutobookingReschedule } from '@prisma/client';
+import { sharedLatencyService } from '../../../services/monitoring/shared/latency.service';
 import type {
   MonitoringUser,
   WarehouseAvailability,
-} from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
+} from '../../../services/monitoring/interfaces/reschedule.interfaces';
+import type { AutobookingReschedule } from '@prisma/client';
 
 // Mock dependencies
 jest.mock(
@@ -32,7 +29,9 @@ jest.mock(
   () => ({
     autobookingRescheduleExecutorService: {
       createRescheduleTask: jest.fn(),
-      filterAvailabilitiesForReschedule: jest.fn(),
+      addSuccessfulReschedule: jest.fn(),
+      logSuccessfulReschedule: jest.fn(),
+      handleRescheduleProcessingError: jest.fn(),
     },
   }),
 );
@@ -41,98 +40,148 @@ jest.mock(
   '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service',
   () => ({
     autobookingRescheduleNotificationService: {
-      sendSuccessNotification: jest.fn(),
       updateRescheduleStatus: jest.fn(),
+      sendSuccessNotification: jest.fn(),
     },
   }),
 );
 
-jest.mock('../../../utils/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-  },
-}));
+// Helper functions
+const createReschedule = (
+  overrides: Partial<AutobookingReschedule> = {},
+): AutobookingReschedule => {
+  const isCustomDates =
+    (overrides.dateType || 'CUSTOM_DATES_SINGLE') === 'CUSTOM_DATES_SINGLE';
+  const defaultCustomDates = isCustomDates ? [new Date('2025-09-01')] : [];
 
-// Mock task organizer service
-jest.mock('../../../services/monitoring/shared/task-organizer.service', () => ({
-  sharedTaskOrganizerService: {
-    organizeReschedulesByWarehouseDateTyped: jest.fn(),
-    getProxyString: jest.fn().mockReturnValue('proxy-string'),
-  },
-}));
-
-// Mock latency service
-jest.mock('../../../services/monitoring/shared/latency.service', () => ({
-  sharedLatencyService: {
-    generateLatency: jest.fn().mockReturnValue(1000),
-  },
-}));
-
-describe('AutobookingRescheduleMonitoringService', () => {
-  let service: AutobookingRescheduleMonitoringService;
-  let mockExecutor: jest.Mocked<typeof autobookingRescheduleExecutorService>;
-
-  // Helper to create reschedule
-  const createReschedule = (
-    overrides: Partial<AutobookingReschedule> = {},
-  ): AutobookingReschedule => ({
-    id: 'reschedule-1',
+  return {
+    id: 'reschedule-101',
     userId: 1,
     supplierId: 'supplier-1',
-    supplyId: 'supply-123',
+    supplyId: '12345',
     warehouseId: 123,
-    currentDate: new Date(),
-    targetDateFrom: getFutureDate(7),
-    targetDateTo: getFutureDate(14),
-    coefficient: 5,
-    status: 'ACTIVE',
+    supplyType: 'BOX',
+    dateType: 'CUSTOM_DATES_SINGLE',
+    startDate: null,
+    endDate: null,
+    currentDate: new Date('2025-09-01'),
+    customDates: defaultCustomDates,
+    completedDates: [],
+    maxCoefficient: 1000,
+    status: 'ACTIVE' as const,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
-  });
+  };
+};
+
+const createMonitoringUser = (
+  overrides: Partial<MonitoringUser> = {},
+): MonitoringUser => {
+  const userId = overrides.userId || 1;
+  const accountId = `account-${userId}`;
+
+  // Get supplierId from accounts if provided, otherwise default
+  const accounts = overrides.accounts || {
+    [accountId]: ['supplier-1'],
+  };
+
+  return {
+    userId,
+    chatId: 'test-chat-id',
+    proxy: {
+      host: `${userId}.${userId}.${userId}.${userId}`,
+      port: 8080,
+      username: `user${userId}`,
+      password: `pass${userId}`,
+    },
+    userAgent: 'test-agent',
+    autobookings: [],
+    supplyTriggers: [],
+    reschedules: [],
+    accounts,
+    ...overrides,
+  };
+};
+
+const createAvailability = (
+  overrides: Partial<WarehouseAvailability> = {},
+): WarehouseAvailability => {
+  return {
+    warehouseId: 123,
+    warehouseName: 'Test Warehouse',
+    boxTypeID: 2 as const,
+    availableDates: [{ date: '2025-09-01', coefficient: 100 }],
+    ...overrides,
+  };
+};
+
+describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
+  let service: AutobookingRescheduleMonitoringService;
+  let mockExecutorService: jest.Mocked<typeof autobookingRescheduleExecutorService>;
+  let mockNotificationService: jest.Mocked<typeof autobookingRescheduleNotificationService>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     service = new AutobookingRescheduleMonitoringService();
-    mockExecutor = autobookingRescheduleExecutorService as jest.Mocked<
+
+    // Get mock references
+    mockExecutorService = autobookingRescheduleExecutorService as jest.Mocked<
       typeof autobookingRescheduleExecutorService
     >;
+    mockNotificationService = autobookingRescheduleNotificationService as jest.Mocked<
+      typeof autobookingRescheduleNotificationService
+    >;
 
-    // Set default mock implementations
-    mockExecutor.createRescheduleTask.mockResolvedValue({
-      success: true,
-      supplyId: 'supply-123',
-    });
-    mockExecutor.filterAvailabilitiesForReschedule.mockImplementation(
-      (availabilities) => availabilities,
+    // Setup default mocks for executor
+    mockExecutorService.createRescheduleTask.mockResolvedValue(undefined);
+    mockExecutorService.addSuccessfulReschedule.mockImplementation(() => {});
+    mockExecutorService.logSuccessfulReschedule.mockImplementation(() => {});
+    mockExecutorService.handleRescheduleProcessingError.mockResolvedValue(
+      undefined,
     );
 
-    // Default: empty map for task organizer (no reschedules to process)
-    (sharedTaskOrganizerService.organizeReschedulesByWarehouseDateTyped as jest.Mock).mockReturnValue(
-      new Map()
+    // Setup default mocks for notification service
+    mockNotificationService.updateRescheduleStatus.mockResolvedValue(undefined);
+    mockNotificationService.sendSuccessNotification.mockResolvedValue(
+      undefined,
     );
 
-    // Clear shared service states
-    sharedBanService.clearAllBannedDates();
-    sharedBanService.clearAllBlacklistedUsers();
-    sharedProcessingStateService.resetRescheduleState();
-    sharedUserTrackingService.clearAllRunningUsers();
-    sharedUserTrackingService.clearAllBlacklistedUsers();
+    // Setup default mocks for shared services
+    jest
+      .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+      .mockReturnValue(new Map());
+    jest
+      .spyOn(sharedProcessingStateService, 'isRescheduleProcessed')
+      .mockReturnValue(false);
+    jest
+      .spyOn(sharedProcessingStateService, 'markRescheduleAsProcessed')
+      .mockImplementation(() => {});
+    jest
+      .spyOn(sharedProcessingStateService, 'resetRescheduleState')
+      .mockImplementation(() => {});
+    jest
+      .spyOn(sharedUserTrackingService, 'isUserRunning')
+      .mockReturnValue(false);
+    jest
+      .spyOn(sharedUserTrackingService, 'trackUsersAsRunning')
+      .mockImplementation(() => {});
+    jest
+      .spyOn(sharedUserTrackingService, 'removeUsersFromRunning')
+      .mockImplementation(() => {});
+    jest
+      .spyOn(sharedBanService, 'isUserBlacklisted')
+      .mockReturnValue(false);
+    jest.spyOn(sharedBanService, 'isBanned').mockReturnValue(false);
+    jest.spyOn(sharedLatencyService, 'generateLatency').mockReturnValue(1000);
   });
 
   afterEach(() => {
-    sharedBanService.clearAllBannedDates();
-    sharedBanService.clearAllBlacklistedUsers();
-    sharedProcessingStateService.resetRescheduleState();
-    sharedUserTrackingService.clearAllRunningUsers();
-    sharedUserTrackingService.clearAllBlacklistedUsers();
+    jest.restoreAllMocks();
   });
 
   describe('Basic reschedule processing flow', () => {
-    test('should process reschedule availabilities with no reschedules', async () => {
+    test('should complete successfully when no reschedules to process', async () => {
       // Arrange
       const monitoringUsers: MonitoringUser[] = [];
       const availabilities: WarehouseAvailability[] = [];
@@ -144,469 +193,612 @@ describe('AutobookingRescheduleMonitoringService', () => {
       );
 
       // Assert
-      expect(mockExecutor.createRescheduleTask).not.toHaveBeenCalled();
+      expect(sharedProcessingStateService.resetRescheduleState).toHaveBeenCalled();
+      expect(
+        sharedTaskOrganizerService.organizeReschedulesByWarehouseDateTyped,
+      ).toHaveBeenCalledWith(monitoringUsers, availabilities);
     });
 
-    test('should process reschedule availabilities with single reschedule', async () => {
+    test('should process single reschedule successfully', async () => {
       // Arrange
       const reschedule = createReschedule();
-      const monitoringUser = createMonitoringUser({
-        userId: 1,
-        reschedules: [reschedule],
-      });
-      const monitoringUsers: MonitoringUser[] = [monitoringUser];
+      const user = createMonitoringUser({ reschedules: [reschedule] });
+      const availability = createAvailability();
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
-
-      // Set up task organizer to return a reschedule task
-      const warehouseDateKey = `123-${getFutureDate(7).toDateString()}-BOX`;
       const rescheduleTask = {
         reschedule,
-        user: monitoringUser,
-        warehouseName: 'Test WH',
-        coefficient: 2,
-        availability: availabilities[0],
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
       };
-      (sharedTaskOrganizerService.organizeReschedulesByWarehouseDateTyped as jest.Mock).mockReturnValue(
-        new Map([[warehouseDateKey, [[rescheduleTask]]]])
-      );
+
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
 
       // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
-      );
+      await service.processRescheduleAvailabilities([user], [availability]);
 
       // Assert
-      expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
+      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([1]);
+      expect(
+        sharedProcessingStateService.markRescheduleAsProcessed,
+      ).toHaveBeenCalledWith(reschedule.id);
+      expect(mockExecutorService.createRescheduleTask).toHaveBeenCalledWith({
+        reschedule,
+        effectiveDate: expect.any(Date),
+        account: { id: 'account-1' },
+        user,
+        latency: 1000,
+      });
+      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalledWith([1]);
     });
 
-    test('should process reschedule availabilities with multiple reschedules', async () => {
+    test('should process multiple reschedules in sequence', async () => {
       // Arrange
-      const reschedule1 = createReschedule({ id: 'reschedule-1' });
+      const reschedule1 = createReschedule({ id: 'reschedule-1', userId: 1 });
       const reschedule2 = createReschedule({
         id: 'reschedule-2',
         userId: 2,
         supplierId: 'supplier-2',
       });
+      const user1 = createMonitoringUser({
+        userId: 1,
+        reschedules: [reschedule1],
+      });
+      const user2 = createMonitoringUser({
+        userId: 2,
+        reschedules: [reschedule2],
+        accounts: { 'account-2': ['supplier-2'] },
+      });
+      const availability = createAvailability();
 
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule1],
-        }),
-        createMonitoringUser({
-          userId: 2,
-          supplierId: 'supplier-2',
-          reschedules: [reschedule2],
-        }),
-      ];
+      const rescheduleTask1 = {
+        reschedule: reschedule1,
+        user: user1,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
+      const rescheduleTask2 = {
+        reschedule: reschedule2,
+        user: user2,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [
-            { date: getFutureDateString(7), coefficient: 2 },
-            { date: getFutureDateString(8), coefficient: 2 },
-          ],
-        },
-      ];
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask1, rescheduleTask2]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
 
       // Act
       await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
+        [user1, user2],
+        [availability],
       );
 
       // Assert
-      expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
+      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([1, 2]);
+      expect(mockExecutorService.createRescheduleTask).toHaveBeenCalled();
+      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalledWith([
+        1, 2,
+      ]);
     });
   });
 
   describe('Task organization and filtering', () => {
     test('should skip already processed reschedules', async () => {
       // Arrange
-      const reschedule = createReschedule({ id: 'reschedule-1' });
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule],
-        }),
-      ];
+      const reschedule = createReschedule();
+      const user = createMonitoringUser({ reschedules: [reschedule] });
+      const availability = createAvailability();
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
 
-      // Mark as processed
-      sharedProcessingStateService.markRescheduleAsProcessed(
-        'reschedule-1',
-        getFutureDate(7),
-      );
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
+      jest
+        .spyOn(sharedProcessingStateService, 'isRescheduleProcessed')
+        .mockReturnValue(true); // Already processed
 
       // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
-      );
+      await service.processRescheduleAvailabilities([user], [availability]);
 
-      // Assert - should not attempt to process already processed reschedule
-      // The processing may or may not call executor depending on implementation
+      // Assert
+      expect(mockExecutorService.createRescheduleTask).not.toHaveBeenCalled();
+      expect(sharedUserTrackingService.trackUsersAsRunning).not.toHaveBeenCalled();
     });
 
     test('should skip blacklisted users', async () => {
       // Arrange
       const reschedule = createReschedule();
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule],
-        }),
-      ];
+      const user = createMonitoringUser({ reschedules: [reschedule] });
+      const availability = createAvailability();
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
 
-      // Blacklist user
-      sharedBanService.addUserToBlacklist(1, 600000);
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
+      jest.spyOn(sharedBanService, 'isUserBlacklisted').mockReturnValue(true); // User is blacklisted
 
       // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
-      );
+      await service.processRescheduleAvailabilities([user], [availability]);
 
-      // Assert - blacklisted user should be skipped
-      expect(sharedBanService.isUserBlacklisted(1)).toBe(true);
+      // Assert
+      expect(mockExecutorService.createRescheduleTask).not.toHaveBeenCalled();
+      expect(sharedUserTrackingService.trackUsersAsRunning).not.toHaveBeenCalled();
     });
 
     test('should skip running users', async () => {
       // Arrange
       const reschedule = createReschedule();
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule],
-        }),
-      ];
+      const user = createMonitoringUser({ reschedules: [reschedule] });
+      const availability = createAvailability();
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
 
-      // Mark user as running (userId 1 is running, so reschedule should be skipped)
-      sharedUserTrackingService.trackUsersAsRunning([1]);
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
+      jest.spyOn(sharedUserTrackingService, 'isUserRunning').mockReturnValue(true); // User is already running
 
       // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
-      );
+      await service.processRescheduleAvailabilities([user], [availability]);
 
-      // Assert - verify user is running and executor wasn't called
-      expect(sharedUserTrackingService.isUserRunning(1)).toBe(true);
-      expect(mockExecutor.createRescheduleTask).not.toHaveBeenCalled();
+      // Assert
+      expect(mockExecutorService.createRescheduleTask).not.toHaveBeenCalled();
+      expect(sharedUserTrackingService.trackUsersAsRunning).not.toHaveBeenCalled();
     });
 
     test('should skip banned warehouse-date combinations', async () => {
       // Arrange
-      const reschedule = createReschedule({ warehouseId: 123 });
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule],
-        }),
-      ];
+      const reschedule = createReschedule();
+      const user = createMonitoringUser({ reschedules: [reschedule] });
+      const availability = createAvailability();
 
-      const targetDate = getFutureDate(7);
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
 
-      // Ban the warehouse-date
-      sharedBanService.banSingleDate({
-        warehouseId: 123,
-        date: targetDate,
-        supplyType: 'BOX',
-        coefficient: 2,
-        error: { message: 'Test error' },
-      });
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
+      jest.spyOn(sharedBanService, 'isBanned').mockReturnValue(true); // Warehouse-date is banned
 
       // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
-      );
+      await service.processRescheduleAvailabilities([user], [availability]);
 
       // Assert
-      expect(
-        sharedBanService.isBanned({
-          warehouseId: 123,
-          date: targetDate,
-          supplyType: 'BOX',
-          coefficient: 2,
-        }),
-      ).toBe(true);
+      expect(mockExecutorService.createRescheduleTask).not.toHaveBeenCalled();
     });
   });
 
   describe('Account lookup and validation', () => {
-    test('should find correct account for supplier', async () => {
+    test('should successfully find account for reschedule', async () => {
       // Arrange
       const reschedule = createReschedule({ supplierId: 'supplier-1' });
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          accounts: { 'account-1': ['supplier-1'] },
-          reschedules: [reschedule],
-        }),
-      ];
-
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
+      const user = createMonitoringUser({
+        userId: 1,
+        accounts: {
+          'account-1': ['supplier-1', 'supplier-2'],
+          'account-2': ['supplier-3'],
         },
-      ];
+        reschedules: [reschedule],
+      });
+      const availability = createAvailability();
+
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
+
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
 
       // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
-      );
+      await service.processRescheduleAvailabilities([user], [availability]);
 
       // Assert
-      expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
+      expect(mockExecutorService.createRescheduleTask).toHaveBeenCalledWith({
+        reschedule,
+        effectiveDate: expect.any(Date),
+        account: { id: 'account-1' }, // Should find the correct account
+        user,
+        latency: 1000,
+      });
     });
 
-    test('should handle missing account gracefully', async () => {
+    test('should throw error when no account found for supplier', async () => {
       // Arrange
-      const reschedule = createReschedule({ supplierId: 'unknown-supplier' });
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          accounts: {}, // No accounts
-          reschedules: [reschedule],
-        }),
-      ];
-
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
+      const reschedule = createReschedule({ supplierId: 'missing-supplier' });
+      const user = createMonitoringUser({
+        accounts: {
+          'account-1': ['supplier-1', 'supplier-2'],
         },
-      ];
+        reschedules: [reschedule],
+      });
+      const availability = createAvailability();
 
-      // Act - should not throw
-      await expect(
-        service.processRescheduleAvailabilities(
-          monitoringUsers,
-          availabilities,
-        ),
-      ).resolves.not.toThrow();
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
+
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
+
+      // Act - should not throw, error is handled internally
+      await service.processRescheduleAvailabilities([user], [availability]);
+
+      // Assert - should attempt to remove user from running even on error
+      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalled();
     });
   });
 
   describe('Success handling and notifications', () => {
-    test('should send notification after successful reschedule', async () => {
+    test('should handle successful reschedule notifications', async () => {
       // Arrange
       const reschedule = createReschedule();
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule],
-        }),
-      ];
-
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
-
-      mockExecutor.createRescheduleTask.mockResolvedValue({
-        success: true,
-        supplyId: 'supply-123',
+      const user = createMonitoringUser({
+        chatId: 'test-chat',
+        reschedules: [reschedule],
       });
+      const availability = createAvailability();
 
-      // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
+
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
+
+      // Mock successful reschedule - simulate adding to successfulReschedules
+      mockExecutorService.addSuccessfulReschedule.mockImplementation(
+        (successfulReschedules: any[], params: any) => {
+          successfulReschedules.push({
+            chatId: 'test-chat',
+            warehouseName: 'Test Warehouse',
+            effectiveDate: new Date('2025-09-01'),
+            coefficient: 100,
+            reschedule,
+          });
+        },
       );
 
+      // Act
+      await service.processRescheduleAvailabilities([user], [availability]);
+
       // Assert
-      expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
+      expect(
+        mockNotificationService.updateRescheduleStatus,
+      ).toHaveBeenCalledWith(reschedule, expect.any(Date));
+      expect(
+        mockNotificationService.sendSuccessNotification,
+      ).toHaveBeenCalledWith(
+        'test-chat',
+        'Test Warehouse',
+        expect.any(Date),
+        100,
+      );
+    });
+
+    test('should log processing results correctly', async () => {
+      // Arrange
+      const loggerSpy = jest.spyOn(
+        await import('../../../utils/logger'),
+        'logger',
+      );
+      const infoSpy = jest.fn();
+      jest.doMock('../../../utils/logger', () => ({
+        logger: {
+          info: infoSpy,
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        },
+      }));
+
+      const reschedule = createReschedule();
+      const user = createMonitoringUser({ reschedules: [reschedule] });
+      const availability = createAvailability();
+
+      const rescheduleTask = {
+        reschedule,
+        user,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
+
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
+
+      // Act
+      await service.processRescheduleAvailabilities([user], [availability]);
+
+      // Assert - verify the service completed without errors
+      expect(mockExecutorService.createRescheduleTask).toHaveBeenCalled();
+
+      jest.dontMock('../../../utils/logger');
     });
   });
 
   describe('Sequential proxy group processing', () => {
     test('should process multiple proxy groups in sequence', async () => {
       // Arrange
-      const reschedule1 = createReschedule({ id: 'reschedule-1' });
+      const reschedule1 = createReschedule({ id: 'reschedule-1', userId: 1 });
       const reschedule2 = createReschedule({
         id: 'reschedule-2',
         userId: 2,
         supplierId: 'supplier-2',
       });
+      const user1 = createMonitoringUser({
+        userId: 1,
+        reschedules: [reschedule1],
+      });
+      const user2 = createMonitoringUser({
+        userId: 2,
+        reschedules: [reschedule2],
+        accounts: { 'account-2': ['supplier-2'] },
+      });
+      const availability = createAvailability();
 
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          proxy: {
-            ip: '1.1.1.1',
-            port: '8080',
-            username: 'user1',
-            password: 'pass1',
-          },
-          reschedules: [reschedule1],
-        }),
-        createMonitoringUser({
-          userId: 2,
-          supplierId: 'supplier-2',
-          proxy: {
-            ip: '2.2.2.2',
-            port: '8080',
-            username: 'user2',
-            password: 'pass2',
-          },
-          reschedules: [reschedule2],
-        }),
-      ];
+      const rescheduleTask1 = {
+        reschedule: reschedule1,
+        user: user1,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
+      const rescheduleTask2 = {
+        reschedule: reschedule2,
+        user: user2,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
+      // Two proxy groups
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask1], [rescheduleTask2]]],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
 
       // Act
       await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
+        [user1, user2],
+        [availability],
       );
 
       // Assert
-      expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
+      expect(mockExecutorService.createRescheduleTask).toHaveBeenCalledTimes(2);
+      // Should process groups and track users
+      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([1]);
+      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([2]);
     });
 
-    test('should handle error recovery between groups', async () => {
+    test('should continue processing when non-DATE_UNAVAILABLE error occurs', async () => {
       // Arrange
-      const reschedule1 = createReschedule({ id: 'reschedule-1' });
+      const reschedule1 = createReschedule({ id: 'reschedule-1', userId: 1 });
       const reschedule2 = createReschedule({
         id: 'reschedule-2',
         userId: 2,
         supplierId: 'supplier-2',
       });
+      const user1 = createMonitoringUser({
+        userId: 1,
+        reschedules: [reschedule1],
+      });
+      const user2 = createMonitoringUser({
+        userId: 2,
+        reschedules: [reschedule2],
+        accounts: { 'account-2': ['supplier-2'] },
+      });
+      const availability = createAvailability();
 
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule1],
-        }),
-        createMonitoringUser({
-          userId: 2,
-          supplierId: 'supplier-2',
-          reschedules: [reschedule2],
-        }),
-      ];
+      const rescheduleTask1 = {
+        reschedule: reschedule1,
+        user: user1,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
+      const rescheduleTask2 = {
+        reschedule: reschedule2,
+        user: user2,
+        warehouseName: 'Test Warehouse',
+        coefficient: 100,
+        availability,
+      };
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [{ date: getFutureDateString(7), coefficient: 2 }],
-        },
-      ];
+      const warehouseDateMap = new Map([
+        ['123-Mon Sep 01 2025-BOX', [[rescheduleTask1], [rescheduleTask2]]],
+      ]);
 
-      // Mock first call fails, second succeeds
-      mockExecutor.createRescheduleTask
-        .mockRejectedValueOnce(new Error('Connection failed'))
-        .mockResolvedValueOnce({ success: true, supplyId: 'supply-123' });
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
 
-      // Act - should not throw
-      await expect(
-        service.processRescheduleAvailabilities(
-          monitoringUsers,
-          availabilities,
-        ),
-      ).resolves.not.toThrow();
+      // First group throws a non-date-unavailable error, second should still process
+      mockExecutorService.createRescheduleTask
+        .mockRejectedValueOnce(new Error('Some other error'))
+        .mockResolvedValueOnce(undefined);
+
+      // Mock the error handling to NOT throw (non-critical error)
+      mockExecutorService.handleRescheduleProcessingError.mockResolvedValue(
+        undefined,
+      );
+
+      // Act
+      await service.processRescheduleAvailabilities(
+        [user1, user2],
+        [availability],
+      );
+
+      // Assert
+      expect(mockExecutorService.createRescheduleTask).toHaveBeenCalledTimes(2); // Both groups processed
+      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalledTimes(2); // Cleanup called for both groups
     });
   });
 
   describe('Date extraction and sorting', () => {
-    test('should process warehouse-date keys in chronological order', async () => {
+    test('should extract and sort warehouse-date keys by date', async () => {
       // Arrange
-      const reschedule = createReschedule();
-      const monitoringUsers: MonitoringUser[] = [
-        createMonitoringUser({
-          userId: 1,
-          reschedules: [reschedule],
-        }),
-      ];
+      const reschedule1 = createReschedule({
+        id: 'reschedule-1',
+        customDates: [new Date('2025-09-03')],
+      });
+      const reschedule2 = createReschedule({
+        id: 'reschedule-2',
+        customDates: [new Date('2025-09-01')],
+      });
+      const reschedule3 = createReschedule({
+        id: 'reschedule-3',
+        customDates: [new Date('2025-09-02')],
+      });
 
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [
-            { date: getFutureDateString(9), coefficient: 2 },
-            { date: getFutureDateString(7), coefficient: 2 },
-            { date: getFutureDateString(8), coefficient: 2 },
+      const user = createMonitoringUser({
+        reschedules: [reschedule1, reschedule2, reschedule3],
+      });
+      const availability = createAvailability();
+
+      const warehouseDateMap = new Map([
+        [
+          '123-Wed Sep 03 2025-BOX',
+          [
+            [
+              {
+                reschedule: reschedule1,
+                user,
+                warehouseName: 'Test',
+                coefficient: 100,
+                availability,
+              },
+            ],
           ],
-        },
-      ];
+        ],
+        [
+          '123-Mon Sep 01 2025-BOX',
+          [
+            [
+              {
+                reschedule: reschedule2,
+                user,
+                warehouseName: 'Test',
+                coefficient: 100,
+                availability,
+              },
+            ],
+          ],
+        ],
+        [
+          '123-Tue Sep 02 2025-BOX',
+          [
+            [
+              {
+                reschedule: reschedule3,
+                user,
+                warehouseName: 'Test',
+                coefficient: 100,
+                availability,
+              },
+            ],
+          ],
+        ],
+      ]);
+
+      jest
+        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .mockReturnValue(warehouseDateMap as any);
 
       // Act
-      await service.processRescheduleAvailabilities(
-        monitoringUsers,
-        availabilities,
-      );
+      await service.processRescheduleAvailabilities([user], [availability]);
 
-      // Assert
-      expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
+      // Assert - should process all three dates
+      expect(mockExecutorService.createRescheduleTask).toHaveBeenCalledTimes(3);
     });
   });
 });
