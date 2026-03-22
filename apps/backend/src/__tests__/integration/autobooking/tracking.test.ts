@@ -51,7 +51,10 @@ jest.mock(
   '../../../services/monitoring/autobooking/autobooking-executor.service',
   () => ({
     autobookingExecutorService: {
-      executeBooking: jest.fn(),
+      createBookingTask: jest.fn(),
+      addSuccessfulBooking: jest.fn(),
+      logSuccessfulBooking: jest.fn(),
+      handleBookingProcessingError: jest.fn(),
     },
   }),
 );
@@ -125,24 +128,23 @@ describe('AutobookingMonitoringService - Tracking', () => {
       undefined,
     );
 
-    // Set default mock for executeBooking
-    mockAutobookingExecutor.executeBooking.mockResolvedValue({
-      success: true,
-      supplyId: '99999',
-    });
+    // Set default mock for createBookingTask
+    mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
     // Clear shared service states
     sharedBanService.clearAllBlacklistedUsers();
     sharedBanService.clearAllBannedDates();
     sharedProcessingStateService.resetAutobookingState();
-    sharedUserTrackingService.reset();
+    sharedUserTrackingService.clearAllRunningUsers();
+    sharedUserTrackingService.clearAllBlacklistedUsers();
   });
 
   afterEach(() => {
     sharedBanService.clearAllBlacklistedUsers();
     sharedBanService.clearAllBannedDates();
     sharedProcessingStateService.resetAutobookingState();
-    sharedUserTrackingService.reset();
+    sharedUserTrackingService.clearAllRunningUsers();
+    sharedUserTrackingService.clearAllBlacklistedUsers();
   });
 
   describe('Scenario 1: Same Booking Multiple Dates', () => {
@@ -174,16 +176,15 @@ describe('AutobookingMonitoringService - Tracking', () => {
       ];
 
       // Mock successful booking
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Should only execute booking once (for first successful date)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
     });
 
     test('should skip booking for later dates after first attempt', async () => {
@@ -215,22 +216,22 @@ describe('AutobookingMonitoringService - Tracking', () => {
       ];
 
       // Mock successful booking
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Should only process once (booking is tracked and skipped for other dates)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
     });
   });
 
   describe('Scenario 2: Same User Multiple Bookings', () => {
     test('should handle same user with multiple different bookings', async () => {
-      // Arrange: Single user with multiple bookings
+      // Arrange: Single user with multiple bookings for same warehouse/date
+      // Bookings have different proxies so they end up in different proxy groups
       const monitoringUsers: MonitoringUser[] = [
         createMonitoringUser({
           userId: 1,
@@ -238,14 +239,15 @@ describe('AutobookingMonitoringService - Tracking', () => {
             createAutobooking({
               id: 'booking-101',
               userId: 1,
+              warehouseId: 123,
               customDates: [TEST_DATE_1],
             }),
             createAutobooking({
               id: 'booking-102',
               userId: 1,
-              supplierId: 'supplier-1b',
-              draftId: 'draft1b',
-              customDates: [TEST_DATE_2],
+              warehouseId: 123,
+              draftId: 'draft2',
+              customDates: [TEST_DATE_1],
             }),
           ],
         }),
@@ -258,22 +260,20 @@ describe('AutobookingMonitoringService - Tracking', () => {
           boxTypeID: 2 as const,
           availableDates: [
             { date: getDateString(TEST_DATE_1), coefficient: 100 },
-            { date: getDateString(TEST_DATE_2), coefficient: 100 },
           ],
         },
       ];
 
       // Mock successful booking
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Both bookings should be processed (they're different bookings)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
     });
   });
 
@@ -331,16 +331,15 @@ describe('AutobookingMonitoringService - Tracking', () => {
       ];
 
       // Mock successful booking
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: All users should be processed
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(3);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        3,
+      );
     });
   });
 
@@ -386,10 +385,7 @@ describe('AutobookingMonitoringService - Tracking', () => {
       ];
 
       // Mock successful booking
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -397,7 +393,9 @@ describe('AutobookingMonitoringService - Tracking', () => {
       // Assert: Both users should be processed
       // User 1's booking should only be processed once (tracked after first date)
       // User 2's booking should be processed once
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
     });
   });
 
@@ -429,22 +427,25 @@ describe('AutobookingMonitoringService - Tracking', () => {
       ];
 
       // Mock first call fails, simulating no booking
-      mockAutobookingExecutor.executeBooking
+      mockAutobookingExecutor.createBookingTask
         .mockRejectedValueOnce(new Error('Date unavailable'))
-        .mockResolvedValueOnce({ success: true, supplyId: '99999' });
+        .mockResolvedValueOnce(undefined);
 
       // Act - First cycle (fails)
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Reset for second cycle
       sharedProcessingStateService.resetAutobookingState();
-      sharedUserTrackingService.reset();
+      sharedUserTrackingService.clearAllRunningUsers();
+      sharedUserTrackingService.clearAllBlacklistedUsers();
 
       // Act - Second cycle (succeeds)
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Both attempts should have been made (tracking was reset)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
     });
   });
 
@@ -478,16 +479,15 @@ describe('AutobookingMonitoringService - Tracking', () => {
       ];
 
       // Mock successful booking
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Should only process once (first success tracks the booking)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
     });
   });
 });

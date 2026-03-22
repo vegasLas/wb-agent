@@ -109,14 +109,16 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
     sharedBanService.clearAllBlacklistedUsers();
     sharedBanService.clearAllBannedDates();
     sharedProcessingStateService.resetAutobookingState();
-    sharedUserTrackingService.reset();
+    sharedUserTrackingService.clearAllRunningUsers();
+    sharedUserTrackingService.clearAllBlacklistedUsers();
   });
 
   afterEach(() => {
     sharedBanService.clearAllBlacklistedUsers();
     sharedBanService.clearAllBannedDates();
     sharedProcessingStateService.resetAutobookingState();
-    sharedUserTrackingService.reset();
+    sharedUserTrackingService.clearAllRunningUsers();
+    sharedUserTrackingService.clearAllBlacklistedUsers();
   });
 
   describe('Scenario 1: CUSTOM_DATES_SINGLE Basic Functionality', () => {

@@ -1,7 +1,7 @@
 /**
  * Autobooking Reschedule Monitoring Service Tests
  * Migrated from: tests/autobookingRescheduleMonitoring.service.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths to use new project structure
@@ -11,34 +11,40 @@
 
 import { AutobookingRescheduleMonitoringService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
 import { autobookingRescheduleExecutorService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
-import { autobookingRescheduleNotificationService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service';
 import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
-import { sharedTaskOrganizerService } from '../../../services/monitoring/shared/task-organizer.service';
 import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
 import { sharedProcessingStateService } from '../../../services/monitoring/shared/processing-state.service';
 import {
-  createAutobooking,
   createMonitoringUser,
   getFutureDate,
   getFutureDateString,
 } from '../../helpers/autobooking-helpers';
 import type { AutobookingReschedule } from '@prisma/client';
-import type { MonitoringUser, WarehouseAvailability } from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
+import type {
+  MonitoringUser,
+  WarehouseAvailability,
+} from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock dependencies
-jest.mock('../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service', () => ({
-  autobookingRescheduleExecutorService: {
-    createRescheduleTask: jest.fn(),
-    filterAvailabilitiesForReschedule: jest.fn(),
-  },
-}));
+jest.mock(
+  '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service',
+  () => ({
+    autobookingRescheduleExecutorService: {
+      createRescheduleTask: jest.fn(),
+      filterAvailabilitiesForReschedule: jest.fn(),
+    },
+  }),
+);
 
-jest.mock('../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service', () => ({
-  autobookingRescheduleNotificationService: {
-    sendSuccessNotification: jest.fn(),
-    updateRescheduleStatus: jest.fn(),
-  },
-}));
+jest.mock(
+  '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service',
+  () => ({
+    autobookingRescheduleNotificationService: {
+      sendSuccessNotification: jest.fn(),
+      updateRescheduleStatus: jest.fn(),
+    },
+  }),
+);
 
 jest.mock('../../../utils/logger', () => ({
   logger: {
@@ -55,7 +61,7 @@ describe('AutobookingRescheduleMonitoringService', () => {
 
   // Helper to create reschedule
   const createReschedule = (
-    overrides: Partial<AutobookingReschedule> = {}
+    overrides: Partial<AutobookingReschedule> = {},
   ): AutobookingReschedule => ({
     id: 'reschedule-1',
     userId: 1,
@@ -75,7 +81,9 @@ describe('AutobookingRescheduleMonitoringService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service = new AutobookingRescheduleMonitoringService();
-    mockExecutor = autobookingRescheduleExecutorService as jest.Mocked<typeof autobookingRescheduleExecutorService>;
+    mockExecutor = autobookingRescheduleExecutorService as jest.Mocked<
+      typeof autobookingRescheduleExecutorService
+    >;
 
     // Set default mock implementations
     mockExecutor.createRescheduleTask.mockResolvedValue({
@@ -83,21 +91,23 @@ describe('AutobookingRescheduleMonitoringService', () => {
       supplyId: 'supply-123',
     });
     mockExecutor.filterAvailabilitiesForReschedule.mockImplementation(
-      (availabilities) => availabilities
+      (availabilities) => availabilities,
     );
 
     // Clear shared service states
     sharedBanService.clearAllBannedDates();
     sharedBanService.clearAllBlacklistedUsers();
     sharedProcessingStateService.resetRescheduleState();
-    sharedUserTrackingService.reset();
+    sharedUserTrackingService.clearAllRunningUsers();
+    sharedUserTrackingService.clearAllBlacklistedUsers();
   });
 
   afterEach(() => {
     sharedBanService.clearAllBannedDates();
     sharedBanService.clearAllBlacklistedUsers();
     sharedProcessingStateService.resetRescheduleState();
-    sharedUserTrackingService.reset();
+    sharedUserTrackingService.clearAllRunningUsers();
+    sharedUserTrackingService.clearAllBlacklistedUsers();
   });
 
   describe('Basic reschedule processing flow', () => {
@@ -107,7 +117,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       const availabilities: WarehouseAvailability[] = [];
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(mockExecutor.createRescheduleTask).not.toHaveBeenCalled();
@@ -133,7 +146,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       ];
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
@@ -173,7 +189,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       ];
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
@@ -201,10 +220,16 @@ describe('AutobookingRescheduleMonitoringService', () => {
       ];
 
       // Mark as processed
-      sharedProcessingStateService.markRescheduleAsProcessed('reschedule-1', getFutureDate(7));
+      sharedProcessingStateService.markRescheduleAsProcessed(
+        'reschedule-1',
+        getFutureDate(7),
+      );
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert - should not attempt to process already processed reschedule
       // The processing may or may not call executor depending on implementation
@@ -233,7 +258,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       sharedBanService.addUserToBlacklist(1, 600000);
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert - blacklisted user should be skipped
       expect(sharedBanService.isUserBlacklisted(1)).toBe(true);
@@ -262,7 +290,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       sharedUserTrackingService.markUserAsRunning(1);
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(sharedUserTrackingService.isUserRunning(1)).toBe(true);
@@ -298,15 +329,20 @@ describe('AutobookingRescheduleMonitoringService', () => {
       });
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
-      expect(sharedBanService.isBanned({
-        warehouseId: 123,
-        date: targetDate,
-        supplyType: 'BOX',
-        coefficient: 2,
-      })).toBe(true);
+      expect(
+        sharedBanService.isBanned({
+          warehouseId: 123,
+          date: targetDate,
+          supplyType: 'BOX',
+          coefficient: 2,
+        }),
+      ).toBe(true);
     });
   });
 
@@ -332,7 +368,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       ];
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
@@ -360,7 +399,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
 
       // Act - should not throw
       await expect(
-        service.processRescheduleAvailabilities(monitoringUsers, availabilities)
+        service.processRescheduleAvailabilities(
+          monitoringUsers,
+          availabilities,
+        ),
       ).resolves.not.toThrow();
     });
   });
@@ -391,7 +433,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       });
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
@@ -411,13 +456,23 @@ describe('AutobookingRescheduleMonitoringService', () => {
       const monitoringUsers: MonitoringUser[] = [
         createMonitoringUser({
           userId: 1,
-          proxy: { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' },
+          proxy: {
+            ip: '1.1.1.1',
+            port: '8080',
+            username: 'user1',
+            password: 'pass1',
+          },
           reschedules: [reschedule1],
         }),
         createMonitoringUser({
           userId: 2,
           supplierId: 'supplier-2',
-          proxy: { ip: '2.2.2.2', port: '8080', username: 'user2', password: 'pass2' },
+          proxy: {
+            ip: '2.2.2.2',
+            port: '8080',
+            username: 'user2',
+            password: 'pass2',
+          },
           reschedules: [reschedule2],
         }),
       ];
@@ -432,7 +487,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       ];
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();
@@ -475,7 +533,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
 
       // Act - should not throw
       await expect(
-        service.processRescheduleAvailabilities(monitoringUsers, availabilities)
+        service.processRescheduleAvailabilities(
+          monitoringUsers,
+          availabilities,
+        ),
       ).resolves.not.toThrow();
     });
   });
@@ -505,7 +566,10 @@ describe('AutobookingRescheduleMonitoringService', () => {
       ];
 
       // Act
-      await service.processRescheduleAvailabilities(monitoringUsers, availabilities);
+      await service.processRescheduleAvailabilities(
+        monitoringUsers,
+        availabilities,
+      );
 
       // Assert
       expect(mockExecutor.createRescheduleTask).toHaveBeenCalled();

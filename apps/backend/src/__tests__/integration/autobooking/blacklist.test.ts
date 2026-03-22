@@ -74,7 +74,10 @@ jest.mock(
   '../../../services/monitoring/autobooking/autobooking-executor.service',
   () => ({
     autobookingExecutorService: {
-      executeBooking: jest.fn(),
+      createBookingTask: jest.fn(),
+      addSuccessfulBooking: jest.fn(),
+      logSuccessfulBooking: jest.fn(),
+      handleBookingProcessingError: jest.fn(),
     },
   }),
 );
@@ -139,11 +142,23 @@ describe('AutobookingMonitoringService - User Blacklist Functionality', () => {
       undefined,
     );
 
-    // Set default mock for executeBooking (tests can override)
-    mockAutobookingExecutor.executeBooking.mockResolvedValue({
-      success: true,
-      supplyId: '99999',
-    });
+    // Set default mock for createBookingTask (tests can override)
+    mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
+
+    // Mock handleBookingProcessingError to simulate blacklisting for "too active" errors
+    mockAutobookingExecutor.handleBookingProcessingError.mockImplementation(
+      async ({ error, user }) => {
+        const errorMessage = (error as Error).message;
+        // Simulate the blacklisting behavior for "too active" errors
+        if (
+          errorMessage.includes(
+            'Заметили, что вы слишком активно создаёте поставки',
+          )
+        ) {
+          sharedBanService.addUserToBlacklist(user.userId, 600000); // 10 minutes
+        }
+      },
+    );
 
     // Clear the blacklist and banned dates before each test
     sharedBanService.clearAllBlacklistedUsers();
@@ -199,19 +214,21 @@ describe('AutobookingMonitoringService - User Blacklist Functionality', () => {
         'Заметили, что вы слишком активно создаёте поставки. Подождите пару минут и можете продолжить',
       );
       let callCount = 0;
-      mockAutobookingExecutor.executeBooking.mockImplementation(() => {
+      mockAutobookingExecutor.createBookingTask.mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
           return Promise.reject(tooActiveError); // User 1 gets too active error
         }
-        return Promise.resolve({ success: true, supplyId: '99999' }); // User 2 succeeds
+        return Promise.resolve(); // User 2 succeeds
       });
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: User 1 should be blacklisted, User 2 should still process successfully
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
 
       // Verify that User 1 is now blacklisted
       expect(sharedBanService.isUserBlacklisted(1)).toBe(true);
@@ -261,16 +278,22 @@ describe('AutobookingMonitoringService - User Blacklist Functionality', () => {
       sharedBanService.addUserToBlacklist(1, 600000); // 10 minutes
 
       // Mock successful booking for User 2
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Only User 2 should be processed (User 1 is blacklisted)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
+
+      // Verify the call was for User 2 (check userId in the call)
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user: expect.objectContaining({ userId: 2 }),
+        }),
+      );
     });
   });
 
@@ -306,17 +329,15 @@ describe('AutobookingMonitoringService - User Blacklist Functionality', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Mock successful booking
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: User should be processed (blacklist expired)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(1);
-
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
       // Verify user is no longer blacklisted
       expect(sharedBanService.isUserBlacklisted(1)).toBe(false);
     });
@@ -366,8 +387,24 @@ describe('AutobookingMonitoringService - User Blacklist Functionality', () => {
       );
       const dateUnavailableError = new Error('Эта дата уже недоступна');
 
+      // Update handleBookingProcessingError mock to handle different error types
+      mockAutobookingExecutor.handleBookingProcessingError.mockImplementation(
+        async ({ error, user }) => {
+          const errorMessage = (error as Error).message;
+          // Only blacklist for "too active" errors
+          if (
+            errorMessage.includes(
+              'Заметили, что вы слишком активно создаёте поставки',
+            )
+          ) {
+            sharedBanService.addUserToBlacklist(user.userId, 600000);
+          }
+          // Date unavailable errors don't cause blacklisting
+        },
+      );
+
       let callCount = 0;
-      mockAutobookingExecutor.executeBooking.mockImplementation(() => {
+      mockAutobookingExecutor.createBookingTask.mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
           return Promise.reject(tooActiveError); // User 1: too active error
@@ -381,7 +418,9 @@ describe('AutobookingMonitoringService - User Blacklist Functionality', () => {
       // Assert:
       // - User 1 should be blacklisted (too active error)
       // - User 2 should not be blacklisted (date unavailable error)
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
 
       // Verify User 1 is blacklisted but User 2 is not
       expect(sharedBanService.isUserBlacklisted(1)).toBe(true);
@@ -445,16 +484,22 @@ describe('AutobookingMonitoringService - User Blacklist Functionality', () => {
       sharedBanService.addUserToBlacklist(2, 600000);
 
       // Mock successful booking for User 3
-      mockAutobookingExecutor.executeBooking.mockResolvedValue({
-        success: true,
-        supplyId: '99999',
-      });
+      mockAutobookingExecutor.createBookingTask.mockResolvedValue(undefined);
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Only User 3 should be processed
-      expect(mockAutobookingExecutor.executeBooking).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
+
+      // Verify the call was for User 3 (check userId in the call)
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user: expect.objectContaining({ userId: 3 }),
+        }),
+      );
     });
   });
 });
