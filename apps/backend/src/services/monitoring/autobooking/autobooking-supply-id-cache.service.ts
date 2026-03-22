@@ -172,7 +172,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
       rpc_order: randomNumber,
       params: {
         boxTypeID: boxTypeMask,
-        isBoxOnPallet: false,
+        isBoxOnPallet,
         draftID: booking.draftId,
         warehouseId: booking.warehouseId,
         transitWarehouseId: booking.transitWarehouseId || null,
