@@ -109,7 +109,7 @@ export class SharedBanService implements ISharedBanService {
 
     // Count attempts within the time window
     const recentAttempts = attempts.filter(
-      (attempt) => now - attempt.timestamp <= BAN_ATTEMPT_WINDOW_MS
+      (attempt) => now - attempt.timestamp <= BAN_ATTEMPT_WINDOW_MS,
     );
 
     return recentAttempts.length >= MAX_BAN_ATTEMPTS;
@@ -123,7 +123,7 @@ export class SharedBanService implements ISharedBanService {
 
     for (const [key, attempts] of this.banAttempts.entries()) {
       const validAttempts = attempts.filter(
-        (attempt) => now - attempt.timestamp <= BAN_ATTEMPT_WINDOW_MS
+        (attempt) => now - attempt.timestamp <= BAN_ATTEMPT_WINDOW_MS,
       );
 
       if (validAttempts.length === 0) {
@@ -287,7 +287,7 @@ export class SharedBanService implements ISharedBanService {
       // Reset ban attempts after extending duration
       this.resetBanAttempts(key);
       console.log(
-        `🚫 Extended ban duration by hour for key: ${key} (3+ attempts in 20 seconds)`
+        `🚫 Extended ban duration by hour for key: ${key} (3+ attempts in 20 seconds)`,
       );
     }
 
@@ -372,7 +372,7 @@ export class SharedBanService implements ISharedBanService {
    * Sends notification to admin about banned warehouse-date combination
    */
   private async sendBannedDateNotification(
-    params: Partial<BanParams>
+    params: Partial<BanParams>,
   ): Promise<void> {
     const { warehouseId, date, supplyType, dateType, error } = params;
     try {
@@ -386,7 +386,7 @@ export class SharedBanService implements ISharedBanService {
           supplyType!,
           dateType,
           date,
-          error
+          error,
         );
         await sharedTelegramNotificationService.sendErrorNotification(
           adminUser.chatId,
@@ -397,13 +397,13 @@ export class SharedBanService implements ISharedBanService {
                 [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
               ],
             },
-          }
+          },
         );
       }
     } catch (notificationError) {
       console.error(
         'Error sending banned date notification:',
-        notificationError
+        notificationError,
       );
     }
   }
@@ -426,7 +426,7 @@ export class SharedBanService implements ISharedBanService {
     supplyType: string,
     dateType?: string,
     date?: Date | null,
-    error?: BookingError
+    error?: BookingError,
   ): string {
     let message = `⚠️ Внимание! Склад временно заблокирован:\n\nсклад: ${warehouseName}\n`;
 
@@ -470,14 +470,14 @@ export class SharedBanService implements ISharedBanService {
    */
   addUserToBlacklist(
     userId: number,
-    duration: number = TOO_ACTIVE_BLACKLIST_DURATION_MS
+    duration: number = TOO_ACTIVE_BLACKLIST_DURATION_MS,
   ): void {
     const expiration = Date.now() + duration;
     this.blacklistedUsers.set(userId, expiration);
 
     const durationMinutes = duration / 60000;
     console.log(
-      `🚫 BLACKLISTED USER: ${userId} - Duration: ${durationMinutes} minutes`
+      `🚫 BLACKLISTED USER: ${userId} - Duration: ${durationMinutes} minutes`,
     );
   }
 
