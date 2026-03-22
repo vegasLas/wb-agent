@@ -385,12 +385,7 @@ export interface ISharedBanService {
 export interface MonitoringUser {
   userId: number;
   userAgent: string;
-  proxy: {
-    ip: string;
-    port: string;
-    username: string;
-    password: string;
-  };
+  proxy: Proxy;
   chatId?: string;
   autobookings: Autobooking[];
   supplyTriggers: SupplyTrigger[];
@@ -410,6 +405,8 @@ export interface Proxy {
   port: string;
   username: string;
   password: string;
+  timezone?: number;
+  usageCount?: number;
 }
 
 // ============== UserEnvInfo (from existing types) ==============

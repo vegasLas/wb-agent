@@ -13,6 +13,7 @@ import { autobookingSupplyIdCacheService } from './autobooking-supply-id-cache.s
 import { supplyService } from '../../supply.service';
 import { prisma } from '../../../config/database';
 import { logger } from '../../../utils/logger';
+import type { Proxy } from '../../../utils/userEnvInfo';
 import { playwrightBrowserService, BrowserErrorCode } from '../playwright-browser.service';
 import { browserFingerprintService } from '../browser-fingerprint.service';
 import type {
@@ -120,7 +121,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
         cookiesString: account.wbCookies!,
         accountId: account.id,
         supplierId: booking.supplierId,
-        proxy: user.proxy,
+        proxy: user.proxy as Proxy,
         userAgent: user.userAgent,
         fingerprint,
         transitWarehouseId: booking.transitWarehouseId,
