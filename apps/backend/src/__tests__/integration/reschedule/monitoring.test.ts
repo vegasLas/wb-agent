@@ -559,20 +559,6 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
 
     test('should log processing results correctly', async () => {
       // Arrange
-      const loggerSpy = jest.spyOn(
-        await import('../../../utils/logger'),
-        'logger',
-      );
-      const infoSpy = jest.fn();
-      jest.doMock('../../../utils/logger', () => ({
-        logger: {
-          info: infoSpy,
-          warn: jest.fn(),
-          error: jest.fn(),
-          debug: jest.fn(),
-        },
-      }));
-
       const reschedule = createReschedule();
       const user = createMonitoringUser({ reschedules: [reschedule] });
       const availability = createAvailability();
@@ -598,8 +584,6 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
 
       // Assert - verify the service completed without errors
       expect(mockExecutorService.createRescheduleTask).toHaveBeenCalled();
-
-      jest.dontMock('../../../utils/logger');
     });
   });
 
