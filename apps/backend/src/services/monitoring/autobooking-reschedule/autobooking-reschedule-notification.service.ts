@@ -41,13 +41,14 @@ export class AutobookingRescheduleNotificationService
     warehouseName: string,
     date: Date,
     coefficient: number,
+    transitWarehouseName?: string,
   ): Promise<void> {
     const message =
       sharedTelegramNotificationService.buildBookingSuccessMessage(
         warehouseName,
         date,
         coefficient,
-        null, // no transit warehouse for reschedule
+        transitWarehouseName, // optional transit warehouse for reschedule
         true, // isReschedule = true
       );
 

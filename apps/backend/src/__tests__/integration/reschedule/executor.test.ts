@@ -1,7 +1,7 @@
 /**
  * Autobooking Reschedule Executor Service Tests
  * Migrated from: tests/autobookingRescheduleExecutor.service.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths to use new project structure
@@ -11,19 +11,14 @@
 
 import { AutobookingRescheduleExecutorService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
 import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
-import { sharedAvailabilityFilterService } from '../../../services/monitoring/shared/availability-filter.service';
 import { sharedErrorHandlingService } from '../../../services/monitoring/shared/error-handling.service';
-import { sharedStatusUpdateService } from '../../../services/monitoring/shared/status-update.service';
 import { supplyService } from '../../../services/supply.service';
 import { bookingErrorService } from '../../../services/booking-error.service';
 import {
-  createAutobooking,
   createMonitoringUser,
   getFutureDate,
-  getFutureDateString,
 } from '../../helpers/autobooking-helpers';
 import type { AutobookingReschedule } from '@prisma/client';
-import type { MonitoringUser, WarehouseAvailability } from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock dependencies
 jest.mock('../../../services/supply.service');
@@ -44,28 +39,33 @@ describe('AutobookingRescheduleExecutorService', () => {
 
   // Helper function to create a reschedule object
   const createReschedule = (
-    overrides: Partial<AutobookingReschedule> = {}
-  ): AutobookingReschedule => ({
-    id: 'reschedule-1',
-    userId: 1,
-    supplierId: 'supplier-1',
-    supplyId: 'supply-123',
-    warehouseId: 123,
-    currentDate: new Date(),
-    targetDateFrom: getFutureDate(7),
-    targetDateTo: getFutureDate(14),
-    coefficient: 5,
-    status: 'ACTIVE',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  });
+    overrides: Partial<AutobookingReschedule> = {},
+  ): AutobookingReschedule =>
+    ({
+      id: 'reschedule-1',
+      userId: 1,
+      supplierId: 'supplier-1',
+      supplyId: 'supply-123',
+      warehouseId: 123,
+      supplyType: 'BOX',
+      dateType: 'CUSTOM_DATES',
+      currentDate: new Date(),
+      targetDateFrom: getFutureDate(7),
+      targetDateTo: getFutureDate(14),
+      coefficient: 5,
+      status: 'ACTIVE',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    }) as AutobookingReschedule;
 
   beforeEach(() => {
     jest.clearAllMocks();
     service = new AutobookingRescheduleExecutorService();
     mockSupplyService = supplyService as jest.Mocked<typeof supplyService>;
-    mockBookingErrorService = bookingErrorService as jest.Mocked<typeof bookingErrorService>;
+    mockBookingErrorService = bookingErrorService as jest.Mocked<
+      typeof bookingErrorService
+    >;
 
     // Mock supplyService
     mockSupplyService.updateSupplyPlan.mockResolvedValue({
@@ -87,52 +87,37 @@ describe('AutobookingRescheduleExecutorService', () => {
   });
 
   describe('createRescheduleTask', () => {
-    test('should create reschedule task with proper parameters', async () => {
+    test('should successfully create reschedule task via updateSupplyPlan', async () => {
       // Arrange
-      const reschedule = createReschedule();
+      const reschedule = createReschedule({ supplyId: '12345' });
       const monitoringUser = createMonitoringUser();
       const targetDate = getFutureDate(7);
+      const account = { id: 'account-123' };
+      const latency = 1000;
 
       // Act
-      const result = await service.createRescheduleTask(
+      await service.createRescheduleTask({
         reschedule,
-        monitoringUser,
-        targetDate
-      );
+        effectiveDate: targetDate,
+        account,
+        user: monitoringUser,
+        latency,
+      });
 
       // Assert
-      expect(mockSupplyService.updateSupplyPlan).toHaveBeenCalled();
-      const callArgs = mockSupplyService.updateSupplyPlan.mock.calls[0][0];
-      expect(callArgs).toHaveProperty('supplyId');
-      expect(callArgs).toHaveProperty('deliveryDate');
-      expect(callArgs).toHaveProperty('rpc_order');
-    });
-
-    test('should parse supplyId correctly', async () => {
-      // Arrange
-      const reschedule = createReschedule({ supplyId: 'WB-GI-123456789' });
-      const monitoringUser = createMonitoringUser();
-      const targetDate = getFutureDate(7);
-
-      // Act
-      await service.createRescheduleTask(reschedule, monitoringUser, targetDate);
-
-      // Assert
-      expect(mockSupplyService.updateSupplyPlan).toHaveBeenCalled();
-    });
-
-    test('should format deliveryDate correctly', async () => {
-      // Arrange
-      const reschedule = createReschedule();
-      const monitoringUser = createMonitoringUser();
-      const targetDate = new Date('2024-01-15');
-
-      // Act
-      await service.createRescheduleTask(reschedule, monitoringUser, targetDate);
-
-      // Assert
-      const callArgs = mockSupplyService.updateSupplyPlan.mock.calls[0][0];
-      expect(callArgs.deliveryDate).toBeDefined();
+      expect(mockSupplyService.updateSupplyPlan).toHaveBeenCalledWith({
+        accountId: 'account-123',
+        supplierId: 'supplier-1',
+        userId: 1,
+        proxy: monitoringUser.proxy,
+        latency: 1000,
+        params: {
+          supplyId: 12345,
+          deliveryDate: targetDate.toISOString(),
+        },
+        rpc_order: expect.any(Number),
+        userAgent: monitoringUser.userAgent,
+      });
     });
 
     test('should generate random rpc_order in valid range', async () => {
@@ -140,9 +125,17 @@ describe('AutobookingRescheduleExecutorService', () => {
       const reschedule = createReschedule();
       const monitoringUser = createMonitoringUser();
       const targetDate = getFutureDate(7);
+      const account = { id: 'account-123' };
+      const latency = 1000;
 
       // Act
-      await service.createRescheduleTask(reschedule, monitoringUser, targetDate);
+      await service.createRescheduleTask({
+        reschedule,
+        effectiveDate: targetDate,
+        account,
+        user: monitoringUser,
+        latency,
+      });
 
       // Assert
       const callArgs = mockSupplyService.updateSupplyPlan.mock.calls[0][0];
@@ -152,32 +145,45 @@ describe('AutobookingRescheduleExecutorService', () => {
   });
 
   describe('addSuccessfulReschedule', () => {
-    test('should add successful reschedule to log', () => {
+    test('should add successful reschedule to list', () => {
       // Arrange
+      const successfulReschedules: any[] = [];
       const reschedule = createReschedule();
+      const monitoringUser = createMonitoringUser({ chatId: 'test-chat' });
       const targetDate = getFutureDate(7);
 
       // Act
-      (service as unknown as { addSuccessfulReschedule: (r: AutobookingReschedule, d: Date) => void }).addSuccessfulReschedule(
+      service.addSuccessfulReschedule(successfulReschedules, {
+        user: monitoringUser,
+        warehouseName: 'Test Warehouse',
+        effectiveDate: targetDate,
+        coefficient: 100,
         reschedule,
-        targetDate
-      );
+      });
 
-      // Assert - no error thrown
-      expect(true).toBe(true);
+      // Assert
+      expect(successfulReschedules).toHaveLength(1);
+      expect(successfulReschedules[0]).toEqual({
+        chatId: 'test-chat',
+        warehouseName: 'Test Warehouse',
+        effectiveDate: targetDate,
+        coefficient: 100,
+        reschedule,
+      });
     });
 
     test('should log successful reschedule details', () => {
       // Arrange
-      const reschedule = createReschedule({ id: 'reschedule-test' });
+      const reschedule = createReschedule({
+        id: 'reschedule-test',
+        supplyId: '67890',
+        warehouseId: 456,
+      });
       const targetDate = getFutureDate(7);
 
       // Act - should not throw
       expect(() => {
-        (service as unknown as { addSuccessfulReschedule: (r: AutobookingReschedule, d: Date) => void }).addSuccessfulReschedule(
-          reschedule,
-          targetDate
-        );
+        service.logSuccessfulReschedule(reschedule, targetDate, 1);
       }).not.toThrow();
     });
   });
@@ -186,32 +192,50 @@ describe('AutobookingRescheduleExecutorService', () => {
     test('should handle date unavailable error', async () => {
       // Arrange
       const dateUnavailableError = new Error('Эта дата уже недоступна');
-      mockSupplyService.updateSupplyPlan.mockRejectedValue(dateUnavailableError);
+      mockSupplyService.updateSupplyPlan.mockRejectedValue(
+        dateUnavailableError,
+      );
 
       const reschedule = createReschedule();
       const monitoringUser = createMonitoringUser();
       const targetDate = getFutureDate(7);
+      const account = { id: 'account-123' };
+      const latency = 1000;
 
       // Act & Assert
       await expect(
-        service.createRescheduleTask(reschedule, monitoringUser, targetDate)
+        service.createRescheduleTask({
+          reschedule,
+          effectiveDate: targetDate,
+          account,
+          user: monitoringUser,
+          latency,
+        }),
       ).rejects.toThrow();
     });
 
     test('should handle too active error', async () => {
       // Arrange
       const tooActiveError = new Error(
-        'Заметили, что вы слишком активно создаёте поставки'
+        'Заметили, что вы слишком активно создаёте поставки',
       );
       mockSupplyService.updateSupplyPlan.mockRejectedValue(tooActiveError);
 
       const reschedule = createReschedule();
       const monitoringUser = createMonitoringUser();
       const targetDate = getFutureDate(7);
+      const account = { id: 'account-123' };
+      const latency = 1000;
 
       // Act & Assert
       await expect(
-        service.createRescheduleTask(reschedule, monitoringUser, targetDate)
+        service.createRescheduleTask({
+          reschedule,
+          effectiveDate: targetDate,
+          account,
+          user: monitoringUser,
+          latency,
+        }),
       ).rejects.toThrow();
     });
 
@@ -224,10 +248,18 @@ describe('AutobookingRescheduleExecutorService', () => {
       const reschedule = createReschedule();
       const monitoringUser = createMonitoringUser();
       const targetDate = getFutureDate(7);
+      const account = { id: 'account-123' };
+      const latency = 1000;
 
       // Act & Assert
       await expect(
-        service.createRescheduleTask(reschedule, monitoringUser, targetDate)
+        service.createRescheduleTask({
+          reschedule,
+          effectiveDate: targetDate,
+          account,
+          user: monitoringUser,
+          latency,
+        }),
       ).rejects.toThrow();
     });
 
@@ -240,72 +272,19 @@ describe('AutobookingRescheduleExecutorService', () => {
       const reschedule = createReschedule();
       const monitoringUser = createMonitoringUser();
       const targetDate = getFutureDate(7);
+      const account = { id: 'account-123' };
+      const latency = 1000;
 
       // Act & Assert
       await expect(
-        service.createRescheduleTask(reschedule, monitoringUser, targetDate)
+        service.createRescheduleTask({
+          reschedule,
+          effectiveDate: targetDate,
+          account,
+          user: monitoringUser,
+          latency,
+        }),
       ).rejects.toThrow();
-    });
-  });
-
-  describe('availability filtering', () => {
-    test('should filter availabilities based on reschedule criteria', () => {
-      // Arrange
-      const reschedule = createReschedule({
-        coefficient: 3,
-        warehouseId: 123,
-      });
-
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [
-            { date: getFutureDateString(7), coefficient: 2 },
-            { date: getFutureDateString(8), coefficient: 4 },
-          ],
-        },
-      ];
-
-      // Act - use the availability filter service directly
-      const filtered = sharedAvailabilityFilterService.filterAvailabilitiesForReschedule(
-        availabilities,
-        reschedule
-      );
-
-      // Assert
-      expect(filtered).toBeDefined();
-      expect(Array.isArray(filtered)).toBe(true);
-    });
-
-    test('should exclude dates with coefficient higher than max', () => {
-      // Arrange
-      const reschedule = createReschedule({
-        coefficient: 2,
-        warehouseId: 123,
-      });
-
-      const availabilities: WarehouseAvailability[] = [
-        {
-          warehouseId: 123,
-          warehouseName: 'Test WH',
-          boxTypeID: 2,
-          availableDates: [
-            { date: getFutureDateString(7), coefficient: 1 },
-            { date: getFutureDateString(8), coefficient: 5 },
-          ],
-        },
-      ];
-
-      // Act
-      const filtered = sharedAvailabilityFilterService.filterAvailabilitiesForReschedule(
-        availabilities,
-        reschedule
-      );
-
-      // Assert
-      expect(filtered).toBeDefined();
     });
   });
 
@@ -314,6 +293,9 @@ describe('AutobookingRescheduleExecutorService', () => {
       // Arrange
       const reschedule = createReschedule();
       const targetDate = getFutureDate(7);
+      const monitoringUser = createMonitoringUser();
+      const account = { id: 'account-123' };
+      const latency = 1000;
 
       mockSupplyService.updateSupplyPlan.mockResolvedValue({
         success: true,
@@ -321,11 +303,13 @@ describe('AutobookingRescheduleExecutorService', () => {
       });
 
       // Act
-      await service.createRescheduleTask(
+      await service.createRescheduleTask({
         reschedule,
-        createMonitoringUser(),
-        targetDate
-      );
+        effectiveDate: targetDate,
+        account,
+        user: monitoringUser,
+        latency,
+      });
 
       // Assert
       expect(mockSupplyService.updateSupplyPlan).toHaveBeenCalled();
