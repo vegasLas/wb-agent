@@ -1,10 +1,10 @@
 /**
  * Phone Input Component Tests
  * Migrated from: tests/client/components/ui/phone-input.test.ts
- * 
+ *
  * Changes made:
  * - Migrated from Vue to React
- * - Replaced vitest (vi) with jest
+ * - Uses Vitest for testing (frontend standard)
  * - Updated to use React Testing Library patterns
  * - Same test logic preserved
  */
@@ -72,7 +72,7 @@ describe('PhoneInput Component', () => {
       const handleChange = (newValue: string) => {
         value = newValue;
       };
-      
+
       render(<PhoneInput value={value} onChange={handleChange} />);
 
       // Act
