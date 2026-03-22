@@ -144,6 +144,76 @@ export class BrowserFingerprintService {
   }
 
   /**
+   * Get a simple random fingerprint object (simplified API for testing)
+   * Returns an object with userAgent, screenResolution, and timezone as string
+   */
+  getRandomFingerprint(): {
+    userAgent: string;
+    screenResolution: string;
+    timezone: string;
+  } {
+    const userAgent = this.getRandomUserAgent();
+    const screenResolution = this.getRandomScreenResolutionAsString();
+    const timezone = this.getRandomTimezoneAsString();
+
+    return {
+      userAgent,
+      screenResolution,
+      timezone,
+    };
+  }
+
+  /**
+   * Get a random user agent string
+   */
+  getRandomUserAgent(): string {
+    const platform = this.getRandomPlatform();
+    return this.getUserAgentForPlatform(platform);
+  }
+
+  /**
+   * Get a random screen resolution as string (e.g., "1920x1080")
+   */
+  getRandomScreenResolution(): string {
+    return this.getRandomScreenResolutionAsString();
+  }
+
+  /**
+   * Get a random timezone as string
+   */
+  getRandomTimezone(): string {
+    return this.getRandomTimezoneAsString();
+  }
+
+  /**
+   * Helper: Get random screen resolution as string
+   */
+  private getRandomScreenResolutionAsString(): string {
+    const resolution =
+      this.screenResolutions[
+        Math.floor(Math.random() * this.screenResolutions.length)
+      ];
+    return `${resolution[0]}x${resolution[1]}`;
+  }
+
+  /**
+   * Helper: Get random timezone as string
+   */
+  private getRandomTimezoneAsString(): string {
+    // Return common timezone names
+    const timezones = [
+      'Europe/Moscow',
+      'Europe/London',
+      'America/New_York',
+      'America/Los_Angeles',
+      'Asia/Tokyo',
+      'Asia/Shanghai',
+      'Australia/Sydney',
+    ];
+    return timezones[Math.floor(Math.random() * timezones.length)];
+  }
+
+  /**
    * Convert UserEnvInfo to Fingerprint
    * Use this when envInfo is already fetched from database
    */
@@ -185,7 +255,7 @@ export class BrowserFingerprintService {
       (platform as 'Win32' | 'MacIntel' | 'Linux x86_64') ||
       this.getRandomPlatform();
     const userAgent = this.getUserAgentForPlatform(selectedPlatform);
-    const screenResolution = this.getRandomScreenResolution();
+    const screenResolution = this.getRandomScreenResolutionTuple();
     const selectedLanguage = language || this.getRandomLanguage();
 
     return {
@@ -193,7 +263,7 @@ export class BrowserFingerprintService {
       screenResolution,
       platform: selectedPlatform,
       language: selectedLanguage,
-      timezone: timezone ?? this.getRandomTimezone(),
+      timezone: timezone ?? this.getRandomTimezoneOffset(),
       deviceMemory: this.getRandomDeviceMemory(),
       hardwareConcurrency: this.getRandomHardwareConcurrency(),
       colorDepth: 24,
@@ -400,9 +470,9 @@ export class BrowserFingerprintService {
   }
 
   /**
-   * Helper: Get random screen resolution
+   * Helper: Get random screen resolution as tuple
    */
-  private getRandomScreenResolution(): [number, number] {
+  private getRandomScreenResolutionTuple(): [number, number] {
     return this.screenResolutions[
       Math.floor(Math.random() * this.screenResolutions.length)
     ];
@@ -434,7 +504,7 @@ export class BrowserFingerprintService {
   /**
    * Helper: Get random timezone offset in minutes
    */
-  private getRandomTimezone(): number {
+  private getRandomTimezoneOffset(): number {
     // Random timezone offset in minutes (-12 to +14 hours)
     return (Math.floor(Math.random() * 27) - 12) * 60;
   }
