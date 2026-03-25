@@ -1,85 +1,341 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { reschedulesAPI } from '../../api';
-import { useReschedulesStore } from './index';
-import { useViewStore } from '../view';
-import type { RescheduleCreateData } from '../../types';
+import { useRescheduleStore } from './index';
+import { useUserStore } from '../user';
+import type { CreateAutobookingRescheduleRequest, Supply } from '../../types';
 
-export const useRescheduleCreateFormStore = defineStore('rescheduleCreateForm', () => {
-  // State
-  const form = ref<RescheduleCreateData>({
-    supplyId: '',
-    targetDate: '',
-    monotype: false,
-  });
+export interface RescheduleFormData {
+  warehouseId: number | null;
+  dateType: string;
+  startDate: string | null;
+  endDate: string | null;
+  customDates: string[];
+  maxCoefficient: number;
+  supplyType: string;
+  supplyId: string | null;
+  currentDate: string | null;
+}
 
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+export const useRescheduleCreateFormStore = defineStore(
+  'rescheduleCreateForm',
+  () => {
+    const userStore = useUserStore();
+    const rescheduleStore = useRescheduleStore();
 
-  // Getters
-  const isValid = computed(() => {
-    return !!(form.value.supplyId && form.value.targetDate);
-  });
+    // Form state
+    const form = ref<RescheduleFormData>({
+      warehouseId: null,
+      dateType: 'CUSTOM_DATES_SINGLE',
+      startDate: null,
+      endDate: null,
+      customDates: [],
+      maxCoefficient: 0,
+      supplyType: 'BOX',
+      supplyId: null,
+      currentDate: null,
+    });
 
-  const canSubmit = computed(() => isValid.value && !loading.value);
+    const formErrors = ref<Record<string, string>>({});
+    const isSubmitting = ref(false);
 
-  // Actions
-  function resetForm() {
-    form.value = {
-      supplyId: '',
-      targetDate: '',
-      monotype: false,
-    };
-    error.value = null;
-  }
+    // UI State
+    const showHintsModal = ref(false);
+    const selectedSupplyId = ref<number | undefined>(undefined);
+    const selectedDateType = ref('');
+    const startDateInput = ref('');
+    const endDateInput = ref('');
+    const customDates = ref<(string | Date)[]>([]);
+    const maxCoefficientInput = ref(0);
 
-  function setFormField<K extends keyof RescheduleCreateData>(
-    field: K,
-    value: RescheduleCreateData[K]
-  ) {
-    form.value[field] = value;
-  }
+    // Simple validation (replace with yup if needed)
+    const validate = computed(() => {
+      const errors: string[] = [];
+      
+      if (!form.value.supplyId) errors.push('Выберите поставку');
+      if (!form.value.warehouseId) errors.push('Склад обязателен');
+      if (!form.value.supplyType) errors.push('Тип поставки обязателен');
+      if (!form.value.dateType) errors.push('Выберите тип периода');
+      if (form.value.maxCoefficient < 0 || form.value.maxCoefficient > 20) {
+        errors.push('Коэффициент должен быть от 0 до 20');
+      }
+      
+      // Date validation based on dateType
+      if (['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(form.value.dateType) && !form.value.startDate) {
+        errors.push('Выберите дату начала');
+      }
+      if (form.value.dateType === 'CUSTOM_PERIOD' && !form.value.endDate) {
+        errors.push('Выберите дату окончания');
+      }
+      if (form.value.dateType === 'CUSTOM_DATES_SINGLE' && form.value.customDates.length === 0) {
+        errors.push('Выберите хотя бы одну дату');
+      }
+      
+      return errors.length === 0;
+    });
 
-  async function createReschedule() {
-    if (!isValid.value) {
-      throw new Error('Form is not valid');
+    const validationErrors = computed(() => {
+      const errors: Record<string, string> = {};
+      
+      if (!form.value.supplyId) errors.supplyId = 'Выберите поставку';
+      if (!form.value.warehouseId) errors.warehouseId = 'Склад обязателен';
+      if (!form.value.supplyType) errors.supplyType = 'Тип поставки обязателен';
+      if (!form.value.dateType) errors.dateType = 'Выберите тип периода';
+      
+      return errors;
+    });
+
+    // Validate form
+    function validateForm(): boolean {
+      formErrors.value = validationErrors.value;
+      return validate.value;
     }
 
-    const reschedulesStore = useReschedulesStore();
-    const viewStore = useViewStore();
+    // Update form field
+    function updateField<K extends keyof RescheduleFormData>(
+      field: K,
+      value: RescheduleFormData[K],
+    ) {
+      form.value[field] = value;
+      formErrors.value = validationErrors.value;
+    }
 
-    try {
-      loading.value = true;
-      error.value = null;
+    // Reset form
+    function resetForm() {
+      form.value = {
+        warehouseId: null,
+        dateType: 'CUSTOM_DATES_SINGLE',
+        startDate: null,
+        endDate: null,
+        customDates: [],
+        maxCoefficient: 0,
+        supplyType: 'BOX',
+        supplyId: null,
+        currentDate: null,
+      };
+      formErrors.value = {};
 
-      const reschedule = await reschedulesAPI.createReschedule(form.value);
-      reschedulesStore.addReschedule(reschedule);
-      
+      // Reset UI state
+      selectedSupplyId.value = undefined;
+      selectedDateType.value = '';
+      startDateInput.value = '';
+      endDateInput.value = '';
+      customDates.value = [];
+      maxCoefficientInput.value = 0;
+    }
+
+    // Convert form data to API format
+    function toApiFormat(): CreateAutobookingRescheduleRequest {
+      return {
+        warehouseId: form.value.warehouseId!,
+        dateType: form.value.dateType,
+        startDate: form.value.startDate || undefined,
+        endDate: form.value.endDate || undefined,
+        customDates: form.value.customDates,
+        maxCoefficient: form.value.maxCoefficient,
+        supplyType: form.value.supplyType,
+        supplyId: form.value.supplyId as string,
+        currentDate: form.value.currentDate as string,
+      };
+    }
+
+    // Computed properties
+    const formState = computed(() => ({
+      supplyId: String(selectedSupplyId.value) || null,
+      warehouseId: form.value.warehouseId,
+      supplyType: form.value.supplyType,
+      dateType: selectedDateType.value,
+      startDate: startDateInput.value || null,
+      endDate: endDateInput.value || null,
+      customDates: customDates.value,
+      maxCoefficient: maxCoefficientInput.value,
+    }));
+
+    const supplyOptions = computed(() => {
+      return rescheduleStore.availableSupplies.map((supply: Supply) => ({
+        ...supply,
+        displayName: `${supply.supplyId} - ${supply.warehouseName} (${supply.statusName})`,
+      }));
+    });
+
+    const selectedSupply = computed(() => {
+      if (!selectedSupplyId.value) return null;
+      return (
+        rescheduleStore.availableSupplies.find(
+          (supply: Supply) => supply.supplyId === selectedSupplyId.value,
+        ) || null
+      );
+    });
+
+    // Initialize form
+    async function initialize() {
       resetForm();
-      viewStore.setView('reschedules-main');
-      
-      return reschedule;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to create reschedule';
-      throw err;
-    } finally {
-      loading.value = false;
+      selectedDateType.value = 'WEEK';
+      updateField('dateType', 'WEEK');
     }
-  }
 
-  return {
-    // State
-    form: readonly(form),
-    loading: readonly(loading),
-    error: readonly(error),
+    // Handle supply change
+    function handleSupplyChange(value: number | undefined) {
+      selectedSupplyId.value = value;
+      updateField('supplyId', String(value) || null);
 
-    // Getters
-    isValid,
-    canSubmit,
+      // Auto-fill warehouse and supply type from selected supply
+      if (value && selectedSupply.value) {
+        const supply = selectedSupply.value;
+        updateField('warehouseId', supply.warehouseId);
+        updateField('supplyType', mapBoxTypeToSupplyType(supply.boxTypeName || ''));
 
-    // Actions
-    resetForm,
-    setFormField,
-    createReschedule,
-  };
-});
+        // Auto-populate currentDate from supply date
+        if (supply.supplyDate) {
+          let currentDate: string;
+          if (typeof supply.supplyDate === 'string') {
+            // If it's already a date string (YYYY-MM-DD format), use it directly
+            if (supply.supplyDate.includes('T')) {
+              // Full datetime string - extract date part
+              currentDate = supply.supplyDate.split('T')[0];
+            } else {
+              // Date-only string
+              currentDate = supply.supplyDate;
+            }
+          } else {
+            // Date object - convert to UTC date string
+            const date = new Date(supply.supplyDate);
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            currentDate = `${year}-${month}-${day}`;
+          }
+          updateField('currentDate', currentDate);
+        }
+      } else {
+        // Clear auto-filled values when no supply selected
+        updateField('warehouseId', null);
+        updateField('supplyType', '');
+        updateField('currentDate', null);
+      }
+    }
+
+    // Handle date type changes
+    function handleDateTypeChange(value: string) {
+      selectedDateType.value = value;
+      updateField('dateType', value);
+      // Clear date fields when type changes
+      startDateInput.value = '';
+      endDateInput.value = '';
+      customDates.value = [];
+      updateField('startDate', null);
+      updateField('endDate', null);
+      updateField('customDates', []);
+    }
+
+    // Handle date input changes
+    function handleStartDateChange(value: string) {
+      startDateInput.value = value;
+      updateField('startDate', value || null);
+    }
+
+    function handleEndDateChange(value: string) {
+      endDateInput.value = value;
+      updateField('endDate', value || null);
+    }
+
+    function handleCustomDatesChange(value: (string | Date)[]) {
+      customDates.value = value;
+      // Convert Date objects to strings for form store
+      const stringDates = value.map((date) =>
+        date instanceof Date ? date.toISOString().split('T')[0] : date,
+      );
+      updateField('customDates', stringDates);
+    }
+
+    function handleMaxCoefficientChange(value: number) {
+      maxCoefficientInput.value = value;
+      updateField('maxCoefficient', value);
+    }
+
+    // Helper functions
+    function mapBoxTypeToSupplyType(boxTypeName: string): string {
+      const normalized = boxTypeName?.toUpperCase() || '';
+      if (normalized.includes('КОРОБ') || normalized.includes('BOX')) {
+        return 'BOX';
+      }
+      if (
+        normalized.includes('МОНОПАЛЛЕТ') ||
+        normalized.includes('MONOPALLETE')
+      ) {
+        return 'MONOPALLETE';
+      }
+      if (
+        normalized.includes('СУПЕРСЕЙФ') ||
+        normalized.includes('SUPERSAFE')
+      ) {
+        return 'SUPERSAFE';
+      }
+      return 'BOX'; // Default fallback
+    }
+
+    // Submit form
+    async function submit() {
+      if (validateForm()) {
+        try {
+          isSubmitting.value = true;
+          const apiData = toApiFormat();
+          await rescheduleStore.createReschedule(apiData);
+          return true;
+        } catch (error) {
+          console.error('Failed to create reschedule:', error);
+          return false;
+        } finally {
+          isSubmitting.value = false;
+        }
+      }
+      return false;
+    }
+
+    // Refresh supplies
+    async function refreshSupplies() {
+      try {
+        await rescheduleStore.fetchSupplies(
+          userStore.selectedAccount?.selectedSupplierId,
+        );
+      } catch (error) {
+        console.error('Failed to refresh supplies:', error);
+      }
+    }
+
+    return {
+      // State
+      form: readonly(form),
+      formErrors: readonly(formErrors),
+      isSubmitting: readonly(isSubmitting),
+      showHintsModal,
+      selectedSupplyId,
+      selectedDateType,
+      startDateInput,
+      endDateInput,
+      customDates,
+      maxCoefficientInput,
+
+      // Computed
+      formState,
+      supplyOptions,
+      selectedSupply,
+      validate,
+      validationErrors,
+
+      // Actions
+      initialize,
+      validateForm,
+      updateField,
+      resetForm,
+      toApiFormat,
+      handleSupplyChange,
+      handleDateTypeChange,
+      handleStartDateChange,
+      handleEndDateChange,
+      handleCustomDatesChange,
+      handleMaxCoefficientChange,
+      submit,
+      refreshSupplies,
+    };
+  },
+);
