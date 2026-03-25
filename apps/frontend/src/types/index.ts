@@ -576,3 +576,69 @@ export interface TelegramWebAppInitData {
 // Auth Step Types
 // -----------------------------------------------------------------------------
 export type AuthStep = 'idle' | 'phone' | 'sms' | 'two_factor' | 'completed' | 'error';
+
+// -----------------------------------------------------------------------------
+// Global Window Extensions
+// -----------------------------------------------------------------------------
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        close: () => void;
+        initData: string;
+        initDataUnsafe: Record<string, unknown>;
+        version: string;
+        platform: string;
+        colorScheme: 'light' | 'dark';
+        themeParams: Record<string, string>;
+        isExpanded: boolean;
+        viewportHeight: number;
+        viewportStableHeight: number;
+        headerColor: string;
+        backgroundColor: string;
+        bottomBarColor: string;
+        ready: () => void;
+        expand: () => void;
+        enableClosingConfirmation: () => void;
+        disableClosingConfirmation: () => void;
+        showPopup: (params: { title?: string; message: string; buttons?: Array<{ id?: string; type?: string; text: string }> }) => Promise<string>;
+        showAlert: (message: string) => Promise<void>;
+        showConfirm: (message: string) => Promise<boolean>;
+        onEvent: (eventType: string, eventHandler: () => void) => void;
+        offEvent: (eventType: string, eventHandler: () => void) => void;
+        sendData: (data: string) => void;
+        switchInlineQuery: (query: string, chooseChatTypes?: string[]) => void;
+        openLink: (url: string, options?: { try_instant_view?: boolean }) => void;
+        openTelegramLink: (url: string) => void;
+        openInvoice: (url: string) => Promise<string>;
+        readTextFromClipboard: () => Promise<string>;
+        requestWriteAccess: () => Promise<boolean>;
+        requestContact: () => Promise<boolean>;
+        MainButton: {
+          text: string;
+          color: string;
+          textColor: string;
+          isVisible: boolean;
+          isActive: boolean;
+          isProgressVisible: boolean;
+          setText: (text: string) => void;
+          onClick: (callback: () => void) => void;
+          offClick: (callback: () => void) => void;
+          show: () => void;
+          hide: () => void;
+          enable: () => void;
+          disable: () => void;
+          showProgress: (leaveActive: boolean) => void;
+          hideProgress: () => void;
+        };
+        BackButton: {
+          isVisible: boolean;
+          onClick: (callback: () => void) => void;
+          offClick: (callback: () => void) => void;
+          show: () => void;
+          hide: () => void;
+        };
+      };
+    };
+  }
+}
