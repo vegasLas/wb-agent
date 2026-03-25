@@ -2,11 +2,12 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { api } from '../api';
 import { useViewStore } from './view';
-import type { Trigger } from '../types';
+import { useWarehousesStore } from './warehouses';
+import type { SupplyTrigger, CreateTriggerRequest } from '../types';
 
 export const useTriggerStore = defineStore('triggers', () => {
-  // state
-  const triggers = ref<Trigger[]>([]);
+  // State
+  const triggers = ref<SupplyTrigger[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
   const deletingId = ref<string | null>(null);
@@ -14,16 +15,16 @@ export const useTriggerStore = defineStore('triggers', () => {
   const isCreating = ref(false);
   const selectedStatus = ref<'RELEVANT' | 'COMPLETED' | 'EXPIRED'>('RELEVANT');
 
-  // action states
+  // Action states
   const isFetched = ref(false);
   const isUpdating = ref(false);
   const isDeleting = ref(false);
   const togglingId = ref<string | null>(null);
 
-  // getters
+  // Getters
   const getTriggerById = computed(() => {
     return (triggerId: string) =>
-      triggers.value.find((t) => t.id === Number(triggerId));
+      triggers.value.find((t) => t.id === triggerId);
   });
 
   const isLoading = computed(() => loading.value);
@@ -36,6 +37,18 @@ export const useTriggerStore = defineStore('triggers', () => {
     filtered = filtered.filter(
       (trigger) => trigger.status === selectedStatus.value,
     );
+
+    // Filter by search query (if provided)
+    if (searchQuery.value.trim()) {
+      const query = searchQuery.value.toLowerCase();
+      const warehouseStore = useWarehousesStore();
+      filtered = filtered.filter((trigger) =>
+        trigger.warehouseIds.some((warehouseId) => {
+          const name = warehouseStore.getWarehouseName(warehouseId);
+          return typeof name === 'string' && name.toLowerCase().includes(query);
+        }),
+      );
+    }
 
     return filtered;
   });
@@ -56,12 +69,12 @@ export const useTriggerStore = defineStore('triggers', () => {
     () => triggers.value.filter((t) => t.status === 'EXPIRED').length,
   );
 
-  // actions
-  async function create(data: Omit<Trigger, 'id' | 'createdAt' | 'updatedAt'>) {
+  // Actions
+  async function create(data: CreateTriggerRequest) {
     try {
       isCreating.value = true;
       const response = await api.post('/triggers', data);
-      const trigger = response.data as Trigger;
+      const trigger = response.data as SupplyTrigger;
       if (trigger) {
         triggers.value.unshift(trigger);
       }
@@ -75,11 +88,11 @@ export const useTriggerStore = defineStore('triggers', () => {
     }
   }
 
-  async function updateTrigger(data: Partial<Trigger> & { id: number }) {
+  async function updateTrigger(data: Partial<SupplyTrigger> & { id: string }) {
     try {
       isUpdating.value = true;
       const response = await api.put(`/triggers/${data.id}`, data);
-      const trigger = response.data as Trigger;
+      const trigger = response.data as SupplyTrigger;
       if (trigger) {
         const index = triggers.value.findIndex((t) => t.id === data.id);
         if (index !== -1) {
@@ -98,11 +111,12 @@ export const useTriggerStore = defineStore('triggers', () => {
   async function fetchTriggers() {
     try {
       loading.value = true;
+      error.value = null;
       const response = await api.get('/triggers');
       if (response.data) {
-        triggers.value = response.data;
+        triggers.value = response.data.data || response.data;
       }
-      return response.data;
+      return triggers.value;
     } catch (err) {
       error.value = 'Failed to fetch triggers';
       throw err;
@@ -118,12 +132,11 @@ export const useTriggerStore = defineStore('triggers', () => {
       isDeleting.value = true;
 
       await api.delete(`/triggers/${triggerId}`);
-      triggers.value = triggers.value.filter((t) => t.id !== Number(triggerId));
+      triggers.value = triggers.value.filter((t) => t.id !== triggerId);
     } catch (err) {
       error.value = 'Failed to delete trigger';
       throw err;
     } finally {
-      loading.value = false;
       isDeleting.value = false;
       deletingId.value = null;
     }
@@ -131,11 +144,10 @@ export const useTriggerStore = defineStore('triggers', () => {
 
   async function toggleTrigger(triggerId: string): Promise<void> {
     try {
-      loading.value = true;
       togglingId.value = triggerId;
       const response = await api.patch(`/triggers/${triggerId}/toggle`);
-      const updatedTrigger = response.data as Trigger;
-      const index = triggers.value.findIndex((t) => t.id === Number(triggerId));
+      const updatedTrigger = response.data as SupplyTrigger;
+      const index = triggers.value.findIndex((t) => t.id === triggerId);
       if (index !== -1 && updatedTrigger) {
         triggers.value[index] = updatedTrigger;
       }
@@ -143,7 +155,6 @@ export const useTriggerStore = defineStore('triggers', () => {
       error.value = 'Failed to toggle trigger';
       throw err;
     } finally {
-      loading.value = false;
       togglingId.value = null;
     }
   }
@@ -152,35 +163,40 @@ export const useTriggerStore = defineStore('triggers', () => {
     selectedStatus.value = status;
   }
 
+  function setSearchQuery(query: string) {
+    searchQuery.value = query;
+  }
+
   return {
-    // state
+    // State
     triggers,
     loading,
     deletingId,
     error,
     isCreating,
-    // action states
+    // Action states
     isFetched,
     isUpdating,
     isDeleting,
     togglingId,
-    // getters
+    // Getters
     getTriggerById,
     isLoading,
     hasError,
-    // actions
+    // Actions
     searchQuery,
     filteredTriggers,
     activeTriggersCount,
-    selectedStatus,
     relevantTriggersCount,
     completedTriggersCount,
     expiredTriggersCount,
+    selectedStatus,
     create,
     updateTrigger,
     fetchTriggers,
     deleteTrigger,
     toggleTrigger,
     setSelectedStatus,
+    setSearchQuery,
   };
 });
