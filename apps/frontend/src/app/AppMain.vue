@@ -90,8 +90,8 @@
       <RouterView />
     </div>
 
-    <!-- Help Modal - placeholder for future implementation -->
-    <!-- <MainHelpModal :show="showHelpModal" @close="showHelpModal = false" /> -->
+    <!-- Help Modal -->
+    <MainHelpModal v-model="showHelpModal" />
     
     <!-- Account Management Modal -->
     <AccountManagementView v-model="accountModalStore.showModal" />
@@ -119,6 +119,7 @@ import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
 // Components
 import { BaseButton, BaseDropdown, BaseDropdownItem } from '../components/ui';
 import { AccountManagementView } from '../components/account-management';
+import { MainHelpModal } from '../components/help';
 
 // Types
 import type { ViewType } from '../types';

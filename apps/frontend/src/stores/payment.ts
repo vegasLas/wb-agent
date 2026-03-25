@@ -71,13 +71,13 @@ export const usePaymentStore = defineStore('payment', () => {
   }
 
   return {
-    // State
-    tariffs: readonly(tariffs),
-    selectedTariff: readonly(selectedTariff),
-    payments: readonly(payments),
-    loading: readonly(loading),
-    error: readonly(error),
-    isFetched: readonly(isFetched),
+    // State (exported without readonly to avoid type issues with mutable arrays)
+    tariffs,
+    selectedTariff,
+    payments,
+    loading,
+    error,
+    isFetched,
 
     // Getters
     hasSelectedTariff,
