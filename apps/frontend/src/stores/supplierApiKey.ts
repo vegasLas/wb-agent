@@ -49,6 +49,22 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
     }
   }
 
+  async function deleteApiKey() {
+    try {
+      loading.value = true;
+      error.value = null;
+      await supplierAPI.deleteSupplierApiKey();
+      // Clear status after delete
+      status.value = null;
+      isFetched.value = false;
+    } catch (err: any) {
+      error.value = err.message || 'Failed to delete API key';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   function clearStatus() {
     status.value = null;
     isFetched.value = false;
@@ -70,6 +86,7 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
     // Actions
     checkStatus,
     updateApiKey,
+    deleteApiKey,
     clearStatus,
   };
 });
