@@ -89,14 +89,26 @@ export interface Autobooking {
   id: string;
   name: string;
   enabled: boolean;
-  dateType: string;
-  startDate?: string;
-  endDate?: string;
+  userId?: number;
+  draftId: string;
+  warehouseId: number;
+  warehouseIds?: string[];
+  transitWarehouseId?: number | null;
+  transitWarehouseName?: string | null;
+  supplierId: string;
+  supplyType: string;
+  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+  startDate?: string | null;
+  endDate?: string | null;
   customDates?: string[];
-  warehouseIds: string[];
-  draftId?: string;
-  coefficient: number;
+  completedDates?: string[];
+  maxCoefficient: number;
+  coefficient?: number;
   monotype: boolean;
+  monopalletCount?: number | null;
+  status: 'ACTIVE' | 'ARCHIVED' | 'COMPLETED' | 'ERROR';
+  bookedAt?: string | null;
+  bookedDate?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -105,17 +117,33 @@ export type AutobookingStatus = 'active' | 'paused' | 'completed' | 'failed';
 
 export interface AutobookingCreateData {
   name: string;
+  draftId: string;
+  warehouseId: number | null;
+  transitWarehouseId?: number | null;
+  transitWarehouseName?: string | null;
+  supplyType: string;
   dateType: string;
-  startDate?: string;
-  endDate?: string;
-  customDates?: string[];
-  warehouseIds: string[];
-  draftId?: string;
-  coefficient: number;
-  monotype: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  customDates?: (string | Date)[];
+  maxCoefficient: number;
+  monopalletCount?: number | null;
 }
 
-export interface AutobookingUpdateData extends Partial<AutobookingCreateData> {}
+export interface AutobookingUpdateData {
+  name?: string;
+  draftId?: string;
+  warehouseId?: number | null;
+  transitWarehouseId?: number | null;
+  transitWarehouseName?: string | null;
+  supplyType?: string;
+  dateType?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  customDates?: (string | Date)[];
+  maxCoefficient?: number;
+  monopalletCount?: number | null;
+}
 
 // -----------------------------------------------------------------------------
 // Warehouse Types
@@ -231,9 +259,14 @@ export interface Draft {
 }
 
 export interface DraftGood {
-  id: string;
+  id?: string;
+  article?: string;
+  sa?: string;
   name: string;
+  subjectName?: string;
   quantity: number;
+  image?: string;
+  imgSrc?: string;
 }
 
 // -----------------------------------------------------------------------------

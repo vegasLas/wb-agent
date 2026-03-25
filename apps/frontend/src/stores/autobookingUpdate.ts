@@ -4,20 +4,61 @@ import { autobookingAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
 import { useViewStore } from './view';
 import { useUserStore } from './user';
+import { useWarehousesStore } from './warehouses';
 import type { Autobooking, AutobookingUpdateData } from '../types';
+
+interface FormState {
+  draftId: string;
+  warehouseId: number | null;
+  transitWarehouseId: number | null;
+  transitWarehouseName: string | null;
+  supplyType: string;
+  dateType: string;
+  startDate: string;
+  endDate: string;
+  customDates: (string | Date)[];
+  maxCoefficient: number;
+  monopalletCount: number | null;
+}
 
 export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => {
   // State
   const currentAutobooking = ref<Autobooking | null>(null);
-  const form = ref<AutobookingUpdateData>({});
+  const form = ref<FormState>({
+    draftId: '',
+    warehouseId: null,
+    transitWarehouseId: null,
+    transitWarehouseName: null,
+    supplyType: '',
+    dateType: 'WEEK',
+    startDate: '',
+    endDate: '',
+    customDates: [],
+    maxCoefficient: 0,
+    monopalletCount: null,
+  });
+  const useTransit = ref(false);
   const loading = ref(false);
   const error = ref<string | null>(null);
   const isFetched = ref(false);
+  const validationLoading = ref(false);
+  const validationResult = ref<{
+    result: {
+      metaInfo: {
+        monoMixQuantity: number;
+        palletQuantity: number;
+        supersafeQuantity: number;
+      };
+    };
+  } | null>(null);
+  const suggestedCoefficient = ref<number | null>(null);
+
+  const userStore = useUserStore();
+  const warehouseStore = useWarehousesStore();
 
   // Getters
   // Calculate remaining autobooking count for update mode
   const remainingAutobookingCount = computed(() => {
-    const userStore = useUserStore();
     const availableCount = userStore.user.autobookingCount;
     
     if (!currentAutobooking.value) return availableCount;
@@ -28,11 +69,12 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
       currentFormCount = form.value.customDates.length;
     } else if (form.value.dateType === 'CUSTOM_DATES_SINGLE' && form.value.customDates) {
       currentFormCount = 1; // CUSTOM_DATES_SINGLE uses only 1 credit
-    } else if (form.value.dateType === 'range' && form.value.startDate && form.value.endDate) {
-      // For range, count the number of days
-      const start = new Date(form.value.startDate);
-      const end = new Date(form.value.endDate);
-      currentFormCount = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    } else if ((form.value.dateType === 'WEEK' || form.value.dateType === 'MONTH') && form.value.startDate) {
+      // For week/month, uses 1 credit
+      currentFormCount = 1;
+    } else if (form.value.dateType === 'CUSTOM_PERIOD' && form.value.startDate && form.value.endDate) {
+      // For custom period, uses 1 credit
+      currentFormCount = 1;
     }
     
     // Get the original count from the autobooking
@@ -41,10 +83,10 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
       originalCount = currentAutobooking.value.customDates.length;
     } else if (currentAutobooking.value.dateType === 'CUSTOM_DATES_SINGLE' && currentAutobooking.value.customDates) {
       originalCount = 1;
-    } else if (currentAutobooking.value.dateType === 'range' && currentAutobooking.value.startDate && currentAutobooking.value.endDate) {
-      const start = new Date(currentAutobooking.value.startDate);
-      const end = new Date(currentAutobooking.value.endDate);
-      originalCount = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    } else if ((currentAutobooking.value.dateType === 'WEEK' || currentAutobooking.value.dateType === 'MONTH') && currentAutobooking.value.startDate) {
+      originalCount = 1;
+    } else if (currentAutobooking.value.dateType === 'CUSTOM_PERIOD' && currentAutobooking.value.startDate && currentAutobooking.value.endDate) {
+      originalCount = 1;
     }
     
     // The adjustment: original uses X credits, new uses Y credits
@@ -53,13 +95,23 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
   });
 
   const isValid = computed(() => {
-    if (!form.value.name) return false;
-    if (!form.value.warehouseIds || form.value.warehouseIds.length === 0) return false;
-    
-    if (form.value.dateType === 'range') {
+    if (!form.value.warehouseId) return false;
+    if (!form.value.draftId) return false;
+    if (!form.value.supplyType) return false;
+    if (!form.value.dateType) return false;
+
+    // Validate dates based on dateType
+    if (form.value.dateType === 'WEEK' || form.value.dateType === 'MONTH') {
+      return !!form.value.startDate;
+    } else if (form.value.dateType === 'CUSTOM_PERIOD') {
       return !!(form.value.startDate && form.value.endDate);
-    } else if (form.value.dateType === 'custom') {
+    } else if (form.value.dateType === 'CUSTOM_DATES' || form.value.dateType === 'CUSTOM_DATES_SINGLE') {
       return form.value.customDates && form.value.customDates.length > 0;
+    }
+
+    // Check monopallet count for MONOPALLETE
+    if (form.value.supplyType === 'MONOPALLETE' && !form.value.monopalletCount) {
+      return false;
     }
     
     return true;
@@ -70,9 +122,10 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
   const hasChanges = computed(() => {
     if (!currentAutobooking.value) return false;
     
-    const fields: (keyof AutobookingUpdateData)[] = [
-      'name', 'dateType', 'startDate', 'endDate', 'customDates',
-      'warehouseIds', 'draftId', 'coefficient', 'monotype'
+    const fields: (keyof FormState)[] = [
+      'draftId', 'warehouseId', 'transitWarehouseId', 'transitWarehouseName',
+      'supplyType', 'dateType', 'startDate', 'endDate', 'customDates',
+      'maxCoefficient', 'monopalletCount'
     ];
     
     return fields.some(field => {
@@ -83,34 +136,82 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
   });
 
   // Actions
-  function loadAutobooking(autobooking: Autobooking) {
+  function openUpdate(autobooking: Autobooking) {
     currentAutobooking.value = autobooking;
     form.value = {
-      name: autobooking.name,
-      dateType: autobooking.dateType,
-      startDate: autobooking.startDate,
-      endDate: autobooking.endDate,
-      customDates: autobooking.customDates,
-      warehouseIds: autobooking.warehouseIds,
       draftId: autobooking.draftId,
-      coefficient: autobooking.coefficient,
-      monotype: autobooking.monotype,
+      warehouseId: autobooking.warehouseId,
+      transitWarehouseId: autobooking.transitWarehouseId,
+      transitWarehouseName: autobooking.transitWarehouseName,
+      supplyType: autobooking.supplyType,
+      dateType: autobooking.dateType,
+      startDate: autobooking.startDate || '',
+      endDate: autobooking.endDate || '',
+      customDates: autobooking.customDates || [],
+      maxCoefficient: autobooking.maxCoefficient,
+      monopalletCount: autobooking.monopalletCount,
     };
+    useTransit.value = !!autobooking.transitWarehouseId;
     isFetched.value = true;
+  }
+
+  function loadAutobooking(autobooking: Autobooking) {
+    openUpdate(autobooking);
   }
 
   function resetForm() {
     currentAutobooking.value = null;
-    form.value = {};
+    form.value = {
+      draftId: '',
+      warehouseId: null,
+      transitWarehouseId: null,
+      transitWarehouseName: null,
+      supplyType: '',
+      dateType: 'WEEK',
+      startDate: '',
+      endDate: '',
+      customDates: [],
+      maxCoefficient: 0,
+      monopalletCount: null,
+    };
+    useTransit.value = false;
     error.value = null;
     isFetched.value = false;
+    validationResult.value = null;
   }
 
-  function setFormField<K extends keyof AutobookingUpdateData>(
-    field: K,
-    value: AutobookingUpdateData[K]
-  ) {
-    form.value[field] = value;
+  async function initialize() {
+    // Initialize form - fetch necessary data
+    if (warehouseStore.warehouses.length === 0) {
+      await warehouseStore.fetchWarehouses();
+    }
+  }
+
+  function handleWarehouseChange(warehouseId: number) {
+    form.value.warehouseId = warehouseId;
+    // Fetch transit options for this warehouse
+    warehouseStore.fetchTransits(warehouseId);
+  }
+
+  async function validateWarehouse() {
+    if (!form.value.warehouseId || !form.value.draftId) return;
+
+    try {
+      validationLoading.value = true;
+      // Call API to validate warehouse and draft compatibility
+      const { api } = require('../api');
+      const response = await api.post('/autobookings/validate', {
+        warehouseId: form.value.warehouseId,
+        transitWarehouseId: form.value.transitWarehouseId,
+        draftId: form.value.draftId,
+      });
+      validationResult.value = response.data;
+    } catch (err) {
+      console.error('Validation failed:', err);
+      validationResult.value = null;
+    } finally {
+      validationLoading.value = false;
+    }
   }
 
   async function updateAutobooking() {
@@ -128,9 +229,23 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
       loading.value = true;
       error.value = null;
 
+      const updateData: AutobookingUpdateData = {
+        draftId: form.value.draftId,
+        warehouseId: form.value.warehouseId,
+        transitWarehouseId: form.value.transitWarehouseId,
+        transitWarehouseName: form.value.transitWarehouseName,
+        supplyType: form.value.supplyType,
+        dateType: form.value.dateType,
+        startDate: form.value.startDate || null,
+        endDate: form.value.endDate || null,
+        customDates: form.value.customDates,
+        maxCoefficient: form.value.maxCoefficient,
+        monopalletCount: form.value.monopalletCount,
+      };
+
       const autobooking = await autobookingAPI.updateAutobooking(
         currentAutobooking.value.id,
-        form.value
+        updateData
       );
       
       autobookingStore.updateAutobookingInList(autobooking.id, autobooking);
@@ -151,9 +266,13 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
     // State
     currentAutobooking: readonly(currentAutobooking),
     form: readonly(form),
+    useTransit,
     loading: readonly(loading),
     error: readonly(error),
     isFetched: readonly(isFetched),
+    validationLoading: readonly(validationLoading),
+    validationResult: readonly(validationResult),
+    suggestedCoefficient: readonly(suggestedCoefficient),
 
     // Getters
     isValid,
@@ -162,9 +281,12 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
     remainingAutobookingCount,
 
     // Actions
+    openUpdate,
     loadAutobooking,
     resetForm,
-    setFormField,
+    initialize,
+    handleWarehouseChange,
+    validateWarehouse,
     updateAutobooking,
   };
 });
