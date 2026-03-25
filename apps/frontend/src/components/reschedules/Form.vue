@@ -17,7 +17,9 @@
       <form class="mb-6 space-y-3">
         <!-- Supply Selection -->
         <div class="space-y-3">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Поставка
           </label>
           <div class="flex gap-2">
@@ -42,10 +44,16 @@
               <ArrowPathIcon class="w-4 h-4" />
             </BaseButton>
           </div>
-          <p v-if="suppliesError" class="text-sm text-red-600 dark:text-red-400">
+          <p
+            v-if="suppliesError"
+            class="text-sm text-red-600 dark:text-red-400"
+          >
             {{ suppliesError }}
           </p>
-          <p v-else-if="supplyOptions.length === 0 && !loadingSupplies" class="text-sm text-gray-500">
+          <p
+            v-else-if="supplyOptions.length === 0 && !loadingSupplies"
+            class="text-sm text-gray-500"
+          >
             Нет доступных поставок
           </p>
         </div>
@@ -55,7 +63,9 @@
           <BaseButton
             size="sm"
             variant="soft"
-            @click="supplyDetailsStore.openModal(String(selectedSupply.supplyId))"
+            @click="
+              supplyDetailsStore.openModal(String(selectedSupply.supplyId))
+            "
           >
             <InformationCircleIcon class="w-4 h-4 mr-1" />
             детали
@@ -79,7 +89,9 @@
 
         <!-- Max Coefficient -->
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Максимальный коэффициент
           </label>
           <div class="flex items-center gap-4">
@@ -87,13 +99,20 @@
               type="range"
               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
               :value="maxCoefficientInput"
-              @input="(e) => formStore.handleMaxCoefficientChange(Number((e.target as HTMLInputElement).value))"
+              @input="
+                (e) =>
+                  formStore.handleMaxCoefficientChange(
+                    Number((e.target as HTMLInputElement).value),
+                  )
+              "
               :step="1"
               :min="0"
               :max="20"
             />
             <div class="min-w-[4rem] text-center">
-              <span class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+              <span
+                class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+              >
                 {{ maxCoefficientInput }}
               </span>
             </div>
@@ -102,6 +121,13 @@
             Поставка будет перепланирована только если коэффициент не превышает
             указанное значение
           </p>
+
+          <!-- Coefficient History -->
+          <CoefficientHistoryAlert
+            v-if="form.warehouseId && form.supplyType"
+            :warehouse-id="form.warehouseId"
+            :supply-type="form.supplyType"
+          />
         </div>
       </form>
 
@@ -140,10 +166,10 @@
     :show="supplyDetailsStore.showModal"
     @update:show="supplyDetailsStore.closeModal"
   />
-  
+
   <!-- Hints Modal -->
   <ReschedulesHints :show="showHintsModal" @close="showHintsModal = false" />
-  
+
   <!-- Telegram Back Button -->
   <BackButton @click="emit('back')" />
 </template>
@@ -164,6 +190,7 @@ import { BaseButton, BaseSelect, BaseAlert } from '../ui';
 import DateSelection from '../common/DateSelection.vue';
 import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
 import ReschedulesHints from './Hints.vue';
+import CoefficientHistoryAlert from '../triggers/CoefficientHistoryAlert.vue';
 
 interface Emits {
   back: [];
