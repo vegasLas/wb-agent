@@ -1,9 +1,18 @@
 import apiClient from './client';
-import type { SupplyDetails } from '../types';
+import type { SupplyDetails, SupplyGood } from '../types';
+
+export interface SupplyDetailsResponse {
+  success: boolean;
+  data?: {
+    goods: SupplyGood[];
+    supply: SupplyDetails;
+  };
+  error?: string;
+}
 
 export const supplyDetailsAPI = {
-  async fetchSupplyDetails(supplyId: string): Promise<SupplyDetails> {
-    const response = await apiClient.get(`/supplies/${supplyId}`);
-    return response.data.data;
+  async fetchSupplyDetails(supplyId: string): Promise<SupplyDetailsResponse> {
+    const response = await apiClient.get('/supplies/supply-details', { params: { supplyId } });
+    return response.data;
   },
 };

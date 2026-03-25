@@ -1,79 +1,110 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { supplyDetailsAPI } from '../api';
-import type { SupplyDetails } from '../types';
+import { useRescheduleStore } from './reschedules';
+import type { SupplyDetails, SupplyGood } from '../types';
 
 export const useSupplyDetailsStore = defineStore('supplyDetails', () => {
-  // State
-  const supplyDetails = ref<Map<string, SupplyDetails>>(new Map());
-  const loading = ref(false);
-  const error = ref<string | null>(null);
-  const currentSupplyId = ref<string | null>(null);
+  // Supply details state
+  const supplyGoods = ref<SupplyGood[]>([]);
+  const supplyDetails = ref<SupplyDetails | null>(null);
+  const loadingSupplyDetails = ref(false);
+  const supplyGoodsError = ref<string | null>(null);
+  const supplyRemoved = ref(false);
+
+  // Modal state
+  const showModal = ref(false);
+  const selectedSupplyId = ref<string | null>(null);
 
   // Getters
-  const currentDetails = computed(() =>
-    currentSupplyId.value ? supplyDetails.value.get(currentSupplyId.value) : null
-  );
-
-  const getDetailsById = computed(() => {
-    return (id: string) => supplyDetails.value.get(id);
-  });
-
-  const isCached = computed(() => {
-    return (id: string) => supplyDetails.value.has(id);
-  });
+  const currentDetails = computed(() => supplyDetails.value);
 
   // Actions
-  async function fetchSupplyDetails(supplyId: string) {
-    // Return cached data if available
-    if (supplyDetails.value.has(supplyId)) {
-      currentSupplyId.value = supplyId;
-      return supplyDetails.value.get(supplyId);
-    }
+  async function getSupplyDetails(supplyId: string) {
+    loadingSupplyDetails.value = true;
+    supplyGoodsError.value = null;
+    supplyRemoved.value = false;
 
     try {
-      loading.value = true;
-      error.value = null;
-      const data = await supplyDetailsAPI.fetchSupplyDetails(supplyId);
-      supplyDetails.value.set(supplyId, data);
-      currentSupplyId.value = supplyId;
-      return data;
+      const response = await supplyDetailsAPI.fetchSupplyDetails(supplyId);
+      if (response.success) {
+        supplyGoods.value = response.data?.goods || [];
+        supplyDetails.value = response.data?.supply || null;
+      } else {
+        // Handle API error response (success: false)
+        const errorResponse = response as unknown as {
+          success: false;
+          error: string;
+        };
+        if (errorResponse.error === 'SUPPLY_REMOVED') {
+          supplyRemoved.value = true;
+          supplyGoodsError.value = 'Поставка была удалена';
+        } else {
+          supplyGoodsError.value =
+            errorResponse.error || 'Failed to get supply details';
+        }
+        supplyGoods.value = [];
+        supplyDetails.value = null;
+      }
     } catch (err: any) {
-      error.value = err.message || 'Failed to fetch supply details';
-      throw err;
+      // Handle network/unexpected errors
+      console.error('Failed to get supply details:', err);
+      supplyGoodsError.value = err.message || 'Failed to get supply details';
+      supplyGoods.value = [];
+      supplyDetails.value = null;
     } finally {
-      loading.value = false;
+      loadingSupplyDetails.value = false;
     }
   }
 
-  function setCurrentSupplyId(supplyId: string | null) {
-    currentSupplyId.value = supplyId;
+  // Clear supply goods
+  function clearSupplyGoods() {
+    supplyGoods.value = [];
+    supplyDetails.value = null;
+    supplyGoodsError.value = null;
+    supplyRemoved.value = false;
   }
 
-  function clearCache() {
-    supplyDetails.value.clear();
-    currentSupplyId.value = null;
+  // Get reschedule by supply ID (moved from reschedule store for better separation)
+  function getRescheduleBySupplyId(supplyId: string) {
+    const rescheduleStore = useRescheduleStore();
+    const reschedule = rescheduleStore.reschedules.find(
+      (reschedule) => reschedule.supplyId === supplyId,
+    );
+    return reschedule;
   }
 
-  function clearError() {
-    error.value = null;
+  // Modal management functions
+  async function openModal(supplyId: string) {
+    selectedSupplyId.value = supplyId;
+    showModal.value = true;
+    await getSupplyDetails(supplyId);
+  }
+
+  function closeModal() {
+    showModal.value = false;
+    selectedSupplyId.value = null;
+    clearSupplyGoods();
   }
 
   return {
     // State
-    loading: readonly(loading),
-    error: readonly(error),
-    currentSupplyId: readonly(currentSupplyId),
+    supplyGoods: readonly(supplyGoods),
+    supplyDetails: readonly(supplyDetails),
+    loadingSupplyDetails: readonly(loadingSupplyDetails),
+    supplyGoodsError: readonly(supplyGoodsError),
+    supplyRemoved: readonly(supplyRemoved),
+    showModal: readonly(showModal),
+    selectedSupplyId: readonly(selectedSupplyId),
 
     // Getters
     currentDetails,
-    getDetailsById,
-    isCached,
 
     // Actions
-    fetchSupplyDetails,
-    setCurrentSupplyId,
-    clearCache,
-    clearError,
+    getSupplyDetails,
+    clearSupplyGoods,
+    getRescheduleBySupplyId,
+    openModal,
+    closeModal,
   };
 });

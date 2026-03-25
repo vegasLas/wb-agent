@@ -1,12 +1,56 @@
-<script setup lang="ts">
-import { ref } from 'vue';
+<template>
+  <ReschedulesList v-if="viewStore.currentView === 'reschedules-main'" />
+  <ReschedulesForm
+    v-else-if="viewStore.currentView === 'reschedules-form'"
+    @back="viewStore.setView('reschedules-main')"
+  />
+  <ReschedulesUpdateForm
+    v-else-if="viewStore.currentView === 'reschedules-update'"
+    @back="viewStore.setView('reschedules-main')"
+  />
+</template>
 
-const message = ref('Reschedules Main - To be implemented in Plan 09');
+<script setup lang="ts">
+import { useViewStore } from '../../stores/view';
+import ReschedulesList from './List.vue';
+import ReschedulesForm from './Form.vue';
+import ReschedulesUpdateForm from './UpdateForm.vue';
+
+const viewStore = useViewStore();
 </script>
 
-<template>
-  <div class="p-4">
-    <h1 class="text-2xl font-bold mb-4">Reschedules</h1>
-    <p class="text-gray-600">{{ message }}</p>
-  </div>
-</template>
+<style scoped>
+.reschedule-container {
+  padding: 1rem;
+}
+
+.reschedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.reschedule-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.button-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.reschedule-count {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.reschedule-label {
+  font-size: 1rem;
+  color: var(--color-gray-600);
+}
+</style>
