@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { api } from '../api';
 import { useWarehousesStore } from './warehouses';
+import { AUTOBOOKING_STATUSES } from '../constants';
 import type { Autobooking } from '../types';
 
 type BadgeColor = 'gray' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'indigo' | 'purple' | 'pink';
@@ -87,6 +88,62 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     return statusMap[status] || status;
   }
 
+  function getDateTypeText(dateType: string): string {
+    const typeMap: Record<string, string> = {
+      'WEEK': 'Неделя',
+      'MONTH': 'Месяц',
+      'CUSTOM_PERIOD': 'Свой период',
+      'CUSTOM_DATES': 'Выбранные даты',
+      'CUSTOM_DATES_SINGLE': 'Выбранные даты (одна)',
+    };
+    return typeMap[dateType] || dateType;
+  }
+
+  /**
+   * Check if booking dates are still relevant (not in the past)
+   */
+  function isBookingDatesRelevant(booking: Autobooking): boolean {
+    const now = new Date();
+    
+    if (booking.dateType === 'WEEK' || booking.dateType === 'MONTH') {
+      if (!booking.startDate) return false;
+      const startDate = new Date(booking.startDate);
+      // Add buffer period based on date type
+      const bufferDays = booking.dateType === 'WEEK' ? 6 : 30;
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + bufferDays);
+      return endDate >= now;
+    }
+    
+    if (booking.dateType === 'CUSTOM_PERIOD') {
+      if (!booking.endDate) return false;
+      const endDate = new Date(booking.endDate);
+      return endDate >= now;
+    }
+    
+    if (booking.dateType === 'CUSTOM_DATES' || booking.dateType === 'CUSTOM_DATES_SINGLE') {
+      if (!booking.customDates || booking.customDates.length === 0) return false;
+      // Check if any date is in the future
+      return booking.customDates.some(date => new Date(date) >= now);
+    }
+    
+    return true;
+  }
+
+  async function activateAutobooking(booking: Autobooking) {
+    try {
+      loading.value = true;
+      await api.post(`/autobookings/${booking.id}/activate`);
+      // Refresh the list to get updated status
+      await fetchData(1);
+    } catch (err) {
+      error.value = 'Failed to activate autobooking';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   async function fetchData(page?: number): Promise<AutobookingsResponse> {
     try {
       loading.value = true;
@@ -141,6 +198,9 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     fetchData,
     getStatusColor,
     getStatusText,
+    getDateTypeText,
+    isBookingDatesRelevant,
+    activateAutobooking,
     currentPage,
     nextPage,
     loadNextPage,

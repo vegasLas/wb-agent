@@ -1,7 +1,8 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { draftsAPI } from '../api';
-import type { Draft } from '../types';
+import { api } from '../api';
+import type { Draft, DraftGood } from '../types';
 
 export const useDraftStore = defineStore('draft', () => {
   // State
@@ -9,6 +10,9 @@ export const useDraftStore = defineStore('draft', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const selectedDraftId = ref<string | null>(null);
+  const showGoodsModal = ref(false);
+  const draftGoods = ref<DraftGood[]>([]);
+  const loadingGoods = ref(false);
 
   // Getters
   const draftCount = computed(() => drafts.value.length);
@@ -48,12 +52,47 @@ export const useDraftStore = defineStore('draft', () => {
     selectedDraftId.value = id;
   }
 
+  async function showDraftGoods(draftId: string, supplierId?: string) {
+    try {
+      loadingGoods.value = true;
+      showGoodsModal.value = true;
+      
+      const response = await api.get(`/drafts/${draftId}/goods`, {
+        params: supplierId ? { supplierId } : undefined
+      });
+      
+      if (response.data && response.data.success) {
+        draftGoods.value = response.data.data.map((good: any) => ({
+          article: good.sa || good.article,
+          image: good.imgSrc || good.image,
+          name: good.subjectName || good.name,
+          quantity: good.quantity,
+        })) || [];
+      } else {
+        draftGoods.value = [];
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch draft goods:', err);
+      draftGoods.value = [];
+    } finally {
+      loadingGoods.value = false;
+    }
+  }
+
+  function closeGoodsModal() {
+    showGoodsModal.value = false;
+    draftGoods.value = [];
+  }
+
   return {
     // State
     drafts: readonly(drafts),
     loading: readonly(loading),
     error: readonly(error),
     selectedDraftId: readonly(selectedDraftId),
+    showGoodsModal: readonly(showGoodsModal),
+    draftGoods: readonly(draftGoods),
+    loadingGoods: readonly(loadingGoods),
 
     // Getters
     draftCount,
@@ -64,5 +103,7 @@ export const useDraftStore = defineStore('draft', () => {
     // Actions
     fetchDrafts,
     selectDraft,
+    showDraftGoods,
+    closeGoodsModal,
   };
 });
