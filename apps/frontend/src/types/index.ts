@@ -173,6 +173,44 @@ export interface Coefficient {
 // -----------------------------------------------------------------------------
 // Trigger Types
 // -----------------------------------------------------------------------------
+export type SearchMode =
+  | 'TODAY'
+  | 'TOMORROW'
+  | 'WEEK'
+  | 'UNTIL_FOUND'
+  | 'CUSTOM_DATES'
+  | 'RANGE';
+
+export interface SupplyTrigger {
+  id: string;
+  userId: number;
+  warehouseIds: number[];
+  supplyTypes: ('BOX' | 'MONOPALLETE' | 'SUPERSAFE')[];
+  isActive: boolean;
+  checkInterval: number;
+  maxCoefficient: number;
+  createdAt: string;
+  updatedAt: string;
+  status: 'RELEVANT' | 'COMPLETED' | 'EXPIRED';
+  lastNotificationAt: string | null;
+  searchMode: SearchMode;
+  startDate?: string | null;
+  endDate?: string | null;
+  selectedDates: string[];
+}
+
+export interface CreateTriggerRequest {
+  warehouseIds: number[];
+  supplyTypes: ('BOX' | 'MONOPALLETE' | 'SUPERSAFE')[];
+  checkInterval: number;
+  maxCoefficient: number;
+  searchMode: SearchMode;
+  startDate?: string | null;
+  endDate?: string | null;
+  selectedDates?: string[];
+}
+
+// Legacy types for backward compatibility
 export interface Trigger {
   id: string;
   date: string;
