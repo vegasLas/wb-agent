@@ -1,23 +1,49 @@
 import apiClient from './client';
-import type { Reschedule, RescheduleCreateData, RescheduleUpdateData } from '../types';
+import type { 
+  AutobookingReschedule, 
+  CreateAutobookingRescheduleRequest,
+  UpdateAutobookingRescheduleRequest,
+  SupplyGood,
+  SupplyDetails 
+} from '../types';
+
+export interface RescheduleAPIResponse {
+  success: boolean;
+  message?: string;
+  items?: AutobookingReschedule[];
+  counts?: Record<string, number>;
+  currentPage?: number;
+  nextPage?: number | null;
+  data?: {
+    goods: SupplyGood[];
+    supply: SupplyDetails;
+  };
+  error?: string;
+}
 
 export const reschedulesAPI = {
-  async fetchReschedules(): Promise<Reschedule[]> {
-    const response = await apiClient.get('/reschedules');
-    return response.data.data;
+  async fetchReschedules(page: number = 1): Promise<RescheduleAPIResponse> {
+    const response = await apiClient.get('/reschedule', { params: { page } });
+    return response.data;
   },
 
-  async createReschedule(data: RescheduleCreateData): Promise<Reschedule> {
-    const response = await apiClient.post('/reschedules', data);
-    return response.data.data;
+  async createReschedule(data: CreateAutobookingRescheduleRequest): Promise<RescheduleAPIResponse> {
+    const response = await apiClient.post('/reschedule', data);
+    return response.data;
   },
 
-  async updateReschedule(id: string, data: RescheduleUpdateData): Promise<Reschedule> {
-    const response = await apiClient.patch(`/reschedules/${id}`, data);
-    return response.data.data;
+  async updateReschedule(data: UpdateAutobookingRescheduleRequest): Promise<RescheduleAPIResponse> {
+    const response = await apiClient.put('/reschedule', data);
+    return response.data;
   },
 
-  async deleteReschedule(id: string): Promise<void> {
-    await apiClient.delete(`/reschedules/${id}`);
+  async deleteReschedule(id: string): Promise<RescheduleAPIResponse> {
+    const response = await apiClient.delete('/reschedule', { data: { id } });
+    return response.data;
+  },
+
+  async getSupplyDetails(supplyId: string): Promise<RescheduleAPIResponse> {
+    const response = await apiClient.get('/supplies/supply-details', { params: { supplyId } });
+    return response.data;
   },
 };
