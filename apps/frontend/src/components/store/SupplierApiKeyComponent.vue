@@ -1,21 +1,31 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold">API ключ поставщика</h3>
-      <span
-        v-if="userStore.user.supplierApiKey"
-        class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-      >
-        Настроен
-      </span>
-    </div>
+  <div class="api-key-component space-y-4">
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+      <h3 class="font-medium mb-2">API ключ поставщика</h3>
 
-    <div class="space-y-4">
-      <!-- Show current API key if exists -->
+      <!-- Status -->
+      <div v-if="apiKeyStatus" class="mb-4">
+        <div
+          :class="[
+            'inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm',
+            apiKeyStatus.valid
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+          ]"
+        >
+          <CheckCircleIcon v-if="apiKeyStatus.valid" class="w-4 h-4" />
+          <XCircleIcon v-else class="w-4 h-4" />
+          {{ apiKeyStatus.valid ? 'Ключ действителен' : 'Ошибка ключа' }}
+        </div>
+        <p v-if="apiKeyStatus.message" class="text-sm text-gray-500 mt-1">
+          {{ apiKeyStatus.message }}
+        </p>
+      </div>
+
+      <!-- Current Key Display -->
       <div v-if="userStore.user.supplierApiKey && !showEditForm" class="space-y-3">
         <div
-          class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+          class="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg"
         >
           <div class="flex-1">
             <div class="flex items-center justify-between">
@@ -33,7 +43,7 @@
                   variant="outline"
                   size="sm"
                   square
-                  :loading="loading"
+                  :loading="apiKeyStore.loading"
                   @click="handleDelete"
                   title="Удалить API ключ"
                 >
@@ -59,148 +69,116 @@
         </div>
       </div>
 
-      <!-- Add/Edit form -->
-      <div v-if="!userStore.user.supplierApiKey || showEditForm" class="space-y-3">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            API ключ
-            <span v-if="formError" class="text-red-500 text-xs ml-2">{{ formError }}</span>
-          </label>
-          <div class="flex gap-2">
-            <BaseInput
-              v-model="formData.apiKey"
-              placeholder="Введите ваш API ключ поставщика"
-              :disabled="loading"
-              class="flex-1"
-            />
-
-            <BaseButton
-              color="primary"
-              size="sm"
-              square
-              :loading="loading"
-              :disabled="!formData.apiKey.trim() || loading"
-              @click="handleSave"
-              :title="
-                userStore.user.supplierApiKey
-                  ? 'Обновить API ключ'
-                  : 'Сохранить API ключ'
-              "
-            >
-              <CheckIcon class="w-4 h-4" />
-            </BaseButton>
-
-            <BaseButton
-              v-if="showEditForm"
-              color="gray"
-              variant="ghost"
-              size="sm"
-              square
-              @click="cancelEdit"
-              title="Отмена"
-            >
-              <XMarkIcon class="w-4 h-4" />
-            </BaseButton>
-          </div>
+      <!-- Input -->
+      <div v-if="!userStore.user.supplierApiKey || showEditForm" class="space-y-2">
+        <label class="block text-sm font-medium">
+          {{ userStore.user.supplierApiKey ? 'Новый API ключ' : 'API ключ' }}
+          <span v-if="formError" class="text-red-500 text-xs ml-2">{{ formError }}</span>
+        </label>
+        <div class="flex gap-2">
+          <BaseInput
+            v-model="newApiKey"
+            type="password"
+            placeholder="Введите API ключ"
+            class="flex-1"
+            :disabled="apiKeyStore.saving"
+          />
+          <BaseButton
+            :loading="apiKeyStore.saving"
+            :disabled="!newApiKey.trim() || apiKeyStore.saving"
+            @click="saveApiKey"
+          >
+            {{ userStore.user.supplierApiKey ? 'Обновить' : 'Сохранить' }}
+          </BaseButton>
+          <BaseButton
+            v-if="showEditForm"
+            color="gray"
+            variant="ghost"
+            size="sm"
+            square
+            @click="cancelEdit"
+            title="Отмена"
+          >
+            <XMarkIcon class="w-4 h-4" />
+          </BaseButton>
         </div>
+        <p class="text-xs text-gray-500">
+          API ключ можно получить в личном кабинете WB Партнеры
+        </p>
       </div>
-
-      <!-- Info Alert -->
-      <BaseAlert
-        v-if="!userStore.user.supplierApiKey || showEditForm"
-        color="blue"
-        icon="info"
-        title="Информация об API ключе"
-      >
-        <div class="space-y-2 text-sm">
-          <p>
-            API ключ ускорит успех ваших автобронирований. Убедитесь, что ключ
-            действителен и имеет необходимые права доступа.
-          </p>
-          <p>
-            <a
-              href="https://seller.wildberries.ru/supplier-settings/access-to-api"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-            >
-              Получить API ключ в личном кабинете Wildberries →
-            </a>
-          </p>
-        </div>
-      </BaseAlert>
     </div>
+
+    <!-- Instructions -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+      <h4 class="font-medium text-blue-900 dark:text-blue-200 mb-2">
+        <InformationCircleIcon class="w-4 h-4 inline mr-1" />
+        Как получить API ключ
+      </h4>
+      <ol class="text-sm text-blue-800 dark:text-blue-300 list-decimal list-inside space-y-1">
+        <li>Войдите в <a href="https://seller.wildberries.ru" target="_blank" class="underline">WB Партнеры</a></li>
+        <li>Перейдите в раздел "Настройки" → "Доступ к API"</li>
+        <li>Скопируйте ключ и вставьте в поле выше</li>
+      </ol>
+    </div>
+
+    <!-- Error Alert -->
+    <BaseAlert
+      v-if="apiKeyStore.error"
+      color="red"
+      icon="error"
+      title="Ошибка"
+      class="mt-4"
+    >
+      {{ apiKeyStore.error }}
+    </BaseAlert>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
+  CheckCircleIcon,
+  XCircleIcon,
+  InformationCircleIcon,
   TrashIcon,
   PencilIcon,
   ShieldCheckIcon,
-  CheckIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline';
-import { BaseButton, BaseInput, BaseAlert } from '../ui';
+import { useSupplierApiKeyStore } from '../../stores/supplierApiKey';
 import { useUserStore } from '../../stores/user';
-import { api } from '../../api';
+import { BaseInput, BaseButton, BaseAlert } from '../ui';
 
+const apiKeyStore = useSupplierApiKeyStore();
 const userStore = useUserStore();
 
+const newApiKey = ref('');
 const showEditForm = ref(false);
 const formError = ref('');
-const loading = ref(false);
 
-const formData = reactive({
-  apiKey: '',
-});
+const apiKeyStatus = computed(() => apiKeyStore.status);
 
-// Helper function to format date
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-// Methods
-async function handleSave() {
+async function saveApiKey() {
   formError.value = '';
 
-  if (!formData.apiKey.trim()) {
+  if (!newApiKey.value.trim()) {
     formError.value = 'API ключ обязателен';
     return;
   }
 
-  if (formData.apiKey.length < 10) {
+  if (newApiKey.value.length < 10) {
     formError.value = 'API ключ должен содержать минимум 10 символов';
     return;
   }
 
   try {
-    loading.value = true;
-    await api.post('/supplier/api-key', {
-      apiKey: formData.apiKey.trim(),
-    });
-
-    // Update local user state
-    userStore.user.supplierApiKey = formData.apiKey.trim();
-
-    // Show success alert (using native alert for now)
-    alert('API ключ успешно сохранен. Ваш API ключ прошел проверку и был сохранен в системе.');
-
-    // Reset form
-    formData.apiKey = '';
+    await apiKeyStore.updateApiKey(newApiKey.value.trim());
+    userStore.user.supplierApiKey = newApiKey.value.trim();
+    newApiKey.value = '';
     showEditForm.value = false;
+    alert('API ключ успешно сохранен. Ваш API ключ прошел проверку и был сохранен в системе.');
   } catch (error: any) {
-    formError.value =
-      'Не валидный API ключ, пожалуйста проверьте ключ и попробуйте еще раз';
-  } finally {
-    loading.value = false;
+    formError.value = error.message || 'Не удалось сохранить API ключ';
   }
 }
 
@@ -211,25 +189,32 @@ async function handleDelete() {
 
   if (confirmed) {
     try {
-      loading.value = true;
-      await api.delete('/supplier/api-key');
-
-      // Update local user state
+      await apiKeyStore.deleteApiKey();
       userStore.user.supplierApiKey = undefined;
-
-      // Show success alert
       alert('API ключ удален. Ваш API ключ был успешно удален из системы.');
     } catch (error) {
       alert('Ошибка удаления. Не удалось удалить API ключ. Попробуйте еще раз.');
-    } finally {
-      loading.value = false;
     }
   }
 }
 
 function cancelEdit() {
   showEditForm.value = false;
-  formData.apiKey = '';
+  newApiKey.value = '';
   formError.value = '';
 }
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+onMounted(() => {
+  apiKeyStore.checkStatus();
+});
 </script>
