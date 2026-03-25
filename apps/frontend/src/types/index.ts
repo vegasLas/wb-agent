@@ -234,6 +234,27 @@ export interface TriggerUpdateData extends Partial<TriggerCreateData> {
 // -----------------------------------------------------------------------------
 // Reschedule Types
 // -----------------------------------------------------------------------------
+export interface AutobookingReschedule {
+  id: string;
+  userId: number;
+  supplierId: string;
+  warehouseId: number;
+  dateType: string;
+  startDate: string | null;
+  endDate: string | null;
+  customDates: string[];
+  completedDates: string[];
+  maxCoefficient: number;
+  status: RescheduleStatus;
+  supplyType: string;
+  supplyId: string;
+  createdAt: string;
+  updatedAt: string;
+  currentDate: string;
+}
+
+export type RescheduleStatus = 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+
 export interface Reschedule {
   id: string;
   supplyId: string;
@@ -244,8 +265,6 @@ export interface Reschedule {
   createdAt: string;
 }
 
-export type RescheduleStatus = 'pending' | 'completed' | 'failed';
-
 export interface RescheduleCreateData {
   supplyId: string;
   targetDate: string;
@@ -253,6 +272,33 @@ export interface RescheduleCreateData {
 }
 
 export interface RescheduleUpdateData extends Partial<RescheduleCreateData> {}
+
+// Create/Update API request types
+export interface CreateAutobookingRescheduleRequest {
+  warehouseId: number;
+  dateType: string;
+  startDate?: string;
+  endDate?: string;
+  currentDate: string;
+  customDates?: string[];
+  maxCoefficient: number;
+  supplyType: string;
+  supplyId: string;
+}
+
+export interface UpdateAutobookingRescheduleRequest {
+  id: string;
+  warehouseId?: number;
+  dateType?: string;
+  startDate?: string;
+  endDate?: string;
+  currentDate?: string;
+  customDates?: string[];
+  maxCoefficient?: number;
+  supplyType?: string;
+  supplyId?: string;
+  status?: string;
+}
 
 // -----------------------------------------------------------------------------
 // Supply Types
@@ -264,6 +310,12 @@ export interface Supply {
   date: string;
   status: string;
   goods: SupplyGood[];
+  supplyId?: number;
+  supplyDate?: string;
+  warehouseName?: string;
+  boxTypeName?: string;
+  statusId?: number;
+  statusName?: string;
 }
 
 export interface SupplyGood {
@@ -271,6 +323,12 @@ export interface SupplyGood {
   name: string;
   quantity: number;
   price: number;
+  imgSrc?: string;
+  imtName?: string;
+  barcode?: string;
+  brandName?: string;
+  subjectName?: string;
+  colorName?: string;
 }
 
 export interface SupplyDetails {
@@ -282,6 +340,8 @@ export interface SupplyDetails {
     sku: string;
     quantity: number;
   }>;
+  supplyDate?: string;
+  statusId?: number;
 }
 
 // -----------------------------------------------------------------------------
