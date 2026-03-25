@@ -24,6 +24,10 @@ export const supplierAPI = {
     return response.data.data;
   },
 
+  async deleteSupplierApiKey(): Promise<void> {
+    await apiClient.delete('/supplier/api-key');
+  },
+
   async fetchWarehouseBalances(supplierId?: string): Promise<GoodBalance[]> {
     const response = await apiClient.get('/supplier/balances', {
       params: supplierId ? { supplierId } : undefined
