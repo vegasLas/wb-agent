@@ -31,6 +31,12 @@ export interface User {
   firstName?: string;
   lastName?: string;
   photoUrl?: string;
+  agreeTerms: boolean;
+  subscriptionExpiresAt: string | null;
+  autobookingCount: number;
+  payments: Payment[];
+  selectedAccountId?: string;
+  accounts: Account[];
   createdAt: string;
   updatedAt: string;
 }
@@ -44,9 +50,11 @@ export interface AuthResponse {
 // Account Types
 // -----------------------------------------------------------------------------
 export interface Account {
-  id: number;
-  name: string;
+  id: string;
+  phoneWb: string;
   isActive: boolean;
+  suppliers: Supplier[];
+  selectedSupplierId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,27 +67,36 @@ export interface AccountWithSuppliers extends Account {
 // Supplier Types
 // -----------------------------------------------------------------------------
 export interface Supplier {
-  id: number;
+  supplierId: string;
+  supplierName: string;
+}
+
+export interface SupplierInfo {
+  id: string;
   name: string;
-  accountId: number;
-  isActive: boolean;
   apiKey?: string;
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface ApiKeyStatus {
+  valid: boolean;
+  message?: string;
 }
 
 // -----------------------------------------------------------------------------
 // Autobooking Types
 // -----------------------------------------------------------------------------
 export interface Autobooking {
-  id: number;
-  supplierId: number;
-  warehouseId: number;
-  boxTypeId: number;
+  id: string;
+  name: string;
+  enabled: boolean;
+  dateType: string;
+  startDate?: string;
+  endDate?: string;
+  customDates?: string[];
+  warehouseIds: string[];
+  draftId?: string;
   coefficient: number;
-  dateFrom: string;
-  dateTo: string;
-  status: AutobookingStatus;
+  monotype: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -87,19 +104,24 @@ export interface Autobooking {
 export type AutobookingStatus = 'active' | 'paused' | 'completed' | 'failed';
 
 export interface AutobookingCreateData {
-  supplierId: number;
-  warehouseId: number;
-  boxTypeId: number;
+  name: string;
+  dateType: string;
+  startDate?: string;
+  endDate?: string;
+  customDates?: string[];
+  warehouseIds: string[];
+  draftId?: string;
   coefficient: number;
-  dateFrom: string;
-  dateTo: string;
+  monotype: boolean;
 }
+
+export interface AutobookingUpdateData extends Partial<AutobookingCreateData> {}
 
 // -----------------------------------------------------------------------------
 // Warehouse Types
 // -----------------------------------------------------------------------------
 export interface Warehouse {
-  id: number;
+  id: string;
   name: string;
   address?: string;
   isActive: boolean;
@@ -114,8 +136,8 @@ export interface WarehouseWithCoefficient extends Warehouse {
 // Coefficient Types
 // -----------------------------------------------------------------------------
 export interface Coefficient {
-  warehouseId: number;
-  boxTypeId: number;
+  warehouseId: string;
+  boxTypeId?: number;
   coefficient: number;
   date: string;
 }
@@ -124,44 +146,47 @@ export interface Coefficient {
 // Trigger Types
 // -----------------------------------------------------------------------------
 export interface Trigger {
-  id: number;
-  supplierId: number;
-  warehouseIds: number[];
-  boxTypeIds: number[];
-  coefficientThreshold: number;
-  isActive: boolean;
+  id: string;
+  date: string;
+  warehouseId: string;
+  warehouseName: string;
+  maxCoefficient: number;
+  enabled: boolean;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface TriggerCreateData {
-  supplierId: number;
-  warehouseIds: number[];
-  boxTypeIds: number[];
-  coefficientThreshold: number;
+  date: string;
+  warehouseIds: string[];
+  maxCoefficient: number;
+}
+
+export interface TriggerUpdateData extends Partial<TriggerCreateData> {
+  enabled?: boolean;
 }
 
 // -----------------------------------------------------------------------------
 // Reschedule Types
 // -----------------------------------------------------------------------------
 export interface Reschedule {
-  id: number;
-  supplierId: number;
+  id: string;
   supplyId: string;
-  oldDate: string;
-  newDate: string;
+  originalDate: string;
+  targetDate: string;
   status: RescheduleStatus;
+  monotype: boolean;
   createdAt: string;
-  updatedAt: string;
 }
 
 export type RescheduleStatus = 'pending' | 'completed' | 'failed';
 
 export interface RescheduleCreateData {
-  supplierId: number;
   supplyId: string;
-  newDate: string;
+  targetDate: string;
+  monotype: boolean;
 }
+
+export interface RescheduleUpdateData extends Partial<RescheduleCreateData> {}
 
 // -----------------------------------------------------------------------------
 // Supply Types
@@ -182,6 +207,17 @@ export interface SupplyGood {
   price: number;
 }
 
+export interface SupplyDetails {
+  id: string;
+  date: string;
+  warehouseId: string;
+  warehouseName: string;
+  goods: Array<{
+    sku: string;
+    quantity: number;
+  }>;
+}
+
 // -----------------------------------------------------------------------------
 // Draft Types
 // -----------------------------------------------------------------------------
@@ -189,7 +225,8 @@ export interface Draft {
   id: string;
   supplierId: number;
   name: string;
-  goods: DraftGood[];
+  goodsCount: number;
+  goods?: DraftGood[];
   createdAt: string;
 }
 
@@ -209,6 +246,17 @@ export interface Report {
   periodTo: string;
   data: ReportData;
   createdAt: string;
+  // Extended report data
+  totalBookings: number;
+  bookingsByMonth: Array<{ month: string; count: number }>;
+  warehouseStats: Array<{ name: string; count: number }>;
+  coefficientStats: Array<{ range: string; count: number }>;
+  warehouseSuggestions: Array<{
+    warehouseId: string;
+    name: string;
+    reason: string;
+    score: number;
+  }>;
 }
 
 export interface ReportData {
@@ -242,9 +290,21 @@ export type SubscriptionStatus = 'active' | 'expired' | 'cancelled';
 export interface Tariff {
   id: string;
   name: string;
+  description: string;
   price: number;
-  period: 'month' | 'year';
-  features: string[];
+  duration: number;
+  period?: 'month' | 'year';
+  features?: string[];
+}
+
+export interface Payment {
+  id: string;
+  amount: number;
+  status: string;
+  paymentUrl?: string;
+  createdAt: string;
+  tariffId?: string;
+  userId?: number;
 }
 
 // -----------------------------------------------------------------------------
@@ -305,3 +365,8 @@ export interface TelegramWebAppInitData {
   auth_date: number;
   hash: string;
 }
+
+// -----------------------------------------------------------------------------
+// Auth Step Types
+// -----------------------------------------------------------------------------
+export type AuthStep = 'idle' | 'phone' | 'sms' | 'two_factor' | 'completed' | 'error';
