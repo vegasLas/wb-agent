@@ -92,6 +92,13 @@
               </span>
             </div>
           </div>
+          
+          <!-- Coefficient History -->
+          <CoefficientHistoryAlert
+            v-if="reschedule?.warehouseId && reschedule?.supplyType"
+            :warehouse-id="reschedule.warehouseId"
+            :supply-type="reschedule.supplyType"
+          />
         </div>
 
         <!-- Completed Dates Display (read-only) -->
@@ -145,6 +152,7 @@ import { BaseButton } from '../ui';
 import DateSelection from '../common/DateSelection.vue';
 import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
 import ReschedulesHints from './Hints.vue';
+import CoefficientHistoryAlert from '../triggers/CoefficientHistoryAlert.vue';
 
 interface Emits {
   back: [];
