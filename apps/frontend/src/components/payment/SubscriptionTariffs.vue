@@ -1,115 +1,66 @@
 <template>
-  <div class="subscription-tariffs">
-    <h4 class="font-medium mb-4">Тарифы подписки</h4>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div
+      v-for="tariff in SUBSCRIPTION_TARIFFS"
+      :key="tariff.id"
+      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-lg transition-shadow"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ tariff.name }}</h3>
+        <span
+          v-if="tariff.discount"
+          class="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full"
+        >
+          -{{ tariff.discount }}%
+        </span>
+      </div>
 
-    <!-- Tariffs Grid -->
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div
-        v-for="tariff in SUBSCRIPTION_TARIFFS"
-        :key="tariff.id"
-        :class="[
-          'rounded-lg border p-4 cursor-pointer transition-all bg-white dark:bg-gray-800',
-          selectedTariff?.id === tariff.id
-            ? 'border-blue-500 ring-2 ring-blue-500/20'
-            : 'border-gray-200 hover:border-blue-300 dark:border-gray-700'
-        ]"
-        @click="selectTariff(tariff)"
-      >
-        <!-- Header with discount badge -->
-        <div class="flex items-center justify-between mb-2">
-          <h5 class="font-semibold">{{ tariff.name }}</h5>
-          <span
-            v-if="tariff.discount"
-            class="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full"
-          >
-            -{{ tariff.discount }}%
-          </span>
-        </div>
-
-        <!-- Price -->
-        <div class="flex items-center gap-2 mb-4">
-          <span class="text-2xl font-bold">{{ tariff.price }} ₽</span>
-          <span
+      <!-- Price and Button -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-2">
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ tariff.price }} ₽</p>
+          <p
             v-if="tariff.discount"
             class="text-sm text-gray-400 line-through"
           >
             {{ calculateOriginalPrice(tariff.price, tariff.discount) }} ₽
-          </span>
+          </p>
         </div>
 
-        <!-- Description -->
-        <p class="text-sm text-gray-500 mb-4">{{ tariff.description }}</p>
-
-        <!-- Select Button -->
         <BaseButton
           :color="selectedTariff?.id === tariff.id ? 'gray' : 'primary'"
-          size="sm"
           class="w-full"
-          @click.stop="handleSelect(tariff)"
+          @click="selectTariff(tariff)"
         >
           {{ selectedTariff?.id === tariff.id ? 'Выбрано' : 'Выбрать' }}
         </BaseButton>
       </div>
     </div>
-
-    <!-- Payment Button (Telegram MainButton simulation) -->
-    <div v-if="selectedTariff && !showModal" class="mt-6">
-      <BaseButton color="green" size="lg" class="w-full" @click="handlePayment">
-        Оплатить
-      </BaseButton>
-    </div>
-
-    <!-- Payment Modal placeholder -->
-    <BaseModal
-      v-if="showModal"
-      :title="'Оплата: ' + selectedTariff?.name"
-      @close="closeModal"
-    >
-      <div class="p-4">
-        <p class="mb-4">
-          Вы выбрали тариф: <strong>{{ selectedTariff?.name }}</strong>
-        </p>
-        <p class="mb-4">Сумма к оплате: <strong>{{ selectedTariff?.price }} ₽</strong></p>
-        <p class="text-gray-500 text-sm">
-          Здесь будет интеграция с платежной системой (Plan 12)
-        </p>
-      </div>
-    </BaseModal>
   </div>
+
+  <!-- Payment Modal -->
+  <PaymentModal
+    v-if="selectedTariff && showModal"
+    v-model="showModal"
+    :tariff-id="selectedTariff.id"
+    :tariff-name="selectedTariff.name || ''"
+    :tariff-price="selectedTariff.price"
+    @update:model-value="handleModalClose"
+    @success="handleSuccess"
+    @fail="handleFail"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { SUBSCRIPTION_TARIFFS } from '../../constants';
-import { BaseButton, BaseModal } from '../ui';
+import { BaseButton } from '../ui';
+import PaymentModal from './PaymentModal.vue';
 import type { SubscriptionTariff } from '../../constants';
 
-const emit = defineEmits<{
-  (e: 'select', tariff: SubscriptionTariff): void;
-}>();
-
-const selectedTariff = ref<SubscriptionTariff | null>(null);
 const showModal = ref(false);
-
-function selectTariff(tariff: SubscriptionTariff) {
-  selectedTariff.value = tariff;
-}
-
-function handleSelect(tariff: SubscriptionTariff) {
-  selectedTariff.value = tariff;
-  emit('select', tariff);
-}
-
-function handlePayment() {
-  if (selectedTariff.value) {
-    showModal.value = true;
-  }
-}
-
-function closeModal() {
-  showModal.value = false;
-  selectedTariff.value = null;
-}
+const selectedTariff = ref<SubscriptionTariff | null>(null);
 
 function calculateOriginalPrice(price: number, discount: number): number {
   const originalPrice = price / (1 - discount / 100);
@@ -128,5 +79,24 @@ function calculateOriginalPrice(price: number, discount: number): number {
     const variation = Math.floor(Math.random() * 3); // 0, 1, or 2
     return rounded - (variation === 0 ? 1 : variation === 1 ? 10 : 23);
   }
+}
+
+function selectTariff(tariff: SubscriptionTariff) {
+  selectedTariff.value = tariff;
+  showModal.value = true;
+}
+
+function handleModalClose() {
+  showModal.value = false;
+  selectedTariff.value = null;
+}
+
+function handleSuccess() {
+  showModal.value = false;
+  selectedTariff.value = null;
+}
+
+function handleFail() {
+  // Keep modal open to show error
 }
 </script>
