@@ -3,22 +3,64 @@ import { defineStore } from 'pinia';
 import { triggersAPI } from '../api';
 import { useTriggerStore } from './triggers';
 import { useViewStore } from './view';
-import type { TriggerCreateData } from '../types';
+import { useWarehousesStore } from './warehouses';
+import { SUPPLY_TYPES } from '../constants';
+import type { CreateTriggerRequest, SearchMode } from '../types';
 
 export const useTriggerFormStore = defineStore('triggerForm', () => {
-  // State
-  const form = ref<TriggerCreateData>({
-    date: '',
+  // Dependencies
+  const warehouseStore = useWarehousesStore();
+  const useCheckPeriod = ref(false);
+
+  // Form state
+  const form = ref<CreateTriggerRequest>({
     warehouseIds: [],
-    maxCoefficient: 100,
+    supplyTypes: [],
+    checkInterval: 180,
+    maxCoefficient: 0,
+    searchMode: 'TODAY',
+    startDate: null,
+    endDate: null,
+    selectedDates: [],
   });
 
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  // Getters
+  // Options for selects
+  const searchModeOptions = [
+    { label: 'Сегодня', value: 'TODAY' as SearchMode },
+    { label: 'Завтра', value: 'TOMORROW' as SearchMode },
+    { label: 'Неделя (включая текущий день)', value: 'WEEK' as SearchMode },
+    { label: 'Искать до нахождения', value: 'UNTIL_FOUND' as SearchMode },
+    { label: 'Выбрать даты', value: 'CUSTOM_DATES' as SearchMode },
+    { label: 'Диапазон', value: 'RANGE' as SearchMode },
+  ];
+
+  const supplyTypesOptions = [
+    { label: 'Короба', value: SUPPLY_TYPES.BOX },
+    { label: 'Суперсейф', value: SUPPLY_TYPES.SUPERSAFE },
+    { label: 'Монопаллеты', value: SUPPLY_TYPES.MONOPALLETE },
+  ];
+
+  const warehouseOptions = computed(() => {
+    return warehouseStore.warehouses.map((warehouse) => ({
+      label: warehouse.name,
+      value: warehouse.ID,
+    }));
+  });
+
+  // Computed
+  const showDatePicker = computed(() => form.value.searchMode === 'RANGE');
+  const showRangePicker = computed(() => form.value.searchMode === 'CUSTOM_DATES');
+
   const isValid = computed(() => {
-    return !!(form.value.date && form.value.warehouseIds.length > 0);
+    return (
+      form.value.warehouseIds.length > 0 &&
+      form.value.supplyTypes.length > 0 &&
+      form.value.checkInterval > 0 &&
+      form.value.searchMode !== undefined
+    );
   });
 
   const canSubmit = computed(() => isValid.value && !loading.value);
@@ -26,18 +68,30 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
   // Actions
   function resetForm() {
     form.value = {
-      date: '',
       warehouseIds: [],
-      maxCoefficient: 100,
+      supplyTypes: [],
+      checkInterval: 180,
+      maxCoefficient: 0,
+      searchMode: 'TODAY',
+      startDate: null,
+      endDate: null,
+      selectedDates: [],
     };
+    useCheckPeriod.value = false;
     error.value = null;
   }
 
-  function setFormField<K extends keyof TriggerCreateData>(
+  function setFormField<K extends keyof CreateTriggerRequest>(
     field: K,
-    value: TriggerCreateData[K]
+    value: CreateTriggerRequest[K]
   ) {
     form.value[field] = value;
+  }
+
+  async function initializeWarehouses() {
+    if (warehouseStore.warehouses.length === 0) {
+      await warehouseStore.fetchWarehouses();
+    }
   }
 
   async function createTrigger() {
@@ -53,7 +107,7 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
       error.value = null;
 
       const trigger = await triggersAPI.createTrigger(form.value);
-      triggerStore.triggers.unshift(trigger);
+      triggerStore.triggers.unshift(trigger as unknown as typeof triggerStore.triggers[0]);
       
       resetForm();
       viewStore.setView('triggers-main');
@@ -67,19 +121,33 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
     }
   }
 
+  async function submitForm() {
+    return createTrigger();
+  }
+
   return {
     // State
     form: readonly(form),
     loading: readonly(loading),
     error: readonly(error),
+    useCheckPeriod,
 
-    // Getters
+    // Options
+    searchModeOptions,
+    supplyTypesOptions,
+    warehouseOptions,
+
+    // Computed
     isValid,
     canSubmit,
+    showDatePicker,
+    showRangePicker,
 
     // Actions
     resetForm,
     setFormField,
+    initializeWarehouses,
     createTrigger,
+    submitForm,
   };
 });
