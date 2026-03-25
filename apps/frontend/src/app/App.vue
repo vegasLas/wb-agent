@@ -30,7 +30,7 @@ import { useWarehousesStore } from '../stores/warehouses';
 import { useCoefficientsStore } from '../stores/coefficients';
 import { useTriggerStore } from '../stores/triggers';
 import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
-import { useRescheduleStore } from '../stores/reschedule';
+import { useRescheduleStore } from '../stores/reschedules';
 
 // Components
 import TechnicalMaintenanceError from '../components/TechnicalMaintenanceError.vue';
