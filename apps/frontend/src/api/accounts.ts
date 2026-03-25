@@ -1,0 +1,23 @@
+import apiClient from './client';
+import type { Supplier } from '../types';
+
+export const accountsAPI = {
+  async updateAccountSupplier(
+    accountId: string,
+    supplierId: string
+  ): Promise<void> {
+    await apiClient.patch(`/accounts/${accountId}/supplier`, { supplierId });
+  },
+
+  async refreshAccountSuppliers(accountId: string): Promise<{
+    success: boolean;
+    suppliers: Supplier[];
+  }> {
+    const response = await apiClient.post(`/accounts/${accountId}/refresh-suppliers`);
+    return response.data;
+  },
+
+  async deleteAccount(accountId: string): Promise<void> {
+    await apiClient.delete(`/accounts/${accountId}`);
+  },
+};
