@@ -403,6 +403,81 @@ export interface WarehouseDistribution {
   percentage: number;
 }
 
+// Sales Report Types (from deprecated project)
+// Corresponds to ExcelItem from server/types/parse.ts
+export interface ReportItem {
+  brand: string;
+  category: string;
+  season: string;
+  collection: string;
+  productName: string;
+  vendorCode: string;
+  wbArticle: number;
+  barcode: string;
+  size: string;
+  contract: string;
+  warehouse: string;
+  orderedQty: number;
+  orderedSum: number;
+  purchasedQty: number;
+  purchasedSum: number;
+  stockQty: number;
+}
+
+// Corresponds to ReportInfo from server/types/parse.ts
+export interface ReportInfo {
+  supplier: string;
+  dateFrom: string;
+  dateTo: string;
+  generatedAt: string;
+  warehouse: string;
+  rawTitle: string;
+}
+
+// Corresponds to FriendlyExcelData from server/types/parse.ts
+export interface ReportParsedData {
+  items: ReportItem[];
+  meta: {
+    totalItems: number;
+    sheetName: string;
+    allSheets: string[];
+    reportInfo: ReportInfo;
+  };
+}
+
+// Top-level structure the API expects
+export interface ReportApiPayload {
+  parsedData: ReportParsedData | null;
+  error: string | null;
+  reportPending?: boolean;
+  estimatedWaitTime?: number | null;
+}
+
+export interface ReportRequestParams {
+  limit?: number;
+  offset?: number;
+  dateFrom?: string; // Format: DD.MM.YY or YYYY-MM-DD
+  dateTo?: string;   // Format: DD.MM.YY or YYYY-MM-DD
+}
+
+// Warehouse Suggestion Types
+export interface WarehouseSuggestionItem {
+  vendorCode: string;
+  productName: string;
+  stockQty: number;
+  purchasedQty: number;
+  calculatedDaysOfStock?: number;
+  suggestedUnloadQty?: number;
+  isReplenishment?: boolean;
+}
+
+export interface WarehouseSuggestion {
+  warehouseName: string;
+  priority: 'high' | 'medium' | 'low';
+  reason: string;
+  relevantItems: WarehouseSuggestionItem[];
+}
+
 // -----------------------------------------------------------------------------
 // Payment Types
 // -----------------------------------------------------------------------------
