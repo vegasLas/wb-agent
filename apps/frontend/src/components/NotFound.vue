@@ -3,24 +3,23 @@
     <div class="text-center">
       <div class="text-6xl font-bold text-gray-300 mb-4">404</div>
       <div class="text-red-500 w-16 h-16 mb-4 mx-auto">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-        </svg>
+        <i class="pi pi-exclamation-triangle text-6xl"></i>
       </div>
       <h2 class="text-2xl font-semibold mb-2">{{ title }}</h2>
       <p class="text-gray-600 dark:text-gray-400 mb-6">{{ message }}</p>
-      <button
+      <Button
         v-if="showButton"
-        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        severity="primary"
+        :label="buttonText"
         @click="onRetry"
-      >
-        {{ buttonText }}
-      </button>
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import Button from 'primevue/button';
+
 withDefaults(defineProps<{
   title?: string;
   message?: string;
