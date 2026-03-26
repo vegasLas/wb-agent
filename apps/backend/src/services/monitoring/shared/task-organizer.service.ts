@@ -10,6 +10,7 @@ import type {
   TaskOrganizerBookingItem,
   TaskOrganizerAvailability,
   Proxy,
+  SchedulableItem,
 } from './interfaces/sharedInterfaces';
 import { sharedAvailabilityFilterService } from './availability-filter.service';
 
@@ -119,7 +120,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
     for (const booking of user.autobookings) {
       const genericBooking =
         sharedAvailabilityFilterService.convertToSchedulableItem(
-          booking as unknown as TaskOrganizerBookingItem,
+          booking as unknown as SchedulableItem & Record<string, unknown>,
         );
       const matchingResults =
         sharedAvailabilityFilterService.filterMatchingAvailabilities(
@@ -159,7 +160,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
 
       const genericReschedule =
         sharedAvailabilityFilterService.convertToSchedulableItem(
-          reschedule as unknown as TaskOrganizerBookingItem,
+          reschedule as unknown as SchedulableItem & Record<string, unknown>,
         );
       const matchingResults =
         sharedAvailabilityFilterService.filterMatchingAvailabilities(
