@@ -1,21 +1,33 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "../../dist/out-tsc",
+    "target": "es2022",
+    "lib": ["es2020", "dom"],
     "module": "commonjs",
     "moduleResolution": "node",
     "types": ["node"],
-    "lib": ["es2020", "dom"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "importHelpers": true,
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "emitDeclarationOnly": false,
     "noImplicitReturns": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmitOnError": false,
+    "isolatedModules": true,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitOverride": false,
+    "noUnusedLocals": false,
+    "paths": {
+      "@wb-monorepo/shared": ["../../libs/shared/src/index.ts"],
+      "@wb-monorepo/shared/*": ["../../libs/shared/src/*"]
+    }
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/**/__tests__/**/*"],
   "include": ["src/**/*"]
