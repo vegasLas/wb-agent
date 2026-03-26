@@ -149,24 +149,26 @@ export class YookassaService {
 
     let message: string;
     if (type === 'subscription') {
+      const subTariff = tariff as SubscriptionTariff;
       message = [
         '✅ *Оплата прошла успешно!*',
         '',
-        `Тариф: *${tariff.name}*`,
-        `Сумма: *${tariff.price} ₽*`,
+        `Тариф: *${subTariff.name}*`,
+        `Сумма: *${subTariff.price} ₽*`,
         '',
-        `🎉 В течение нескольких минут ваша подписка будет продлена на *${tariff.days} дней*, если возникнут проблемы, напишите в поддержку`,
+        `🎉 В течение нескольких минут ваша подписка будет продлена на *${subTariff.days} дней*, если возникнут проблемы, напишите в поддержку`,
         '',
         'Спасибо за доверие! Приятного использования бота!',
       ].join('\n');
     } else {
+      const bookingTariff = tariff as BookingTariff;
       message = [
         '✅ *Оплата прошла успешно!*',
         '',
-        `Тариф: *${tariff.name}*`,
-        `Сумма: *${tariff.price} ₽*`,
+        `Тариф: *${bookingTariff.name}*`,
+        `Сумма: *${bookingTariff.price} ₽*`,
         '',
-        `🎉 В течение 5 минут будет добавлено *${tariff.bookingCount}* автоброней, если возникнут проблемы, напишите в поддержку`,
+        `🎉 В течение 5 минут будет добавлено *${bookingTariff.bookingCount}* автоброней, если возникнут проблемы, напишите в поддержку`,
         '',
         'Спасибо за доверие! Приятного использования бота!',
       ].join('\n');
