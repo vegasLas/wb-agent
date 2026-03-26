@@ -1,161 +1,126 @@
 <template>
   <div class="space-y-4">
     <!-- Current Account & Supplier Info -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">Текущий аккаунт</h3>
-          <BaseButton
-            size="sm"
-            variant="outline"
-            @click="accountModalStore.showModal = true"
-          >
-            Изменить
-          </BaseButton>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <DevicePhoneMobileIcon class="w-4 h-4 text-blue-500" />
-            <span class="text-sm"
-              >Аккаунт:
-              {{
-                userStore.selectedAccount
-                  ? !userStore.selectedAccount.phoneWb
-                    ? 'Номер не указан'
-                    : userStore.selectedAccount.phoneWb
-                  : 'Не выбран'
-              }}</span
+    <Card>
+      <template #content>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Текущий аккаунт</h3>
+            <Button
+              size="small"
+              variant="outlined"
+              @click="accountModalStore.showModal = true"
             >
+              Изменить
+            </Button>
           </div>
-          <div class="flex items-center gap-2">
-            <BuildingStorefrontIcon class="w-4 h-4 text-green-500" />
-            <span class="text-sm">{{
-              userStore.activeSupplier?.supplierName || 'Поставщик не выбран'
-            }}</span>
+
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <i class="pi pi-mobile text-blue-500" />
+              <span class="text-sm"
+                >Аккаунт:
+                {{
+                  userStore.selectedAccount
+                    ? !userStore.selectedAccount.phoneWb
+                      ? 'Номер не указан'
+                      : userStore.selectedAccount.phoneWb
+                    : 'Не выбран'
+                }}</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="pi pi-building text-green-500" />
+              <span class="text-sm">{{
+                userStore.activeSupplier?.supplierName || 'Поставщик не выбран'
+              }}</span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </Card>
 
     <!-- Subscription Status -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <div class="flex flex-col space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">подписка:</h3>
-          <span
-            :class="[
-              'px-2 py-1 text-xs font-medium rounded-full',
-              subscriptionActive
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200',
-            ]"
-          >
-            {{
-              subscriptionActive
-                ? `осталось дней: ${subscriptionRemainingDays}`
-                : 'неактивна'
-            }}
-          </span>
+    <Card>
+      <template #content>
+        <div class="flex flex-col space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">подписка:</h3>
+            <Tag
+              :value="subscriptionActive ? `осталось дней: ${subscriptionRemainingDays}` : 'неактивна'"
+              :severity="subscriptionActive ? 'success' : 'danger'"
+            />
+          </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </Card>
 
     <!-- Autobooking Count -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold">кредитов:</h3>
-        <span class="text-lg font-medium">{{ user.autobookingCount }}</span>
-      </div>
-    </div>
+    <Card>
+      <template #content>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">кредитов:</h3>
+          <span class="text-lg font-medium">{{ user.autobookingCount }}</span>
+        </div>
+      </template>
+    </Card>
 
     <!-- Supplier API Key -->
     <SupplierApiKeyComponent />
 
     <!-- Payment History -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold">история платежей</h3>
-      </div>
+    <Card>
+      <template #title>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">история платежей</h3>
+        </div>
+      </template>
+      <template #content>
+        <div v-if="user.payments && user.payments.length > 0" class="overflow-x-auto">
+          <DataTable :value="user.payments" scrollable scrollHeight="300px" class="p-datatable-sm">
+            <Column field="createdAt" header="Дата">
+              <template #body="{ data }">
+                {{ formatDate(data.createdAt) }}
+              </template>
+            </Column>
+            <Column field="tariffId" header="Тариф">
+              <template #body="{ data }">
+                {{ getTariffTitle(data.tariffId) }}
+              </template>
+            </Column>
+            <Column field="status" header="Статус">
+              <template #body="{ data }">
+                <Tag
+                  :value="data.status === 'succeeded' ? 'Оплачено' : 'Не оплачено'"
+                  :severity="data.status === 'succeeded' ? 'success' : 'warn'"
+                />
+              </template>
+            </Column>
+            <Column field="amount" header="Сумма">
+              <template #body="{ data }">
+                {{ data.amount }} {{ data.currency || 'RUB' }}
+              </template>
+            </Column>
+          </DataTable>
+        </div>
 
-      <div v-if="user.payments && user.payments.length > 0" class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead class="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th
-                scope="col"
-                class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Дата
-              </th>
-              <th
-                scope="col"
-                class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Тариф
-              </th>
-              <th
-                scope="col"
-                class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Статус
-              </th>
-              <th
-                scope="col"
-                class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Сумма
-              </th>
-            </tr>
-          </thead>
-          <tbody
-            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 max-h-[300px] overflow-y-auto"
-          >
-            <tr v-for="payment in user.payments" :key="payment.id">
-              <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                {{ formatDate(payment.createdAt) }}
-              </td>
-              <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                {{ getTariffTitle(payment.tariffId) }}
-              </td>
-              <td class="px-3 py-3 whitespace-nowrap text-sm">
-                <span
-                  :class="[
-                    'px-2 py-1 text-xs font-medium rounded-full',
-                    payment.status === 'succeeded'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
-                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
-                  ]"
-                >
-                  {{ payment.status === 'succeeded' ? 'Оплачено' : 'Не оплачено' }}
-                </span>
-              </td>
-              <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                {{ payment.amount }} {{ payment.currency || 'RUB' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
-        <CircleStackIcon class="w-12 h-12 mx-auto mb-2 opacity-50" />
-        <p>Нет платежей</p>
-      </div>
-    </div>
+        <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
+          <i class="pi pi-database text-5xl mx-auto mb-2 opacity-50 block" />
+          <p>Нет платежей</p>
+        </div>
+      </template>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import {
-  DevicePhoneMobileIcon,
-  BuildingStorefrontIcon,
-  CircleStackIcon,
-} from '@heroicons/vue/24/outline';
-import { BaseButton } from '../ui';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Tag from 'primevue/tag';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import SupplierApiKeyComponent from '../store/SupplierApiKeyComponent.vue';
 import { useUserStore } from '../../stores/user';
 import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
