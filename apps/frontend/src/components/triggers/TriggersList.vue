@@ -2,12 +2,12 @@
   <div class="space-y-4">
     <!-- Status Filter Buttons -->
     <div class="flex gap-2">
-      <BaseButton
+      <Button
         v-for="status in ['RELEVANT', 'COMPLETED', 'EXPIRED'] as const"
         :key="status"
-        :variant="triggerStore.selectedStatus === status ? 'solid' : 'soft'"
-        color="primary"
-        size="sm"
+        :variant="triggerStore.selectedStatus === status ? 'filled' : 'outlined'"
+        severity="primary"
+        size="small"
         class="flex-1 justify-between"
         @click="triggerStore.setSelectedStatus(status)"
       >
@@ -22,15 +22,15 @@
         >
           {{ getStatusCount(status) }}
         </span>
-      </BaseButton>
+      </Button>
     </div>
 
     <!-- Search Input -->
-    <BaseInput
+    <InputText
       v-model="triggerStore.searchQuery"
       type="text"
       :placeholder="getSearchPlaceholder()"
-      class="mb-4"
+      class="mb-4 w-full"
     />
 
     <!-- Header with count and create button -->
@@ -39,173 +39,166 @@
         активных таймслотов: {{ triggerStore.activeTriggersCount }}/30
       </span>
 
-      <BaseButton
-        color="primary"
-        size="sm"
+      <Button
+        severity="primary"
+        size="small"
         :disabled="triggerStore.activeTriggersCount >= 30"
         @click="viewStore.setView('triggers-form')"
       >
-        <PlusIcon class="w-4 h-4 mr-1" />
+        <i class="pi pi-plus mr-1 text-xs"></i>
         добавить
-      </BaseButton>
+      </Button>
     </div>
 
     <!-- Trigger Cards -->
-    <div
+    <Card
       v-for="trigger in triggerStore.filteredTriggers"
       :key="trigger.id"
-      class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+      class="shadow-sm"
+      :pt="{ root: { class: 'rounded-lg border border-gray-200 dark:border-gray-700' }, content: { class: 'p-4' } }"
     >
-      <div class="flex flex-col gap-3">
-        <!-- Warehouses section -->
-        <div class="flex items-center gap-2">
-          <BuildingOffice2Icon class="w-5 h-5 text-gray-500 flex-shrink-0" />
-          <div class="flex flex-wrap gap-2">
-            <span
-              v-for="warehouseId in trigger.warehouseIds"
-              :key="warehouseId"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-            >
-              {{ warehouseStore.getWarehouseName(warehouseId) }}
-            </span>
+      <template #content>
+        <div class="flex flex-col gap-3">
+          <!-- Warehouses section -->
+          <div class="flex items-center gap-2">
+            <i class="pi pi-building text-gray-500 flex-shrink-0"></i>
+            <div class="flex flex-wrap gap-2">
+              <Tag
+                v-for="warehouseId in trigger.warehouseIds"
+                :key="warehouseId"
+                severity="secondary"
+                :value="warehouseStore.getWarehouseName(warehouseId)"
+                class="text-xs"
+              />
+            </div>
           </div>
-        </div>
 
-        <!-- Supply types section -->
-        <div class="flex items-center gap-2">
-          <CubeIcon class="w-5 h-5 text-gray-500 flex-shrink-0" />
-          <div class="flex flex-wrap gap-2">
-            <span
-              v-for="type in trigger.supplyTypes"
-              :key="type"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-            >
-              {{ getSupplyTypeLabel(type) }}
-            </span>
+          <!-- Supply types section -->
+          <div class="flex items-center gap-2">
+            <i class="pi pi-box text-gray-500 flex-shrink-0"></i>
+            <div class="flex flex-wrap gap-2">
+              <Tag
+                v-for="type in trigger.supplyTypes"
+                :key="type"
+                severity="secondary"
+                :value="getSupplyTypeLabel(type)"
+                class="text-xs"
+              />
+            </div>
           </div>
-        </div>
 
-        <!-- Search mode section -->
-        <div class="flex items-center gap-2">
-          <CalendarIcon class="w-5 h-5 text-gray-500 flex-shrink-0" />
-          <div class="flex flex-wrap gap-2 items-center">
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-              {{ getSearchModeLabel(trigger.searchMode) }}
-            </span>
-            <span
-              v-if="['RANGE', 'WEEK'].includes(trigger.searchMode) && trigger.startDate && trigger.endDate"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
-            >
-              {{ formatDate(trigger.startDate) }} - {{ formatDate(trigger.endDate) }}
-            </span>
-            <div
-              v-else-if="trigger.searchMode !== 'UNTIL_FOUND' && trigger.selectedDates?.length"
-              class="flex flex-wrap gap-1"
-            >
-              <span
-                v-for="date in trigger.selectedDates.slice(0, 3)"
-                :key="date"
-                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+          <!-- Search mode section -->
+          <div class="flex items-center gap-2">
+            <i class="pi pi-calendar text-gray-500 flex-shrink-0"></i>
+            <div class="flex flex-wrap gap-2 items-center">
+              <Tag severity="secondary" :value="getSearchModeLabel(trigger.searchMode)" class="text-xs" />
+              <Tag
+                v-if="['RANGE', 'WEEK'].includes(trigger.searchMode) && trigger.startDate && trigger.endDate"
+                severity="warn"
+                :value="formatDate(trigger.startDate) + ' - ' + formatDate(trigger.endDate)"
+                class="text-xs"
+              />
+              <div
+                v-else-if="trigger.searchMode !== 'UNTIL_FOUND' && trigger.selectedDates?.length"
+                class="flex flex-wrap gap-1"
               >
-                {{ formatDate(date) }}
-              </span>
-              <span
-                v-if="trigger.selectedDates.length > 3"
-                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-              >
-                +{{ trigger.selectedDates.length - 3 }}
+                <Tag
+                  v-for="date in trigger.selectedDates.slice(0, 3)"
+                  :key="date"
+                  severity="success"
+                  :value="formatDate(date)"
+                  class="text-xs"
+                />
+                <Tag
+                  v-if="trigger.selectedDates.length > 3"
+                  severity="secondary"
+                  :value="'+' + (trigger.selectedDates.length - 3)"
+                  class="text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Check interval section -->
+          <div class="flex items-center gap-2">
+            <i class="pi pi-clock text-gray-500 flex-shrink-0"></i>
+            <div class="flex flex-col gap-1">
+              <span class="text-xs text-gray-600 dark:text-gray-400">
+                Повторная проверка через: {{ trigger.checkInterval }} мин
               </span>
             </div>
           </div>
-        </div>
 
-        <!-- Check interval section -->
-        <div class="flex items-center gap-2">
-          <ClockIcon class="w-5 h-5 text-gray-500 flex-shrink-0" />
-          <div class="flex flex-col gap-1">
-            <span class="text-xs text-gray-600 dark:text-gray-400">
-              Повторная проверка через: {{ trigger.checkInterval }} мин
-            </span>
+          <!-- Free/Paid and coefficient section -->
+          <div class="flex items-center gap-2">
+            <i class="pi pi-dollar text-gray-500 flex-shrink-0"></i>
+            <div class="flex flex-wrap gap-2">
+              <Tag
+                :severity="trigger.maxCoefficient === 0 ? 'success' : 'info'"
+                :value="trigger.maxCoefficient === 0 ? 'Бесплатная' : 'Платная'"
+                class="text-xs"
+              />
+              <Tag
+                v-if="trigger.maxCoefficient !== 0"
+                severity="warn"
+                :value="'Коэф. до ' + trigger.maxCoefficient"
+                class="text-xs"
+              />
+            </div>
           </div>
-        </div>
 
-        <!-- Free/Paid and coefficient section -->
-        <div class="flex items-center gap-2">
-          <CurrencyDollarIcon class="w-5 h-5 text-gray-500 flex-shrink-0" />
-          <div class="flex flex-wrap gap-2">
-            <span
-              :class="[
-                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                trigger.maxCoefficient === 0
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
-                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
-              ]"
-            >
-              {{ trigger.maxCoefficient === 0 ? 'Бесплатная' : 'Платная' }}
-            </span>
-            <span
-              v-if="trigger.maxCoefficient !== 0"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
-            >
-              Коэф. до {{ trigger.maxCoefficient }}
-            </span>
+          <!-- Last notification date if exists -->
+          <div
+            v-if="trigger.lastNotificationAt"
+            class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400"
+          >
+            <i class="pi pi-bell text-xs"></i>
+            Посл. уведомление:
+            {{ formatDateTime(trigger.lastNotificationAt) }}
           </div>
-        </div>
 
-        <!-- Last notification date if exists -->
-        <div
-          v-if="trigger.lastNotificationAt"
-          class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400"
-        >
-          <BellIcon class="w-4 h-4" />
-          Посл. уведомление:
-          {{ formatDateTime(trigger.lastNotificationAt) }}
-        </div>
+          <!-- Created Date -->
+          <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
+            <i class="pi pi-calendar text-xs"></i>
+            Создан: {{ formatDate(trigger.createdAt) }}
+          </div>
 
-        <!-- Created Date -->
-        <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
-          <CalendarDaysIcon class="w-4 h-4" />
-          Создан: {{ formatDate(trigger.createdAt) }}
-        </div>
-
-        <!-- Coefficient History for all warehouses and supply types -->
-        <CoefficientHistoryAlert
-          :warehouse-ids="trigger.warehouseIds"
-          :supply-types="trigger.supplyTypes"
-        />
-      </div>
-
-      <!-- Actions -->
-      <div class="flex justify-end gap-2 mt-4">
-        <BaseButton
-          :color="getActionButtonColor(trigger)"
-          :loading="triggerStore.togglingId === trigger.id"
-          :disabled="
-            triggerStore.togglingId === trigger.id ||
-            trigger.status !== 'RELEVANT' ||
-            (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
-          "
-          size="sm"
-          @click="triggerStore.toggleTrigger(trigger.id)"
-        >
-          <component
-            :is="getActionButtonIcon(trigger)"
-            class="w-4 h-4 mr-1"
+          <!-- Coefficient History for all warehouses and supply types -->
+          <CoefficientHistoryAlert
+            :warehouse-ids="trigger.warehouseIds"
+            :supply-types="trigger.supplyTypes"
           />
-          {{ getActionButtonLabel(trigger) }}
-        </BaseButton>
+        </div>
 
-        <BaseButton
-          color="red"
-          variant="ghost"
-          size="sm"
-          :loading="triggerStore.deletingId === trigger.id"
-          @click="triggerStore.deleteTrigger(trigger.id)"
-        >
-          <TrashIcon class="w-4 h-4" />
-        </BaseButton>
-      </div>
-    </div>
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 mt-4">
+          <Button
+            :severity="getActionButtonColor(trigger)"
+            :loading="triggerStore.togglingId === trigger.id"
+            :disabled="
+              triggerStore.togglingId === trigger.id ||
+              trigger.status !== 'RELEVANT' ||
+              (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
+            "
+            size="small"
+            @click="triggerStore.toggleTrigger(trigger.id)"
+          >
+            <i :class="[getActionButtonIcon(trigger), 'mr-1 text-xs']"></i>
+            {{ getActionButtonLabel(trigger) }}
+          </Button>
+
+          <Button
+            severity="danger"
+            variant="text"
+            size="small"
+            :loading="triggerStore.deletingId === trigger.id"
+            @click="triggerStore.deleteTrigger(trigger.id)"
+          >
+            <i class="pi pi-trash text-xs"></i>
+          </Button>
+        </div>
+      </template>
+    </Card>
 
     <!-- Empty State -->
     <div
@@ -218,26 +211,13 @@
 </template>
 
 <script setup lang="ts">
-import {
-  PlusIcon,
-  BuildingOffice2Icon,
-  CubeIcon,
-  CalendarIcon,
-  CalendarDaysIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  BellIcon,
-  TrashIcon,
-  PauseIcon,
-  PlayIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/vue/24/outline';
 import { useTriggerStore } from '../../stores/triggers';
 import { useWarehousesStore } from '../../stores/warehouses';
 import { useViewStore } from '../../stores/view';
-import BaseButton from '../ui/BaseButton.vue';
-import BaseInput from '../ui/BaseInput.vue';
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Card from 'primevue/card';
+import Tag from 'primevue/tag';
 import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
 
@@ -313,25 +293,25 @@ function getActionButtonLabel(trigger: SupplyTrigger): string {
   return trigger.isActive ? 'стоп' : 'запуск';
 }
 
-function getActionButtonIcon(trigger: SupplyTrigger) {
+function getActionButtonIcon(trigger: SupplyTrigger): string {
   switch (trigger.status) {
     case 'COMPLETED':
-      return CheckCircleIcon;
+      return 'pi pi-check-circle';
     case 'EXPIRED':
-      return ExclamationCircleIcon;
+      return 'pi pi-exclamation-circle';
     default:
-      return trigger.isActive ? PauseIcon : PlayIcon;
+      return trigger.isActive ? 'pi pi-pause' : 'pi pi-play';
   }
 }
 
-function getActionButtonColor(trigger: SupplyTrigger): 'yellow' | 'gray' | 'green' | 'blue' | 'primary' {
+function getActionButtonColor(trigger: SupplyTrigger): 'warn' | 'secondary' | 'success' | 'info' | 'primary' | 'danger' | 'help' | 'contrast' | undefined {
   switch (trigger.status) {
     case 'COMPLETED':
-      return 'blue';
+      return 'info';
     case 'EXPIRED':
-      return 'gray';
+      return 'secondary';
     default:
-      return trigger.isActive ? 'yellow' : 'green';
+      return trigger.isActive ? 'warn' : 'success';
   }
 }
 

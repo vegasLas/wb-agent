@@ -3,149 +3,170 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <BaseButton variant="ghost" size="sm" @click="$emit('back')">
-          <ArrowLeftIcon class="w-5 h-5" />
-        </BaseButton>
+        <Button variant="text" size="small" @click="$emit('back')">
+          <i class="pi pi-arrow-left"></i>
+        </Button>
         <h2 class="text-xl font-semibold">Создание таймслота</h2>
       </div>
-      <BaseButton
-        variant="ghost"
-        size="sm"
+      <Button
+        variant="text"
+        size="small"
         @click="showHintsModal = true"
       >
-        <QuestionMarkCircleIcon class="w-5 h-5 text-yellow-600" />
-      </BaseButton>
+        <i class="pi pi-question-circle text-yellow-600"></i>
+      </Button>
     </div>
 
     <!-- Form -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-5">
-      <!-- Warehouses -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Склады (максимум 3) <span class="text-red-500">*</span>
-        </label>
-        <MultiSelect
-          v-model="triggerFormStore.form.warehouseIds"
-          :options="triggerFormStore.warehouseOptions"
-          placeholder="Выберите склады"
-          :max-selectable="3"
-        />
-        <p v-if="formErrors.warehouseIds" class="mt-1 text-sm text-red-600">
-          {{ formErrors.warehouseIds }}
-        </p>
-      </div>
+    <Card class="shadow-sm" :pt="{ root: { class: 'rounded-lg border border-gray-200 dark:border-gray-700' }, content: { class: 'p-4' } }">
+      <template #content>
+        <div class="space-y-5">
+          <!-- Warehouses -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Склады (максимум 3) <span class="text-red-500">*</span>
+            </label>
+            <MultiSelect
+              v-model="triggerFormStore.form.warehouseIds"
+              :options="triggerFormStore.warehouseOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Выберите склады"
+              class="w-full"
+              :maxSelectedLabels="3"
+              :selectionLimit="3"
+            />
+            <p v-if="formErrors.warehouseIds" class="mt-1 text-sm text-red-600">
+              {{ formErrors.warehouseIds }}
+            </p>
+          </div>
 
-      <!-- Supply Types -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Типы коробов <span class="text-red-500">*</span>
-        </label>
-        <MultiSelect
-          v-model="triggerFormStore.form.supplyTypes"
-          :options="triggerFormStore.supplyTypesOptions"
-          placeholder="Выберите типы коробов"
-        />
-        <p v-if="formErrors.supplyTypes" class="mt-1 text-sm text-red-600">
-          {{ formErrors.supplyTypes }}
-        </p>
-      </div>
+          <!-- Supply Types -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Типы коробов <span class="text-red-500">*</span>
+            </label>
+            <MultiSelect
+              v-model="triggerFormStore.form.supplyTypes"
+              :options="triggerFormStore.supplyTypesOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Выберите типы коробов"
+              class="w-full"
+            />
+            <p v-if="formErrors.supplyTypes" class="mt-1 text-sm text-red-600">
+              {{ formErrors.supplyTypes }}
+            </p>
+          </div>
 
-      <!-- Check Interval -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Интервал проверки <span class="text-red-500">*</span>
-        </label>
-        <BaseSelect
-          v-model="triggerFormStore.form.checkInterval"
-          :options="TRIGGER_INTERVALS.map(i => ({ label: i.label, value: i.value }))"
-          placeholder="Интервал проверки"
-        />
-        <p class="mt-1 text-xs text-gray-500">
-          Через сколько после срабатывания таймслота снова проверять склады
-        </p>
-      </div>
+          <!-- Check Interval -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Интервал проверки <span class="text-red-500">*</span>
+            </label>
+            <Select
+              v-model="triggerFormStore.form.checkInterval"
+              :options="TRIGGER_INTERVALS.map(i => ({ label: i.label, value: i.value }))"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Интервал проверки"
+              class="w-full"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Через сколько после срабатывания таймслота снова проверять склады
+            </p>
+          </div>
 
-      <!-- Search Mode -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Режим поиска <span class="text-red-500">*</span>
-        </label>
-        <BaseSelect
-          v-model="triggerFormStore.form.searchMode"
-          :options="triggerFormStore.searchModeOptions"
-          placeholder="Выберите режим поиска"
-          @update:model-value="onSearchModeChange"
-        />
-      </div>
+          <!-- Search Mode -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Режим поиска <span class="text-red-500">*</span>
+            </label>
+            <Select
+              v-model="triggerFormStore.form.searchMode"
+              :options="triggerFormStore.searchModeOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Выберите режим поиска"
+              class="w-full"
+              @update:model-value="onSearchModeChange"
+            />
+          </div>
 
-      <!-- Date Range (for RANGE mode) -->
-      <div v-if="triggerFormStore.showDatePicker">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Период поиска <span class="text-red-500">*</span>
-        </label>
-        <VueDatePicker
-          v-model="dateRange"
-          :min-date="new Date()"
-          :enable-time-picker="false"
-          format="dd.MM.yyyy"
-          range
-          locale="ru-RU"
-          auto-apply
-          placeholder="Выберите период"
-          @update:model-value="onDateRangeChange"
-        />
-      </div>
+          <!-- Date Range (for RANGE mode) -->
+          <div v-if="triggerFormStore.showDatePicker">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Период поиска <span class="text-red-500">*</span>
+            </label>
+            <VueDatePicker
+              v-model="dateRange"
+              :min-date="new Date()"
+              :enable-time-picker="false"
+              format="dd.MM.yyyy"
+              range
+              locale="ru-RU"
+              auto-apply
+              placeholder="Выберите период"
+              @update:model-value="onDateRangeChange"
+            />
+          </div>
 
-      <!-- Selected Dates (for CUSTOM_DATES mode) -->
-      <div v-if="triggerFormStore.showRangePicker">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Выбрать даты <span class="text-red-500">*</span>
-        </label>
-        <MultiSelect
-          v-model="selectedDates"
-          :options="availableDatesOptions"
-          placeholder="Выберите даты"
-        />
-      </div>
+          <!-- Selected Dates (for CUSTOM_DATES mode) -->
+          <div v-if="triggerFormStore.showRangePicker">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Выбрать даты <span class="text-red-500">*</span>
+            </label>
+            <MultiSelect
+              v-model="selectedDates"
+              :options="availableDatesOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Выберите даты"
+              class="w-full"
+            />
+          </div>
 
-      <!-- Max Coefficient -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Максимальный коэффициент выгрузки
-        </label>
-        <div class="flex items-center gap-4">
-          <input
-            v-model.number="triggerFormStore.form.maxCoefficient"
-            type="range"
-            min="0"
-            max="20"
-            step="1"
-            class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-          />
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 min-w-[3rem] justify-center">
-            {{ triggerFormStore.form.maxCoefficient }}
-          </span>
+          <!-- Max Coefficient -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Максимальный коэффициент выгрузки
+            </label>
+            <div class="flex items-center gap-4">
+              <Slider
+                v-model="triggerFormStore.form.maxCoefficient"
+                :min="0"
+                :max="20"
+                :step="1"
+                class="flex-1"
+              />
+              <Tag
+                :value="String(triggerFormStore.form.maxCoefficient)"
+                severity="secondary"
+                class="min-w-[3rem] justify-center"
+              />
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+              0 означает поиск только бесплатных слотов
+            </p>
+          </div>
         </div>
-        <p class="mt-1 text-xs text-gray-500">
-          0 означает поиск только бесплатных слотов
-        </p>
-      </div>
-    </div>
+      </template>
+    </Card>
 
     <!-- Actions -->
     <div class="flex gap-2">
-      <BaseButton variant="ghost" class="flex-1" @click="$emit('back')">
+      <Button variant="outlined" class="flex-1" @click="$emit('back')">
         Отмена
-      </BaseButton>
-      <BaseButton
-        color="primary"
+      </Button>
+      <Button
+        severity="primary"
         class="flex-1"
         :loading="triggerFormStore.loading"
         :disabled="!isFormValid"
         @click="submitForm"
       >
         Создать
-      </BaseButton>
+      </Button>
     </div>
 
     <!-- Telegram Buttons -->
@@ -168,17 +189,16 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { BackButton, MainButton } from 'vue-tg';
-import {
-  ArrowLeftIcon,
-  QuestionMarkCircleIcon,
-} from '@heroicons/vue/24/outline';
 import { useTriggerFormStore } from '../../stores/triggerForm';
 import { useTriggerStore } from '../../stores/triggers';
 import { TRIGGER_INTERVALS } from '../../constants';
 import type { SearchMode } from '../../types';
-import BaseButton from '../ui/BaseButton.vue';
-import BaseSelect from '../ui/BaseSelect.vue';
-import MultiSelect from '../ui/MultiSelect.vue';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
+import Slider from 'primevue/slider';
+import Tag from 'primevue/tag';
 import TriggerHints from './TriggerHints.vue';
 
 const emit = defineEmits<{

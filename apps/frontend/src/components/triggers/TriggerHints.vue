@@ -1,9 +1,10 @@
 <template>
-  <BaseModal
-    :model-value="show"
-    title="Инструкция по созданию таймслота"
-    size="lg"
-    @close="$emit('close')"
+  <Dialog
+    :visible="show"
+    header="Инструкция по созданию таймслота"
+    modal
+    :style="{ width: '90vw', maxWidth: '600px' }"
+    @update:visible="$emit('close')"
   >
     <div class="space-y-4 text-sm">
       <div>
@@ -62,17 +63,17 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">
           После создания таймслот начнет автоматически искать слоты согласно заданным параметрам. Вы получите уведомление, когда подходящий слот будет найден.
         </p>
-        <BaseButton color="primary" class="w-full" @click="$emit('close')">
+        <Button severity="primary" class="w-full" @click="$emit('close')">
           Понятно
-        </BaseButton>
+        </Button>
       </div>
     </template>
-  </BaseModal>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import BaseModal from '../ui/BaseModal.vue';
-import BaseButton from '../ui/BaseButton.vue';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
 
 defineProps<{
   show: boolean;
