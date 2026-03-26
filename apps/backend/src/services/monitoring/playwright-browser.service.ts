@@ -6,7 +6,7 @@
  * Uses Playwright with fingerprint injection to avoid detection.
  */
 
-import { chromium, Browser, Page, BrowserContext, Cookie } from 'playwright';
+import { chromium, Browser, Page, BrowserContext, Cookie, type BrowserContextOptions } from 'playwright';
 import type { Proxy } from '../../utils/userEnvInfo';
 import {
   browserFingerprintService,
@@ -204,7 +204,7 @@ export class PlaywrightBrowserService {
         );
       }
 
-      const contextOptions: { userAgent?: string; locale?: string; timezoneId?: string; viewport?: { width: number; height: number }; deviceScaleFactor?: number } = {};
+      const contextOptions: BrowserContextOptions = {};
 
       // Apply fingerprint properties to context if available (matching browserFingerprintService.js pattern)
       if (this.fingerprint && this.useFingerprintInjection) {

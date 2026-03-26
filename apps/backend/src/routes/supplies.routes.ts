@@ -12,6 +12,7 @@ import { accountService } from '../services/account.service';
 import { userService } from '../services/user.service';
 import { ApiError } from '../utils/errors';
 import { prisma } from '../config/database';
+import type { UserEnvInfo } from '../types/wb';
 
 const router = Router();
 
@@ -29,9 +30,9 @@ async function getValidatedAccount(userId: number, accountId: string) {
 /**
  * Helper to get user environment info
  */
-async function getUserEnvInfo(userId: number) {
+async function getUserEnvInfo(userId: number): Promise<UserEnvInfo> {
   const user = await userService.findById(userId);
-  const envInfo = user?.envInfo as { userAgent?: string } | null | undefined;
+  const envInfo = user?.envInfo as unknown as UserEnvInfo | null | undefined;
   if (!envInfo?.userAgent) {
     throw new ApiError(400, 'User environment info not available');
   }
@@ -228,7 +229,7 @@ router.get(
             err.message.includes('removed') ||
             err.message.includes('deleted') ||
             err.message.includes('не найден') ||
-            error.message.includes('удалена')))
+            err.message.includes('удалена')))
       ) {
         res.json({
           success: false,

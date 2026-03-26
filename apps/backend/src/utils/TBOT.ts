@@ -9,8 +9,6 @@ class RateLimiter {
   constructor(
     private windowMs: number,
     private maxRequests: number,
-    // @ts-expect-error - type parameter is kept for compatibility but not used
-     
     private _type: string
   ) {}
 

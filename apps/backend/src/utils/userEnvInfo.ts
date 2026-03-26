@@ -59,7 +59,7 @@ const getLeastUsedProxy = async (): Promise<Proxy> => {
 
   // Sort by usage and return least used
   const sortedProxies = [...proxyList].sort(
-    (a, b) => a.usageCount - b.usageCount
+    (a, b) => a.usageCount - b.usageCount,
   );
   return sortedProxies[0];
 };
@@ -71,7 +71,7 @@ const getConsistentValues = (ip: string) => {
       .split('.')
       .map((part) => part.padStart(3, '0'))
       .join(''),
-    10
+    10,
   );
 
   const seededRandom = () => {
@@ -101,12 +101,12 @@ export const regenerateAllUserEnvInfo = async (): Promise<void> => {
       const newEnvInfo = await generateUserEnvInfo();
       await prisma.user.update({
         where: { id: user.id },
-        data: { envInfo: newEnvInfo as Prisma.JsonObject },
+        data: { envInfo: newEnvInfo as unknown as Prisma.JsonObject },
       });
     }
 
     logger.info(
-      'Successfully regenerated env info for all users (except user ID 4)'
+      'Successfully regenerated env info for all users (except user ID 4)',
     );
   } catch (error) {
     logger.error('Error regenerating user env info:', error);
@@ -175,7 +175,11 @@ export const generateUserEnvInfo = async (): Promise<UserEnvInfo> => {
   };
 
   const getHashForIP = (ipSeed: string): string => {
-    return crypto.createHash('md5').update(ipSeed).digest('hex').substring(0, 16);
+    return crypto
+      .createHash('md5')
+      .update(ipSeed)
+      .digest('hex')
+      .substring(0, 16);
   };
 
   const plugins = generatePluginList();
@@ -201,4 +205,4 @@ export const generateUserEnvInfo = async (): Promise<UserEnvInfo> => {
       password: proxy.password,
     },
   };
-}
+};
