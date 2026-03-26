@@ -55,8 +55,9 @@ export const createSalesOrder = async ({
     });
 
     return response;
-  } catch (error: any) {
-    throw new Error(error.message || 'Failed to create sales order');
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    throw new Error(err.message || 'Failed to create sales order');
   }
 };
 
@@ -89,8 +90,9 @@ export const fetchReportXlsx = async ({
     });
 
     return response;
-  } catch (error: any) {
-    throw new Error(error.message || 'Failed to fetch report XLSX');
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    throw new Error(err.message || 'Failed to fetch report XLSX');
   }
 };
 
@@ -119,8 +121,9 @@ export const getAllOrders = async ({
     });
 
     return response;
-  } catch (error: any) {
-    throw new Error(error.message || 'Failed to fetch orders');
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    throw new Error(err.message || 'Failed to fetch orders');
   }
 };
 

@@ -46,10 +46,11 @@ export const useSupplyDetailsStore = defineStore('supplyDetails', () => {
         supplyGoods.value = [];
         supplyDetails.value = null;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Handle network/unexpected errors
       console.error('Failed to get supply details:', err);
-      supplyGoodsError.value = err.message || 'Failed to get supply details';
+      const errorMsg = err instanceof Error ? err.message : 'Failed to get supply details';
+      supplyGoodsError.value = errorMsg;
       supplyGoods.value = [];
       supplyDetails.value = null;
     } finally {

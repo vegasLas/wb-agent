@@ -70,12 +70,12 @@ export class AutobookingDateManagerService {
         // CUSTOM_DATES triggers expire when all selected dates are in the past
         if (autobooking.customDates && autobooking.customDates.length > 0) {
           const validDates = autobooking.customDates
-            .map((date) => {
+            .map((date: Date) => {
               const moscowDate = new Date(date);
               moscowDate.setUTCHours(0, 0, 0, 0);
               return moscowDate;
             })
-            .filter((date) => date >= moscowNow);
+            .filter((date: Date) => date >= moscowNow);
 
           shouldComplete = validDates.length === 0;
         }
@@ -152,7 +152,7 @@ export class AutobookingDateManagerService {
         where: { id: autobooking.userId },
       });
 
-      if (!user?.chatId) return;
+      if (!user?.chatId || !TBOT) return;
 
       const message =
         `ℹ️ Неактуальное автобронирование архивировано 🕒\n\n` +

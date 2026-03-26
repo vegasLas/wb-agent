@@ -22,7 +22,7 @@ export interface RescheduleAPIResponse {
 }
 
 export const reschedulesAPI = {
-  async fetchReschedules(page: number = 1): Promise<RescheduleAPIResponse> {
+  async fetchReschedules(page = 1): Promise<RescheduleAPIResponse> {
     const response = await apiClient.get('/reschedule', { params: { page } });
     return response.data;
   },

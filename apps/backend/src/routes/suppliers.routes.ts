@@ -4,9 +4,12 @@
  * Handles supplier-related endpoints with multi-account support
  */
 
-import { Router } from 'express';
+import { Router, RequestHandler, Response, NextFunction } from 'express';
 import { body, query } from 'express-validator';
-import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
+import {
+  authenticate,
+  AuthenticatedRequest,
+} from '../middleware/auth.middleware';
 import { wbSupplierService } from '../services/wb-supplier.service';
 import { accountService } from '../services/account.service';
 import { userService } from '../services/user.service';
@@ -54,7 +57,7 @@ router.get(
   authenticate,
   query('accountId').optional().isUUID(),
   query('supplierId').optional().isString(),
-  async (req: AuthenticatedRequest, res, next) => {
+  (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const { accountId, supplierId: querySupplierId } = req.query;
 
@@ -65,7 +68,7 @@ router.get(
         // If supplierId provided, find account containing this supplier
         account = await accountService.findAccountBySupplierId(
           req.user!.id,
-          querySupplierId as string
+          querySupplierId as string,
         );
 
         if (!account) {
@@ -91,7 +94,7 @@ router.get(
 
         account = await accountService.getAccountById(
           user.selectedAccountId,
-          req.user!.id
+          req.user!.id,
         );
 
         if (!account) {
@@ -147,7 +150,7 @@ router.get(
 
       // Convert English warehouse names to Russian for proper mapping
       const russianWarehouseNames = warehouseNames.map((name) =>
-        convertWarehouseName(name)
+        convertWarehouseName(name),
       );
 
       // Process data rows to extract balances by warehouse
@@ -155,17 +158,19 @@ router.get(
 
       // Build warehouse ID mapping from account suppliers data
       const warehouseMapping = new Map<string, number>();
-      
+
       response.data.table.data.forEach((row) => {
         if (row.length < 6) return; // Skip incomplete rows
 
         const [
           brand,
           subject,
-          supplierArticle,
-          , // quantityInTransitToClient
-          , // quantityInTransitFromClient
-          , // totalInWarehouses
+          supplierArticle, // quantityInTransitToClient
+          // quantityInTransitFromClient
+          // totalInWarehouses
+          ,
+          ,
+          ,
           ...warehouseQuantities
         ] = row;
 
@@ -185,8 +190,8 @@ router.get(
                 Math.abs(
                   russianWarehouseName.split('').reduce((acc, char) => {
                     return acc + char.charCodeAt(0);
-                  }, 0)
-                )
+                  }, 0),
+                ),
               );
             }
 
@@ -207,7 +212,7 @@ router.get(
         });
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: balancesByWarehouse,
       });
@@ -215,7 +220,7 @@ router.get(
       logger.error('Failed to get balances:', error);
       next(error);
     }
-  }
+  }) as RequestHandler,
 );
 
 /**
@@ -230,7 +235,7 @@ router.post(
   body('limit').optional().isInt(),
   body('offset').optional().isInt(),
   body('orderBy').optional().isObject(),
-  async (req: AuthenticatedRequest, res, next) => {
+  (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const {
         accountId: bodyAccountId,
@@ -261,7 +266,7 @@ router.post(
         if (!targetSupplier) {
           throw new ApiError(
             400,
-            'Specified supplier not found or not accessible'
+            'Specified supplier not found or not accessible',
           );
         }
 
@@ -285,7 +290,7 @@ router.post(
         targetAccountId = user.selectedAccountId;
         account = await accountService.getAccountById(
           targetAccountId,
-          req.user!.id
+          req.user!.id,
         );
 
         if (!account) {
@@ -310,7 +315,7 @@ router.post(
         proxy: envInfo.proxy,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: result.result.drafts,
       });
@@ -318,7 +323,7 @@ router.post(
       logger.error('Failed to list drafts:', error);
       next(error);
     }
-  }
+  }) as RequestHandler,
 );
 
 /**
@@ -336,7 +341,7 @@ router.post(
   body('subjects').optional().isArray(),
   body('limit').optional().isInt(),
   body('offset').optional().isInt(),
-  async (req: AuthenticatedRequest, res, next) => {
+  (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const {
         accountId: bodyAccountId,
@@ -356,7 +361,7 @@ router.post(
         // Find account containing this supplier
         account = await accountService.findAccountBySupplierId(
           req.user!.id,
-          bodySupplierId
+          bodySupplierId,
         );
 
         if (!account) {
@@ -381,7 +386,7 @@ router.post(
 
         account = await accountService.getAccountById(
           user.selectedAccountId,
-          req.user!.id
+          req.user!.id,
         );
 
         if (!account) {
@@ -406,7 +411,7 @@ router.post(
         proxy: envInfo.proxy,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: result.result.goods,
       });
@@ -414,7 +419,7 @@ router.post(
       logger.error('Failed to list goods:', error);
       next(error);
     }
-  }
+  }) as RequestHandler,
 );
 
 export default router;

@@ -254,8 +254,9 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
       viewStore.setView('autobookings-main');
       
       return autobooking;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to update autobooking';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to update autobooking';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;

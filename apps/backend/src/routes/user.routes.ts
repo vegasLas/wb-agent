@@ -22,7 +22,7 @@ router.get('/', authenticate, async (req, res, next) => {
       agreeTerms: user.agreeTerms,
       selectedAccountId: user.selectedAccountId || undefined,
       payments: (user.payments || [])
-        .map((payment) => ({
+        .map((payment: { createdAt: Date; amount: number; currency: string; status: string; tariffId: string }) => ({
           createdAt: payment.createdAt.toISOString(),
           amount: payment.amount,
           currency: payment.currency,
@@ -30,7 +30,7 @@ router.get('/', authenticate, async (req, res, next) => {
           tariffId: payment.tariffId,
         }))
         .sort(
-          (a, b) =>
+          (a: { createdAt: string }, b: { createdAt: string }) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         ),
       supplierApiKey: user.supplierApiKey
@@ -40,11 +40,11 @@ router.get('/', authenticate, async (req, res, next) => {
             updatedAt: user.supplierApiKey.updatedAt.toISOString(),
           }
         : undefined,
-      accounts: (user.accounts || []).map((account) => ({
+      accounts: (user.accounts || []).map((account: { id: string; phoneWb: string | null; selectedSupplierId: string | null; suppliers: { supplierId: string; supplierName: string }[]; createdAt: Date; updatedAt: Date }) => ({
         id: account.id,
         phoneWb: account.phoneWb || undefined,
         selectedSupplierId: account.selectedSupplierId || undefined,
-        suppliers: (account.suppliers || []).map((supplier) => ({
+        suppliers: (account.suppliers || []).map((supplier: { supplierId: string; supplierName: string }) => ({
           supplierId: supplier.supplierId,
           supplierName: supplier.supplierName,
         })),

@@ -9,6 +9,8 @@ import { Supply } from '../types/wb';
 import { AcceptanceType } from '../types/wb';
 import { wbWarehouseService } from './wb-warehouse.service';
 import { logger } from '../utils/logger';
+import { ProxyConfig } from '../utils/wb-request';
+import { Prisma } from '@prisma/client';
 
 interface CloseApiWarehouse {
   warehouseID: number;
@@ -28,7 +30,7 @@ interface AccountInfo {
   accountId: string;
   supplierId: string;
   userAgent: string;
-  proxy: unknown;
+  proxy: ProxyConfig | undefined;
   supplierIds: string[];
 }
 
@@ -233,7 +235,7 @@ export class CloseApiService {
         accountId: account.accountId,
         supplierId: account.supplierId,
         userAgent: account.userAgent,
-        proxy: account.proxy as any,
+        proxy: account.proxy,
       });
 
       const transformedData = this.transformApiResponse(result.result.report);
@@ -542,7 +544,7 @@ export class CloseApiService {
       const accountMap = new Map<string, AccountInfo>();
       const now = Date.now();
 
-      accounts.forEach((account) => {
+      accounts.forEach((account: { id: string; suppliers: { supplierId: string }[]; user: { envInfo: unknown } }) => {
         if (!account.suppliers.length || !account.user.envInfo) return;
 
         // Check if account is ignored due to 403 errors
@@ -556,8 +558,8 @@ export class CloseApiService {
           this.ignoredAccounts.delete(account.id);
         }
 
-        const envInfo = account.user.envInfo as any;
-        const supplierIds = account.suppliers.map((s) => s.supplierId);
+        const envInfo = account.user.envInfo as Prisma.JsonObject | null;
+        const supplierIds = account.suppliers.map((s: { supplierId: string }) => s.supplierId);
         const supplierKey = supplierIds.sort().join(',');
 
         // Only keep one account per unique supplier combination

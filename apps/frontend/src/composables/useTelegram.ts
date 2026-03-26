@@ -228,10 +228,18 @@ export function useMainButton(): UseMainButtonReturn {
     if (params.color !== undefined) btn.setParams({ color: params.color });
     if (params.textColor !== undefined) btn.setParams({ text_color: params.textColor });
     if (params.isVisible !== undefined) {
-      params.isVisible ? btn.show() : btn.hide();
+      if (params.isVisible) {
+        btn.show();
+      } else {
+        btn.hide();
+      }
     }
     if (params.isActive !== undefined) {
-      params.isActive ? btn.enable() : btn.disable();
+      if (params.isActive) {
+        btn.enable();
+      } else {
+        btn.disable();
+      }
     }
   };
 
@@ -251,7 +259,7 @@ export function useMainButton(): UseMainButtonReturn {
     getMainButton()?.hide();
   };
 
-  const setMainButtonProgress = (leaveActive: boolean = false) => {
+  const setMainButtonProgress = (leaveActive = false) => {
     getMainButton()?.showProgress(leaveActive);
   };
 

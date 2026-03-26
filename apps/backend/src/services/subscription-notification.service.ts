@@ -147,7 +147,7 @@ export class SubscriptionNotificationService {
       }
 
       // Skip if message is empty (no matching day)
-      if (!message) {
+      if (!message || !TBOT) {
         return;
       }
 
@@ -165,12 +165,13 @@ export class SubscriptionNotificationService {
           ],
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Check if the error is due to user blocking the bot
+      const err = error as { response?: { body?: { error_code?: number; description?: string } } };
       if (
-        error?.response?.body?.error_code === 403 &&
+        err?.response?.body?.error_code === 403 &&
         ["deactivated", "blocked by the user"].some((word) =>
-          error?.response?.body?.description?.includes(word),
+          err?.response?.body?.description?.includes(word),
         )
       ) {
         console.log(

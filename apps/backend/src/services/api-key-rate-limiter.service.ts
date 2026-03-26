@@ -13,7 +13,7 @@ interface ApiKeyUsage {
 /**
  * Service for managing API key rotation and rate limiting
  * Uses singleton pattern to maintain state across requests
- * 
+ *
  * Rate limiting rules:
  * - Max 6 requests per minute per API key
  * - Round-robin selection for load distribution
@@ -41,11 +41,13 @@ export class ApiKeyRateLimiterService {
     try {
       const technicalModeUserIds = process.env.TECHNICAL_MODE_USER_IDS;
 
-      let whereCondition: any = { isActive: true };
+      let whereCondition: Record<string, unknown> = { isActive: true };
 
       // In technical mode, only load specified users' API keys
       if (technicalModeUserIds) {
-        logger.info(`Technical mode enabled for user IDs: ${technicalModeUserIds}`);
+        logger.info(
+          `Technical mode enabled for user IDs: ${technicalModeUserIds}`,
+        );
         whereCondition = {
           userId: {
             in: technicalModeUserIds.split(',').map((id) => parseInt(id)),
@@ -76,7 +78,7 @@ export class ApiKeyRateLimiterService {
       }
 
       return apiKeys
-        .map((key) => {
+        .map((key: { userId: number; apiKey: string }) => {
           const decryptedKey = safeDecrypt(key.apiKey);
           if (!decryptedKey) {
             logger.warn(`Failed to decrypt API key for user ${key.userId}`);
@@ -103,7 +105,7 @@ export class ApiKeyRateLimiterService {
   private cleanOldRequests(usage: ApiKeyUsage): void {
     const now = Date.now();
     usage.requestTimes = usage.requestTimes.filter(
-      (time) => now - time < this.MINUTE_IN_MS
+      (time) => now - time < this.MINUTE_IN_MS,
     );
   }
 
@@ -182,7 +184,20 @@ export class ApiKeyRateLimiterService {
       this.apiKeyUsage.delete(userId);
       logger.info(`Deactivated API key for user ${userId}`);
     } catch (error) {
-      logger.error(`Failed to deactivate/delete API key for user ${userId}:`, error);
+      logger.error(
+        `Failed to deactivate/delete API key for user ${userId}:`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Mark a key as used (update last used time)
+   */
+  markKeyAsUsed(userId: number): void {
+    const usage = this.apiKeyUsage.get(userId);
+    if (usage) {
+      usage.lastUsed = Date.now();
     }
   }
 
@@ -193,7 +208,9 @@ export class ApiKeyRateLimiterService {
     const usage = this.apiKeyUsage.get(userId);
     if (usage) {
       usage.blockedUntil = Date.now() + durationHours * 60 * 60 * 1000;
-      logger.info(`Temporarily blocked API key for user ${userId} for ${durationHours} hours`);
+      logger.info(
+        `Temporarily blocked API key for user ${userId} for ${durationHours} hours`,
+      );
     }
   }
 
@@ -233,7 +250,8 @@ export class ApiKeyRateLimiterService {
     }
 
     // Calculate optimal interval: 60 seconds / (6 requests per key * number of keys)
-    const totalRequestsPerMinute = this.MAX_REQUESTS_PER_MINUTE * activeKeyCount;
+    const totalRequestsPerMinute =
+      this.MAX_REQUESTS_PER_MINUTE * activeKeyCount;
     const optimalIntervalMs = (60 * 1000) / totalRequestsPerMinute;
 
     // Ensure minimum interval of 150ms
@@ -266,7 +284,7 @@ export class ApiKeyRateLimiterService {
     };
   }
 
-  private getNextAvailableTime(): number | null {
+  getNextAvailableTime(): number | null {
     const usageArray = Array.from(this.apiKeyUsage.values());
 
     if (usageArray.length === 0) {

@@ -104,8 +104,8 @@ export const useRescheduleListStore = defineStore('rescheduleList', () => {
 
     // Sort results
     result.sort((a, b) => {
-      let aValue: any = a[sortBy.value];
-      let bValue: any = b[sortBy.value];
+      let aValue: unknown = a[sortBy.value];
+      let bValue: unknown = b[sortBy.value];
 
       // Handle different data types
       if (typeof aValue === 'string' && typeof bValue === 'string') {

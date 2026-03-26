@@ -31,7 +31,7 @@ async function getValidatedAccount(userId: number, accountId: string) {
  */
 async function getUserEnvInfo(userId: number) {
   const user = await userService.findById(userId);
-  const envInfo = user?.envInfo as any;
+  const envInfo = user?.envInfo as { userAgent?: string } | null | undefined;
   if (!envInfo?.userAgent) {
     throw new ApiError(400, 'User environment info not available');
   }
@@ -67,7 +67,7 @@ router.post(
 
       if (bodySupplierId) {
         // Check if this supplier belongs to a different account that user has access to
-        const accountSupplierIds = account.suppliers.map(s => s.supplierId);
+        const accountSupplierIds = account.suppliers.map((s: { supplierId: string }) => s.supplierId);
         
         if (!accountSupplierIds.includes(bodySupplierId)) {
           // Find the account that contains this supplierId and ensure user owns it
@@ -199,7 +199,7 @@ router.get(
       }
 
       // Extract only the goods data that we need for the UI
-      const goods = response.result.data.map((item: any) => ({
+      const goods = response.result.data.map((item: { imgSrc?: string; imtName?: string; quantity?: number; barcode?: string; brandName?: string; subjectName?: string; colorName?: string }) => ({
         imgSrc: item.imgSrc,
         imtName: item.imtName,
         quantity: item.quantity,
@@ -217,16 +217,17 @@ router.get(
           totalCount: response.result.totalCount,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; status?: number };
       // Handle specific supply removal errors
       if (
-        error.message === 'SUPPLY_REMOVED' ||
-        error.status === 404 ||
-        (typeof error.message === 'string' &&
-          (error.message.includes('not found') ||
-            error.message.includes('removed') ||
-            error.message.includes('deleted') ||
-            error.message.includes('не найден') ||
+        err.message === 'SUPPLY_REMOVED' ||
+        err.status === 404 ||
+        (typeof err.message === 'string' &&
+          (err.message.includes('not found') ||
+            err.message.includes('removed') ||
+            err.message.includes('deleted') ||
+            err.message.includes('не найден') ||
             error.message.includes('удалена')))
       ) {
         res.json({

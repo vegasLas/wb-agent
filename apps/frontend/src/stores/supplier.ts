@@ -35,8 +35,9 @@ export const useSupplierStore = defineStore('supplier', () => {
       supplierInfo.value = data;
       isFetched.value = true;
       return data;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch supplier info';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch supplier info';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;
@@ -50,8 +51,9 @@ export const useSupplierStore = defineStore('supplier', () => {
       const data = await supplierAPI.fetchWarehouseBalances(supplierId);
       warehouseBalances.value = data;
       return data;
-    } catch (err: any) {
-      balancesError.value = err.message || 'Failed to fetch warehouse balances';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch warehouse balances';
+      balancesError.value = errorMsg;
       throw err;
     } finally {
       loadingBalances.value = false;

@@ -8,7 +8,9 @@ import axios from 'axios';
 import { prisma } from '../config/database';
 import { ICreatePayment, ICreatePaymentResponse } from '../types/payments';
 import { TBOT } from '../utils/TBOT';
-import { PAYMENT_TARIFFS } from '../constants/payments';
+import { PAYMENT_TARIFFS, SubscriptionTariff, BookingTariff } from '../constants/payments';
+
+type Tariff = SubscriptionTariff | BookingTariff;
 import { logger } from '../utils/logger';
 
 const YOOKASSA_API_URL = 'https://api.yookassa.ru/v3';
@@ -140,7 +142,7 @@ export class YookassaService {
 
   private async sendSuccessNotification(
     chatId: string,
-    tariff: any,
+    tariff: Tariff,
     type: 'subscription' | 'booking'
   ): Promise<void> {
     const URL = process.env.FRONTEND_URL || process.env.URL || '';
@@ -171,6 +173,7 @@ export class YookassaService {
     }
 
     try {
+      if (!TBOT) return;
       await TBOT.sendMessage(chatId, message, {
         parse_mode: 'Markdown',
         reply_markup: {

@@ -9,17 +9,16 @@ export interface AuthUser {
   telegramId: string;
   subscriptionExpiresAt?: Date | null;
   selectedAccountId?: string | null;
+  chatId?: string | null;
 }
 
 export interface AuthenticatedRequest extends Request {
   user: AuthUser;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthUser;
-    }
+declare module 'express' {
+  export interface Request {
+    user?: AuthUser;
   }
 }
 

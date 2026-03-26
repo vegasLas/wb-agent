@@ -40,8 +40,9 @@ export const useDraftStore = defineStore('draft', () => {
       const data = await draftsAPI.fetchDrafts();
       drafts.value = data;
       return data;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch drafts';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch drafts';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;
@@ -62,7 +63,7 @@ export const useDraftStore = defineStore('draft', () => {
       });
       
       if (response.data && response.data.success) {
-        draftGoods.value = response.data.data.map((good: any) => ({
+        draftGoods.value = response.data.data.map((good: { sa?: string; article?: string; imgSrc?: string; image?: string; subjectName?: string; name?: string; quantity?: number }) => ({
           article: good.sa || good.article,
           image: good.imgSrc || good.image,
           name: good.subjectName || good.name,
@@ -71,7 +72,7 @@ export const useDraftStore = defineStore('draft', () => {
       } else {
         draftGoods.value = [];
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch draft goods:', err);
       draftGoods.value = [];
     } finally {

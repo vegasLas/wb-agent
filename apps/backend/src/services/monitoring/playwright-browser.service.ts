@@ -46,6 +46,11 @@ export interface ErrorNotification {
   description?: string;
 }
 
+interface BrowserError extends Error {
+  code: BrowserErrorCode;
+  originalError?: Error;
+}
+
 export interface BrowserServiceOptions {
   warehouseId: string;
   draftId: string;
@@ -92,9 +97,9 @@ export class PlaywrightBrowserService {
       ? message
       : `${message} Эта дата уже недоступна`;
 
-    const error = new Error(finalMessage);
-    (error as any).code = code;
-    (error as any).originalError = originalError;
+    const error = new Error(finalMessage) as BrowserError;
+    error.code = code;
+    error.originalError = originalError;
     return error;
   }
 
@@ -114,7 +119,7 @@ export class PlaywrightBrowserService {
       // Use race to wait for either error notifications or timeout
       const notifications = await Promise.race([
         this.page.locator('.Notification-modal--error').all(),
-        new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 500)),
+        new Promise<[]>((resolve) => setTimeout(() => resolve([]), 500)),
       ]);
 
       if (!Array.isArray(notifications) || notifications.length === 0) {
@@ -154,7 +159,7 @@ export class PlaywrightBrowserService {
 
   private static getPlaywrightOptions(proxy?: Proxy) {
     // Match the simple launch options pattern from openWithCookies.js
-    const options: any = {};
+    const options: { proxy?: { server: string; username?: string; password?: string } } = {};
 
     // Add proxy configuration if provided (matching JS pattern)
     if (proxy) {
@@ -199,7 +204,7 @@ export class PlaywrightBrowserService {
         );
       }
 
-      const contextOptions: any = {};
+      const contextOptions: { userAgent?: string; locale?: string; timezoneId?: string; viewport?: { width: number; height: number }; deviceScaleFactor?: number } = {};
 
       // Apply fingerprint properties to context if available (matching browserFingerprintService.js pattern)
       if (this.fingerprint && this.useFingerprintInjection) {
@@ -228,7 +233,7 @@ export class PlaywrightBrowserService {
         await this.context.addCookies(cookies);
       }
     } catch (error) {
-      if ((error as any).code) {
+      if ((error as BrowserError).code) {
         throw error;
       }
       const err = error instanceof Error ? error : new Error(String(error));
@@ -264,7 +269,7 @@ export class PlaywrightBrowserService {
       // to match the openWithCookies.js flow: init session → load all-supplies → restore storage → refresh
       return this.page;
     } catch (error) {
-      if ((error as any).code) {
+      if ((error as BrowserError).code) {
         throw error;
       }
       const err = error instanceof Error ? error : new Error(String(error));
@@ -374,7 +379,7 @@ export class PlaywrightBrowserService {
           })(),
         ]);
       } catch (error) {
-        if ((error as any).code === BrowserErrorCode.PAGE_ERROR_NOTIFICATION) {
+        if ((error as BrowserError).code === BrowserErrorCode.PAGE_ERROR_NOTIFICATION) {
           throw error;
         }
         const err = error instanceof Error ? error : new Error(String(error));
@@ -385,7 +390,7 @@ export class PlaywrightBrowserService {
         );
       }
     } catch (error) {
-      if ((error as any).code) {
+      if ((error as BrowserError).code) {
         throw error;
       }
       throw this.createError(
@@ -480,7 +485,7 @@ export class PlaywrightBrowserService {
           );
         }
       } catch (error) {
-        if ((error as any).code === BrowserErrorCode.DATE_ELEMENT_NOT_FOUND) {
+        if ((error as BrowserError).code === BrowserErrorCode.DATE_ELEMENT_NOT_FOUND) {
           throw error;
         }
         const err = error instanceof Error ? error : new Error(String(error));
@@ -577,7 +582,7 @@ export class PlaywrightBrowserService {
           })(),
         ]);
       } catch (error) {
-        if ((error as any).code === BrowserErrorCode.PAGE_ERROR_NOTIFICATION)
+        if ((error as BrowserError).code === BrowserErrorCode.PAGE_ERROR_NOTIFICATION)
           throw error;
         const err = error instanceof Error ? error : new Error(String(error));
         logger.error(`[Navigator] Packaging view timeout: ${err.message}`);
@@ -588,7 +593,7 @@ export class PlaywrightBrowserService {
         );
       }
     } catch (error) {
-      if ((error as any).code) throw error;
+      if ((error as BrowserError).code) throw error;
       logger.error(
         `[Navigator] Unknown error in selectDateByDateString: ${error instanceof Error ? error.message : String(error)}`,
       );

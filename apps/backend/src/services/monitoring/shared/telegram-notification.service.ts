@@ -47,8 +47,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     };
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await TBOT.sendMessage(chatId, message, defaultOptions as any);
+      await TBOT.sendMessage(chatId, message, defaultOptions as unknown as Parameters<typeof TBOT.sendMessage>[2]);
     } catch (error) {
       await this.handleNotificationError(error as TelegramError, chatId);
     }
@@ -81,8 +80,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     };
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await TBOT.sendMessage(chatId, message, defaultOptions as any);
+      await TBOT.sendMessage(chatId, message, defaultOptions as unknown as Parameters<typeof TBOT.sendMessage>[2]);
     } catch (error) {
       await this.handleNotificationError(error as TelegramError, chatId);
     }

@@ -164,7 +164,7 @@ export const useRescheduleUpdateFormStore = defineStore(
         maxCoefficient: formData.value.maxCoefficientInput,
       };
 
-      const changes: any = {};
+      const changes: Record<string, unknown> = {};
 
       // Compare each field and only include if changed
       if (current.dateType !== originalData.value.dateType) {

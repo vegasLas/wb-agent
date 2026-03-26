@@ -34,8 +34,9 @@ export const useAutobookingStore = defineStore('autobooking', () => {
       const data = await autobookingAPI.fetchAutobookings();
       autobookings.value = data;
       return data;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch autobookings';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch autobookings';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;
@@ -47,8 +48,9 @@ export const useAutobookingStore = defineStore('autobooking', () => {
       deletingId.value = id;
       await autobookingAPI.deleteAutobooking(id);
       autobookings.value = autobookings.value.filter((a) => a.id !== id);
-    } catch (err: any) {
-      error.value = err.message || 'Failed to delete autobooking';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to delete autobooking';
+      error.value = errorMsg;
       throw err;
     } finally {
       deletingId.value = null;
@@ -63,8 +65,9 @@ export const useAutobookingStore = defineStore('autobooking', () => {
       if (autobooking) {
         autobooking.enabled = enabled;
       }
-    } catch (err: any) {
-      error.value = err.message || 'Failed to toggle autobooking';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to toggle autobooking';
+      error.value = errorMsg;
       throw err;
     } finally {
       togglingId.value = null;

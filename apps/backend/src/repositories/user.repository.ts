@@ -1,4 +1,4 @@
-import { User, PrismaClient } from '@prisma/client';
+import { User, PrismaClient, Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 
 export class UserRepository {
@@ -39,7 +39,7 @@ export class UserRepository {
     return this.prismaClient.user.create({
       data: {
         ...data,
-        envInfo: data.envInfo as any,
+        envInfo: data.envInfo as Prisma.JsonValue,
       },
     });
   }

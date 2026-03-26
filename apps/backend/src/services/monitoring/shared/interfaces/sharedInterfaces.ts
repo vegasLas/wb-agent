@@ -320,13 +320,13 @@ export interface TaskOrganizerAvailability {
 }
 
 export interface ISharedTaskOrganizerService {
-  groupTasksByProxy<T extends { user: { proxy?: any } }>(
+  groupTasksByProxy<T extends { user: { proxy?: Proxy | string | null } }>(
     warehouseDateTasksMap: Map<string, T[]>
   ): Map<string, T[][]>;
-  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: any } }>(
+  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: Proxy | string | null } }>(
     tasks: T[]
   ): T[];
-  getProxyString<T extends { user: { proxy?: any } }>(task: T): string;
+  getProxyString<T extends { user: { proxy?: Proxy | string | null } }>(task: T): string;
   organizeBookingsByWarehouseDate<
     TBooking extends TaskOrganizerBookingItem,
     TUser extends TaskOrganizerUser

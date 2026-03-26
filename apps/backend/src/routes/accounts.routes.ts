@@ -18,11 +18,11 @@ router.get('/', authenticate, async (req, res, next) => {
 
     res.json({
       success: true,
-      accounts: accounts.map((account) => ({
+      accounts: accounts.map((account: { id: string; phoneWb: string | null; selectedSupplierId: string | null; suppliers?: { supplierId: string; supplierName: string }[]; createdAt: Date; updatedAt: Date }) => ({
         id: account.id,
         phoneWb: account.phoneWb || undefined,
         selectedSupplierId: account.selectedSupplierId || undefined,
-        suppliers: account.suppliers?.map((s) => ({
+        suppliers: account.suppliers?.map((s: { supplierId: string; supplierName: string }) => ({
           supplierId: s.supplierId,
           supplierName: s.supplierName,
         })),
@@ -60,7 +60,7 @@ router.get(
           id: account.id,
           phoneWb: account.phoneWb || undefined,
           selectedSupplierId: account.selectedSupplierId || undefined,
-          suppliers: account.suppliers?.map((s) => ({
+          suppliers: account.suppliers?.map((s: { supplierId: string; supplierName: string }) => ({
             supplierId: s.supplierId,
             supplierName: s.supplierName,
           })),

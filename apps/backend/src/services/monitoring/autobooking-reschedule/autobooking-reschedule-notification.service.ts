@@ -90,8 +90,8 @@ export class AutobookingRescheduleNotificationService
 
       const uniqueChatIds = new Set(
         reschedules
-          .map((r) => r.user.chatId)
-          .filter((chatId): chatId is string => chatId !== null),
+          .map((r: { user: { chatId: string | null } }) => r.user.chatId)
+          .filter((chatId: string | null): chatId is string => chatId !== null),
       );
 
       if (uniqueChatIds.size === 0) return;

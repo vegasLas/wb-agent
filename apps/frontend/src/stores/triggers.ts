@@ -151,7 +151,8 @@ export const useTriggerStore = defineStore('triggers', () => {
       if (index !== -1 && updatedTrigger) {
         triggers.value[index] = updatedTrigger;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error('Failed to toggle trigger:', err);
       error.value = 'Failed to toggle trigger';
       throw err;
     } finally {

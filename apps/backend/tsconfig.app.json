@@ -5,6 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "types": ["node"],
+    "lib": ["es2020", "dom"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
@@ -12,7 +13,9 @@
     "composite": false,
     "declaration": false,
     "declarationMap": false,
-    "emitDeclarationOnly": false
+    "emitDeclarationOnly": false,
+    "noImplicitReturns": false,
+    "skipLibCheck": true
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/**/__tests__/**/*"],
   "include": ["src/**/*"]

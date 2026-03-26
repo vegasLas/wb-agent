@@ -107,8 +107,6 @@ export {
 export {
   PlaywrightBrowserService,
   playwrightBrowserService,
-  getPlaywrightBrowserService,
-  resetPlaywrightBrowserService,
   BrowserErrorCode,
   type SelectDateOptions,
   type BrowserServiceOptions,

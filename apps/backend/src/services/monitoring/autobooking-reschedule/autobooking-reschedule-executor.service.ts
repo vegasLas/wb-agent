@@ -30,6 +30,53 @@ export class AutobookingRescheduleExecutorService
   implements IRescheduleExecutorService
 {
   /**
+   * Filters availabilities to find matching warehouse and dates for reschedule
+   */
+  filterMatchingAvailabilities(
+    reschedule: AutobookingReschedule,
+    availabilities: import('../interfaces/reschedule.interfaces').WarehouseAvailability[]
+  ): Array<{
+    availability: import('../interfaces/reschedule.interfaces').WarehouseAvailability;
+    matchingDates: Array<{
+      effectiveDate: Date;
+      availableDate: { date: string; coefficient: number };
+    }>;
+  }> {
+    const matches: Array<{
+      availability: import('../interfaces/reschedule.interfaces').WarehouseAvailability;
+      matchingDates: Array<{
+        effectiveDate: Date;
+        availableDate: { date: string; coefficient: number };
+      }>;
+    }> = [];
+
+    for (const availability of availabilities) {
+      if (availability.warehouseId !== reschedule.warehouseId) continue;
+
+      const matchingDates: Array<{
+        effectiveDate: Date;
+        availableDate: { date: string; coefficient: number };
+      }> = [];
+
+      for (const availableDate of availability.availableDates) {
+        const date = new Date(availableDate.date);
+        const coefficient = availableDate.coefficient;
+
+        // Check if date matches reschedule criteria
+        if (coefficient <= reschedule.maxCoefficient) {
+          matchingDates.push({ effectiveDate: date, availableDate });
+        }
+      }
+
+      if (matchingDates.length > 0) {
+        matches.push({ availability, matchingDates });
+      }
+    }
+
+    return matches;
+  }
+
+  /**
    * Creates reschedule task - updates existing supply date
    */
   async createRescheduleTask(params: {

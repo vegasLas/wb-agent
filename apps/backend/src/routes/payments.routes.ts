@@ -3,7 +3,7 @@
  * Source: /Users/muhammad/Documents/wb/server/api/v1/payments/*.ts
  */
 
-import { Router } from 'express';
+import { Router, RequestHandler, Response, NextFunction } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
@@ -20,7 +20,7 @@ const router = Router();
 const getPaymentTemplate = (
   type: 'success' | 'pending' | 'canceled' | 'error' | 'waiting_for_capture',
   data?: {
-    tariff?: any;
+    tariff?: { name?: string; days?: number; bookingCount?: number };
     amount?: number;
     errorMessage?: string;
   }
@@ -185,7 +185,7 @@ router.post(
   authenticate,
   body('tariffId').notEmpty().withMessage('Tariff ID is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  async (req: AuthenticatedRequest, res, next) => {
+  (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       // Validate request
       const errors = validationResult(req);
@@ -257,7 +257,7 @@ router.post(
       });
 
       // Send Telegram notification if chatId exists
-      if (req.user!.chatId && payment.confirmation?.confirmation_url) {
+      if (req.user!.chatId && payment.confirmation?.confirmation_url && TBOT) {
         await TBOT.sendMessage(
           req.user!.chatId,
           [
@@ -301,7 +301,7 @@ router.post(
       logger.error('Payment creation failed:', error);
       next(error instanceof ApiError ? error : new ApiError(500, 'Failed to create payment'));
     }
-  }
+  }) as RequestHandler
 );
 
 // GET /api/v1/payments/check - Check payment status (returns HTML page)
@@ -310,7 +310,7 @@ router.get(
   query('key').notEmpty(),
   async (req, res) => {
     try {
-      const key = req.query.key as string;
+      const key = req.query?.key as string;
 
       if (!key) {
         return res.status(400).send(getPaymentTemplate('error', { errorMessage: 'Ключ платежа не найден' }));
@@ -373,27 +373,29 @@ router.get(
       }
 
       return res.send(getPaymentTemplate('success', { tariff, amount: dbPayment.amount }));
-    } catch (error: any) {
-      logger.error('Payment verification failed:', error);
-      return res.status(error?.statusCode || 400).send(
-        getPaymentTemplate('error', { errorMessage: error?.message || '❌ Ошибка при проверке платежа' })
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      logger.error('Payment creation failed:', err);
+      logger.error('Payment verification failed:', err);
+      return res.status((err as { statusCode?: number }).statusCode || 400).send(
+        getPaymentTemplate('error', { errorMessage: err.message || '❌ Ошибка при проверке платежа' })
       );
     }
   }
 );
 
 // GET /api/v1/payments/history - Get user's payment history
-router.get('/history', authenticate, async (req: AuthenticatedRequest, res, next) => {
+router.get('/history', authenticate, (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const payments = await prisma.payment.findMany({
       where: { userId: req.user!.id },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json(payments);
+    return res.json(payments);
   } catch (error) {
     next(error);
   }
-});
+}) as RequestHandler);
 
 export default router;

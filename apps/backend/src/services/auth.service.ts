@@ -94,12 +94,10 @@ export class AuthService {
     const digits = smsCode.split('');
     for (let i = 0; i < digits.length; i++) {
       // This function runs in browser context via Playwright
-      // @ts-ignore - browser context has DOM types not available in Node
-       
+      // @ts-expect-error - browser context has DOM types not available in Node
       await page.evaluate(({ digit, index }: { digit: string; index: number }) => {
-        // @ts-ignore - document is available in browser context
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const inputs = Array.from((document as any).querySelectorAll('input[data-testid="sms-code-input"]') as any[]);
+        // @ts-expect-error - document is available in browser context
+        const inputs = Array.from((document as unknown as { querySelectorAll: (selector: string) => NodeListOf<Element> }).querySelectorAll('input[data-testid="sms-code-input"]'));
         if (inputs[index]) {
           inputs[index].value = digit;
           inputs[index].dispatchEvent(new Event('input', { bubbles: true }));
@@ -597,13 +595,16 @@ export class AuthService {
           if (!hasWBTokenV3AfterNav) {
             const accessTokens = await session.page.evaluate(() => {
               const tokens: { [key: string]: string } = {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            for (let i = 0; i < (localStorage as any).length; i++) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const key = (localStorage as any).key(i);
+            interface LocalStorageMock {
+              length: number;
+              key(index: number): string | null;
+              getItem(key: string): string | null;
+            }
+            const ls = localStorage as unknown as LocalStorageMock;
+            for (let i = 0; i < ls.length; i++) {
+              const key = ls.key(i);
               if (key && key.includes('access-token')) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                tokens[key] = (localStorage as any).getItem(key) || '';
+                tokens[key] = ls.getItem(key) || '';
               }
             }
               return tokens;
@@ -654,13 +655,18 @@ export class AuthService {
 
       console.log('[AuthService] Collecting localStorage data...');
       // Collect localStorage data from browser context via Playwright
-      // @ts-ignore - browser context has DOM types not available in Node
-       
+      // @ts-expect-error - browser context has DOM types not available in Node
       const localStorage = await session.page.evaluate(() => {
         const storage: Record<string, string> = {};
-        // @ts-ignore - window is available in browser context
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const win = window as any;
+        // @ts-expect-error - window is available in browser context
+        interface WindowWithLocalStorage {
+          localStorage: {
+            length: number;
+            key(index: number): string | null;
+            getItem(key: string): string | null;
+          };
+        }
+        const win = window as unknown as WindowWithLocalStorage;
         const ls = win.localStorage;
         for (let i = 0; i < ls.length; i++) {
           const k = ls.key(i);
