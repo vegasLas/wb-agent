@@ -11,21 +11,19 @@
       <div
         class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center"
       >
-        <BuildingStorefrontIcon class="w-5 h-5 text-white" />
+        <i class="pi pi-shop text-white" />
       </div>
       <div>
         <div class="font-medium">{{ supplier.supplierName }}</div>
       </div>
     </div>
     <div v-if="isSelected" class="text-blue-600">
-      <CheckCircleIcon class="w-5 h-5" />
+      <i class="pi pi-check-circle" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { BuildingStorefrontIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
-
 export interface Supplier {
   supplierId: string;
   supplierName: string;

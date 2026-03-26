@@ -18,14 +18,12 @@
       class="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"
     >
       <div class="flex items-start gap-3">
-        <ExclamationTriangleIcon class="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+        <i class="pi pi-exclamation-triangle text-orange-600 mt-0.5 flex-shrink-0" />
         <div class="flex-1">
           <h5 class="font-medium text-orange-900 dark:text-orange-100 mb-1">
             Требуется подписка
           </h5>
-          <BaseButton size="sm" color="yellow" @click="openShop">
-            Купить подписку
-          </BaseButton>
+          <Button label="Купить подписку" size="small" severity="warn" @click="openShop" />
         </div>
       </div>
     </div>
@@ -37,8 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
-import { BaseButton } from '../ui';
+import Button from 'primevue/button';
 import AccountCard from './AccountCard.vue';
 import AddAccountCard from './AddAccountCard.vue';
 import { useUserStore } from '../../stores/user';

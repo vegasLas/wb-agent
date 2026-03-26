@@ -90,24 +90,21 @@
     </div>
 
     <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-      <BaseAlert
-        color="blue"
-        icon="info"
-        title="❗️ Важное уведомление"
-        description="Внимательно ознакомьтесь с условиями перед использованием сервиса."
-      />
+      <Message severity="info" :closable="false">
+        <div class="font-medium">❗️ Важное уведомление</div>
+        <div class="text-sm">Внимательно ознакомьтесь с условиями перед использованием сервиса.</div>
+      </Message>
 
       <div class="flex justify-between items-center gap-4">
-        <BaseButton variant="ghost" @click="$emit('cancel')"> Отмена </BaseButton>
-        <BaseButton
+        <Button variant="text" @click="$emit('cancel')"> Отмена </Button>
+        <Button
           :loading="loading"
-          color="primary"
-          size="lg"
+          severity="primary"
           class="px-8 py-3 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
           @click="handleAgree"
         >
           ✍️ Я согласен с условиями
-        </BaseButton>
+        </Button>
       </div>
     </div>
   </div>
@@ -115,7 +112,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { BaseButton, BaseAlert } from '../ui';
+import Button from 'primevue/button';
+import Message from 'primevue/message';
 import { useUserStore } from '../../stores/user';
 import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
 
