@@ -10,7 +10,6 @@ import { AcceptanceType } from '../types/wb';
 import { wbWarehouseService } from './wb-warehouse.service';
 import { logger } from '../utils/logger';
 import { ProxyConfig } from '../utils/wb-request';
-import { Prisma } from '@prisma/client';
 
 interface CloseApiWarehouse {
   warehouseID: number;
@@ -107,41 +106,53 @@ export class CloseApiService {
 
           // Handle database recovery errors silently - they're expected during maintenance
           if (this.isDatabaseRecoveryError(errorMessage)) {
-            logger.info('Close API temporarily unavailable due to database recovery');
+            logger.info(
+              'Close API temporarily unavailable due to database recovery',
+            );
             return;
           }
 
           // Handle 429 rate limit errors specifically
           if (error?.status === 429 || errorMessage.includes('429')) {
-            logger.error(`429 Rate Limit error for account ${account.accountId}:`, {
-              message: errorMessage,
-              status: error?.status,
-              method: error?.method,
-              url: error?.url,
-              accountId: account.accountId,
-              supplierId: account.supplierId,
-            });
+            logger.error(
+              `429 Rate Limit error for account ${account.accountId}:`,
+              {
+                message: errorMessage,
+                status: error?.status,
+                method: error?.method,
+                url: error?.url,
+                accountId: account.accountId,
+                supplierId: account.supplierId,
+              },
+            );
             // Call the existing error handler which will handle account cleanup
-            this.handleApiError(error, account.accountId).catch((handlerError) => {
-              logger.error('Error in 429 handler:', handlerError);
-            });
+            this.handleApiError(error, account.accountId).catch(
+              (handlerError) => {
+                logger.error('Error in 429 handler:', handlerError);
+              },
+            );
             return;
           }
 
           // Handle 403 errors specifically
           if (error?.status === 403 || errorMessage.includes('403')) {
-            logger.error(`403 Forbidden error for account ${account.accountId}:`, {
-              message: errorMessage,
-              status: error?.status,
-              method: error?.method,
-              url: error?.url,
-              accountId: account.accountId,
-              supplierId: account.supplierId,
-            });
+            logger.error(
+              `403 Forbidden error for account ${account.accountId}:`,
+              {
+                message: errorMessage,
+                status: error?.status,
+                method: error?.method,
+                url: error?.url,
+                accountId: account.accountId,
+                supplierId: account.supplierId,
+              },
+            );
             // Call the existing error handler which will handle account cleanup
-            this.handleApiError(error, account.accountId).catch((handlerError) => {
-              logger.error('Error in 403 handler:', handlerError);
-            });
+            this.handleApiError(error, account.accountId).catch(
+              (handlerError) => {
+                logger.error('Error in 403 handler:', handlerError);
+              },
+            );
             return;
           }
 
@@ -159,8 +170,8 @@ export class CloseApiService {
     accountId: string,
     supplierId: string,
     userAgent: string,
-    proxy: unknown,
-    needsExtendedDates = false
+    proxy: ProxyConfig | undefined,
+    needsExtendedDates = false,
   ): Promise<Supply[]> {
     // Return cached data if fresh
     // if (this.isCacheFresh()) {
@@ -228,15 +239,16 @@ export class CloseApiService {
       this.requestCount++;
       this.accountUsageCount.set(
         account.accountId,
-        (this.accountUsageCount.get(account.accountId) || 0) + 1
+        (this.accountUsageCount.get(account.accountId) || 0) + 1,
       );
 
-      const result = await wbWarehouseService.getAcceptanceCoefficientsByAccount({
-        accountId: account.accountId,
-        supplierId: account.supplierId,
-        userAgent: account.userAgent,
-        proxy: account.proxy,
-      });
+      const result =
+        await wbWarehouseService.getAcceptanceCoefficientsByAccount({
+          accountId: account.accountId,
+          supplierId: account.supplierId,
+          userAgent: account.userAgent,
+          proxy: account.proxy,
+        });
 
       const transformedData = this.transformApiResponse(result.result.report);
       return transformedData;
@@ -248,7 +260,7 @@ export class CloseApiService {
       if (this.isDatabaseRecoveryError(errorMessage)) {
         // Don't treat this as a failure, just log and return empty
         logger.info(
-          `Close API temporarily unavailable due to database recovery, account ${account.accountId}`
+          `Close API temporarily unavailable due to database recovery, account ${account.accountId}`,
         );
         return [];
       }
@@ -292,7 +304,9 @@ export class CloseApiService {
     // Convert to Moscow time (UTC+3)
     const moscowTime = new Date(date.getTime() + 3 * 60 * 60 * 1000);
     const hours = moscowTime.getUTCHours();
-    return hours >= this.BUSINESS_HOURS.start && hours < this.BUSINESS_HOURS.end;
+    return (
+      hours >= this.BUSINESS_HOURS.start && hours < this.BUSINESS_HOURS.end
+    );
   }
 
   /**
@@ -306,24 +320,28 @@ export class CloseApiService {
             warehouseID: warehouse.warehouseID,
             warehouseName: warehouse.warehouseName,
             date: warehouse.date,
-            boxTypeID: this.mapAcceptanceTypeToBoxTypeId(warehouse.acceptanceType),
+            boxTypeID: this.mapAcceptanceTypeToBoxTypeId(
+              warehouse.acceptanceType,
+            ),
             boxTypeName: this.getBoxTypeName(warehouse.acceptanceType),
             coefficient: warehouse.coefficient,
             allowUnload: warehouse.allowUnload,
-          }) as Supply
+          }) as Supply,
       )
       .filter(
         (warehouse) =>
           warehouse?.boxTypeID &&
           warehouse.allowUnload === true &&
-          warehouse.coefficient >= 0
+          warehouse.coefficient >= 0,
       );
   }
 
   /**
    * Maps acceptance type to box type ID
    */
-  private mapAcceptanceTypeToBoxTypeId(acceptanceType: AcceptanceType): BoxTypeId {
+  private mapAcceptanceTypeToBoxTypeId(
+    acceptanceType: AcceptanceType,
+  ): BoxTypeId {
     switch (acceptanceType) {
       case AcceptanceType.box:
         return 2;
@@ -366,13 +384,15 @@ export class CloseApiService {
    */
   private async handleApiError(
     error: Error & { status?: number },
-    accountId: string
+    accountId: string,
   ): Promise<void> {
     const errorMessage = error?.message || '';
 
     // Handle specific database recovery error - don't log as it's temporary
     if (this.isDatabaseRecoveryError(errorMessage)) {
-      logger.info('Close API temporarily unavailable due to database recovery, will retry later');
+      logger.info(
+        'Close API temporarily unavailable due to database recovery, will retry later',
+      );
       return;
     }
 
@@ -381,7 +401,9 @@ export class CloseApiService {
       errorMessage.includes('fetch failed') &&
       errorMessage.includes('Connect Timeout Error')
     ) {
-      logger.info('Close API connection timeout (network issue), will retry later');
+      logger.info(
+        'Close API connection timeout (network issue), will retry later',
+      );
       return;
     }
 
@@ -394,12 +416,12 @@ export class CloseApiService {
     ];
 
     const isKnownError = knownErrors.some((knownError) =>
-      errorMessage.includes(knownError)
+      errorMessage.includes(knownError),
     );
 
     if (isKnownError) {
       logger.info(
-        `Close API known error (will retry): ${errorMessage.substring(0, 100)}...`
+        `Close API known error (will retry): ${errorMessage.substring(0, 100)}...`,
       );
       return;
     }
@@ -418,7 +440,7 @@ export class CloseApiService {
 
         if (account?.user) {
           logger.info(
-            `429 Rate Limit error for account ${accountId}, user ${account.user.id} - temporarily ignoring account for 2 hours`
+            `429 Rate Limit error for account ${accountId}, user ${account.user.id} - temporarily ignoring account for 2 hours`,
           );
 
           // Set account to be ignored for 2 hours
@@ -427,15 +449,18 @@ export class CloseApiService {
 
           // Remove from availableAccounts cache
           this.availableAccounts = this.availableAccounts.filter(
-            (acc) => acc.accountId !== accountId
+            (acc) => acc.accountId !== accountId,
           );
 
           logger.info(
-            `Account ${accountId} will be ignored until ${new Date(ignoreUntil).toISOString()}`
+            `Account ${accountId} will be ignored until ${new Date(ignoreUntil).toISOString()}`,
           );
         }
       } catch (cleanupError) {
-        logger.error(`Failed to handle 429 error for account ${accountId}:`, cleanupError);
+        logger.error(
+          `Failed to handle 429 error for account ${accountId}:`,
+          cleanupError,
+        );
       }
       return;
     }
@@ -451,7 +476,7 @@ export class CloseApiService {
 
         if (account?.user) {
           logger.info(
-            `403 Forbidden error for account ${accountId}, user ${account.user.id} - temporarily ignoring account for 10 hours`
+            `403 Forbidden error for account ${accountId}, user ${account.user.id} - temporarily ignoring account for 10 hours`,
           );
 
           // Set account to be ignored for 10 hours
@@ -460,15 +485,18 @@ export class CloseApiService {
 
           // Remove from availableAccounts cache
           this.availableAccounts = this.availableAccounts.filter(
-            (acc) => acc.accountId !== accountId
+            (acc) => acc.accountId !== accountId,
           );
 
           logger.info(
-            `Account ${accountId} will be ignored until ${new Date(ignoreUntil).toISOString()}`
+            `Account ${accountId} will be ignored until ${new Date(ignoreUntil).toISOString()}`,
           );
         }
       } catch (cleanupError) {
-        logger.error(`Failed to handle 403 error for account ${accountId}:`, cleanupError);
+        logger.error(
+          `Failed to handle 403 error for account ${accountId}:`,
+          cleanupError,
+        );
       }
       return;
     }
@@ -483,7 +511,7 @@ export class CloseApiService {
 
         if (account?.user) {
           logger.info(
-            `Authentication error for account ${accountId}, user ${account.user.id}`
+            `Authentication error for account ${accountId}, user ${account.user.id}`,
           );
 
           // Remove the account that caused the auth error
@@ -494,13 +522,16 @@ export class CloseApiService {
 
           // Remove from availableAccounts cache
           this.availableAccounts = this.availableAccounts.filter(
-            (acc) => acc.accountId !== accountId
+            (acc) => acc.accountId !== accountId,
           );
 
           // Note: Telegram notification would be sent by the caller
         }
       } catch (cleanupError) {
-        logger.error(`Failed to handle auth error for account ${accountId}:`, cleanupError);
+        logger.error(
+          `Failed to handle auth error for account ${accountId}:`,
+          cleanupError,
+        );
       }
     }
   }
@@ -517,7 +548,7 @@ export class CloseApiService {
     try {
       // Log statistics if needed
       this.logStatisticsIfNeeded();
-      
+
       // Get all active accounts with valid cookies and environment info
       const accounts = await prisma.account.findMany({
         where: {
@@ -544,35 +575,46 @@ export class CloseApiService {
       const accountMap = new Map<string, AccountInfo>();
       const now = Date.now();
 
-      accounts.forEach((account: { id: string; suppliers: { supplierId: string }[]; user: { envInfo: unknown } }) => {
-        if (!account.suppliers.length || !account.user.envInfo) return;
+      accounts.forEach(
+        (account: {
+          id: string;
+          suppliers: { supplierId: string }[];
+          user: { envInfo: unknown };
+        }) => {
+          if (!account.suppliers.length || !account.user.envInfo) return;
 
-        // Check if account is ignored due to 403 errors
-        const ignoreUntil = this.ignoredAccounts.get(account.id);
-        if (ignoreUntil && now < ignoreUntil) {
-          return; // Skip this account as it's still being ignored
-        }
+          // Check if account is ignored due to 403 errors
+          const ignoreUntil = this.ignoredAccounts.get(account.id);
+          if (ignoreUntil && now < ignoreUntil) {
+            return; // Skip this account as it's still being ignored
+          }
 
-        // Clean up expired ignore entries
-        if (ignoreUntil && now >= ignoreUntil) {
-          this.ignoredAccounts.delete(account.id);
-        }
+          // Clean up expired ignore entries
+          if (ignoreUntil && now >= ignoreUntil) {
+            this.ignoredAccounts.delete(account.id);
+          }
 
-        const envInfo = account.user.envInfo as Prisma.JsonObject | null;
-        const supplierIds = account.suppliers.map((s: { supplierId: string }) => s.supplierId);
-        const supplierKey = supplierIds.sort().join(',');
+          const envInfo = account.user.envInfo as unknown as {
+            userAgent?: string;
+            proxy?: ProxyConfig;
+          } | null;
+          const supplierIds = account.suppliers.map(
+            (s: { supplierId: string }) => s.supplierId,
+          );
+          const supplierKey = supplierIds.sort().join(',');
 
-        // Only keep one account per unique supplier combination
-        if (!accountMap.has(supplierKey)) {
-          accountMap.set(supplierKey, {
-            accountId: account.id,
-            supplierId: supplierIds[0],
-            userAgent: envInfo.userAgent,
-            proxy: envInfo.proxy,
-            supplierIds,
-          });
-        }
-      });
+          // Only keep one account per unique supplier combination
+          if (!accountMap.has(supplierKey)) {
+            accountMap.set(supplierKey, {
+              accountId: account.id,
+              supplierId: supplierIds[0],
+              userAgent: envInfo?.userAgent || '',
+              proxy: envInfo?.proxy,
+              supplierIds,
+            });
+          }
+        },
+      );
 
       this.availableAccounts = Array.from(accountMap.values());
       this.lastAccountRefresh = now;
@@ -614,7 +656,7 @@ export class CloseApiService {
     const accountsUsed = this.accountUsageCount.size;
     const totalRequests = Array.from(this.accountUsageCount.values()).reduce(
       (sum, count) => sum + count,
-      0
+      0,
     );
     const cacheInfo = this.getCacheInfo();
     const currentInterval = this.getCalculatedInterval();
@@ -625,9 +667,11 @@ export class CloseApiService {
     logger.info(`🔄 Accounts used: ${accountsUsed}`);
     logger.info(`⏱️ Current interval: ${currentInterval}ms`);
     logger.info(
-      `💾 Cache: ${cacheInfo.count} warehouses (${cacheInfo.isFresh ? 'fresh' : 'stale'})`
+      `💾 Cache: ${cacheInfo.count} warehouses (${cacheInfo.isFresh ? 'fresh' : 'stale'})`,
     );
-    logger.info(`⏰ Last API call: ${new Date(this.lastApiCall).toISOString()}`);
+    logger.info(
+      `⏰ Last API call: ${new Date(this.lastApiCall).toISOString()}`,
+    );
 
     // Log cached warehouses in format: [warehouseId-date-coefficient-boxType, ...]
     if (this.cache.data.length > 0) {
