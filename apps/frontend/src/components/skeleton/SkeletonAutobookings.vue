@@ -1,24 +1,24 @@
 <template>
   <!-- Summary Skeleton -->
   <div class="grid grid-cols-3 gap-4">
-    <div class="h-9 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-    <div class="h-9 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-    <div class="h-9 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+    <Skeleton width="100%" height="2.25rem" borderRadius="0.25rem" />
+    <Skeleton width="100%" height="2.25rem" borderRadius="0.25rem" />
+    <Skeleton width="100%" height="2.25rem" borderRadius="0.25rem" />
   </div>
 
   <!-- Search Bar Skeleton -->
-  <div class="mt-4 h-10 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+  <Skeleton class="mt-4" width="100%" height="2.5rem" borderRadius="0.25rem" />
 
   <div class="flex justify-between">
-    <div class="mt-4 h-10 w-2/3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-    <div class="mt-4 h-10 w-[109px] bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+    <Skeleton class="mt-4" width="66.666%" height="2.5rem" borderRadius="0.25rem" />
+    <Skeleton class="mt-4" width="109px" height="2.5rem" borderRadius="0.25rem" />
   </div>
 
   <!-- Card Skeleton -->
-  <div class="mt-6 p-4 h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-  <div class="mt-6 p-4 h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+  <Skeleton class="mt-6" width="100%" height="400px" borderRadius="0.5rem" />
+  <Skeleton class="mt-6" width="100%" height="400px" borderRadius="0.5rem" />
 </template>
 
 <script setup lang="ts">
-// Skeleton component for autobookings view loading state
+import Skeleton from 'primevue/skeleton';
 </script>
