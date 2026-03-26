@@ -181,8 +181,9 @@ export const useReportStore = defineStore('report', () => {
         reportPending.value = false;
         estimatedWaitTime.value = null;
       }
-    } catch (err: any) {
-      error.value = err.message || 'An unexpected error occurred';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
+      error.value = errorMsg;
       data.value = null;
       reportPending.value = false;
       estimatedWaitTime.value = null;
@@ -200,8 +201,9 @@ export const useReportStore = defineStore('report', () => {
       report.value = result;
       isFetched.value = true;
       return result;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch report';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch report';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;

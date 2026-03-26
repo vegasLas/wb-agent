@@ -25,8 +25,9 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
       status.value = data;
       isFetched.value = true;
       return data;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to check API key status';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to check API key status';
+      error.value = errorMsg;
       status.value = { valid: false, message: 'Failed to check status' };
       throw err;
     } finally {
@@ -41,8 +42,9 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
       await supplierAPI.updateSupplierApiKey(apiKey);
       // Re-check status after update
       await checkStatus();
-    } catch (err: any) {
-      error.value = err.message || 'Failed to update API key';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to update API key';
+      error.value = errorMsg;
       throw err;
     } finally {
       saving.value = false;
@@ -57,8 +59,9 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
       // Clear status after delete
       status.value = null;
       isFetched.value = false;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to delete API key';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to delete API key';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;

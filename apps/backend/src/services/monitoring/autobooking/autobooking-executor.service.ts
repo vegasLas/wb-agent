@@ -109,8 +109,11 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
       );
 
       // Get monopallet count if applicable
+      interface BookingWithMonopallet {
+        monopalletCount?: number | null;
+      }
       const monopalletCount = booking.supplyType === 'MONOPALLETE' 
-        ? (booking as any).monopalletCount || 1 
+        ? (booking as unknown as BookingWithMonopallet).monopalletCount || 1 
         : null;
 
       await playwrightBrowserService.selectDateAndNavigate({

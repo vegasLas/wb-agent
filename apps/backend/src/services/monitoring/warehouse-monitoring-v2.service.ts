@@ -518,8 +518,8 @@ export class WarehouseMonitoringV2Service {
   private extractTriggerWarehouseData = (
     trigger: SupplyTrigger,
   ): { warehouseId: number; boxTypeId: BoxTypeId }[] => {
-    return trigger.warehouseIds.flatMap((warehouseId) =>
-      trigger.supplyTypes.map((type) => ({
+    return trigger.warehouseIds.flatMap((warehouseId: number) =>
+      trigger.supplyTypes.map((type: string) => ({
         warehouseId,
         boxTypeId: getBoxTypeFromSupplyType(type),
       })),

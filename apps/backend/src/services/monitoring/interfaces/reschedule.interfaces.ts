@@ -55,24 +55,30 @@ export interface RescheduleBanParams {
 
 /**
  * Monitoring user with reschedules
+ * Compatible with sharedInterfaces.MonitoringUser
  */
 export interface MonitoringUser {
   userId: number;
   userAgent: string;
   proxy: Proxy;
   chatId?: string;
-  autobookings: AutobookingLite[];
-  supplyTriggers: SupplyTriggerLite[];
+  autobookings: import('@prisma/client').Autobooking[];
+  supplyTriggers: import('@prisma/client').SupplyTrigger[];
   reschedules: AutobookingReschedule[];
   accounts: { [accountId: string]: string[] };
 }
 
 /**
+ * AutobookingReschedule with dates info
+ */
+export type AutobookingRescheduleWithDates = AutobookingReschedule;
+
+/**
  * Proxy configuration
  */
 export interface Proxy {
-  host: string;
-  port: number;
+  ip: string;
+  port: string;
   username: string;
   password: string;
 }

@@ -113,8 +113,9 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
       viewStore.setView('triggers-main');
       
       return trigger;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to create trigger';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create trigger';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;

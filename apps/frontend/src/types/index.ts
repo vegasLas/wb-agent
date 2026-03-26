@@ -271,7 +271,7 @@ export interface RescheduleCreateData {
   monotype: boolean;
 }
 
-export interface RescheduleUpdateData extends Partial<RescheduleCreateData> {}
+export type RescheduleUpdateData = Partial<RescheduleCreateData>;
 
 // Create/Update API request types
 export interface CreateAutobookingRescheduleRequest {

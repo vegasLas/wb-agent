@@ -9,6 +9,7 @@ import type {
   TaskOrganizerUser,
   TaskOrganizerBookingItem,
   TaskOrganizerAvailability,
+  Proxy,
 } from './interfaces/sharedInterfaces';
 import { sharedAvailabilityFilterService } from './availability-filter.service';
 
@@ -94,7 +95,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
    * Validates if user can be processed
    */
   private isValidUserForProcessing<TUser extends GenericUser>(
-    user: TUser & { autobookings?: any[] },
+    user: TUser & { autobookings?: unknown[] },
   ): boolean {
     return !!(
       user.chatId &&
@@ -118,7 +119,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
     for (const booking of user.autobookings) {
       const genericBooking =
         sharedAvailabilityFilterService.convertToSchedulableItem(
-          booking as any,
+          booking as unknown as TaskOrganizerBookingItem,
         );
       const matchingResults =
         sharedAvailabilityFilterService.filterMatchingAvailabilities(
@@ -158,7 +159,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
 
       const genericReschedule =
         sharedAvailabilityFilterService.convertToSchedulableItem(
-          reschedule as any,
+          reschedule as unknown as TaskOrganizerBookingItem,
         );
       const matchingResults =
         sharedAvailabilityFilterService.filterMatchingAvailabilities(
@@ -237,7 +238,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
    * Optimizes task order for all warehouse-date combinations
    */
   private optimizeAllTaskOrders<
-    T extends { coefficient: number; user: { proxy?: any } },
+    T extends { coefficient: number; user: { proxy?: Proxy | string | null } },
   >(warehouseDateTasksMap: Map<string, T[]>): void {
     for (const [warehouseDateKey, tasks] of warehouseDateTasksMap.entries()) {
       warehouseDateTasksMap.set(
@@ -370,7 +371,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
   /**
    * Groups tasks so that each group contains tasks with different proxies
    */
-  groupTasksByProxy<T extends { user: { proxy?: any } }>(
+  groupTasksByProxy<T extends { user: { proxy?: Proxy | string | null } }>(
     warehouseDateTasksMap: Map<string, T[]>,
   ): Map<string, T[][]> {
     const groupedMap = new Map<string, T[][]>();
@@ -412,7 +413,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
   /**
    * Optimizes task order to ensure proxy and user diversity
    */
-  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: any } }>(
+  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: Proxy | string | null } }>(
     tasks: T[],
   ): T[] {
     if (tasks.length <= 1) return tasks;
@@ -455,7 +456,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
   /**
    * Generates proxy string for tracking
    */
-  getProxyString<T extends { user: { proxy?: any } }>(task: T): string {
+  getProxyString<T extends { user: { proxy?: Proxy | string | null } }>(task: T): string {
     if (!task.user.proxy) return 'no-proxy';
 
     // Handle proxy object with ip and port properties

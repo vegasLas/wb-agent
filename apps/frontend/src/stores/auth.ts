@@ -80,9 +80,10 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         throw new Error(response.message || 'Failed to verify phone number');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        err?.response?.data?.message || err.message || 'Failed to verify phone number';
+        error?.response?.data?.message || error.message || 'Failed to verify phone number';
       error.value = errorMessage;
 
       // For retryable errors, don't change step
@@ -118,9 +119,10 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         throw new Error(response.message || 'Failed to verify SMS code');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        err?.response?.data?.message || err.message || 'Failed to verify SMS code';
+        error?.response?.data?.message || error.message || 'Failed to verify SMS code';
       error.value = errorMessage;
 
       // For retryable errors, clear invalid code and don't change step
@@ -156,9 +158,10 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         throw new Error(response.message || 'Failed to verify two-factor code');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        err?.response?.data?.message || err.message || 'Failed to verify two-factor code';
+        error?.response?.data?.message || error.message || 'Failed to verify two-factor code';
       error.value = errorMessage;
 
       // For retryable errors, clear invalid code and don't change step

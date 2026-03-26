@@ -147,7 +147,7 @@ async function makeHttpRequest(
       method,
       headers,
       body,
-      agent: proxyAgent as any,
+      agent: proxyAgent as unknown as import('node-fetch').RequestInit['agent'],
     }) as unknown as Response;
   } else {
     response = await fetch(url, {

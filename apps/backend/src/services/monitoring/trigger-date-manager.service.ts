@@ -77,12 +77,12 @@ export class TriggerDateManagerService {
         // CUSTOM_DATES triggers expire when all selected dates are in the past
         if (trigger.selectedDates && trigger.selectedDates.length > 0) {
           const validDates = trigger.selectedDates
-            .map((date) => {
+            .map((date: Date) => {
               const moscowDate = new Date(date);
               moscowDate.setUTCHours(0, 0, 0, 0);
               return moscowDate;
             })
-            .filter((date) => date >= moscowNow);
+            .filter((date: Date) => date >= moscowNow);
 
           shouldExpire = validDates.length === 0;
         }
@@ -163,7 +163,7 @@ export class TriggerDateManagerService {
         where: { id: trigger.userId },
       });
 
-      if (!user?.chatId) return;
+      if (!user?.chatId || !TBOT) return;
 
       const warehouseNames = this.getWarehouseNames(trigger.warehouseIds);
 

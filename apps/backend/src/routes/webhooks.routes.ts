@@ -162,11 +162,11 @@ router.post('/yookassa', async (req, res) => {
     }
 
     // Return 200 OK to acknowledge receipt
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (error) {
     logger.error('Webhook error:', error);
     // Always return 200 to acknowledge receipt
-    res.json({ success: true });
+    return res.json({ success: true });
   }
 });
 

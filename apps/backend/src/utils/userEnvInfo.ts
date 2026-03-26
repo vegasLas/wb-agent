@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { UserEnvInfo } from '../types/wb';
 import { prisma } from '../config/database';
 import { logger } from './logger';
+import { Prisma } from '@prisma/client';
 
 export interface Proxy {
   ip: string;
@@ -100,8 +101,7 @@ export const regenerateAllUserEnvInfo = async (): Promise<void> => {
       const newEnvInfo = await generateUserEnvInfo();
       await prisma.user.update({
         where: { id: user.id },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: { envInfo: newEnvInfo as any },
+        data: { envInfo: newEnvInfo as Prisma.JsonObject },
       });
     }
 

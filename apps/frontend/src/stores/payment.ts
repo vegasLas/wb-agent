@@ -30,8 +30,9 @@ export const usePaymentStore = defineStore('payment', () => {
       tariffs.value = data;
       isFetched.value = true;
       return data;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch tariffs';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch tariffs';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;
@@ -54,8 +55,9 @@ export const usePaymentStore = defineStore('payment', () => {
       const payment = await paymentsAPI.createPayment(tariffId);
       payments.value.unshift(payment);
       return payment;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to create payment';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create payment';
+      error.value = errorMsg;
       throw err;
     } finally {
       loading.value = false;

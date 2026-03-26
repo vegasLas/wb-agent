@@ -106,6 +106,10 @@ router.post(
 
       // Use user's selected account from the user object (matching deprecated behavior)
       const selectedAccountId = req.user!.selectedAccountId;
+      
+      if (!selectedAccountId) {
+        throw new ApiError(400, 'No account selected');
+      }
 
       const reschedule = await rescheduleService.createReschedule(
         req.user!.id,

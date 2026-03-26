@@ -117,7 +117,7 @@ if (env.TELEGRAM_BOT_TOKEN) {
   logger.warn('TELEGRAM_BOT_TOKEN not set, Telegram bot not initialized');
 }
 
-export const TBOT = bot;
+export const TBOT = bot as TelegramBot | null;
 
 /**
  * Send logout notification to user

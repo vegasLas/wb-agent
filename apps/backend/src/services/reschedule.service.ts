@@ -81,7 +81,7 @@ export class RescheduleService {
 
     // Convert counts to proper format
     const statusCounts = counts.reduce(
-      (acc, curr) => {
+      (acc: Record<string, number>, curr: { status: string; _count: { status: number } }) => {
         acc[curr.status] = curr._count.status;
         return acc;
       },

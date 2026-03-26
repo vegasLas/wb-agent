@@ -47,7 +47,7 @@ export const useRescheduleStore = defineStore('reschedule', () => {
   );
 
   // Actions
-  async function fetchReschedules(page: number = 1) {
+  async function fetchReschedules(page = 1) {
     loading.value = true;
     error.value = null;
 
@@ -62,8 +62,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         console.warn('[RescheduleStore] API returned success: false');
         error.value = 'API returned unsuccessful response';
       }
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to fetch reschedules';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch reschedules';
       error.value = errorMessage;
 
       console.error(
@@ -88,10 +88,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         return response;
       }
       throw new Error('Failed to create reschedule');
-    } catch (err: any) {
-      error.value = err.message || 'Failed to create reschedule';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create reschedule';
+      error.value = errorMsg;
       console.error('Failed to create reschedule:', err);
-      console.error(err.message || 'Не удалось создать перепланирование');
+      console.error(errorMsg || 'Не удалось создать перепланирование');
       throw err;
     } finally {
       loading.value = false;

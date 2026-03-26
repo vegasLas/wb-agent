@@ -186,8 +186,9 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
       viewStore.setView('autobookings-main');
 
       return true;
-    } catch (err: any) {
-      error.value = err.message || 'Failed to create autobooking';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create autobooking';
+      error.value = errorMsg;
       return false;
     } finally {
       loading.value = false;

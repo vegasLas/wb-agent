@@ -10,7 +10,7 @@
     "declaration": false,
     "declarationMap": false,
     "emitDeclarationOnly": false,
-    "customConditions": []
+
   },
   "include": [
     "jest.config.ts",
