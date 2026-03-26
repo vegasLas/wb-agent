@@ -4,22 +4,24 @@
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
       Склад <span class="text-red-500">*</span>
     </label>
-    <BaseSelect
+    <Select
       :model-value="modelValue || ''"
       :options="warehouseOptions"
+      option-label="label"
+      option-value="value"
       placeholder="Выберите склад"
+      class="w-full"
       @update:model-value="onWarehouseChange"
     />
   </div>
 
   <!-- Transit Warehouse -->
   <div class="flex items-center gap-2">
-    <input
-      :checked="useTransit"
-      type="checkbox"
+    <Checkbox
+      :model-value="useTransit"
+      :binary="true"
       :disabled="isServiceCenter"
-      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-      @change="(e) => $emit('update:useTransit', (e.target as HTMLInputElement).checked)"
+      @update:model-value="(value) => $emit('update:useTransit', value as boolean)"
     />
     <label class="text-sm text-gray-700 dark:text-gray-300">Использовать транзитный склад</label>
   </div>
@@ -28,27 +30,30 @@
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
       Транзитный склад <span class="text-red-500">*</span>
     </label>
-    <BaseSelect
+    <Select
       :model-value="transitWarehouseId || ''"
       :options="transitOptions"
+      option-label="label"
+      option-value="value"
       placeholder="Выберите транзитный склад"
       :disabled="!modelValue"
+      class="w-full"
       @update:model-value="(value) => $emit('update:transitWarehouseId', Number(value))"
     />
   </div>
 
   <!-- Warehouse Balances Button -->
   <div v-if="modelValue" class="flex justify-end">
-    <BaseButton
-      color="blue"
-      variant="soft"
-      size="sm"
+    <Button
+      severity="info"
+      variant="outlined"
+      size="small"
       :loading="supplierStore.loadingBalances"
       @click="showBalancesModal = true"
     >
-      <ChartBarIcon class="w-4 h-4 mr-1" />
+      <i class="pi pi-chart-bar mr-1" />
       остатки
-    </BaseButton>
+    </Button>
   </div>
 
   <!-- Warehouse Balances Modal -->
@@ -63,9 +68,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { ChartBarIcon } from '@heroicons/vue/24/outline';
 import { useSupplierStore } from '../../stores/supplier';
-import { BaseButton, BaseSelect } from '../ui';
+import Select from 'primevue/select';
+import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
 import AutobookingWarehouseBalancesModal from './WarehouseBalancesModal.vue';
 
 interface WarehouseOption {

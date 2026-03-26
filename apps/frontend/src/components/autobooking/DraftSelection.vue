@@ -3,30 +3,32 @@
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
       Черновик поставки <span class="text-red-500">*</span>
     </label>
-    <BaseSelect
+    <Select
       :model-value="modelValue || ''"
       :options="options"
+      option-label="label"
+      option-value="value"
       placeholder="Выберите черновик"
+      class="w-full"
       @update:model-value="(value) => $emit('update:modelValue', value)"
     />
     <div v-if="modelValue" class="flex justify-end">
-      <BaseButton
-        size="sm"
-        variant="soft"
-        color="blue"
+      <Button
+        size="small"
+        severity="secondary"
         :loading="loading"
         @click="$emit('view-goods', modelValue)"
       >
-        <EyeIcon class="w-4 h-4 mr-1" />
+        <i class="pi pi-eye mr-1"></i>
         товары
-      </BaseButton>
+      </Button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { EyeIcon } from '@heroicons/vue/24/outline';
-import { BaseButton, BaseSelect } from '../ui';
+import Button from 'primevue/button';
+import Select from 'primevue/select';
 
 interface Props {
   modelValue?: string;

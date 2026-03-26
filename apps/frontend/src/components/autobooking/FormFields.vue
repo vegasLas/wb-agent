@@ -25,22 +25,21 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Тип поставки <span class="text-red-500">*</span>
       </label>
-      <BaseSelect
+      <Select
         v-model="localForm.supplyType"
         :options="availableSupplyTypes"
+        option-label="label"
+        option-value="value"
         placeholder="Выберите тип поставки"
         :disabled="!canSelectSupplyType"
+        class="w-full"
       />
     </div>
 
     <!-- Validation Failure Alert -->
-    <BaseAlert
-      v-if="showValidationFailureAlert"
-      color="red"
-      icon="error"
-      title="Ошибка валидации склада и черновика"
-    >
+    <Message v-if="showValidationFailureAlert" severity="error" class="w-full">
       <div class="space-y-2 text-sm">
+        <p class="font-medium">Ошибка валидации склада и черновика</p>
         <p>
           К сожалению, выбранный склад не принимает товары из этого черновика.
           Это может быть связано с:
@@ -55,7 +54,7 @@
           товарами или выберите другой склад.
         </p>
       </div>
-    </BaseAlert>
+    </Message>
 
     <DateSelection
       v-model:date-type="localForm.dateType"
@@ -79,10 +78,11 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Количество монопаллет <span class="text-red-500">*</span>
       </label>
-      <BaseInput
+      <InputText
         v-model.number="localForm.monopalletCount"
         type="number"
         placeholder="Введите количество монопаллет"
+        class="w-full"
       />
     </div>
 
@@ -92,18 +92,14 @@
         Максимальный коэффициент <span class="text-red-500">*</span>
       </label>
       <div class="flex items-center gap-4">
-        <input
-          v-model.number="localForm.maxCoefficient"
-          type="range"
-          min="0"
-          max="20"
-          step="1"
-          class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+        <Slider
+          v-model="localForm.maxCoefficient"
+          :min="0"
+          :max="20"
+          class="flex-1"
         />
         <div class="min-w-[4rem] text-center">
-          <span class="inline-flex items-center px-2 py-1 rounded text-sm bg-gray-100 text-gray-800">
-            {{ localForm.maxCoefficient }}
-          </span>
+          <Tag :value="String(localForm.maxCoefficient)" severity="secondary" />
         </div>
       </div>
       <div
@@ -111,9 +107,7 @@
         class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm text-blue-800 dark:text-blue-200"
       >
         Рекомендуемый коэффициент:
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-800">
-          {{ suggestedCoefficient }}
-        </span>
+        <Tag :value="String(suggestedCoefficient)" severity="warn" class="text-xs" />
       </div>
     </div>
   </div>
@@ -126,7 +120,11 @@ import { useDraftStore } from '../../stores/draft';
 import { useUserStore } from '../../stores/user';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
 import { useWarehousesStore } from '../../stores/warehouses';
-import { BaseSelect, BaseInput, BaseAlert } from '../ui';
+import Select from 'primevue/select';
+import InputText from 'primevue/inputtext';
+import Slider from 'primevue/slider';
+import Message from 'primevue/message';
+import Tag from 'primevue/tag';
 import DateSelection from '../common/DateSelection.vue';
 import DateSelectionAlerts from '../common/DateSelectionAlerts.vue';
 import AutobookingWarehouseSelection from './WarehouseSelection.vue';

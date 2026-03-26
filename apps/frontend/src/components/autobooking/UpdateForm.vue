@@ -4,13 +4,13 @@
       <h3 class="text-xl text-center font-semibold flex-1">
         Редактирование автобронирования
       </h3>
-      <BaseButton
-        variant="soft"
-        color="yellow"
+      <Button
+        variant="outlined"
+        severity="warn"
         @click="showHintsModal = true"
       >
-        <QuestionMarkCircleIcon class="w-5 h-5" />
-      </BaseButton>
+        <i class="pi pi-question-circle"></i>
+      </Button>
     </div>
 
     <AutobookingFormFields
@@ -49,11 +49,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { BackButton, MainButton } from 'vue-tg';
-import { QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
 import { useWarehousesStore } from '../../stores/warehouses';
 import { useDraftStore } from '../../stores/draft';
-import { BaseButton } from '../ui';
+import Button from 'primevue/button';
 import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 import AutobookingHints from './Hints.vue';

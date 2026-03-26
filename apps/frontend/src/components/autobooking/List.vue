@@ -20,45 +20,41 @@
 
       <!-- Search and Filters -->
       <div class="space-y-3">
-        <BaseInput
+        <InputText
           v-model="listStore.searchQuery"
           placeholder="Поиск по складу..."
+          class="w-full"
         />
-        <BaseAlert
+        <Message
           v-if="userStore.user.autobookingCount === 0"
-          title="Приобретите пакет кредитов, чтобы создать новые, или удалите архивные."
-          color="red"
-          icon="warning"
+          severity="error"
+          class="w-full"
         >
-          <template #actions>
-            <BaseButton
-              variant="soft"
-              color="primary"
-              size="sm"
+          <div class="flex items-center justify-between w-full">
+            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите архивные.</span>
+            <Button
+              variant="outlined"
+              severity="primary"
+              size="small"
               @click="viewStore.setView('store-bookings')"
             >
               купить
-            </BaseButton>
-          </template>
-        </BaseAlert>
+            </Button>
+          </div>
+        </Message>
         <div v-else class="flex justify-between items-center">
-          <span
-            :class="[
-              'px-2 py-1 rounded text-sm',
-              userStore.user.autobookingCount === 0
-                ? 'bg-red-100 text-red-800'
-                : 'bg-blue-100 text-blue-800'
-            ]"
+          <Tag
+            :severity="userStore.user.autobookingCount === 0 ? 'danger' : 'info'"
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
-          </span>
-          <BaseButton
+          </Tag>
+          <Button
             v-if="!viewStore.isForm"
-            color="primary"
+            severity="primary"
             @click="viewStore.setView('autobookings-form')"
           >
             добавить
-          </BaseButton>
+          </Button>
         </div>
       </div>
 
@@ -100,9 +96,12 @@ import { useUserStore } from '../../stores/user';
 import { useViewStore } from '../../stores/view';
 import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useSupplierStore } from '../../stores/supplier';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
+import Message from 'primevue/message';
 import UserAlerts from '../global/UserAlerts.vue';
 import StatsCards from '../common/StatsCards.vue';
-import { BaseButton, BaseInput, BaseAlert } from '../ui';
 import AutobookingBookingCard from './BookingCard.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 

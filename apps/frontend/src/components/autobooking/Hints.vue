@@ -1,9 +1,9 @@
 <template>
-  <BaseModal
-    :model-value="show"
-    title="Инструкция по автобронированию"
-    size="lg"
-    @update:model-value="(value) => $emit('update:show', value)"
+  <Dialog
+    v-model:visible="visible"
+    header="Инструкция по автобронированию"
+    :style="{ width: '50vw' }"
+    @hide="$emit('update:show', false)"
   >
     <div class="max-h-[70vh] overflow-auto space-y-4 text-gray-700 dark:text-gray-300">
       <!-- Шаблоны -->
@@ -92,17 +92,23 @@
         </ul>
       </div>
     </div>
-  </BaseModal>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import { BaseModal } from '../ui';
+import { computed } from 'vue';
+import Dialog from 'primevue/dialog';
 
-defineProps<{
+const props = defineProps<{
   show: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   'update:show': [value: boolean];
 }>();
+
+const visible = computed({
+  get: () => props.show,
+  set: (value) => emit('update:show', value),
+});
 </script>
