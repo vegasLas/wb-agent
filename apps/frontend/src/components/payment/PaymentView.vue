@@ -39,31 +39,40 @@
 
     <!-- Subscription Tab -->
     <div v-if="activeTab === 'subscription'" class="space-y-6">
-      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-        <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Продление подписки</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          Выберите период подписки. При длительной подписке предусмотрены скидки.
-        </p>
-        <SubscriptionTariffs />
-      </div>
+      <Card>
+        <template #title>
+          <h2 class="text-lg font-medium">Продление подписки</h2>
+        </template>
+        <template #content>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Выберите период подписки. При длительной подписке предусмотрены скидки.
+          </p>
+          <SubscriptionTariffs />
+        </template>
+      </Card>
     </div>
 
     <!-- Credits Tab -->
     <div v-if="activeTab === 'credits'" class="space-y-6">
-      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-        <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Покупка кредитов</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          Кредиты используются для автоматического бронирования поставок.
-          Один кредит = одна успешная бронь.
-        </p>
-        <PaymentTariffs />
-      </div>
+      <Card>
+        <template #title>
+          <h2 class="text-lg font-medium">Покупка кредитов</h2>
+        </template>
+        <template #content>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Кредиты используются для автоматического бронирования поставок.
+            Один кредит = одна успешная бронь.
+          </p>
+          <PaymentTariffs />
+        </template>
+      </Card>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import Card from 'primevue/card';
 import PaymentTariffs from './PaymentTariffs.vue';
 import SubscriptionTariffs from './SubscriptionTariffs.vue';
 
