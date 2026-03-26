@@ -94,13 +94,12 @@ export class AuthService {
     const digits = smsCode.split('');
     for (let i = 0; i < digits.length; i++) {
       // This function runs in browser context via Playwright
-      // @ts-expect-error - browser context has DOM types not available in Node
       await page.evaluate(({ digit, index }: { digit: string; index: number }) => {
-        // @ts-expect-error - document is available in browser context
-        const inputs = Array.from((document as unknown as { querySelectorAll: (selector: string) => NodeListOf<Element> }).querySelectorAll('input[data-testid="sms-code-input"]'));
-        if (inputs[index]) {
-          inputs[index].value = digit;
-          inputs[index].dispatchEvent(new Event('input', { bubbles: true }));
+        const inputs = Array.from(document.querySelectorAll('input[data-testid="sms-code-input"]'));
+        const input = inputs[index] as HTMLInputElement | undefined;
+        if (input) {
+          input.value = digit;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
         }
       }, { digit: digits[i], index: i });
       await page.waitForTimeout(100);
@@ -655,10 +654,8 @@ export class AuthService {
 
       console.log('[AuthService] Collecting localStorage data...');
       // Collect localStorage data from browser context via Playwright
-      // @ts-expect-error - browser context has DOM types not available in Node
       const localStorage = await session.page.evaluate(() => {
         const storage: Record<string, string> = {};
-        // @ts-expect-error - window is available in browser context
         interface WindowWithLocalStorage {
           localStorage: {
             length: number;
