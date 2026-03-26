@@ -20,47 +20,42 @@
 
       <!-- Search and Filters -->
       <div class="space-y-3">
-        <BaseInput
+        <InputText
           v-model="listStore.searchQuery"
           placeholder="Поиск по ID поставки или поставщику..."
-          size="lg"
+          class="w-full"
         />
-        <BaseAlert
+        <Message
           v-if="userStore.user.autobookingCount === 0"
-          title="Приобретите пакет кредитов, чтобы создать новые, или удалите архивные."
-          color="red"
-          icon="error"
+          severity="error"
+          class="mb-2"
         >
-          <template #actions>
-            <BaseButton
-              variant="soft"
-              color="primary"
-              size="sm"
+          <div class="flex items-center justify-between gap-2">
+            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите архивные.</span>
+            <Button
+              variant="outlined"
+              severity="primary"
+              size="small"
               @click="viewStore.setView('store-bookings')"
             >
               купить
-            </BaseButton>
-          </template>
-        </BaseAlert>
+            </Button>
+          </div>
+        </Message>
         <div v-else class="flex justify-between items-center">
-          <span
-            :class="[
-              'text-sm px-3 py-1 rounded-full',
-              userStore.user.autobookingCount === 0
-                ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200'
-                : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200',
-            ]"
+          <Tag
+            :severity="userStore.user.autobookingCount === 0 ? 'danger' : 'info'"
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
-          </span>
-          <BaseButton
+          </Tag>
+          <Button
             v-if="!viewStore.isForm"
-            color="primary"
+            severity="primary"
             @click="viewStore.setView('reschedules-form')"
           >
-            <PlusIcon class="w-4 h-4 mr-1" />
+            <i class="pi pi-plus mr-1" />
             добавить
-          </BaseButton>
+          </Button>
         </div>
       </div>
 
@@ -102,13 +97,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { PlusIcon } from '@heroicons/vue/24/outline';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
+import Message from 'primevue/message';
+import Tag from 'primevue/tag';
 import { useUserStore } from '../../stores/user';
 import { useViewStore } from '../../stores/view';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useRescheduleListStore } from '../../stores/reschedules/list';
 import { useSupplyDetailsStore } from '../../stores/supplyDetails';
-import { BaseInput, BaseButton, BaseAlert } from '../ui';
 import StatsCards from '../common/StatsCards.vue';
 import UserAlerts from '../global/UserAlerts.vue';
 import ReschedulesCard from './Card.vue';
