@@ -3,23 +3,23 @@
 
   <!-- Search Bar Skeleton -->
   <div class="flex gap-2">
-    <div class="h-9 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-    <div class="h-9 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-    <div class="h-9 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+    <Skeleton width="100%" height="2.25rem" borderRadius="0.25rem" />
+    <Skeleton width="100%" height="2.25rem" borderRadius="0.25rem" />
+    <Skeleton width="100%" height="2.25rem" borderRadius="0.25rem" />
   </div>
 
-  <div class="mt-4 h-9 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+  <Skeleton class="mt-4" width="100%" height="2.25rem" borderRadius="0.25rem" />
 
   <div class="flex justify-between gap-4 mt-4">
-    <div class="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-    <div class="h-9 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+    <Skeleton width="6rem" height="2.25rem" borderRadius="0.25rem" />
+    <Skeleton width="7rem" height="2.25rem" borderRadius="0.25rem" />
   </div>
 
   <!-- Slot Card Skeleton -->
-  <div class="h-[300px] w-full mt-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-  <div class="h-[300px] w-full mt-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+  <Skeleton class="mt-4" width="100%" height="300px" borderRadius="0.25rem" />
+  <Skeleton class="mt-4" width="100%" height="300px" borderRadius="0.25rem" />
 </template>
 
 <script setup lang="ts">
-// Skeleton component for triggers view loading state
+import Skeleton from 'primevue/skeleton';
 </script>

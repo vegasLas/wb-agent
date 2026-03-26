@@ -12,107 +12,109 @@
       "
     >
       <!-- Date Range Selection -->
-      <div
-        class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
-      >
-        <h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
-          Отчет продаж за период
-        </h3>
-        <div
-          class="flex flex-col sm:flex-row gap-4 items-start sm:items-center"
-        >
-          <VueDatePicker
-            v-model="pickerDateRange"
-            :dark="isDark"
-            auto-apply
-            :enable-time-picker="false"
-            format="dd.MM.yyyy"
-            locale="ru-RU"
-            range
-            placeholder="Выберите период"
-            :max-date="yesterday"
-            class="mt-1 w-full sm:w-auto"
-            :class="{ 'dark-datepicker': isDark }"
-          />
-          <BaseButton
-            color="primary"
-            :loading="reportStore.loading"
-            class="mt-2 sm:mt-0"
-            @click="reportViewStore.fetchReportData()"
+      <Card class="mb-6">
+        <template #title>
+          <h3 class="text-lg font-semibold">
+            Отчет продаж за период
+          </h3>
+        </template>
+        <template #content>
+          <div
+            class="flex flex-col sm:flex-row gap-4 items-start sm:items-center"
           >
-            Обновить
-          </BaseButton>
-        </div>
-      </div>
+            <VueDatePicker
+              v-model="pickerDateRange"
+              :dark="isDark"
+              auto-apply
+              :enable-time-picker="false"
+              format="dd.MM.yyyy"
+              locale="ru-RU"
+              range
+              placeholder="Выберите период"
+              :max-date="yesterday"
+              class="mt-1 w-full sm:w-auto"
+              :class="{ 'dark-datepicker': isDark }"
+            />
+            <Button
+              severity="primary"
+              :loading="reportStore.loading"
+              class="mt-2 sm:mt-0"
+              @click="reportViewStore.fetchReportData()"
+            >
+              Обновить
+            </Button>
+          </div>
+        </template>
+      </Card>
 
       <!-- Summary Statistics -->
       <div
         v-if="reportStore.data?.items && reportStore.data.items.length > 0"
         class="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4"
       >
-        <div
-          class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-        >
-          <div class="text-center">
-            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {{ summaryStats.totalSold.toLocaleString('ru-RU') }}
+        <Card>
+          <template #content>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {{ summaryStats.totalSold.toLocaleString('ru-RU') }}
+              </div>
+              <div class="text-xs text-gray-600 dark:text-gray-400">
+                продано (шт)
+              </div>
             </div>
-            <div class="text-xs text-gray-600 dark:text-gray-400">
-              продано (шт)
-            </div>
-          </div>
-        </div>
+          </template>
+        </Card>
 
-        <div
-          class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-        >
-          <div class="text-center">
-            <div class="text-2xl font-bold text-green-600 dark:text-green-400">
-              {{ summaryStats.totalRevenue.toLocaleString('ru-RU') }} ₽
+        <Card>
+          <template #content>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                {{ summaryStats.totalRevenue.toLocaleString('ru-RU') }} ₽
+              </div>
+              <div class="text-xs text-gray-600 dark:text-gray-400">
+                выручка
+              </div>
             </div>
-            <div class="text-xs text-gray-600 dark:text-gray-400">
-              выручка
-            </div>
-          </div>
-        </div>
+          </template>
+        </Card>
 
-        <div
-          class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-        >
-          <div class="text-center">
-            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {{ summaryStats.totalOrdered.toLocaleString('ru-RU') }}
+        <Card>
+          <template #content>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {{ summaryStats.totalOrdered.toLocaleString('ru-RU') }}
+              </div>
+              <div class="text-xs text-gray-600 dark:text-gray-400">
+                заказано (шт)
+              </div>
             </div>
-            <div class="text-xs text-gray-600 dark:text-gray-400">
-              заказано (шт)
-            </div>
-          </div>
-        </div>
+          </template>
+        </Card>
 
-        <div
-          class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-        >
-          <div class="text-center">
-            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              {{ summaryStats.uniqueItems.toLocaleString('ru-RU') }}
+        <Card>
+          <template #content>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {{ summaryStats.uniqueItems.toLocaleString('ru-RU') }}
+              </div>
+              <div class="text-xs text-gray-600 dark:text-gray-400">
+                товаров
+              </div>
             </div>
-            <div class="text-xs text-gray-600 dark:text-gray-400">
-              товаров
-            </div>
-          </div>
-        </div>
+          </template>
+        </Card>
       </div>
 
       <!-- Top Products Table -->
-      <div
+      <Card
         v-if="topProducts.length > 0"
-        class="mb-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+        class="mb-6"
       >
-        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <template #title>
           <div
             class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
-            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <h4 class="text-lg font-semibold">
               Топ-10 продаваемых товаров
             </h4>
             <MultiSelect
@@ -127,67 +129,47 @@
               class="w-full sm:w-64"
             />
           </div>
-        </div>
-        <div class="overflow-x-auto max-h-80 overflow-y-auto">
-          <table class="w-full text-sm text-left">
-            <thead
-              class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0"
+        </template>
+        <template #content>
+          <div class="overflow-x-auto max-h-80 overflow-y-auto">
+            <DataTable
+              :value="sortedTopProducts"
+              scrollable
+              scrollHeight="flex"
+              class="p-datatable-sm"
             >
-              <tr>
-                <th
-                  v-for="col in visibleColumns"
-                  :key="col.key"
-                  class="px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                  @click="sortBy(col.key)"
-                >
-                  <div class="flex items-center gap-1">
-                    {{ col.label }}
-                    <span v-if="sortColumn === col.key">
-                      {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                    </span>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(product, index) in sortedTopProducts"
-                :key="index"
-                class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <td
-                  v-for="col in visibleColumns"
-                  :key="col.key"
-                  class="px-4 py-3"
-                >
-                  {{ product[col.key as keyof typeof product] }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+              <Column
+                v-for="col in visibleColumns"
+                :key="col.key"
+                :field="col.key"
+                :header="col.label"
+                sortable
+              />
+            </DataTable>
+          </div>
+        </template>
+      </Card>
 
       <!-- View Toggle Buttons -->
       <div v-if="!reportStore.loading" class="mb-6 flex space-x-2">
-        <BaseButton
-          :color="reportViewStore.activeView === 'charts' ? 'primary' : 'gray'"
-          :variant="reportViewStore.activeView === 'charts' ? 'solid' : 'outline'"
-          size="sm"
+        <Button
+          :severity="reportViewStore.activeView === 'charts' ? 'primary' : 'secondary'"
+          :variant="reportViewStore.activeView === 'charts' ? 'filled' : 'outlined'"
+          size="small"
           @click="reportViewStore.setActiveView('charts')"
         >
-          <ChartPieIcon class="w-5 h-5 mr-1" />
+          <i class="pi pi-chart-pie mr-1"></i>
           Графики
-        </BaseButton>
-        <BaseButton
-          :color="reportViewStore.activeView === 'suggestions' ? 'primary' : 'gray'"
-          :variant="reportViewStore.activeView === 'suggestions' ? 'solid' : 'outline'"
-          size="sm"
+        </Button>
+        <Button
+          :severity="reportViewStore.activeView === 'suggestions' ? 'primary' : 'secondary'"
+          :variant="reportViewStore.activeView === 'suggestions' ? 'filled' : 'outlined'"
+          size="small"
           @click="reportViewStore.setActiveView('suggestions')"
         >
-          <LightBulbIcon class="w-5 h-5 mr-1" />
+          <i class="pi pi-lightbulb mr-1"></i>
           Рекомендации
-        </BaseButton>
+        </Button>
       </div>
 
       <!-- Conditional Rendering based on activeView -->
@@ -209,18 +191,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import VueDatePicker from '@vuepic/vue-datepicker';
+import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { ChartPieIcon, LightBulbIcon } from '@heroicons/vue/24/outline';
 import { useReportStore } from '../../stores/report';
 import { useUserStore } from '../../stores/user';
 import { useReportViewStore } from '../../stores/reportView';
 import { useViewStore } from '../../stores/view';
 import UserAlerts from '../global/UserAlerts.vue';
-import BaseButton from '../ui/BaseButton.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
 import ReportCharts from './ReportCharts.vue';
 import WarehouseSuggestions from './WarehouseSuggestions.vue';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import type { ReportItem } from '../../types';
 
 // Register Vue Date Picker

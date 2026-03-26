@@ -4,17 +4,17 @@
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-2">
         <!-- Navigation Dropdown Skeleton -->
-        <div class="h-9 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <Skeleton width="8rem" height="2.25rem" borderRadius="0.25rem" />
         <!-- Help Button Skeleton -->
-        <div class="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <Skeleton width="2.25rem" height="2.25rem" borderRadius="0.25rem" />
       </div>
       <div class="flex items-center gap-2">
         <!-- Store Button Skeleton -->
-        <div class="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <Skeleton width="2.25rem" height="2.25rem" borderRadius="0.25rem" />
         <!-- Account Management Button Skeleton -->
-        <div class="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <Skeleton width="2.25rem" height="2.25rem" borderRadius="0.25rem" />
         <!-- User Profile Button Skeleton -->
-        <div class="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <Skeleton width="6rem" height="2.25rem" borderRadius="0.25rem" />
       </div>
     </div>
 
@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import type { ViewType } from '../../types';
+import Skeleton from 'primevue/skeleton';
 import SkeletonTriggers from './SkeletonTriggers.vue';
 import SkeletonAccount from './SkeletonAccount.vue';
 import SkeletonStore from './SkeletonStore.vue';

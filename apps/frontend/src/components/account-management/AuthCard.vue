@@ -12,7 +12,7 @@
       <!-- Phone Number Step -->
       <div v-if="authStore.needsPhone" class="space-y-4">
         <div class="text-center">
-          <DevicePhoneMobileIcon class="w-12 h-12 mx-auto mb-4 text-blue-500" />
+          <i class="pi pi-mobile text-5xl mx-auto mb-4 text-blue-500 block" />
           <h4 class="text-lg font-medium mb-2">Введите номер телефона</h4>
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Введите номер телефона, привязанный к вашему аккаунту WB
@@ -20,46 +20,47 @@
         </div>
 
         <!-- Error Message -->
-        <BaseAlert
+        <Message
           v-if="authStore.error"
-          color="red"
-          :title="getErrorTitle(authStore.error)"
-          :description="authStore.error"
-          no-close
-        />
+          severity="error"
+          :closable="false"
+        >
+          <div class="font-medium">{{ getErrorTitle(authStore.error) }}</div>
+          <div class="text-sm">{{ authStore.error }}</div>
+        </Message>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Номер телефона <span class="text-red-500">*</span>
           </label>
-          <BaseInput
+          <InputText
             v-model="phoneNumber"
             type="tel"
             placeholder="+7 (999) 999-99-99"
             :disabled="authStore.loading"
-            @enter="handleVerifyPhone"
+            class="w-full"
+            @keyup.enter="handleVerifyPhone"
           />
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <BaseButton variant="ghost" @click="handleCancel"> Отмена </BaseButton>
-          <BaseButton
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
+          <Button
             :loading="authStore.loading"
             :disabled="isSubmitDisabled"
-            color="primary"
-            size="lg"
+            severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="handleVerifyPhone"
           >
             Отправить SMS
-          </BaseButton>
+          </Button>
         </div>
       </div>
 
       <!-- SMS Code Step -->
       <div v-else-if="authStore.needsSMS" class="space-y-4">
         <div class="text-center">
-          <ChatBubbleLeftRightIcon class="w-12 h-12 mx-auto mb-4 text-blue-500" />
+          <i class="pi pi-comments text-5xl mx-auto mb-4 text-blue-500 block" />
           <h4 class="text-lg font-medium mb-2">Введите SMS код</h4>
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Мы отправили 6-значный код на ваш телефон
@@ -67,47 +68,48 @@
         </div>
 
         <!-- Error Message -->
-        <BaseAlert
+        <Message
           v-if="authStore.error"
-          color="red"
-          :title="getErrorTitle(authStore.error)"
-          :description="authStore.error"
-          no-close
-        />
+          severity="error"
+          :closable="false"
+        >
+          <div class="font-medium">{{ getErrorTitle(authStore.error) }}</div>
+          <div class="text-sm">{{ authStore.error }}</div>
+        </Message>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             SMS код <span class="text-red-500">*</span>
           </label>
-          <BaseInput
+          <InputText
             v-model="smsCode"
             type="text"
             placeholder="123456"
             maxlength="6"
             :disabled="authStore.loading"
-            @enter="handleVerifySMS"
+            class="w-full"
+            @keyup.enter="handleVerifySMS"
           />
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <BaseButton variant="ghost" @click="handleCancel"> Отмена </BaseButton>
-          <BaseButton
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
+          <Button
             :loading="authStore.loading"
             :disabled="smsCode.length !== 6"
-            color="primary"
-            size="lg"
+            severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="handleVerifySMS"
           >
             Подтвердить
-          </BaseButton>
+          </Button>
         </div>
       </div>
 
       <!-- Two Factor Step -->
       <div v-else-if="authStore.needsTwoFactor" class="space-y-4">
         <div class="text-center">
-          <ShieldCheckIcon class="w-12 h-12 mx-auto mb-4 text-blue-500" />
+          <i class="pi pi-shield text-5xl mx-auto mb-4 text-blue-500 block" />
           <h4 class="text-lg font-medium mb-2">Двухфакторная аутентификация</h4>
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Введите код из email для завершения авторизации
@@ -115,47 +117,48 @@
         </div>
 
         <!-- Error Message -->
-        <BaseAlert
+        <Message
           v-if="authStore.error"
-          color="red"
-          :title="getErrorTitle(authStore.error)"
-          :description="authStore.error"
-          no-close
-        />
+          severity="error"
+          :closable="false"
+        >
+          <div class="font-medium">{{ getErrorTitle(authStore.error) }}</div>
+          <div class="text-sm">{{ authStore.error }}</div>
+        </Message>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Код из email <span class="text-red-500">*</span>
           </label>
-          <BaseInput
+          <InputText
             v-model="twoFactorCode"
             type="text"
             placeholder="123456"
             maxlength="6"
             :disabled="authStore.loading"
-            @enter="handleVerifyTwoFactor"
+            class="w-full"
+            @keyup.enter="handleVerifyTwoFactor"
           />
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <BaseButton variant="ghost" @click="handleCancel"> Отмена </BaseButton>
-          <BaseButton
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
+          <Button
             :loading="authStore.loading"
             :disabled="twoFactorCode.length !== 6"
-            color="primary"
-            size="lg"
+            severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="handleVerifyTwoFactor"
           >
             Завершить авторизацию
-          </BaseButton>
+          </Button>
         </div>
       </div>
 
       <!-- Error Step -->
       <div v-else-if="authStore.hasError" class="space-y-4">
         <div class="text-center">
-          <ExclamationTriangleIcon class="w-12 h-12 mx-auto mb-4 text-red-500" />
+          <i class="pi pi-exclamation-triangle text-5xl mx-auto mb-4 text-red-500 block" />
           <h4 class="text-lg font-medium mb-2 text-red-600 dark:text-red-400">
             Ошибка авторизации
           </h4>
@@ -165,22 +168,21 @@
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <BaseButton variant="ghost" @click="handleCancel"> Отмена </BaseButton>
-          <BaseButton
-            color="primary"
-            size="lg"
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
+          <Button
+            severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="authStore.resetState"
           >
             Попробовать снова
-          </BaseButton>
+          </Button>
         </div>
       </div>
 
       <!-- Success Step -->
       <div v-else-if="authStore.isCompleted" class="space-y-4">
         <div class="text-center">
-          <CheckCircleIcon class="w-12 h-12 mx-auto mb-4 text-green-500" />
+          <i class="pi pi-check-circle text-5xl mx-auto mb-4 text-green-500 block" />
           <h4
             class="text-lg font-medium mb-2 text-green-600 dark:text-green-400"
           >
@@ -202,14 +204,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import {
-  DevicePhoneMobileIcon,
-  ChatBubbleLeftRightIcon,
-  ShieldCheckIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-} from '@heroicons/vue/24/outline';
-import { BaseButton, BaseAlert, BaseInput } from '../ui';
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Message from 'primevue/message';
 import { useAuthStore } from '../../stores/auth';
 
 interface Emits {

@@ -1,11 +1,9 @@
 <template>
   <div class="space-y-6">
     <!-- Subscription Requirement Alert -->
-    <BaseAlert
+    <Message
       v-if="!userStore.subscriptionActive"
-      color="yellow"
-      icon="warning"
-      title="Просим обратить внимание"
+      severity="warn"
       class="mb-6"
     >
       <div class="space-y-2">
@@ -13,55 +11,56 @@
           Если у вас не активна подписка поставки не будут забронированы и перепланированы,
           даже при наличии кредитов.
         </p>
-        <BaseButton
-          size="xs"
-          variant="outline"
+        <Button
+          size="small"
+          variant="outlined"
           @click="goToSubscription"
         >
           продлить
-        </BaseButton>
+        </Button>
       </div>
-    </BaseAlert>
+    </Message>
 
     <!-- Booking Tariffs Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div
+      <Card
         v-for="tariff in BOOKING_TARIFFS"
         :key="tariff.id"
-        class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-lg transition-shadow"
+        class="hover:shadow-lg transition-shadow"
       >
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ tariff.name }}</h3>
-          <span
-            v-if="tariff.discount"
-            class="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full"
-          >
-            -{{ tariff.discount }}%
-          </span>
-        </div>
-
-        <!-- Price and Description -->
-        <div class="space-y-4">
-          <div class="flex items-center gap-2">
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ tariff.price }} ₽</p>
-            <p
+        <template #title>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">{{ tariff.name }}</h3>
+            <Tag
               v-if="tariff.discount"
-              class="text-sm text-gray-400 line-through"
-            >
-              {{ calculateOriginalPrice(tariff.price, tariff.discount) }} ₽
-            </p>
+              severity="warn"
+              :value="`-${tariff.discount}%`"
+            />
           </div>
+        </template>
+        <template #content>
+          <!-- Price and Description -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-2">
+              <p class="text-2xl font-bold">{{ tariff.price }} ₽</p>
+              <p
+                v-if="tariff.discount"
+                class="text-sm text-gray-400 line-through"
+              >
+                {{ calculateOriginalPrice(tariff.price, tariff.discount) }} ₽
+              </p>
+            </div>
 
-          <BaseButton
-            :color="selectedTariff?.id === tariff.id ? 'gray' : 'primary'"
-            class="w-full"
-            @click="selectTariff(tariff)"
-          >
-            {{ selectedTariff?.id === tariff.id ? 'Выбрано' : 'Выбрать' }}
-          </BaseButton>
-        </div>
-      </div>
+            <Button
+              :severity="selectedTariff?.id === tariff.id ? 'secondary' : 'primary'"
+              class="w-full"
+              @click="selectTariff(tariff)"
+            >
+              {{ selectedTariff?.id === tariff.id ? 'Выбрано' : 'Выбрать' }}
+            </Button>
+          </div>
+        </template>
+      </Card>
     </div>
 
     <!-- Payment Modal -->
@@ -82,8 +81,11 @@
 import { ref } from 'vue';
 import { BOOKING_TARIFFS } from '../../constants';
 import { useUserStore } from '../../stores/user';
-import { BaseButton, BaseAlert } from '../ui';
 import PaymentModal from './PaymentModal.vue';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Tag from 'primevue/tag';
+import Message from 'primevue/message';
 import type { BookingTariff } from '../../constants';
 
 const emit = defineEmits<{

@@ -5,7 +5,7 @@
     </h4>
     <div class="space-y-1">
       <div class="flex items-center gap-2">
-        <DevicePhoneMobileIcon class="w-4 h-4 text-blue-500" />
+        <i class="pi pi-mobile text-blue-500" />
         <span class="text-sm"
           >Аккаунт:
           {{
@@ -18,7 +18,7 @@
         >
       </div>
       <div class="flex items-center gap-2">
-        <BuildingStorefrontIcon class="w-4 h-4 text-green-500" />
+        <i class="pi pi-building text-green-500" />
         <span class="text-sm"
           >Поставщик: {{ selectedSupplier?.supplierName || 'Не выбран' }}</span
         >
@@ -28,7 +28,6 @@
 </template>
 
 <script setup lang="ts">
-import { DevicePhoneMobileIcon, BuildingStorefrontIcon } from '@heroicons/vue/24/outline';
 import type { Account, Supplier } from '../../stores/user';
 
 interface Props {

@@ -1,35 +1,37 @@
 <template>
   <div class="space-y-4">
     <!-- No Autobooking Count Alert -->
-    <BaseAlert
+    <Message
       v-if="userStore.user.autobookingCount === 0"
-      color="red"
-      icon="error"
-      title="Недостаточно кредитов"
-      description="Приобретите пакет кредитов, чтобы создать автобронирование."
+      severity="error"
+      class="w-full"
     >
-      <template #actions>
-        <BaseButton
-          variant="soft"
-          color="primary"
-          @click="viewStore.setView('store-bookings')"
-        >
-          Купить кредиты
-        </BaseButton>
-      </template>
-    </BaseAlert>
+      <div class="flex flex-col gap-2">
+        <div class="font-semibold">Недостаточно кредитов</div>
+        <div>Приобретите пакет кредитов, чтобы создать автобронирование.</div>
+        <div class="mt-2">
+          <Button
+            variant="outlined"
+            severity="primary"
+            @click="viewStore.setView('store-bookings')"
+          >
+            Купить кредиты
+          </Button>
+        </div>
+      </div>
+    </Message>
 
     <div class="flex items-center justify-end mb-6">
       <h3 class="text-xl text-center font-semibold flex-1">
         Создание автобронирования
       </h3>
-      <BaseButton
-        variant="soft"
-        color="yellow"
+      <Button
+        variant="outlined"
+        severity="warn"
         @click="showHintsModal = true"
       >
-        <QuestionMarkCircleIcon class="w-5 h-5" />
-      </BaseButton>
+        <i class="pi pi-question-circle"></i>
+      </Button>
     </div>
 
     <!-- Template Selection -->
@@ -66,13 +68,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { BackButton, MainButton } from 'vue-tg';
-import { QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
 import { useAutobookingFormStore } from '../../stores/autobookingForm';
 import { useUserStore } from '../../stores/user';
 import { useViewStore } from '../../stores/view';
 import { useDraftStore } from '../../stores/draft';
 import { useWarehousesStore } from '../../stores/warehouses';
-import { BaseButton, BaseAlert } from '../ui';
+import Button from 'primevue/button';
+import Message from 'primevue/message';
 import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 import AutobookingHints from './Hints.vue';

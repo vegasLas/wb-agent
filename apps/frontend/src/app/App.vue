@@ -15,12 +15,20 @@
     v-else-if="isClientSide && isTgClient && userStore.isFetched"
     :show-main="isLoaded && isTgClient"
   />
+  
+  <!-- PrimeVue Global Components -->
+  <Toast position="top-right" />
+  <ConfirmDialog />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
+
+// PrimeVue Components
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
 
 // Stores
 import { useUserStore } from '../stores/user';

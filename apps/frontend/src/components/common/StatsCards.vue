@@ -1,10 +1,10 @@
 <template>
   <div class="flex gap-2 flex-wrap">
-    <BaseButton
+    <Button
       v-for="stat in stats"
       :key="stat.status"
-      :variant="selectedStatus === stat.status ? 'solid' : 'soft'"
-      :color="selectedStatus === stat.status ? 'primary' : 'gray'"
+      :variant="selectedStatus === stat.status ? undefined : 'outlined'"
+      :severity="selectedStatus === stat.status ? 'primary' : 'secondary'"
       class="flex-1 justify-between min-w-fit"
       @click="emit('statusClick', stat.status)"
     >
@@ -17,11 +17,13 @@
       >
         {{ stat.count }}
       </span>
-    </BaseButton>
+    </Button>
   </div>
 </template>
 
 <script setup lang="ts">
+import Button from 'primevue/button';
+
 interface StatItem {
   status: string;
   count: number;

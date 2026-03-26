@@ -1,66 +1,65 @@
 <template>
-  <BaseAlert
+  <Message
     v-if="coefficientHistory.length > 0"
-    color="primary"
-    variant="soft"
-    title="Последние коэффициенты:"
+    severity="info"
+    :closable="false"
     class="mt-2"
   >
-    <template #default>
-      <div class="space-y-2">
-        <div class="flex items-center justify-end">
-          <BaseButton
-            variant="ghost"
-            size="xs"
-            @click="toggleExpanded"
-          >
-            <component
-              :is="isExpanded ? ChevronUpIcon : ChevronDownIcon"
-              class="w-4 h-4"
-            />
-          </BaseButton>
-        </div>
-        <div v-if="isExpanded" class="space-y-1 max-h-60 overflow-y-auto">
-          <div
-            v-for="(coefficient, index) in coefficientHistory"
-            :key="index"
-            class="flex items-center gap-2 text-xs flex-wrap"
-          >
-            <span
-              v-if="warehouseIdsArray.length > 1"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-            >
-              {{ coefficient.warehouseName }}
-            </span>
-            <span
-              v-if="supplyTypesArray.length > 1"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-            >
-              {{ coefficient.supplyTypeLabel }}
-            </span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-              {{ formatCoefficientDate(coefficient.date) }}
-            </span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
-              коэф: {{ coefficient.maxCoefficient }}
-            </span>
-            <span class="text-gray-500">
-              обновлен: {{ formatCaptureDate(coefficient.updatedAt) }}
-            </span>
-          </div>
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="font-medium">Последние коэффициенты:</span>
+        <Button
+          variant="text"
+          size="small"
+          @click="toggleExpanded"
+        >
+          <i :class="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+        </Button>
+      </div>
+      <div v-if="isExpanded" class="space-y-1 max-h-60 overflow-y-auto">
+        <div
+          v-for="(coefficient, index) in coefficientHistory"
+          :key="index"
+          class="flex items-center gap-2 text-xs flex-wrap"
+        >
+          <Tag
+            v-if="warehouseIdsArray.length > 1"
+            severity="info"
+            :value="coefficient.warehouseName"
+            class="text-xs"
+          />
+          <Tag
+            v-if="supplyTypesArray.length > 1"
+            severity="success"
+            :value="coefficient.supplyTypeLabel"
+            class="text-xs"
+          />
+          <Tag
+            severity="secondary"
+            :value="formatCoefficientDate(coefficient.date)"
+            class="text-xs"
+          />
+          <Tag
+            severity="warn"
+            :value="'коэф: ' + coefficient.maxCoefficient"
+            class="text-xs"
+          />
+          <span class="text-gray-500">
+            обновлен: {{ formatCaptureDate(coefficient.updatedAt) }}
+          </span>
         </div>
       </div>
-    </template>
-  </BaseAlert>
+    </div>
+  </Message>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/vue/24/outline';
 import { useCoefficientsStore } from '../../stores/coefficients';
 import { useWarehousesStore } from '../../stores/warehouses';
-import BaseAlert from '../ui/BaseAlert.vue';
-import BaseButton from '../ui/BaseButton.vue';
+import Message from 'primevue/message';
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
 
 interface Props {
   warehouseId?: number | null;

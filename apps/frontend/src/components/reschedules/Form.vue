@@ -5,13 +5,13 @@
         <h3 class="text-xl text-center font-semibold flex-1">
           Создание перепланирования
         </h3>
-        <BaseButton
-          variant="soft"
-          color="yellow"
+        <Button
+          variant="outlined"
+          severity="warn"
           @click="showHintsModal = true"
         >
-          <QuestionMarkCircleIcon class="w-5 h-5" />
-        </BaseButton>
+          <i class="pi pi-question-circle" />
+        </Button>
       </div>
 
       <form class="mb-6 space-y-3">
@@ -23,26 +23,26 @@
             Поставка
           </label>
           <div class="flex gap-2">
-            <BaseSelect
+            <Select
               :model-value="selectedSupplyId"
               :options="supplyOptions"
               :loading="loadingSupplies"
               placeholder="Выберите поставку"
-              value-attribute="supplyId"
-              option-attribute="displayName"
+              option-value="supplyId"
+              option-label="displayName"
               class="flex-1 min-w-0"
               @update:model-value="formStore.handleSupplyChange"
             />
-            <BaseButton
-              size="sm"
-              color="blue"
-              variant="soft"
+            <Button
+              size="small"
+              severity="info"
+              variant="outlined"
               :loading="loadingSupplies"
               @click="formStore.refreshSupplies"
               class="flex-shrink-0"
             >
-              <ArrowPathIcon class="w-4 h-4" />
-            </BaseButton>
+              <i class="pi pi-refresh" />
+            </Button>
           </div>
           <p
             v-if="suppliesError"
@@ -60,16 +60,16 @@
 
         <!-- Supply Information Toggle -->
         <div v-if="selectedSupply" class="flex items-center justify-end">
-          <BaseButton
-            size="sm"
-            variant="soft"
+          <Button
+            size="small"
+            variant="outlined"
             @click="
               supplyDetailsStore.openModal(String(selectedSupply.supplyId))
             "
           >
-            <InformationCircleIcon class="w-4 h-4 mr-1" />
+            <i class="pi pi-info-circle mr-1" />
             детали
-          </BaseButton>
+          </Button>
         </div>
 
         <!-- Date Selection - Only show when supply is selected -->
@@ -110,11 +110,9 @@
               :max="20"
             />
             <div class="min-w-[4rem] text-center">
-              <span
-                class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-              >
+              <Tag severity="secondary">
                 {{ maxCoefficientInput }}
-              </span>
+              </Tag>
             </div>
           </div>
           <p class="text-xs text-gray-500">
@@ -131,13 +129,12 @@
         </div>
       </form>
 
-      <BaseAlert
-        icon="warning"
-        color="yellow"
-        title="Важная информация"
+      <Message
+        severity="warn"
         class="mb-4"
       >
         <div class="text-sm space-y-2">
+          <p class="font-semibold mb-2">Важная информация</p>
           <p>
             <strong>Автоматическое перепланирование</strong> работает как
             автобронирование — бот будет пытаться перепланировать поставку, но
@@ -148,7 +145,7 @@
             будьте готовы к тому, что перепланирование может не сработать.
           </p>
         </div>
-      </BaseAlert>
+      </Message>
     </div>
   </div>
 
@@ -178,15 +175,13 @@
 import { onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { BackButton, MainButton } from 'vue-tg';
-import {
-  QuestionMarkCircleIcon,
-  ArrowPathIcon,
-  InformationCircleIcon,
-} from '@heroicons/vue/24/outline';
+import Button from 'primevue/button';
+import Select from 'primevue/select';
+import Message from 'primevue/message';
+import Tag from 'primevue/tag';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useRescheduleCreateFormStore } from '../../stores/reschedules/createForm';
 import { useSupplyDetailsStore } from '../../stores/supplyDetails';
-import { BaseButton, BaseSelect, BaseAlert } from '../ui';
 import DateSelection from '../common/DateSelection.vue';
 import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
 import ReschedulesHints from './Hints.vue';

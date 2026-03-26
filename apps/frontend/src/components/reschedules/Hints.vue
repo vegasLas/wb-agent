@@ -1,8 +1,9 @@
 <template>
-  <BaseModal
-    :model-value="show"
-    title="Инструкция по перепланированию"
-    @update:model-value="$emit('close')"
+  <Dialog
+    v-model:visible="visible"
+    header="Инструкция по перепланированию"
+    :style="{ width: '90vw', maxWidth: '600px' }"
+    :modal="true"
   >
     <div class="max-h-[70vh] overflow-auto space-y-4">
       <!-- Что такое перепланирование -->
@@ -128,17 +129,31 @@
         </ul>
       </div>
     </div>
-  </BaseModal>
+    <template #footer>
+      <Button label="Закрыть" @click="visible = false" />
+    </template>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import { BaseModal } from '../ui';
+import { computed } from 'vue';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
 
-defineProps<{
+const props = defineProps<{
   show: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   close: [];
 }>();
+
+const visible = computed({
+  get: () => props.show,
+  set: (value: boolean) => {
+    if (!value) {
+      emit('close');
+    }
+  },
+});
 </script>

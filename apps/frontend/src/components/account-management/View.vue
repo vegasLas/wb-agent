@@ -1,10 +1,12 @@
 <template>
   <!-- Main Account & Supplier Selection Modal -->
-  <BaseModal
-    v-model="isOpen"
-    title="Управление аккаунтами"
-    size="2xl"
-    @close="closeModal"
+  <Dialog
+    v-model:visible="isOpen"
+    header="Управление аккаунтами"
+    :style="{ width: '50vw' }"
+    :modal="true"
+    :closable="true"
+    @hide="closeModal"
   >
     <div class="space-y-6">
       <!-- Show Terms Modal Content -->
@@ -50,26 +52,25 @@
     <!-- Main Footer -->
     <template v-if="!showTermsModal && !showAuthModal" #footer>
       <div class="flex justify-between">
-        <BaseButton variant="ghost" @click="closeModal"> Отмена </BaseButton>
-        <BaseButton
+        <Button label="Отмена" text @click="closeModal" />
+        <Button
+          label="Сохранить выбор"
           :disabled="!canSave"
           :loading="saving"
-          color="primary"
-          size="lg"
+          severity="primary"
           class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
           @click="saveSelection"
-        >
-          Сохранить выбор
-        </BaseButton>
+        />
       </div>
     </template>
-  </BaseModal>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { BaseButton, BaseModal } from '../ui';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
 import TermsContent from './TermsContent.vue';
 import AuthCard from './AuthCard.vue';
 import CurrentSelectionSummary from './CurrentSelectionSummary.vue';

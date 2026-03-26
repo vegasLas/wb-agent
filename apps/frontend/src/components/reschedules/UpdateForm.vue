@@ -5,13 +5,13 @@
         <h3 class="text-xl text-center font-semibold flex-1">
           Редактировать перепланирование
         </h3>
-        <BaseButton
-          variant="soft"
-          color="yellow"
+        <Button
+          severity="warning"
+          text
           @click="showHintsModal = true"
         >
-          <QuestionMarkCircleIcon class="w-5 h-5" />
-        </BaseButton>
+          <i class="pi pi-question-circle"></i>
+        </Button>
       </div>
 
       <form class="space-y-6">
@@ -43,15 +43,15 @@
                 </div>
               </div>
               <!-- Supply Information Toggle Button -->
-              <BaseButton
+              <Button
                 v-if="selectedSupply"
-                size="sm"
-                variant="soft"
+                size="small"
+                text
                 @click="supplyDetailsStore.openModal(reschedule.supplyId)"
               >
-                <InformationCircleIcon class="w-4 h-4 mr-1" />
+                <i class="pi pi-info-circle mr-1"></i>
                 детали
-              </BaseButton>
+              </Button>
             </div>
           </div>
         </div>
@@ -141,14 +141,10 @@
 import { ref, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { BackButton, MainButton } from 'vue-tg';
-import {
-  QuestionMarkCircleIcon,
-  InformationCircleIcon,
-} from '@heroicons/vue/24/outline';
+import Button from 'primevue/button';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useRescheduleUpdateFormStore } from '../../stores/reschedules/updateForm';
 import { useSupplyDetailsStore } from '../../stores/supplyDetails';
-import { BaseButton } from '../ui';
 import DateSelection from '../common/DateSelection.vue';
 import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
 import ReschedulesHints from './Hints.vue';

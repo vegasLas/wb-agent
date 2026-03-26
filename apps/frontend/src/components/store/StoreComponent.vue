@@ -4,44 +4,42 @@
     <div class="flex justify-between mb-6 items-center">
       <!-- Subscription Status Badge -->
       <div class="flex items-center">
-        <span
+        <Tag
           v-if="userStore.subscriptionActive"
-          class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full"
-        >
-          осталось дней: {{ userStore.subscriptionRemainingDays }}
-        </span>
-        <span
+          severity="success"
+          :value="`осталось дней: ${userStore.subscriptionRemainingDays}`"
+        />
+        <Tag
           v-else
-          class="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full flex items-center gap-1"
-        >
-          <ExclamationTriangleIcon class="w-4 h-4" />
-          нет подписки
-        </span>
+          severity="danger"
+          icon="pi pi-exclamation-triangle"
+          value="нет подписки"
+        />
       </div>
 
       <!-- Toggle Buttons Group -->
       <div class="flex gap-2">
-        <BaseButton
-          :color="activeTab === 'subscription' ? 'primary' : 'gray'"
-          size="sm"
+        <Button
+          :severity="activeTab === 'subscription' ? 'primary' : 'secondary'"
+          size="small"
           @click="activeTab = 'subscription'"
         >
           подписка
-        </BaseButton>
-        <BaseButton
-          :color="activeTab === 'bookings' ? 'primary' : 'gray'"
-          size="sm"
+        </Button>
+        <Button
+          :severity="activeTab === 'bookings' ? 'primary' : 'secondary'"
+          size="small"
           @click="activeTab = 'bookings'"
         >
           кредиты
-        </BaseButton>
-        <BaseButton
-          :color="activeTab === 'api' ? 'primary' : 'gray'"
-          size="sm"
+        </Button>
+        <Button
+          :severity="activeTab === 'api' ? 'primary' : 'secondary'"
+          size="small"
           @click="activeTab = 'api'"
         >
           API
-        </BaseButton>
+        </Button>
       </div>
     </div>
 
@@ -49,17 +47,21 @@
     <div class="tab-content">
       <!-- Subscription Tab -->
       <div v-if="activeTab === 'subscription'">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border mb-4">
-          <h3 class="font-medium mb-2">Статус подписки</h3>
-          <div v-if="userStore.subscriptionActive" class="text-green-600">
-            <CheckCircleIcon class="w-5 h-5 inline mr-1" />
-            Активна до {{ formatDate(userStore.user.subscriptionExpiresAt) }}
-          </div>
-          <div v-else class="text-red-500">
-            <XCircleIcon class="w-5 h-5 inline mr-1" />
-            Не активна
-          </div>
-        </div>
+        <Card class="mb-4">
+          <template #title>
+            <h3 class="font-medium">Статус подписки</h3>
+          </template>
+          <template #content>
+            <div v-if="userStore.subscriptionActive" class="text-green-600">
+              <i class="pi pi-check-circle mr-1"></i>
+              Активна до {{ formatDate(userStore.user.subscriptionExpiresAt) }}
+            </div>
+            <div v-else class="text-red-500">
+              <i class="pi pi-times-circle mr-1"></i>
+              Не активна
+            </div>
+          </template>
+        </Card>
         <SubscriptionTariffs @select="onSelectTariff" />
       </div>
 
@@ -79,12 +81,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../../stores/user';
-import {
-  CheckCircleIcon,
-  XCircleIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/vue/24/solid';
-import { BaseButton } from '../ui';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Tag from 'primevue/tag';
 import SubscriptionTariffs from '../payment/SubscriptionTariffs.vue';
 import PaymentTariffs from '../payment/PaymentTariffs.vue';
 import SupplierApiKeyComponent from './SupplierApiKeyComponent.vue';

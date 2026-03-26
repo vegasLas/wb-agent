@@ -5,10 +5,13 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         Тип периода <span class="text-red-500">*</span>
       </label>
-      <BaseSelect
+      <Select
         :model-value="dateType"
         :options="availableDateTypeOptions"
+        option-label="label"
+        option-value="value"
         placeholder="Выберите тип периода"
+        class="w-full"
         @update:model-value="(value) => $emit('update:dateType', value)"
       />
     </div>
@@ -96,7 +99,7 @@ import { computed } from 'vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { useWebAppTheme } from 'vue-tg';
-import { BaseSelect } from '../ui';
+import Select from 'primevue/select';
 import MultiSelect from '../ui/MultiSelect.vue';
 
 const { colorScheme } = useWebAppTheme();

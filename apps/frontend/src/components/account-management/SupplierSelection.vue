@@ -2,16 +2,15 @@
   <div v-if="tempSelectedAccount">
     <div class="flex items-center justify-between mb-3">
       <h4 class="text-lg font-medium">Выберите поставщика</h4>
-      <BaseButton
-        size="sm"
-        variant="outline"
-        square
+      <Button
+        size="small"
+        outlined
         :loading="refreshingSuppliers"
         @click="$emit('refresh')"
         aria-label="Обновить список поставщиков"
       >
-        <ArrowPathIcon class="w-4 h-4" />
-      </BaseButton>
+        <i class="pi pi-refresh" />
+      </Button>
     </div>
 
     <div
@@ -36,8 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowPathIcon } from '@heroicons/vue/24/outline';
-import { BaseButton } from '../ui';
+import Button from 'primevue/button';
 import SupplierCard from './SupplierCard.vue';
 import EmptySupplierState from './EmptySupplierState.vue';
 import type { Account } from '../../stores/user';

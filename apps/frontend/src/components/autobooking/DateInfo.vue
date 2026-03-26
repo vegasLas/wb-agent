@@ -1,54 +1,50 @@
 <template>
   <div class="flex items-center gap-2">
-    <CalendarIcon class="w-4 h-4 text-gray-500" />
+    <i class="pi pi-calendar text-gray-500 text-sm" />
     <div class="flex flex-col gap-2">
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800 w-fit">
-        {{ listStore.getDateTypeText(booking.dateType) }}
-      </span>
+      <Tag :value="listStore.getDateTypeText(booking.dateType)" severity="secondary" class="w-fit" />
       <!-- Period Type and Date Range -->
       <div class="flex flex-col gap-2">
         <!-- Date Range Badge based on Period Type -->
-        <span
+        <Tag
           v-if="['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(booking.dateType)"
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-orange-100 text-orange-800 w-fit"
-        >
-          {{ getDateRangeText }}
-        </span>
+          :value="getDateRangeText"
+          severity="warn"
+          class="w-fit"
+        />
         <div
           v-if="
             ['CUSTOM_DATES', 'CUSTOM_DATES_SINGLE'].includes(booking.dateType)
           "
           class="grid grid-cols-2 gap-1"
         >
-          <span
+          <Tag
             v-for="date in booking.customDates"
             :key="String(date)"
-            class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-orange-100 text-orange-800"
-          >
-            {{ formatDateShort(date) }}
-          </span>
+            :value="formatDateShort(date)"
+            severity="warn"
+          />
         </div>
       </div>
     </div>
   </div>
   <!-- Completed Dates Section -->
   <div v-if="booking.completedDates?.length" class="flex items-center gap-2">
-    <CheckCircleIcon class="w-4 h-4 text-gray-500" />
+    <i class="pi pi-check-circle text-gray-500 text-sm" />
     <div class="grid grid-cols-2 gap-2">
-      <span
+      <Tag
         v-for="date in booking.completedDates"
         :key="String(date)"
-        class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-800"
-      >
-        {{ formatDateShort(date) }}
-      </span>
+        :value="formatDateShort(date)"
+        severity="success"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { CalendarIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
+import Tag from 'primevue/tag';
 import type { Autobooking } from '../../types';
 import { useAutobookingListStore } from '../../stores/autobookingList';
 import { formatDateShort, getWeekEndDate, getMonthEndDate, formatDateRange } from '../../utils/formatters';

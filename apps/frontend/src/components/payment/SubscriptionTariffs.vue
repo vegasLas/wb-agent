@@ -1,42 +1,44 @@
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div
+    <Card
       v-for="tariff in SUBSCRIPTION_TARIFFS"
       :key="tariff.id"
-      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-lg transition-shadow"
+      class="hover:shadow-lg transition-shadow"
     >
-      <!-- Header -->
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ tariff.name }}</h3>
-        <span
-          v-if="tariff.discount"
-          class="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full"
-        >
-          -{{ tariff.discount }}%
-        </span>
-      </div>
-
-      <!-- Price and Button -->
-      <div class="space-y-4">
-        <div class="flex items-center gap-2">
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ tariff.price }} ₽</p>
-          <p
+      <template #title>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">{{ tariff.name }}</h3>
+          <Tag
             v-if="tariff.discount"
-            class="text-sm text-gray-400 line-through"
-          >
-            {{ calculateOriginalPrice(tariff.price, tariff.discount) }} ₽
-          </p>
+            severity="warn"
+            :value="`-${tariff.discount}%`"
+          />
         </div>
+      </template>
 
-        <BaseButton
-          :color="selectedTariff?.id === tariff.id ? 'gray' : 'primary'"
-          class="w-full"
-          @click="selectTariff(tariff)"
-        >
-          {{ selectedTariff?.id === tariff.id ? 'Выбрано' : 'Выбрать' }}
-        </BaseButton>
-      </div>
-    </div>
+      <template #content>
+        <!-- Price and Button -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-2">
+            <p class="text-2xl font-bold">{{ tariff.price }} ₽</p>
+            <p
+              v-if="tariff.discount"
+              class="text-sm text-gray-400 line-through"
+            >
+              {{ calculateOriginalPrice(tariff.price, tariff.discount) }} ₽
+            </p>
+          </div>
+
+          <Button
+            :severity="selectedTariff?.id === tariff.id ? 'secondary' : 'primary'"
+            class="w-full"
+            @click="selectTariff(tariff)"
+          >
+            {{ selectedTariff?.id === tariff.id ? 'Выбрано' : 'Выбрать' }}
+          </Button>
+        </div>
+      </template>
+    </Card>
   </div>
 
   <!-- Payment Modal -->
@@ -54,8 +56,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import Card from 'primevue/card';
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
 import { SUBSCRIPTION_TARIFFS } from '../../constants';
-import { BaseButton } from '../ui';
 import PaymentModal from './PaymentModal.vue';
 import type { SubscriptionTariff } from '../../constants';
 

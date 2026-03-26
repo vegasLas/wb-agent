@@ -1,12 +1,11 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+  <Card>
+    <template #title>
+      <h3 class="text-lg font-semibold">
         {{ warehouseName }}
       </h3>
-    </div>
-
-    <div class="p-4">
+    </template>
+    <template #content>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <!-- Chart -->
         <div class="chart-container relative h-80 lg:h-96">
@@ -19,64 +18,37 @@
         </div>
 
         <!-- Table -->
-        <div
-          class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-        >
-          <div class="max-h-64 lg:max-h-96 overflow-y-auto">
-            <table class="w-full text-sm text-left">
-              <thead
-                class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0"
+        <Card class="border border-gray-200 dark:border-gray-700">
+          <template #content>
+            <div class="max-h-64 lg:max-h-96 overflow-y-auto">
+              <DataTable
+                :value="sortedItems"
+                scrollable
+                scrollHeight="flex"
+                class="p-datatable-sm"
               >
-                <tr>
-                  <th class="px-3 py-2 cursor-pointer" @click="sortBy('vendorCode')">
-                    <div class="flex items-center gap-1">
-                      Артикул
-                      <span v-if="sortColumn === 'vendorCode'">
-                        {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                  </th>
-                  <th class="px-3 py-2 cursor-pointer" @click="sortBy('orderedQty')">
-                    <div class="flex items-center gap-1">
-                      Заказано
-                      <span v-if="sortColumn === 'orderedQty'">
-                        {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                  </th>
-                  <th class="px-3 py-2 cursor-pointer" @click="sortBy('stockQty')">
-                    <div class="flex items-center gap-1">
-                      Остаток
-                      <span v-if="sortColumn === 'stockQty'">
-                        {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="item in sortedItems"
-                  :key="`${item.vendorCode}-${item.size}`"
-                  class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">
-                    {{ item.vendorCode }}
-                  </td>
-                  <td class="px-3 py-2">
-                    {{ item.orderedQty.toLocaleString('ru-RU') }}
-                  </td>
-                  <td class="px-3 py-2">
-                    {{ item.stockQty.toLocaleString('ru-RU') }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+                <Column field="vendorCode" header="Артикул" sortable>
+                  <template #body="{ data }">
+                    <span class="font-medium">{{ data.vendorCode }}</span>
+                  </template>
+                </Column>
+                <Column field="orderedQty" header="Заказано" sortable>
+                  <template #body="{ data }">
+                    {{ data.orderedQty.toLocaleString('ru-RU') }}
+                  </template>
+                </Column>
+                <Column field="stockQty" header="Остаток" sortable>
+                  <template #body="{ data }">
+                    {{ data.stockQty.toLocaleString('ru-RU') }}
+                  </template>
+                </Column>
+              </DataTable>
+            </div>
+          </template>
+        </Card>
       </div>
-    </div>
-  </div>
+    </template>
+  </Card>
 </template>
 
 <script setup lang="ts">
@@ -92,6 +64,9 @@ import {
 } from 'chart.js';
 import type { ReportItem } from '../../types';
 import { useUserStore } from '../../stores/user';
+import Card from 'primevue/card';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 
 // Register Chart.js components
 ChartJS.register(RadialLinearScale, ArcElement, Tooltip, Legend, Title);

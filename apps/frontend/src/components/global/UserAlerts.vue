@@ -2,72 +2,73 @@
   <div class="space-y-3">
     <!-- Subscription Alert - First Priority -->
     <template v-if="!userStore.subscriptionActive">
-      <BaseAlert
-        title="Подписка не активна"
-        description="Для использования сервиса требуется активная подписка. Пожалуйста, оформите подписку для продолжения работы."
-        color="red"
-        icon="error"
-      >
-        <template #actions>
-          <BaseButton
-            variant="soft"
-            color="primary"
-            size="sm"
-            @click="navigateToSubscription"
-          >
-            Купить подписку
-          </BaseButton>
-        </template>
-      </BaseAlert>
+      <Message severity="error" :closable="false" class="w-full">
+        <div class="flex flex-col gap-2">
+          <div class="font-medium">Подписка не активна</div>
+          <div class="text-sm opacity-90">
+            Для использования сервиса требуется активная подписка. Пожалуйста, оформите подписку для продолжения работы.
+          </div>
+          <div class="mt-2">
+            <Button
+              severity="primary"
+              variant="outlined"
+              size="small"
+              label="Купить подписку"
+              @click="navigateToSubscription"
+            />
+          </div>
+        </div>
+      </Message>
     </template>
 
     <!-- Account Selection Alert - Second Priority -->
     <template v-else-if="!userStore.user.selectedAccountId">
-      <BaseAlert
-        color="orange"
-        icon="warning"
-        title="Необходимо выбрать аккаунт"
-        description="Для использования сервиса необходимо выбрать активный аккаунт WB."
-      >
-        <template #actions>
-          <BaseButton
-            variant="soft"
-            color="primary"
-            size="sm"
-            @click="openAccountModal"
-          >
-            Выбрать аккаунт
-          </BaseButton>
-        </template>
-      </BaseAlert>
+      <Message severity="warn" :closable="false" class="w-full">
+        <div class="flex flex-col gap-2">
+          <div class="font-medium">Необходимо выбрать аккаунт</div>
+          <div class="text-sm opacity-90">
+            Для использования сервиса необходимо выбрать активный аккаунт WB.
+          </div>
+          <div class="mt-2">
+            <Button
+              severity="primary"
+              variant="outlined"
+              size="small"
+              label="Выбрать аккаунт"
+              @click="openAccountModal"
+            />
+          </div>
+        </div>
+      </Message>
     </template>
 
     <!-- Supplier Selection Alert - Third Priority -->
     <template v-else-if="!userStore.hasValidSupplier">
-      <BaseAlert
-        color="red"
-        icon="error"
-        title="Необходимо выбрать поставщика"
-        description="Выбранный аккаунт не имеет активного поставщика. Выберите поставщика для продолжения работы."
-      >
-        <template #actions>
-          <BaseButton
-            variant="soft"
-            color="primary"
-            size="sm"
-            @click="openAccountModal"
-          >
-            Выбрать поставщика
-          </BaseButton>
-        </template>
-      </BaseAlert>
+      <Message severity="error" :closable="false" class="w-full">
+        <div class="flex flex-col gap-2">
+          <div class="font-medium">Необходимо выбрать поставщика</div>
+          <div class="text-sm opacity-90">
+            Выбранный аккаунт не имеет активного поставщика. Выберите поставщика для продолжения работы.
+          </div>
+          <div class="mt-2">
+            <Button
+              severity="primary"
+              variant="outlined"
+              size="small"
+              label="Выбрать поставщика"
+              @click="openAccountModal"
+            />
+          </div>
+        </div>
+      </Message>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { BaseAlert, BaseButton } from '../ui';
+import Message from 'primevue/message';
+import Button from 'primevue/button';
 import { useUserStore } from '../../stores/user';
 import { useViewStore } from '../../stores/view';
 import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';

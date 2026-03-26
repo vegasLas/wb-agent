@@ -7,71 +7,59 @@
       <div class="flex items-center justify-between">
         <!-- Main Navigation Dropdown -->
         <div class="flex items-center gap-2">
-          <BaseDropdown :items="navigationItems" placement="bottom-start">
-            <template #trigger>
-              <BaseButton
-                :color="selectedNavItem.active ? 'primary' : 'gray'"
-                variant="solid"
-              >
-                <template #icon>
-                  <component :is="selectedNavItem.icon" class="w-5 h-5" />
-                </template>
-                {{ selectedNavItem.label }}
-                <ChevronDownIcon class="w-4 h-4 ml-2" />
-              </BaseButton>
-            </template>
-            <BaseDropdownItem
-              v-for="item in navigationOptions"
-              :key="item.id"
-              @click="viewStore.setView(item.view as ViewType)"
-            >
-              <component :is="item.icon" class="w-5 h-5 mr-2" />
-              {{ item.label }}
-            </BaseDropdownItem>
-          </BaseDropdown>
+          <Button
+            ref="navMenuButton"
+            :severity="selectedNavItem.active ? 'primary' : 'secondary'"
+            @click="toggleNavMenu"
+          >
+            <i :class="selectedNavItem.iconClass"></i>
+            <span class="ml-2">{{ selectedNavItem.label }}</span>
+            <i class="pi pi-chevron-down ml-2"></i>
+          </Button>
+          <Menu ref="navMenu" :model="navigationItems" :popup="true" />
 
-          <BaseButton
-            color="yellow"
-            variant="soft"
-            square
+          <Button
+            severity="warning"
+            variant="outlined"
+            class="rounded"
             @click="showHelpModal = true"
           >
             <template #icon>
-              <QuestionMarkCircleIcon class="w-5 h-5" />
+              <i class="pi pi-question-circle"></i>
             </template>
-          </BaseButton>
+          </Button>
         </div>
 
         <!-- Icons -->
         <div class="flex items-center gap-2">
-          <BaseButton
-            :color="viewStore.mainView === 'store' ? 'primary' : 'gray'"
-            variant="soft"
-            square
+          <Button
+            :severity="viewStore.mainView === 'store' ? 'primary' : 'secondary'"
+            variant="outlined"
+            class="rounded"
             @click="viewStore.setView('store')"
           >
             <template #icon>
-              <ShoppingBagIcon class="w-5 h-5" />
+              <i class="pi pi-shopping-bag"></i>
             </template>
-          </BaseButton>
-          <BaseButton
-            :color="accountModalStore.showModal ? 'primary' : 'gray'"
-            variant="soft"
-            square
+          </Button>
+          <Button
+            :severity="accountModalStore.showModal ? 'primary' : 'secondary'"
+            variant="outlined"
+            class="rounded"
             @click="accountModalStore.showModal = true"
             aria-label="Управление аккаунтами"
           >
             <template #icon>
-              <UsersIcon class="w-5 h-5" />
+              <i class="pi pi-users"></i>
             </template>
-          </BaseButton>
-          <BaseButton
-            :color="viewStore.mainView === 'account' ? 'primary' : 'gray'"
-            variant="soft"
+          </Button>
+          <Button
+            :severity="viewStore.mainView === 'account' ? 'primary' : 'secondary'"
+            variant="outlined"
             @click="viewStore.setView('account')"
           >
             <template #icon>
-              <UserCircleIcon v-if="!userStore.activeSupplier?.supplierName" class="w-5 h-5" />
+              <i v-if="!userStore.activeSupplier?.supplierName" class="pi pi-user"></i>
             </template>
             <span
               v-if="userStore.activeSupplier?.supplierName"
@@ -79,7 +67,7 @@
             >
               {{ userStore.activeSupplier.supplierName }}
             </span>
-          </BaseButton>
+          </Button>
         </div>
       </div>
     </div>
@@ -100,16 +88,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import {
-  ChevronDownIcon,
-  CalendarIcon,
-  ClockIcon,
-  ChartPieIcon,
-  ShoppingBagIcon,
-  UsersIcon,
-  UserCircleIcon,
-  QuestionMarkCircleIcon,
-} from '@heroicons/vue/24/outline';
+
+// PrimeVue imports
+import Button from 'primevue/button';
+import Menu from 'primevue/menu';
 
 // Stores
 import { useViewStore } from '../stores/view';
@@ -117,7 +99,6 @@ import { useUserStore } from '../stores/user';
 import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
 
 // Components
-import { BaseButton, BaseDropdown, BaseDropdownItem } from '../components/ui';
 import { AccountManagementView } from '../components/account-management';
 import { MainHelpModal } from '../components/help';
 
@@ -135,24 +116,32 @@ const accountModalStore = useAccountSupplierModalStore();
 // State for modals
 const showHelpModal = ref(false);
 
+// Menu refs
+const navMenu = ref<InstanceType<typeof Menu> | null>(null);
+const navMenuButton = ref<InstanceType<typeof Button> | null>(null);
+
+const toggleNavMenu = (event: MouseEvent) => {
+  navMenu.value?.toggle(event);
+};
+
 // Navigation dropdown configuration
 const navigationOptions = [
   {
     id: 'autobookings',
     label: 'автоброни',
-    icon: CalendarIcon,
+    iconClass: 'pi pi-calendar',
     view: 'autobookings-main',
   },
   {
     id: 'triggers',
     label: 'слоты',
-    icon: ClockIcon,
+    iconClass: 'pi pi-clock',
     view: 'triggers-main',
   },
   {
     id: 'report',
     label: 'отчеты',
-    icon: ChartPieIcon,
+    iconClass: 'pi pi-chart-pie',
     view: 'report',
   },
 ];
@@ -178,12 +167,12 @@ const selectedNavItem = computed(() => {
       };
 });
 
-// Navigation dropdown items
+// Navigation dropdown items for PrimeVue Menu
 const navigationItems = computed(() =>
   navigationOptions.map((option) => ({
     label: option.label,
-    icon: option.icon,
-    click: () => {
+    icon: option.iconClass,
+    command: () => {
       viewStore.setView(option.view as ViewType);
     },
   })),

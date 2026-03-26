@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-3">
     <!-- Alert for CUSTOM_DATES_SINGLE -->
-    <BaseAlert
+    <Message
       v-if="dateType === 'CUSTOM_DATES_SINGLE'"
-      color="blue"
-      icon="info"
-      title="📋 Режим &quot;Выбрать даты (одна)&quot;:"
+      severity="info"
+      icon="pi pi-info-circle"
     >
-      <ul class="ml-4 space-y-1 text-sm mt-2">
+      <div class="font-semibold mb-2">📋 Режим "Выбрать даты (одна)":</div>
+      <ul class="ml-4 space-y-1 text-sm">
         <li>
           • <strong>Стоимость:</strong> Использует только 1 кредит независимо
           от количества выбранных дат
@@ -25,17 +25,17 @@
           подходит любая из нескольких дат
         </li>
       </ul>
-    </BaseAlert>
+    </Message>
 
     <!-- Alert for CUSTOM_DATES -->
-    <BaseAlert
+    <Message
       v-if="dateType === 'CUSTOM_DATES'"
-      color="yellow"
-      icon="warning"
-      title="📋 Режим &quot;Выбрать даты&quot;:"
+      severity="warn"
+      icon="pi pi-exclamation-triangle"
     >
       <div class="space-y-2">
-        <ul class="ml-4 space-y-1 text-sm mt-2">
+        <div class="font-semibold mb-2">📋 Режим "Выбрать даты":</div>
+        <ul class="ml-4 space-y-1 text-sm">
           <li>
             • <strong>Стоимость:</strong> Каждая выбранная дата использует 1
             кредит
@@ -59,23 +59,24 @@
           </span>
         </p>
         <div v-if="availableCount < (customDates?.length || 0)" class="mt-3">
-          <BaseButton
-            variant="primary"
-            size="sm"
+          <Button
+            severity="primary"
+            size="small"
             @click="navigateToStore"
           >
             Купить
-          </BaseButton>
+          </Button>
         </div>
       </div>
-    </BaseAlert>
+    </Message>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { BaseAlert, BaseButton } from '../ui';
+import Message from 'primevue/message';
+import Button from 'primevue/button';
 import { useViewStore } from '../../stores/view';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
 

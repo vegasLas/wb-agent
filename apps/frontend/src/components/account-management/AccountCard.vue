@@ -11,7 +11,7 @@
       <div
         class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
       >
-        <DevicePhoneMobileIcon class="w-5 h-5 text-white" />
+        <i class="pi pi-mobile text-white" />
       </div>
       <div>
         <div class="font-medium">
@@ -23,29 +23,23 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <BaseButton
-        color="red"
-        variant="ghost"
-        size="sm"
-        square
+      <Button
+        severity="danger"
+        text
+        size="small"
         @click.stop="$emit('remove', account.id)"
       >
-        <TrashIcon class="w-4 h-4" />
-      </BaseButton>
+        <i class="pi pi-trash" />
+      </Button>
       <div v-if="isSelected" class="text-blue-600 flex">
-        <CheckCircleIcon class="w-5 h-5" />
+        <i class="pi pi-check-circle" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  DevicePhoneMobileIcon,
-  CheckCircleIcon,
-  TrashIcon,
-} from '@heroicons/vue/24/outline';
-import { BaseButton } from '../ui';
+import Button from 'primevue/button';
 import type { Account } from '../../stores/user';
 
 interface Props {

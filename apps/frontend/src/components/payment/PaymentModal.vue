@@ -1,25 +1,25 @@
 <template>
-  <BaseModal
-    v-model="isOpen"
-    title="Оплата"
-    size="md"
+  <Dialog
+    v-model:visible="isOpen"
+    header="Оплата"
+    modal
+    :style="{ width: '450px' }"
+    :closable="true"
   >
     <!-- Error Display -->
-    <BaseAlert
+    <Message
       v-if="error"
-      :title="error"
-      color="red"
-      icon="error"
-      class="mb-4"
-    />
+      severity="error"
+      class="mb-4 w-full"
+    >
+      {{ error }}
+    </Message>
 
     <!-- Step 1: Email Input -->
     <div v-if="!paymentInitiated" class="space-y-4">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ tariffName }}</h3>
-        <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-          {{ tariffPrice }} ₽
-        </span>
+        <Tag severity="info" :value="`${tariffPrice} ₽`" />
       </div>
 
       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -30,48 +30,49 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Email
         </label>
-        <input
+        <InputText
           v-model="emailInput"
           type="email"
           placeholder="example@mail.com"
           :class="[
-            'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-            emailError
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-              : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-200 dark:bg-gray-700 dark:text-white'
+            'w-full',
+            emailError ? 'p-invalid' : ''
           ]"
         />
-        <p v-if="emailError" class="text-sm text-red-600">{{ emailError }}</p>
+        <small v-if="emailError" class="p-error">{{ emailError }}</small>
       </div>
 
       <div class="flex justify-end gap-3 mt-6">
-        <BaseButton variant="ghost" @click="close">
+        <Button variant="text" severity="secondary" @click="close">
           Отмена
-        </BaseButton>
-        <BaseButton :loading="loading" @click="handleEmailSubmit">
+        </Button>
+        <Button :loading="loading" @click="handleEmailSubmit">
           Продолжить
-        </BaseButton>
+        </Button>
       </div>
     </div>
 
     <!-- Step 2: Success Message -->
     <div v-else class="text-center py-4">
-      <CheckCircleIcon class="text-green-500 w-16 h-16 mx-auto mb-4" />
+      <i class="pi pi-check-circle text-green-500 text-6xl mb-4"></i>
       <p class="text-lg font-medium mb-2 text-gray-900 dark:text-white">Ссылка на оплату отправлена</p>
       <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Мы отправили ссылку для оплаты в чат. Пожалуйста, проверьте сообщения.
       </p>
-      <BaseButton @click="goToChat">
+      <Button @click="goToChat">
         Перейти в чат
-      </BaseButton>
+      </Button>
     </div>
-  </BaseModal>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { BaseButton, BaseModal, BaseAlert } from '../ui';
-import { CheckCircleIcon } from '@heroicons/vue/24/outline';
+import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Message from 'primevue/message';
+import Tag from 'primevue/tag';
 
 const props = defineProps<{
   modelValue: boolean;

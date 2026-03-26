@@ -1,15 +1,17 @@
 <template>
-  <BaseModal
-    v-model="isOpen"
-    title="Руководство по навигации"
-    size="lg"
-    @close="close"
+  <Dialog
+    v-model:visible="isOpen"
+    header="Руководство по навигации"
+    :style="{ width: '50vw', maxWidth: '800px' }"
+    :modal="true"
+    :closable="true"
+    @hide="close"
   >
     <div class="max-h-[70vh] overflow-y-auto space-y-6 pr-2">
       <!-- Autobookings Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <CalendarIcon class="w-5 h-5 text-blue-600" />
+          <i class="pi pi-calendar text-blue-600 text-lg"></i>
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">Автоброни</h4>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -34,7 +36,7 @@
       <!-- Reschedules Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <ArrowPathIcon class="w-5 h-5 text-blue-600" />
+          <i class="pi pi-refresh text-blue-600 text-lg"></i>
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">Перепланирование</h4>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -60,7 +62,7 @@
       <!-- Triggers Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <ClockIcon class="w-5 h-5 text-blue-600" />
+          <i class="pi pi-clock text-blue-600 text-lg"></i>
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">Слоты</h4>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -86,7 +88,7 @@
       <!-- Report Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <ChartPieIcon class="w-5 h-5 text-blue-600" />
+          <i class="pi pi-chart-pie text-blue-600 text-lg"></i>
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">Отчеты</h4>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -110,7 +112,7 @@
       <!-- Store Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <ShoppingBagIcon class="w-5 h-5 text-blue-600" />
+          <i class="pi pi-shopping-bag text-blue-600 text-lg"></i>
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">Магазин</h4>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -127,7 +129,7 @@
       <!-- Account Management Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <UsersIcon class="w-5 h-5 text-blue-600" />
+          <i class="pi pi-users text-blue-600 text-lg"></i>
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">Управление аккаунтами</h4>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -152,7 +154,7 @@
       <!-- Account Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <UserCircleIcon class="w-5 h-5 text-blue-600" />
+          <i class="pi pi-user text-blue-600 text-lg"></i>
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">Профиль</h4>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -176,7 +178,7 @@
       <!-- Tips Section -->
       <div class="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4">
         <h4 class="font-medium text-lg text-green-600 dark:text-green-400">
-          💡 Полезные советы
+          <i class="pi pi-lightbulb mr-1"></i> Полезные советы
         </h4>
         <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
           <p>
@@ -204,21 +206,12 @@
         кнопки помощи внутри соответствующих страниц.
       </p>
     </template>
-  </BaseModal>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { BaseModal } from '../ui';
-import {
-  CalendarIcon,
-  ArrowPathIcon,
-  ClockIcon,
-  ChartPieIcon,
-  ShoppingBagIcon,
-  UsersIcon,
-  UserCircleIcon,
-} from '@heroicons/vue/24/outline';
+import Dialog from 'primevue/dialog';
 
 const props = defineProps<{
   modelValue: boolean;

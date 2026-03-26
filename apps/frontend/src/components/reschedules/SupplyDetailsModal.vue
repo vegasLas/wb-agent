@@ -1,75 +1,73 @@
 <template>
-  <BaseModal
-    :model-value="show"
-    title="Детали поставки"
-    @update:model-value="(value) => $emit('update:show', value)"
+  <Dialog
+    v-model:visible="visible"
+    header="Детали поставки"
+    :style="{ width: '90vw', maxWidth: '800px' }"
+    :modal="true"
   >
     <div class="max-h-[60vh] overflow-auto">
       <!-- Supply Removal Alert -->
-      <BaseAlert
+      <div
         v-if="supplyRemoved"
-        icon="warning"
-        color="blue"
-        class="mb-4"
+        class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
       >
-        <div class="text-sm space-y-2">
-          <p>
-            <strong>Эта поставка была удалена</strong> из системы WB и
-            больше не существует.
-          </p>
-          <template v-if="!isRescheduleCompleted">
-            <p>
-              <strong>Рекомендуется удалить</strong> это перепланирование,
-              так как оно больше не может быть выполнено.
+        <div class="flex items-start gap-3">
+          <i class="pi pi-exclamation-circle text-blue-500 mt-0.5"></i>
+          <div class="text-sm space-y-2 flex-1">
+            <p class="text-blue-800 dark:text-blue-200">
+              <strong>Эта поставка была удалена</strong> из системы WB и
+              больше не существует.
             </p>
-            <p class="font-medium">
-              Перепланирование для несуществующей поставки не будет
-              работать!
-            </p>
-          </template>
-        </div>
-
-        <template #actions v-if="!isRescheduleCompleted">
-          <BaseButton
-            color="gray"
-            variant="outline"
-            size="sm"
+            <template v-if="!isRescheduleCompleted">
+              <p class="text-blue-700 dark:text-blue-300">
+                <strong>Рекомендуется удалить</strong> это перепланирование,
+                так как оно больше не может быть выполнено.
+              </p>
+              <p class="font-medium text-blue-800 dark:text-blue-200">
+                Перепланирование для несуществующей поставки не будет
+                работать!
+              </p>
+            </template>
+          </div>
+          <Button
+            v-if="!isRescheduleCompleted"
+            severity="secondary"
+            outlined
+            size="small"
             :loading="rescheduleStore.loading"
             @click="handleDelete"
           >
-            <TrashIcon class="w-4 h-4 mr-1" />
+            <i class="pi pi-trash mr-1"></i>
             Удалить
-          </BaseButton>
-        </template>
-      </BaseAlert>
+          </Button>
+        </div>
+      </div>
 
       <template v-else>
         <!-- Supply Information Section -->
         <div v-if="supplyDetails" class="mb-6">
           <div class="grid grid-cols-1 gap-3 p-4 rounded-lg text-sm bg-gray-50 dark:bg-gray-700">
             <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <BuildingStorefrontIcon class="w-4 h-4 text-gray-500" />
+              <i class="pi pi-building text-gray-500"></i>
               {{ supplyDetails.warehouseName }}
             </div>
             <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <CubeIcon class="w-4 h-4 text-gray-500" />
+              <i class="pi pi-box text-gray-500"></i>
               {{ getSupplyTypeLabel(supplyDetails.boxTypeName || '') }}
             </div>
             <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <CalendarDaysIcon class="w-4 h-4 text-gray-500" />
+              <i class="pi pi-calendar text-gray-500"></i>
               {{ formatSupplyDate(supplyDetails.supplyDate) }}
             </div>
             <div
               v-if="supplyDetails.statusId"
               class="flex items-center gap-2"
             >
-              <InformationCircleIcon class="w-4 h-4 text-gray-500" />
-              <span
-                class="px-2 py-0.5 text-xs rounded-full"
-                :class="getStatusColorClass(supplyDetails.statusId)"
-              >
-                {{ getStatusName(supplyDetails.statusId) }}
-              </span>
+              <i class="pi pi-info-circle text-gray-500"></i>
+              <Tag
+                :value="getStatusName(supplyDetails.statusId)"
+                :severity="getStatusSeverity(supplyDetails.statusId)"
+              />
             </div>
           </div>
         </div>
@@ -81,45 +79,43 @@
           </h4>
         </div>
 
-        <!-- Goods Table (when data exists) -->
-        <div v-if="supplyGoods.length" class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16"></th>
-                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Название</th>
-                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Количество</th>
-                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Бренд</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <tr v-for="row in supplyGoods" :key="row.barcode || row.id">
-                <td class="px-3 py-2 whitespace-nowrap">
-                  <img
-                    v-if="row.imgSrc"
-                    :src="row.imgSrc"
-                    class="w-10 h-10 rounded object-cover"
-                    :alt="row.imtName"
-                  />
-                </td>
-                <td class="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{{ row.imtName }}</td>
-                <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{{ row.quantity }} шт.</td>
-                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-                  <div v-if="row.brandName" class="font-medium">
-                    {{ row.brandName }}
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <!-- Goods DataTable (when data exists) -->
+        <DataTable v-if="supplyGoods.length" :value="supplyGoods" size="small" class="p-datatable-sm">
+          <Column header="" style="width: 4rem">
+            <template #body="slotProps">
+              <img
+                v-if="slotProps.data.imgSrc"
+                :src="slotProps.data.imgSrc"
+                class="w-10 h-10 rounded object-cover"
+                :alt="slotProps.data.imtName"
+              />
+            </template>
+          </Column>
+          <Column field="imtName" header="Название">
+            <template #body="slotProps">
+              <span class="text-sm text-gray-900 dark:text-gray-100">{{ slotProps.data.imtName }}</span>
+            </template>
+          </Column>
+          <Column field="quantity" header="Количество">
+            <template #body="slotProps">
+              <span class="text-sm text-gray-500 dark:text-gray-400">{{ slotProps.data.quantity }} шт.</span>
+            </template>
+          </Column>
+          <Column field="brandName" header="Бренд">
+            <template #body="slotProps">
+              <span v-if="slotProps.data.brandName" class="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                {{ slotProps.data.brandName }}
+              </span>
+            </template>
+          </Column>
+        </DataTable>
 
         <!-- Loading State -->
         <div
           v-else-if="loadingSupplyDetails"
           class="flex justify-center items-center py-12"
         >
-          <ArrowPathIcon class="animate-spin h-8 w-8 text-gray-400" />
+          <i class="pi pi-refresh animate-spin text-4xl text-gray-400"></i>
         </div>
 
         <!-- Error State -->
@@ -136,22 +132,21 @@
         </div>
       </template>
     </div>
-  </BaseModal>
+    <template #footer>
+      <Button label="Закрыть" @click="visible = false" />
+    </template>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import {
-  BuildingStorefrontIcon,
-  CubeIcon,
-  CalendarDaysIcon,
-  InformationCircleIcon,
-  ArrowPathIcon,
-  TrashIcon,
-} from '@heroicons/vue/24/outline';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Tag from 'primevue/tag';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useSupplyDetailsStore } from '../../stores/supplyDetails';
-import { BaseModal, BaseAlert, BaseButton } from '../ui';
 
 interface Props {
   show: boolean;
@@ -164,6 +159,13 @@ const emit = defineEmits<{
 
 const rescheduleStore = useRescheduleStore();
 const supplyDetailsStore = useSupplyDetailsStore();
+
+const visible = computed({
+  get: () => props.show,
+  set: (value: boolean) => {
+    emit('update:show', value);
+  },
+});
 
 // Get supply details and goods from store
 const supplyDetails = computed(() => supplyDetailsStore.supplyDetails);
@@ -255,22 +257,22 @@ function getStatusName(statusId: number): string {
   return statusMap[statusId] || `Статус ${statusId}`;
 }
 
-function getStatusColorClass(statusId: number): string {
+function getStatusSeverity(statusId: number): string {
   switch (statusId) {
     case 1:
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200'; // Запланировано
+      return 'info'; // Запланировано
     case 3:
-      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200'; // Отгрузка разрешена
+      return 'success'; // Отгрузка разрешена
     case 4:
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200'; // Идёт приёмка
+      return 'warn'; // Идёт приёмка
     case 7:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'; // Принято
+      return 'secondary'; // Принято
     case 9:
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200'; // Виртуальная
+      return 'secondary'; // Виртуальная
     case 10:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'; // Отгружено на воротах
+      return 'secondary'; // Отгружено на воротах
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      return 'secondary';
   }
 }
 </script>

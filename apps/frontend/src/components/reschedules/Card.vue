@@ -1,201 +1,187 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-all hover:shadow-md">
-    <div class="flex flex-col gap-3">
-      <!-- Header with supply ID on left and supplier on right -->
-      <div class="flex items-start justify-between">
-        <div class="flex-1">
-          <!-- Warehouse section -->
-          <div class="flex items-center gap-2">
-            <BuildingOffice2Icon class="w-4 h-4 text-gray-500" />
-            <div class="flex flex-col gap-1">
-              <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 w-fit">
-                {{ warehouseStore.getWarehouseName(reschedule.warehouseId) }}
-              </span>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 w-fit">
-                Поставка: {{ reschedule.supplyId }}
-              </span>
+  <Card class="transition-all hover:shadow-md">
+    <template #content>
+      <div class="flex flex-col gap-3">
+        <!-- Header with supply ID on left and supplier on right -->
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <!-- Warehouse section -->
+            <div class="flex items-center gap-2">
+              <i class="pi pi-building text-gray-500" />
+              <div class="flex flex-col gap-1">
+                <Tag severity="secondary" class="w-fit">
+                  {{ warehouseStore.getWarehouseName(reschedule.warehouseId) }}
+                </Tag>
+                <Tag severity="info" class="w-fit">
+                  Поставка: {{ reschedule.supplyId }}
+                </Tag>
+              </div>
             </div>
+          </div>
+
+          <!-- Supplier section moved to top right -->
+          <div class="flex items-center gap-1 ml-2">
+            <i class="pi pi-user text-gray-500" />
+            <Tag
+              :severity="isSupplierActive ? 'info' : 'danger'"
+              :class="isSupplierActive ? 'bg-blue-500 text-white' : ''"
+            >
+              {{ getSupplierName(reschedule.supplierId) }}
+            </Tag>
           </div>
         </div>
 
-        <!-- Supplier section moved to top right -->
-        <div class="flex items-center gap-1 ml-2">
-          <UserCircleIcon class="w-4 h-4 text-gray-500" />
-          <span
-            class="px-2 py-0.5 text-xs rounded-full w-fit"
-            :class="isSupplierActive
-              ? 'bg-blue-500 text-white'
-              : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200'"
-          >
-            {{ getSupplierName(reschedule.supplierId) }}
-          </span>
+        <!-- Supply Type section -->
+        <div class="flex items-center gap-2">
+          <i class="pi pi-th-large text-gray-500" />
+          <Tag :severity="getSupplyTypeSeverity(reschedule.supplyType)">
+            {{ getSupplyTypeText(reschedule.supplyType) }}
+          </Tag>
         </div>
-      </div>
 
-      <!-- Supply Type section -->
-      <div class="flex items-center gap-2">
-        <Squares2X2Icon class="w-4 h-4 text-gray-500" />
-        <span
-          class="px-2 py-0.5 text-xs rounded-full"
-          :class="getSupplyTypeColorClass(reschedule.supplyType)"
-        >
-          {{ getSupplyTypeText(reschedule.supplyType) }}
-        </span>
-      </div>
-
-      <!-- Date Information section -->
-      <div class="flex items-center gap-2">
-        <CalendarIcon class="w-4 h-4 text-gray-500" />
-        <div class="flex flex-col gap-2">
-          <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 w-fit">
-            {{ getDateTypeLabel(reschedule.dateType) }}
-          </span>
-          <!-- Period Type and Date Range -->
+        <!-- Date Information section -->
+        <div class="flex items-center gap-2">
+          <i class="pi pi-calendar text-gray-500" />
           <div class="flex flex-col gap-2">
-            <!-- Date Range Badge based on Period Type -->
-            <span
-              v-if="
-                ['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(reschedule.dateType)
-              "
-              class="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200 w-fit"
-            >
-              {{ getDateRangeText }}
-            </span>
-            <div
-              v-if="
-                ['CUSTOM_DATES', 'CUSTOM_DATES_SINGLE'].includes(
-                  reschedule.dateType,
-                ) && reschedule.customDates.length > 0
-              "
-              class="grid grid-cols-2 gap-1"
-            >
-              <span
-                v-for="date in reschedule.customDates"
-                :key="String(date)"
-                class="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200"
+            <Tag severity="secondary" class="w-fit">
+              {{ getDateTypeLabel(reschedule.dateType) }}
+            </Tag>
+            <!-- Period Type and Date Range -->
+            <div class="flex flex-col gap-2">
+              <!-- Date Range Badge based on Period Type -->
+              <Tag
+                v-if="
+                  ['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(reschedule.dateType)
+                "
+                severity="warn"
+                class="w-fit"
               >
-                {{ formatDate(date) }}
-              </span>
+                {{ getDateRangeText }}
+              </Tag>
+              <div
+                v-if="
+                  ['CUSTOM_DATES', 'CUSTOM_DATES_SINGLE'].includes(
+                    reschedule.dateType,
+                  ) && reschedule.customDates.length > 0
+                "
+                class="grid grid-cols-2 gap-1"
+              >
+                <Tag
+                  v-for="date in reschedule.customDates"
+                  :key="String(date)"
+                  severity="warn"
+                >
+                  {{ formatDate(date) }}
+                </Tag>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Coefficient section -->
-      <div class="flex items-center gap-2">
-        <CurrencyDollarIcon class="w-4 h-4 text-gray-500" />
-        <span class="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
-          Макс. коэффициент: {{ reschedule.maxCoefficient }}
-        </span>
-      </div>
+        <!-- Coefficient section -->
+        <div class="flex items-center gap-2">
+          <i class="pi pi-dollar text-gray-500" />
+          <Tag severity="warn">
+            Макс. коэффициент: {{ reschedule.maxCoefficient }}
+          </Tag>
+        </div>
 
-      <!-- Completed Dates Section -->
-      <div
-        v-if="reschedule.completedDates?.length"
-        class="flex items-center gap-2"
-      >
-        <CheckCircleIcon class="w-4 h-4 text-green-500" />
-        <div class="grid grid-cols-2 gap-2">
-          <span
-            v-for="date in reschedule.completedDates"
-            :key="String(date)"
-            class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200"
+        <!-- Completed Dates Section -->
+        <div
+          v-if="reschedule.completedDates?.length"
+          class="flex items-center gap-2"
+        >
+          <i class="pi pi-check-circle text-green-500" />
+          <div class="grid grid-cols-2 gap-2">
+            <Tag
+              v-for="date in reschedule.completedDates"
+              :key="String(date)"
+              severity="success"
+            >
+              {{ formatDate(date) }}
+            </Tag>
+          </div>
+        </div>
+
+        <!-- Created Date -->
+        <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
+          <i class="pi pi-calendar-plus" />
+          Создан: {{ formatDate(reschedule.createdAt) }}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-2 mt-2">
+          <!-- View details button - only show if supply exists -->
+          <Button
+            size="small"
+            variant="outlined"
+            @click="emit('open-details')"
           >
-            {{ formatDate(date) }}
-          </span>
+            <i class="pi pi-info-circle mr-1" />
+            детали
+          </Button>
+
+          <!-- Update button - only for non-completed reschedules and existing supplies -->
+          <Button
+            v-if="reschedule.status !== 'COMPLETED'"
+            severity="info"
+            variant="outlined"
+            size="small"
+            @click="emit('update', reschedule)"
+          >
+            <i class="pi pi-pencil" />
+          </Button>
+
+          <!-- Archive button for active reschedules -->
+          <Button
+            v-if="reschedule.status === 'ACTIVE'"
+            severity="warn"
+            variant="outlined"
+            size="small"
+            :loading="rescheduleStore.loading"
+            @click="handleArchive"
+          >
+            <i class="pi pi-folder-open" />
+          </Button>
+
+          <!-- Activate button for archived items -->
+          <Button
+            v-if="reschedule.status === 'ARCHIVED'"
+            severity="success"
+            variant="outlined"
+            size="small"
+            :loading="rescheduleStore.loading"
+            @click="handleActivate"
+          >
+            <i class="pi pi-play" />
+          </Button>
+
+          <!-- Delete button for active and archived reschedules -->
+          <Button
+            v-if="
+              reschedule.status === 'ACTIVE' || reschedule.status === 'ARCHIVED'
+            "
+            severity="danger"
+            variant="outlined"
+            size="small"
+            @click="emit('delete', reschedule.id)"
+          >
+            <i class="pi pi-trash" />
+          </Button>
         </div>
       </div>
-
-      <!-- Created Date -->
-      <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
-        <CalendarDaysIcon class="w-4 h-4" />
-        Создан: {{ formatDate(reschedule.createdAt) }}
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex justify-end gap-2 mt-2">
-        <!-- View details button - only show if supply exists -->
-        <BaseButton
-          size="sm"
-          variant="soft"
-          @click="emit('open-details')"
-        >
-          <InformationCircleIcon class="w-4 h-4 mr-1" />
-          детали
-        </BaseButton>
-
-        <!-- Update button - only for non-completed reschedules and existing supplies -->
-        <BaseButton
-          v-if="reschedule.status !== 'COMPLETED'"
-          color="blue"
-          variant="soft"
-          size="sm"
-          @click="emit('update', reschedule)"
-        >
-          <PencilSquareIcon class="w-4 h-4" />
-        </BaseButton>
-
-        <!-- Archive button for active reschedules -->
-        <BaseButton
-          v-if="reschedule.status === 'ACTIVE'"
-          color="yellow"
-          variant="soft"
-          size="sm"
-          :loading="rescheduleStore.loading"
-          @click="handleArchive"
-        >
-          <ArchiveBoxIcon class="w-4 h-4" />
-        </BaseButton>
-
-        <!-- Activate button for archived items -->
-        <BaseButton
-          v-if="reschedule.status === 'ARCHIVED'"
-          color="green"
-          variant="soft"
-          size="sm"
-          :loading="rescheduleStore.loading"
-          @click="handleActivate"
-        >
-          <PlayIcon class="w-4 h-4" />
-        </BaseButton>
-
-        <!-- Delete button for active and archived reschedules -->
-        <BaseButton
-          v-if="
-            reschedule.status === 'ACTIVE' || reschedule.status === 'ARCHIVED'
-          "
-          color="red"
-          variant="soft"
-          size="sm"
-          @click="emit('delete', reschedule.id)"
-        >
-          <TrashIcon class="w-4 h-4" />
-        </BaseButton>
-      </div>
-    </div>
-  </div>
+    </template>
+  </Card>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import {
-  BuildingOffice2Icon,
-  UserCircleIcon,
-  Squares2X2Icon,
-  CalendarIcon,
-  CurrencyDollarIcon,
-  CheckCircleIcon,
-  CalendarDaysIcon,
-  InformationCircleIcon,
-  PencilSquareIcon,
-  ArchiveBoxIcon,
-  PlayIcon,
-  TrashIcon,
-} from '@heroicons/vue/24/outline';
+import Card from 'primevue/card';
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useWarehousesStore } from '../../stores/warehouses';
 import { useUserStore } from '../../stores/user';
-import { BaseButton } from '../ui';
 import type { AutobookingReschedule } from '../../types';
 
 const props = defineProps<{
@@ -223,16 +209,16 @@ function getSupplierName(supplierId: string): string {
   return supplier ? supplier.supplierName : 'поставщик не найден';
 }
 
-function getSupplyTypeColorClass(supplyType: string): string {
+function getSupplyTypeSeverity(supplyType: string): string {
   switch (supplyType) {
     case 'BOX':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200';
+      return 'info';
     case 'MONOPALLETE':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200';
+      return 'secondary';
     case 'SUPERSAFE':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200';
+      return 'warn';
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      return 'secondary';
   }
 }
 

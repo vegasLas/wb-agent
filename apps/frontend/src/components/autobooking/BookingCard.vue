@@ -1,226 +1,192 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-    <div class="flex flex-col gap-3">
-      <!-- Header with supplier name on the right -->
-      <div class="flex items-start justify-between">
-        <div class="flex-1">
-          <!-- Warehouse section -->
-          <div class="flex items-center gap-2">
-            <BuildingOffice2Icon class="w-4 h-4 text-gray-500" />
-            <div class="flex flex-col gap-1">
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800 w-fit">
-                {{ warehouseStore.getWarehouseName(booking.warehouseId) }}
-              </span>
-              <span
-                v-if="booking.transitWarehouseId"
-                class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800 w-fit"
-              >
-                Транзит: {{ warehouseStore.getWarehouseName(booking.transitWarehouseId) }}
-              </span>
+  <Card>
+    <template #content>
+      <div class="flex flex-col gap-3">
+        <!-- Header with supplier name on the right -->
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <!-- Warehouse section -->
+            <div class="flex items-center gap-2">
+              <i class="pi pi-building text-gray-500 text-sm"></i>
+              <div class="flex flex-col gap-1">
+                <Tag :value="warehouseStore.getWarehouseName(booking.warehouseId)" severity="secondary" class="w-fit" />
+                <Tag
+                  v-if="booking.transitWarehouseId"
+                  severity="secondary"
+                  class="w-fit"
+                >
+                  Транзит: {{ warehouseStore.getWarehouseName(booking.transitWarehouseId) }}
+                </Tag>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Supplier section moved to top right -->
-        <div class="flex items-center gap-1 ml-2">
-          <UserCircleIcon class="w-4 h-4 text-gray-500" />
-          <span
-            class="inline-flex items-center px-2 py-0.5 rounded text-xs"
-            :class="isSupplierActive ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'"
-          >
-            {{ getSupplierName(booking.supplierId) }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Supply Type section -->
-      <div class="flex items-center gap-2">
-        <CubeIcon class="w-4 h-4 text-gray-500" />
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800">
-          {{ getSupplyTypeText(booking.supplyType) }}
-        </span>
-      </div>
-
-      <!-- MonopalletCount for MONOPALLETE supply type -->
-      <div
-        v-if="booking.supplyType === 'MONOPALLETE' && booking.monopalletCount"
-        class="flex items-center gap-2"
-      >
-        <Squares2X2Icon class="w-4 h-4 text-gray-500" />
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
-          {{ booking.monopalletCount }}
-          {{ booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет' }}
-        </span>
-      </div>
-
-      <!-- Date Information section -->
-      <AutobookingDateInfo :booking="booking" />
-
-      <!-- Coefficient section -->
-      <div class="flex items-center gap-2">
-        <component
-          :is="booking.maxCoefficient ? CurrencyDollarIcon : CheckCircleIcon"
-          class="w-4 h-4 text-gray-500"
-        />
-        <span
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs"
-          :class="booking.maxCoefficient ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'"
-        >
-          {{
-            booking.maxCoefficient
-              ? 'Макс. коэффициент: ' + booking.maxCoefficient
-              : 'Бесплатная'
-          }}
-        </span>
-      </div>
-
-      <!-- Status section -->
-      <div class="flex items-center gap-2">
-        <InformationCircleIcon class="w-4 h-4 text-gray-500" />
-        <span
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs"
-          :class="getStatusBadgeClass(booking.status)"
-        >
-          {{ listStore.getStatusText(booking.status) }}
-        </span>
-      </div>
-
-      <!-- Created Date -->
-      <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
-        <CalendarDaysIcon class="w-4 h-4" />
-        Создан: {{ formatDateShort(booking.createdAt) }}
-      </div>
-
-      <!-- Coefficient Suggestion Alert -->
-      <div
-        v-if="showCoefficientSuggestion && booking.status === 'ACTIVE'"
-        class="rounded-lg p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 mt-2"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <ArrowUpCircleIcon class="w-5 h-5" />
-            <p class="text-sm">
-              Рекомендуемый макс. коэффициент: {{ suggestedCoefficientValue }}.
-            </p>
+          <!-- Supplier section moved to top right -->
+          <div class="flex items-center gap-1 ml-2">
+            <i class="pi pi-user text-gray-500 text-sm"></i>
+            <Tag
+              :value="getSupplierName(booking.supplierId)"
+              :severity="isSupplierActive ? 'info' : 'danger'"
+            />
           </div>
-          <BaseButton
-            color="blue"
-            variant="solid"
-            size="xs"
-            :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
-            @click="updateCoefficient"
+        </div>
+
+        <!-- Supply Type section -->
+        <div class="flex items-center gap-2">
+          <i class="pi pi-box text-gray-500 text-sm"></i>
+          <Tag :value="getSupplyTypeText(booking.supplyType)" severity="secondary" />
+        </div>
+
+        <!-- MonopalletCount for MONOPALLETE supply type -->
+        <div
+          v-if="booking.supplyType === 'MONOPALLETE' && booking.monopalletCount"
+          class="flex items-center gap-2"
+        >
+          <i class="pi pi-th-large text-gray-500 text-sm"></i>
+          <Tag
+            :value="booking.monopalletCount + ' ' + (booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет')"
+            severity="info"
+          />
+        </div>
+
+        <!-- Date Information section -->
+        <AutobookingDateInfo :booking="booking" />
+
+        <!-- Coefficient section -->
+        <div class="flex items-center gap-2">
+          <i :class="booking.maxCoefficient ? 'pi pi-dollar' : 'pi pi-check-circle'" class="text-gray-500 text-sm"></i>
+          <Tag
+            :value="booking.maxCoefficient ? 'Макс. коэффициент: ' + booking.maxCoefficient : 'Бесплатная'"
+            :severity="booking.maxCoefficient ? 'warn' : 'success'"
+          />
+        </div>
+
+        <!-- Status section -->
+        <div class="flex items-center gap-2">
+          <i class="pi pi-info-circle text-gray-500 text-sm"></i>
+          <Tag
+            :value="listStore.getStatusText(booking.status)"
+            :severity="getStatusSeverity(booking.status)"
+          />
+        </div>
+
+        <!-- Created Date -->
+        <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
+          <i class="pi pi-calendar text-sm"></i>
+          Создан: {{ formatDateShort(booking.createdAt) }}
+        </div>
+
+        <!-- Coefficient Suggestion Alert -->
+        <Message
+          v-if="showCoefficientSuggestion && booking.status === 'ACTIVE'"
+          severity="info"
+          class="mt-2"
+        >
+          <div class="flex items-center justify-between w-full">
+            <div class="flex items-center gap-2">
+              <i class="pi pi-arrow-circle-up"></i>
+              <span class="text-sm">
+                Рекомендуемый макс. коэффициент: {{ suggestedCoefficientValue }}.
+              </span>
+            </div>
+            <Button
+              severity="info"
+              size="small"
+              :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
+              @click="updateCoefficient"
+            >
+              увеличить
+            </Button>
+          </div>
+        </Message>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-2 mt-2">
+          <!-- View goods button -->
+          <Button
+            size="small"
+            severity="info"
+            variant="outlined"
+            :disabled="!userStore.getSupplierById(booking.supplierId)"
+            @click="viewGoods"
           >
-            увеличить
-          </BaseButton>
+            <i class="pi pi-eye"></i>
+          </Button>
+
+          <!-- Update button for active autobookings -->
+          <Button
+            v-if="booking.status === 'ACTIVE'"
+            severity="info"
+            variant="outlined"
+            size="small"
+            @click="openUpdateForm"
+          >
+            <i class="pi pi-pencil"></i>
+          </Button>
+
+          <!-- Archive button for active autobookings -->
+          <Button
+            v-if="booking.status === 'ACTIVE'"
+            severity="warn"
+            variant="outlined"
+            size="small"
+            :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
+            @click="archiveAutobooking"
+          >
+            <i class="pi pi-archive"></i>
+          </Button>
+
+          <!-- Activate button or Not Relevant badge for archived items -->
+          <template v-if="booking.status === 'ARCHIVED'">
+            <Button
+              v-if="listStore.isBookingDatesRelevant(booking)"
+              severity="success"
+              variant="outlined"
+              size="small"
+              :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
+              @click="activateAutobooking"
+            >
+              <i class="pi pi-play"></i>
+            </Button>
+            <Tag
+              v-else
+              severity="danger"
+              icon="pi pi-clock"
+              value="Срок истек"
+            />
+          </template>
+
+          <!-- Explicit badge for ERROR status -->
+          <Tag
+            v-else-if="booking.status === 'ERROR'"
+            severity="danger"
+            icon="pi pi-exclamation-triangle"
+            value="Ошибка бронирования"
+          />
+
+          <!-- Delete button for active, archived or error autobookings -->
+          <Button
+            v-if="
+              booking.status === 'ACTIVE' ||
+              booking.status === 'ARCHIVED' ||
+              booking.status === 'ERROR'
+            "
+            severity="danger"
+            variant="outlined"
+            size="small"
+            :loading="autobookingStore.deletingId === booking.id"
+            @click="deleteAutobooking"
+          >
+            <i class="pi pi-trash"></i>
+          </Button>
         </div>
       </div>
-
-      <!-- Action Buttons -->
-      <div class="flex justify-end gap-2 mt-2">
-        <!-- View goods button -->
-        <BaseButton
-          size="sm"
-          variant="soft"
-          color="blue"
-          :disabled="!userStore.getSupplierById(booking.supplierId)"
-          @click="viewGoods"
-        >
-          <EyeIcon class="w-4 h-4" />
-        </BaseButton>
-
-        <!-- Update button for active autobookings -->
-        <BaseButton
-          v-if="booking.status === 'ACTIVE'"
-          color="blue"
-          variant="soft"
-          size="sm"
-          @click="openUpdateForm"
-        >
-          <PencilSquareIcon class="w-4 h-4" />
-        </BaseButton>
-
-        <!-- Archive button for active autobookings -->
-        <BaseButton
-          v-if="booking.status === 'ACTIVE'"
-          color="yellow"
-          variant="soft"
-          size="sm"
-          :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
-          @click="archiveAutobooking"
-        >
-          <ArchiveBoxIcon class="w-4 h-4" />
-        </BaseButton>
-
-        <!-- Activate button or Not Relevant badge for archived items -->
-        <template v-if="booking.status === 'ARCHIVED'">
-          <BaseButton
-            v-if="listStore.isBookingDatesRelevant(booking)"
-            color="green"
-            variant="soft"
-            size="sm"
-            :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
-            @click="activateAutobooking"
-          >
-            <PlayIcon class="w-4 h-4" />
-          </BaseButton>
-          <span
-            v-else
-            class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-100 text-red-800"
-          >
-            <ClockIcon class="w-3 h-3 mr-1" />
-            Срок истек
-          </span>
-        </template>
-
-        <!-- Explicit badge for ERROR status -->
-        <span
-          v-else-if="booking.status === 'ERROR'"
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-100 text-red-800"
-        >
-          <ExclamationTriangleIcon class="w-3 h-3 mr-1" />
-          Ошибка бронирования
-        </span>
-
-        <!-- Delete button for active, archived or error autobookings -->
-        <BaseButton
-          v-if="
-            booking.status === 'ACTIVE' ||
-            booking.status === 'ARCHIVED' ||
-            booking.status === 'ERROR'
-          "
-          color="red"
-          variant="soft"
-          size="sm"
-          :loading="autobookingStore.deletingId === booking.id"
-          @click="deleteAutobooking"
-        >
-          <TrashIcon class="w-4 h-4" />
-        </BaseButton>
-      </div>
-    </div>
-  </div>
+    </template>
+  </Card>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import {
-  BuildingOffice2Icon,
-  UserCircleIcon,
-  CubeIcon,
-  Squares2X2Icon,
-  CurrencyDollarIcon,
-  CheckCircleIcon,
-  InformationCircleIcon,
-  CalendarDaysIcon,
-  ArrowUpCircleIcon,
-  EyeIcon,
-  PencilSquareIcon,
-  ArchiveBoxIcon,
-  PlayIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  TrashIcon,
-} from '@heroicons/vue/24/outline';
 import type { Autobooking } from '../../types';
 import { useAutobookingStore } from '../../stores/autobooking';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
@@ -228,7 +194,10 @@ import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useUserStore } from '../../stores/user';
 import { useWarehousesStore } from '../../stores/warehouses';
 import { useCoefficientsStore } from '../../stores/coefficients';
-import { BaseButton } from '../ui';
+import Card from 'primevue/card';
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
+import Message from 'primevue/message';
 import AutobookingDateInfo from './DateInfo.vue';
 import { formatDateShort, getSupplyTypeText } from '../../utils/formatters';
 
@@ -267,14 +236,14 @@ function getSupplierName(supplierId: string): string {
   return supplier ? supplier.supplierName : 'поставщик не найден';
 }
 
-function getStatusBadgeClass(status: string): string {
-  const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-yellow-100 text-yellow-800',
-    COMPLETED: 'bg-green-100 text-green-800',
-    ARCHIVED: 'bg-gray-100 text-gray-800',
-    ERROR: 'bg-red-100 text-red-800',
+function getStatusSeverity(status: string): string {
+  const severityMap: Record<string, string> = {
+    ACTIVE: 'warn',
+    COMPLETED: 'success',
+    ARCHIVED: 'secondary',
+    ERROR: 'danger',
   };
-  return colorMap[status] || 'bg-gray-100 text-gray-800';
+  return severityMap[status] || 'secondary';
 }
 
 function viewGoods() {
