@@ -1,29 +1,26 @@
 {
-  "name": "api",
+  "name": "backend",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/backend/src",
   "projectType": "application",
   "tags": ["backend"],
   "targets": {
     "serve": {
-      "executor": "nx:run-commands",
+      "executor": "nx:run-script",
       "options": {
-        "command": "npx ts-node --project apps/backend/tsconfig.app.json apps/backend/src/main.ts",
-        "cwd": "."
+        "script": "serve"
       }
     },
     "serve:dev": {
-      "executor": "nx:run-commands",
+      "executor": "nx:run-script",
       "options": {
-        "command": "npx nodemon --exec ts-node --project apps/backend/tsconfig.app.json apps/backend/src/main.ts",
-        "cwd": "."
+        "script": "serve:dev"
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-script",
       "options": {
-        "command": "tsc -p apps/backend/tsconfig.app.json --outDir dist/apps/api"
+        "script": "build"
       }
     },
     "lint": {

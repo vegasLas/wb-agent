@@ -1,7 +1,7 @@
 # ==========================================
 # WB Backend - Production Dockerfile
 # ==========================================
-# Multi-stage build with simplified dist structure
+# Multi-stage build with minimal production image
 
 # ------------------------------------------
 # Stage 1: Builder
@@ -15,18 +15,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy root config files
+# Copy root config files (needed for build)
 COPY package*.json ./
 COPY nx.json ./
 COPY tsconfig*.json ./
-COPY tsconfig.base.json ./
+
+# Copy backend package.json
+COPY apps/backend/package*.json ./apps/backend/
+
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
 
 # Copy source code
 COPY apps/backend ./apps/backend
 COPY libs ./libs
-
-# Install all dependencies
-RUN npm ci
 
 # Install Playwright browser
 RUN npx playwright install chromium
@@ -35,12 +37,10 @@ RUN npx playwright install chromium
 RUN npx prisma generate --schema=apps/backend/prisma/schema.prisma
 
 # Build the application
-RUN npx nx build api
+RUN npx nx build backend
 
-# Restructure to clean dist folder in backend
-RUN mkdir -p apps/backend/dist && \
-    cp -r dist/apps/api/* apps/backend/dist/ && \
-    cp apps/backend/prisma/schema.prisma apps/backend/dist/
+# Prune dev dependencies for production
+RUN npm prune --omit=dev
 
 # ------------------------------------------
 # Stage 2: Production
@@ -70,12 +70,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libatspi2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy production dependencies from builder
+# Copy production node_modules from builder (no dev deps, no nx)
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
 
-# Copy built application (clean structure)
-COPY --from=builder /app/apps/backend/dist ./
+# Copy built application
+COPY --from=builder /app/dist/apps/api ./dist
+
+# Copy prisma schema for migrations
+COPY --from=builder /app/apps/backend/prisma ./prisma
 
 # Copy start script
 COPY apps/backend/start.sh ./start.sh
