@@ -182,8 +182,8 @@ export class SubscriptionNotificationService {
 
       // Check for other bot-related errors
       if (
-        error?.response?.body?.error_code === 400 &&
-        error?.response?.body?.description?.includes("chat not found")
+        err?.response?.body?.error_code === 400 &&
+        err?.response?.body?.description?.includes("chat not found")
       ) {
         console.log(
           `Chat not found for user ${notification.userId} - user may have deleted the chat`,
