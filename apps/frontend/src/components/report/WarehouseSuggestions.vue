@@ -2,134 +2,122 @@
   <div class="warehouse-suggestions">
     <!-- Suggestions List -->
     <div v-if="suggestions && suggestions.length > 0" class="space-y-4">
-      <div
+      <Card
         v-for="(suggestion, index) in suggestions"
         :key="index"
-        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
       >
         <!-- Header with priority icon -->
-        <div
-          class="px-4 py-3 border-b border-gray-200 dark:border-gray-700"
-          :class="{
-            'bg-red-50 dark:bg-red-900/20': suggestion.priority === 'high',
-            'bg-yellow-50 dark:bg-yellow-900/20': suggestion.priority === 'medium',
-            'bg-blue-50 dark:bg-blue-900/20': suggestion.priority === 'low',
-          }"
-        >
-          <div class="flex items-center">
-            <component
-              :is="getPriorityIcon(suggestion.priority)"
-              class="w-6 h-6 mr-2"
-              :class="{
-                'text-red-500': suggestion.priority === 'high',
-                'text-yellow-500': suggestion.priority === 'medium',
-                'text-blue-500': suggestion.priority === 'low',
-              }"
-            />
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-              {{ suggestion.warehouseName }} -
-              <span
-                :class="{
-                  'text-red-600 dark:text-red-400':
-                    suggestion.priority === 'high',
-                  'text-yellow-600 dark:text-yellow-400':
-                    suggestion.priority === 'medium',
-                  'text-blue-600 dark:text-blue-400':
-                    suggestion.priority === 'low',
-                }"
-              >
-                Приоритет:
-                {{ translatePriority(suggestion.priority).toUpperCase() }}
-              </span>
-            </h3>
+        <template #title>
+          <div
+            class="px-4 py-3 -mt-4 -mx-4 mb-4 rounded-t-lg"
+            :class="{
+              'bg-red-50 dark:bg-red-900/20': suggestion.priority === 'high',
+              'bg-yellow-50 dark:bg-yellow-900/20': suggestion.priority === 'medium',
+              'bg-blue-50 dark:bg-blue-900/20': suggestion.priority === 'low',
+            }"
+          >
+            <div class="flex items-center">
+              <i
+                class="text-xl mr-2"
+                :class="getPriorityIconClass(suggestion.priority)"
+              />
+              <h3 class="text-lg font-medium">
+                {{ suggestion.warehouseName }} -
+                <Tag
+                  :severity="getPrioritySeverity(suggestion.priority)"
+                  :value="translatePriority(suggestion.priority).toUpperCase()"
+                />
+              </h3>
+            </div>
           </div>
-        </div>
-
-        <div class="p-4">
+        </template>
+        <template #content>
           <p class="text-gray-700 dark:text-gray-300 mb-4">
             {{ suggestion.reason }}
           </p>
 
           <!-- Items Table -->
-          <div
+          <Card
             v-if="suggestion.relevantItems && suggestion.relevantItems.length > 0"
-            class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+            class="border border-gray-200 dark:border-gray-700"
           >
-            <div class="max-h-60 overflow-y-auto">
-              <table class="w-full text-sm text-left">
-                <thead
-                  class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0"
+            <template #content>
+              <div class="max-h-60 overflow-y-auto">
+                <DataTable
+                  :value="suggestion.relevantItems"
+                  scrollable
+                  scrollHeight="flex"
+                  class="p-datatable-sm"
                 >
-                  <tr>
-                    <th class="px-3 py-2">Товар (Артикул)</th>
-                    <th class="px-3 py-2">Остаток</th>
-                    <th class="px-3 py-2">Продано (30д)</th>
-                    <th class="px-3 py-2">Запас (дн.)</th>
-                    <th class="px-3 py-2">Рекомендация</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(item, itemIndex) in suggestion.relevantItems"
-                    :key="itemIndex"
-                    class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td class="px-3 py-2 font-medium">
-                      {{ item.vendorCode }}
-                    </td>
-                    <td class="px-3 py-2">
-                      {{ item.stockQty.toLocaleString('ru-RU') }}
-                    </td>
-                    <td class="px-3 py-2">
-                      {{ item.purchasedQty.toLocaleString('ru-RU') }}
-                    </td>
-                    <td class="px-3 py-2">
-                      {{ formatDaysOfStock(item.calculatedDaysOfStock) }}
-                    </td>
-                    <td class="px-3 py-2">
+                  <Column field="vendorCode" header="Товар (Артикул)">
+                    <template #body="{ data }">
+                      <span class="font-medium">{{ data.vendorCode }}</span>
+                    </template>
+                  </Column>
+                  <Column field="stockQty" header="Остаток">
+                    <template #body="{ data }">
+                      {{ data.stockQty.toLocaleString('ru-RU') }}
+                    </template>
+                  </Column>
+                  <Column field="purchasedQty" header="Продано (30д)">
+                    <template #body="{ data }">
+                      {{ data.purchasedQty.toLocaleString('ru-RU') }}
+                    </template>
+                  </Column>
+                  <Column field="calculatedDaysOfStock" header="Запас (дн.)">
+                    <template #body="{ data }">
+                      {{ formatDaysOfStock(data.calculatedDaysOfStock) }}
+                    </template>
+                  </Column>
+                  <Column header="Рекомендация">
+                    <template #body="{ data }">
                       <span
                         :class="{
                           'font-semibold text-green-600 dark:text-green-400':
-                            item.isReplenishment,
+                            data.isReplenishment,
                           'font-semibold text-orange-600 dark:text-orange-400':
-                            !item.isReplenishment,
+                            !data.isReplenishment,
                         }"
                       >
-                        {{ getRecommendationText(item) }}
+                        {{ getRecommendationText(data) }}
                       </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+                    </template>
+                  </Column>
+                </DataTable>
+              </div>
+            </template>
+          </Card>
+        </template>
+      </Card>
     </div>
 
     <!-- Loading State -->
-    <div
+    <Card
       v-else-if="reportStore.loading"
-      class="mt-8 text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+      class="mt-8 text-center py-12"
     >
-      <ArrowPathIcon class="h-8 w-8 mx-auto mb-4 text-blue-500 animate-spin" />
-      <p class="text-gray-500 dark:text-gray-400">Анализ рекомендаций...</p>
-    </div>
+      <template #content>
+        <i class="pi pi-spin pi-refresh text-3xl mx-auto mb-4 text-blue-500"></i>
+        <p class="text-gray-500 dark:text-gray-400">Анализ рекомендаций...</p>
+      </template>
+    </Card>
 
     <!-- Empty State -->
-    <div
+    <Card
       v-else
-      class="mt-8 text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+      class="mt-8 text-center py-12"
     >
-      <InformationCircleIcon class="h-12 w-12 mx-auto mb-4 text-gray-400" />
-      <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
-        Нет доступных рекомендаций
-      </h4>
-      <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-        Нет доступных рекомендаций для выбранного периода или по заданным
-        критериям.
-      </p>
-    </div>
+      <template #content>
+        <i class="pi pi-info-circle text-4xl mx-auto mb-4 text-gray-400"></i>
+        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          Нет доступных рекомендаций
+        </h4>
+        <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+          Нет доступных рекомендаций для выбранного периода или по заданным
+          критериям.
+        </p>
+      </template>
+    </Card>
   </div>
 </template>
 
@@ -137,22 +125,28 @@
 import { useWarehouseSuggestions } from '../../composables/useWarehouseSuggestions';
 import { useReportStore } from '../../stores/report';
 import type { WarehouseSuggestionItem } from '../../types';
-import {
-  ExclamationTriangleIcon,
-  ExclamationCircleIcon,
-  InformationCircleIcon,
-  ArrowPathIcon,
-} from '@heroicons/vue/24/solid';
+import Card from 'primevue/card';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Tag from 'primevue/tag';
 
 const reportStore = useReportStore();
 const { suggestions } = useWarehouseSuggestions();
 
-const getPriorityIcon = (priority: 'high' | 'medium' | 'low') => {
+const getPriorityIconClass = (priority: 'high' | 'medium' | 'low') => {
   return {
-    high: ExclamationTriangleIcon,
-    medium: ExclamationCircleIcon,
-    low: InformationCircleIcon,
+    high: 'pi pi-exclamation-triangle text-red-500',
+    medium: 'pi pi-exclamation-circle text-yellow-500',
+    low: 'pi pi-info-circle text-blue-500',
   }[priority];
+};
+
+const getPrioritySeverity = (priority: 'high' | 'medium' | 'low') => {
+  return {
+    high: 'danger',
+    medium: 'warn',
+    low: 'info',
+  }[priority] as 'danger' | 'warn' | 'info';
 };
 
 const translatePriority = (priority: 'high' | 'medium' | 'low') => {
