@@ -29,7 +29,7 @@ const cache = new Map<string, { data: unknown; timestamp: number }>();
  */
 async function getUserEnvInfo(userId: number): Promise<UserEnvInfo> {
   const user = await userService.findById(userId);
-  const envInfo = user?.envInfo as UserEnvInfo | undefined;
+  const envInfo = user?.envInfo as unknown as UserEnvInfo | undefined;
   if (!envInfo?.userAgent) {
     throw new ApiError(400, 'User environment info not available');
   }
