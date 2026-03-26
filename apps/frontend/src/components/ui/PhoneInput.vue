@@ -1,73 +1,52 @@
 <template>
   <div class="flex items-center">
     <!-- Country Code Select -->
-    <Listbox v-model="selectedCountryCode" :disabled="disabled">
-      <div class="relative">
-        <ListboxButton
-          :disabled="disabled"
-          class="relative flex items-center gap-1 rounded-l-lg border border-r-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 pl-3 pr-8 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+    <Select
+      v-model="selectedCountryCode"
+      :options="countries"
+      option-value="code"
+      :disabled="disabled"
+      class="w-auto"
+      :pt="{
+        root: { class: 'rounded-l-lg rounded-r-none border-r-0' },
+        trigger: { class: 'w-6' },
+        list: { class: 'w-48' }
+      }"
+    >
+      <template #value="{ value }">
+        <div class="flex items-center gap-1">
           <span class="text-lg">{{ selectedCountry.flag }}</span>
           <span class="text-gray-900 dark:text-white text-sm font-medium">{{ selectedCountry.dialCode }}</span>
-          <ChevronUpDownIcon class="h-4 w-4 text-gray-400 absolute right-2" aria-hidden="true" />
-        </ListboxButton>
-        <transition
-          leave-active-class="transition duration-100 ease-in"
-          leave-from-class="opacity-100"
-          leave-to-class="opacity-0"
-        >
-          <ListboxOptions
-            class="absolute z-10 mt-1 max-h-60 w-48 overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-          >
-            <ListboxOption
-              v-for="country in countries"
-              :key="country.code"
-              v-slot="{ active, selected }"
-              :value="country.code"
-              as="template"
-            >
-              <li
-                :class="[
-                  active ? 'bg-blue-100 dark:bg-blue-900/30' : 'text-gray-900 dark:text-white',
-                  'relative cursor-default select-none py-2 pl-3 pr-9',
-                ]"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="text-lg">{{ country.flag }}</span>
-                  <span :class="[selected ? 'font-medium' : 'font-normal']">{{ country.name }}</span>
-                  <span class="text-gray-500 text-sm ml-auto">{{ country.dialCode }}</span>
-                </div>
-                <span
-                  v-if="selected"
-                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-600"
-                >
-                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                </span>
-              </li>
-            </ListboxOption>
-          </ListboxOptions>
-        </transition>
-      </div>
-    </Listbox>
+        </div>
+      </template>
+      <template #option="{ option }">
+        <div class="flex items-center gap-2 w-full">
+          <span class="text-lg">{{ option.flag }}</span>
+          <span class="text-gray-900 dark:text-white">{{ option.name }}</span>
+          <span class="text-gray-500 text-sm ml-auto">{{ option.dialCode }}</span>
+        </div>
+      </template>
+    </Select>
 
     <!-- Phone Input -->
-    <input
-      ref="phoneInput"
+    <InputMask
       v-model="phoneNumber"
-      v-maska="phoneMask"
+      :mask="phoneMask"
       :placeholder="phoneMask"
       :disabled="disabled"
-      type="tel"
-      class="flex-1 block w-full rounded-r-lg border-l-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3 border"
-      @input="handlePhoneInput"
+      :pt="{
+        root: { class: 'flex-1' },
+        input: { class: 'w-full rounded-r-lg rounded-l-none border-l-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3 border' }
+      }"
+      @update:model-value="handlePhoneInput"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid';
+import InputMask from 'primevue/inputmask';
+import Select from 'primevue/select';
 
 interface Country {
   code: string;
