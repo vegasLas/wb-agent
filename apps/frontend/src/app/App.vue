@@ -15,7 +15,7 @@
     v-else-if="isClientSide && isTgClient && userStore.isFetched"
     :show-main="isLoaded && isTgClient"
   />
-  
+
   <!-- PrimeVue Global Components -->
   <Toast position="top-right" />
   <ConfirmDialog />
@@ -62,6 +62,7 @@ const rescheduleStore = useRescheduleStore();
 // Computed loading state
 const isLoaded = computed(() => {
   if (!userStore.isFetched || !warehouseStore.isFetched) return false;
+  console.log('Is loaded');
   switch (viewStore.currentView) {
     case 'autobookings-main':
       return listAutobookingStore.isFetched;
@@ -98,17 +99,17 @@ if (view === 'auth') {
 onMounted(async () => {
   try {
     await userStore.fetchUser();
-    
+
     // Fetch supplies if not loaded
     rescheduleStore.fetchReschedules();
-    coefficientsStore.loadCoefficients();
+    // coefficientsStore.loadCoefficients();
     warehouseStore.fetchWarehouses();
-    
+
     // Initialize Telegram WebApp
     const vueTg = await import('vue-tg');
     const { colorScheme } = vueTg.useWebAppTheme();
     useColorMode().preference = colorScheme.value;
-    
+
     const initData = vueTg.useWebApp().initData;
     isTgClient.value = Boolean(initData);
     isClientSide.value = true;
