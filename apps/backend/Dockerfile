@@ -1,7 +1,7 @@
 # ==========================================
 # WB Backend - Production Dockerfile
 # ==========================================
-# Multi-stage build with minimal production image
+# Standalone build using backend's package.json + shared libs
 
 # ------------------------------------------
 # Stage 1: Builder
@@ -15,32 +15,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy root config files (needed for build)
-COPY package*.json ./
-COPY nx.json ./
-COPY tsconfig*.json ./
-
 # Copy backend package.json
-COPY apps/backend/package*.json ./apps/backend/
+COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
-RUN npm ci
+# Install dependencies
+RUN npm install
 
-# Copy source code
-COPY apps/backend ./apps/backend
-COPY libs ./libs
+# Copy source code (backend + libs)
+COPY . .
 
 # Install Playwright browser
 RUN npx playwright install chromium
 
 # Generate Prisma client
-RUN npx prisma generate --schema=apps/backend/prisma/schema.prisma
+RUN npx prisma generate --schema=prisma/schema.prisma
 
-# Build the application
-RUN npx nx build backend
-
-# Prune dev dependencies for production
-RUN npm prune --omit=dev
+# Build with tsc
+RUN npx tsc -p tsconfig.docker.json
 
 # ------------------------------------------
 # Stage 2: Production
@@ -70,17 +61,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libatspi2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy production node_modules from builder (no dev deps, no nx)
+# Copy package files
+COPY package*.json ./
+
+# Copy node_modules from builder, then prune dev dependencies
 COPY --from=builder /app/node_modules ./node_modules
+RUN npm prune --omit=dev
 
 # Copy built application
-COPY --from=builder /app/dist/apps/api ./dist
+COPY --from=builder /app/dist ./dist
 
-# Copy prisma schema for migrations
-COPY --from=builder /app/apps/backend/prisma ./prisma
+# Copy prisma schema
+COPY --from=builder /app/prisma ./prisma
 
 # Copy start script
-COPY apps/backend/start.sh ./start.sh
+COPY start.sh ./start.sh
 RUN chmod +x ./start.sh
 
 EXPOSE 3001

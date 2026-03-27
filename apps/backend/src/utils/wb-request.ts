@@ -2,7 +2,7 @@ import { Cookie } from 'playwright';
 import { prisma } from '../config/database';
 import { logger } from './logger';
 import { getCookiesFromAccount } from './cookies';
-import pkg from 'https-proxy-agent';
+import * as pkg from 'https-proxy-agent';
 const { HttpsProxyAgent } = pkg;
 
 // Define Proxy interface
