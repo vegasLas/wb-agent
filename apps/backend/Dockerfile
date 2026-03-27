@@ -25,7 +25,7 @@ RUN npm install
 COPY . .
 
 # Install Playwright browser
-RUN npx playwright install chromium
+# RUN npx playwright install chromium
 
 # Generate Prisma client
 RUN npx prisma generate --schema=prisma/schema.prisma

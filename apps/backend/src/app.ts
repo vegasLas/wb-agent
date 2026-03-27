@@ -35,8 +35,8 @@ export function createApp(): Application {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // Request logging
-  app.use(requestLogger);
+  // Request logging disabled - only your console.log will show
+  // app.use(requestLogger);
 
   // Health check endpoint
   app.get('/health', (req, res) => {
