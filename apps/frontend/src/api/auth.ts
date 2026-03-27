@@ -1,5 +1,4 @@
 import apiClient from './client';
-import { useWebApp } from 'vue-tg';
 
 export interface VerifyPhoneResponse {
   success: boolean;
@@ -27,21 +26,14 @@ export interface CancelAuthResponse {
   message: string;
 }
 
-function getInitData(): string {
-  const webApp = useWebApp();
-  return webApp.initData.value || '';
-}
-
 export const authAPI = {
   async verifyPhone(phoneNumber: string): Promise<VerifyPhoneResponse> {
-    const initData = getInitData();
-    const response = await apiClient.post<VerifyPhoneResponse>('/auth/verify-phone', {
-      phoneNumber,
-    }, {
-      headers: {
-        'x-init-data': initData,
+    const response = await apiClient.post<VerifyPhoneResponse>(
+      '/auth/verify-phone',
+      {
+        phoneNumber,
       },
-    });
+    );
     return response.data;
   },
 
@@ -49,15 +41,13 @@ export const authAPI = {
     smsCode: string,
     sessionId: string,
   ): Promise<VerifySMSResponse> {
-    const initData = getInitData();
-    const response = await apiClient.post<VerifySMSResponse>('/auth/verify-sms', {
-      smsCode,
-      sessionId,
-    }, {
-      headers: {
-        'x-init-data': initData,
+    const response = await apiClient.post<VerifySMSResponse>(
+      '/auth/verify-sms',
+      {
+        smsCode,
+        sessionId,
       },
-    });
+    );
     return response.data;
   },
 
@@ -65,30 +55,19 @@ export const authAPI = {
     twoFactorCode: string,
     sessionId: string,
   ): Promise<VerifyTwoFactorResponse> {
-    const initData = getInitData();
     const response = await apiClient.post<VerifyTwoFactorResponse>(
       '/auth/verify-two-factor',
       {
         twoFactorCode,
         sessionId,
       },
-      {
-        headers: {
-          'x-init-data': initData,
-        },
-      },
     );
     return response.data;
   },
 
   async cancelAuth(sessionId: string): Promise<CancelAuthResponse> {
-    const initData = getInitData();
     const response = await apiClient.post<CancelAuthResponse>('/auth/cancel', {
       sessionId,
-    }, {
-      headers: {
-        'x-init-data': initData,
-      },
     });
     return response.data;
   },

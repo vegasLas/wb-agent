@@ -1,4 +1,28 @@
-import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
+
+// Extended Window interface for Telegram WebApp
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Telegram?: any;
+  }
+}
+
+/**
+ * Get Telegram initData from WebApp
+ * Similar to how the deprecated project used getInitData() from vue-tg
+ */
+function getInitData(): string {
+  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+    return window.Telegram.WebApp.initData || '';
+  }
+  return '';
+}
 
 // Create axios instance with base URL
 const apiClient: AxiosInstance = axios.create({
@@ -9,21 +33,21 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add Telegram initData
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    // Get token from localStorage
-    const token = localStorage.getItem('auth_token');
-    
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Get initData from Telegram WebApp
+    const initData = getInitData();
+
+    if (initData && config.headers) {
+      config.headers['x-init-data'] = initData;
     }
-    
+
     return config;
   },
   (error: AxiosError): Promise<AxiosError> => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor for error handling
@@ -35,7 +59,7 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Handle specific error status codes
       const status = error.response.status;
-      
+
       switch (status) {
         case 401:
           // Unauthorized - clear token and redirect to login
@@ -64,9 +88,9 @@ apiClient.interceptors.response.use(
       // Request setup error
       console.error('Request error:', error.message);
     }
-    
+
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

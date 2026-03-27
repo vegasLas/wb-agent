@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { api } from '../api';
+import { userAPI } from '../api';
 
 export interface User {
   name: string;
@@ -133,14 +133,9 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true;
     notFound.value = false;
     try {
-      const response = await api.get('/user/me');
-
-      if (!response.data) {
-        throw new Error('Failed to fetch user data');
-      }
-
-      user.value = response.data;
-      return response.data;
+      const data = await userAPI.fetchUser();
+      user.value = data;
+      return data;
     } catch (err) {
       error.value = 'Failed to fetch user data';
       notFound.value = true;
@@ -168,7 +163,7 @@ export const useUserStore = defineStore('user', () => {
 
     if (confirmed) {
       try {
-        await api.post('/auth/logout');
+        await userAPI.logout();
         // Clear all accounts and reset selected account
         user.value.accounts = [];
         user.value.selectedAccountId = undefined;
@@ -182,11 +177,11 @@ export const useUserStore = defineStore('user', () => {
 
   async function agreeToTerms() {
     try {
-      const response = await api.post('/user/agree-terms');
-      if (response.data.success) {
+      const response = await userAPI.agreeToTerms();
+      if (response.success) {
         user.value.agreeTerms = true;
       }
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Failed to agree to terms:', error);
       throw error;

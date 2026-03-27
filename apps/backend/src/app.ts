@@ -17,14 +17,16 @@ export function createApp(): Application {
 
   // Security middleware
   app.use(helmet());
-  
+
   // CORS configuration
-  app.use(cors({
-    origin: env.FRONTEND_URL,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }));
+  app.use(
+    cors({
+      origin: env.FRONTEND_URL,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    }),
+  );
 
   // Compression middleware
   app.use(compression());
@@ -49,7 +51,7 @@ export function createApp(): Application {
   });
 
   // API routes
-  app.use('/api/v1', routes);
+  app.use('/v1', routes);
 
   // 404 handler
   app.use(notFoundHandler);
@@ -71,7 +73,7 @@ export async function startServer(): Promise<void> {
     logger.info(`🚀 Server running on port ${port}`);
     logger.info(`📡 Environment: ${env.NODE_ENV}`);
     logger.info(`🔗 Health check: http://localhost:${port}/health`);
-    
+
     // Initialize monitoring cleanup cron jobs
     initializeMonitoringCleanupJobs();
   });

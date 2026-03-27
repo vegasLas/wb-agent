@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { api } from '../api';
+import { triggersAPI } from '../api';
 import { useViewStore } from './view';
 import { useWarehousesStore } from './warehouses';
 import type { SupplyTrigger, CreateTriggerRequest } from '../types';
@@ -73,8 +73,7 @@ export const useTriggerStore = defineStore('triggers', () => {
   async function create(data: CreateTriggerRequest) {
     try {
       isCreating.value = true;
-      const response = await api.post('/triggers', data);
-      const trigger = response.data as SupplyTrigger;
+      const trigger = await triggersAPI.createTrigger(data);
       if (trigger) {
         triggers.value.unshift(trigger);
       }
@@ -91,8 +90,7 @@ export const useTriggerStore = defineStore('triggers', () => {
   async function updateTrigger(data: Partial<SupplyTrigger> & { id: string }) {
     try {
       isUpdating.value = true;
-      const response = await api.put(`/triggers/${data.id}`, data);
-      const trigger = response.data as SupplyTrigger;
+      const trigger = await triggersAPI.updateTrigger(data.id, data);
       if (trigger) {
         const index = triggers.value.findIndex((t) => t.id === data.id);
         if (index !== -1) {
@@ -112,10 +110,8 @@ export const useTriggerStore = defineStore('triggers', () => {
     try {
       loading.value = true;
       error.value = null;
-      const response = await api.get('/triggers');
-      if (response.data) {
-        triggers.value = response.data.data || response.data;
-      }
+      const data = await triggersAPI.fetchTriggers();
+      triggers.value = data;
       return triggers.value;
     } catch (err) {
       error.value = 'Failed to fetch triggers';
@@ -131,7 +127,7 @@ export const useTriggerStore = defineStore('triggers', () => {
       deletingId.value = triggerId;
       isDeleting.value = true;
 
-      await api.delete(`/triggers/${triggerId}`);
+      await triggersAPI.deleteTrigger(triggerId);
       triggers.value = triggers.value.filter((t) => t.id !== triggerId);
     } catch (err) {
       error.value = 'Failed to delete trigger';
@@ -145,8 +141,7 @@ export const useTriggerStore = defineStore('triggers', () => {
   async function toggleTrigger(triggerId: string): Promise<void> {
     try {
       togglingId.value = triggerId;
-      const response = await api.patch(`/triggers/${triggerId}/toggle`);
-      const updatedTrigger = response.data as SupplyTrigger;
+      const updatedTrigger = await triggersAPI.toggleTrigger(triggerId);
       const index = triggers.value.findIndex((t) => t.id === triggerId);
       if (index !== -1 && updatedTrigger) {
         triggers.value[index] = updatedTrigger;

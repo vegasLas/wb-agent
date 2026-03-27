@@ -1,7 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { draftsAPI } from '../api';
-import { api } from '../api';
+import { useUserStore } from './user';
 import type { Draft, DraftGood } from '../types';
 
 export const useDraftStore = defineStore('draft', () => {
@@ -57,21 +57,17 @@ export const useDraftStore = defineStore('draft', () => {
     try {
       loadingGoods.value = true;
       showGoodsModal.value = true;
-      
-      const response = await api.get(`/drafts/${draftId}/goods`, {
-        params: supplierId ? { supplierId } : undefined
-      });
-      
-      if (response.data && response.data.success) {
-        draftGoods.value = response.data.data.map((good: { sa?: string; article?: string; imgSrc?: string; image?: string; subjectName?: string; name?: string; quantity?: number }) => ({
-          article: good.sa || good.article,
-          image: good.imgSrc || good.image,
-          name: good.subjectName || good.name,
-          quantity: good.quantity,
-        })) || [];
-      } else {
-        draftGoods.value = [];
-      }
+
+      const userStore = useUserStore();
+      const accountId = userStore.selectedAccount?.id;
+
+      const data = await draftsAPI.fetchDraftGoods(draftId, accountId, supplierId);
+      draftGoods.value = data.map((good) => ({
+        article: (good as unknown as { sa?: string }).sa || (good as unknown as { article?: string }).article,
+        image: (good as unknown as { imgSrc?: string }).imgSrc || (good as unknown as { image?: string }).image,
+        name: (good as unknown as { subjectName?: string }).subjectName || (good as unknown as { name?: string }).name,
+        quantity: good.quantity,
+      })) || [];
     } catch (err: unknown) {
       console.error('Failed to fetch draft goods:', err);
       draftGoods.value = [];

@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { defineStore } from 'pinia';
 import { useUserStore } from './user';
-import { api } from '../api';
+import { accountsAPI } from '../api';
 import type { Account, Supplier } from './user';
 
 export const useAccountsStore = defineStore('accounts', () => {
@@ -50,7 +50,7 @@ export const useAccountsStore = defineStore('accounts', () => {
   ) {
     try {
       // Update backend
-      await api.put(`/accounts/${accountId}/supplier`, { supplierId });
+      await accountsAPI.updateAccountSupplier(accountId, supplierId);
 
       // Update local state in userStore
       const account = userStore.user.accounts.find(
@@ -70,13 +70,13 @@ export const useAccountsStore = defineStore('accounts', () => {
 
   async function refreshAccountSuppliers(accountId: string) {
     try {
-      const response = await api.post(`/accounts/${accountId}/refresh-suppliers`);
+      const result = await accountsAPI.refreshAccountSuppliers(accountId);
 
-      if (response.data.success) {
+      if (result.success) {
         // Refresh user data to get updated suppliers from server
         await userStore.fetchUser();
 
-        return response.data.suppliers;
+        return result.suppliers;
       }
     } catch (error) {
       console.error('Error refreshing suppliers:', error);
@@ -86,7 +86,7 @@ export const useAccountsStore = defineStore('accounts', () => {
 
   async function deleteAccount(accountId: string) {
     try {
-      await api.delete(`/accounts/${accountId}`);
+      await accountsAPI.deleteAccount(accountId);
 
       // Refresh user data to get updated accounts list
       await userStore.fetchUser();
