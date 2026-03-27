@@ -11,6 +11,7 @@ import warehouseRoutes from './warehouses.routes';
 import suppliesRoutes from './supplies.routes';
 import paymentRoutes from './payments.routes';
 import webhookRoutes from './webhooks.routes';
+import coefficientsRoutes from './coefficients.routes';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -33,6 +34,7 @@ router.get('/', (req, res) => {
       payments: '/api/v1/payments',
       user: '/api/v1/user',
       webhooks: '/api/v1/webhooks',
+      coefficients: '/api/v1/coefficients',
     },
   });
 });
@@ -69,6 +71,9 @@ router.use('/supplies', authenticate, suppliesRoutes);
 
 // Payment routes (protected)
 router.use('/payments', authenticate, paymentRoutes);
+
+// Coefficients routes (protected)
+router.use('/coefficients', authenticate, coefficientsRoutes);
 
 // Webhook routes (public - called by YooKassa)
 router.use('/webhooks', webhookRoutes);
