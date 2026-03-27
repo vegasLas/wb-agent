@@ -142,6 +142,32 @@ export class UserService {
         stats?.autobookings?.filter((b: { status: string }) => b.status === 'ACTIVE')?.length || 0,
     };
   }
+
+  /**
+   * Find a random user that has at least one account
+   * Used as fallback when current user has no accounts
+   */
+  async findRandomUserWithAccount() {
+    const usersWithAccounts = await prisma.user.findMany({
+      where: {
+        accounts: {
+          some: {},
+        },
+      },
+      include: {
+        accounts: { include: { suppliers: true } },
+      },
+      take: 10, // Get up to 10 users to have some randomness
+    });
+
+    if (usersWithAccounts.length === 0) {
+      return null;
+    }
+
+    // Return a random user from the list
+    const randomIndex = Math.floor(Math.random() * usersWithAccounts.length);
+    return usersWithAccounts[randomIndex];
+  }
 }
 
 export const userService = new UserService();

@@ -19,7 +19,7 @@ const router = Router();
 
 // Cache configuration
 const CACHE_KEY = 'warehouses';
-const CACHE_DURATION = 14 * 24 * 60 * 60 * 1000; // 14 days
+const CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // In-memory cache (in production, use Redis or similar)
 const cache = new Map<string, { data: unknown; timestamp: number }>();
@@ -69,18 +69,8 @@ function getSupplierId(account: {
 router.get(
   '/',
   authenticate,
-  query('accountId').isUUID().withMessage('Valid account ID is required'),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', {
-          errors: errors.array(),
-        });
-      }
-
-      const { accountId } = req.query as { accountId: string };
-
       // Check cache first
       const cachedData = cache.get(CACHE_KEY);
       if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
@@ -92,8 +82,30 @@ router.get(
         return;
       }
 
-      const account = await getValidatedAccount(req.user!.id, accountId);
-      const envInfo = await getUserEnvInfo(req.user!.id);
+      // Get user's accounts
+      const userAccounts = await accountService.getUserAccounts(req.user!.id);
+      
+      let account;
+      let envInfo;
+      
+      if (userAccounts.length === 0) {
+        // User has no accounts, find a random user with an account
+        logger.info(`User ${req.user!.id} has no accounts, finding random user with account`);
+        const randomUser = await userService.findRandomUserWithAccount();
+        if (!randomUser) {
+          throw new ApiError(404, 'No accounts available in the system');
+        }
+        account = randomUser.accounts[0];
+        envInfo = randomUser.envInfo as unknown as UserEnvInfo | undefined;
+        logger.info(`Using account ${account.id} from random user ${randomUser.id}`);
+        if (!envInfo?.userAgent) {
+          throw new ApiError(400, 'User environment info not available');
+        }
+      } else {
+        account = userAccounts[0];
+        envInfo = await getUserEnvInfo(req.user!.id);
+      }
+      
       const supplierId = getSupplierId(account);
 
       const warehousesResponse = await wbWarehouseService
