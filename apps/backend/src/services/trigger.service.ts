@@ -2,7 +2,10 @@ import { prisma } from '../config/database';
 import type { SupplyTrigger } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import { apiKeyRateLimiterService } from './api-key-rate-limiter.service';
-import { DEFAULT_CHECK_INTERVAL, DEFAULT_SEARCH_MODE } from '../constants/triggers';
+import {
+  DEFAULT_CHECK_INTERVAL,
+  DEFAULT_SEARCH_MODE,
+} from '../constants/triggers';
 import type { Supply } from '../types/wb';
 
 export interface CreateTriggerDto {
@@ -45,7 +48,10 @@ export class TriggerService {
     return TriggerService.instance;
   }
 
-  private async getNextApiKey(): Promise<{ userId: number; apiKey: string } | null> {
+  private async getNextApiKey(): Promise<{
+    userId: number;
+    apiKey: string;
+  } | null> {
     return apiKeyRateLimiterService.getAvailableApiKey();
   }
 
@@ -64,7 +70,7 @@ export class TriggerService {
       const nextAvailableTime = apiKeyRateLimiterService.getNextAvailableTime();
       if (nextAvailableTime !== null && nextAvailableTime > 0) {
         throw new Error(
-          `No API keys available. Next available in ${Math.ceil(nextAvailableTime / 1000)} seconds`
+          `No API keys available. Next available in ${Math.ceil(nextAvailableTime / 1000)} seconds`,
         );
       }
       throw new Error('No active API keys available');
@@ -79,7 +85,7 @@ export class TriggerService {
           headers: {
             Authorization: apiKeyInfo.apiKey,
           },
-        }
+        },
       );
 
       // Mark key as successful use
@@ -91,7 +97,9 @@ export class TriggerService {
         // Check if it's an authentication error
         if (error.response?.status === 401 || error.response?.status === 403) {
           await this.deactivateApiKey(apiKeyInfo.userId);
-          throw new Error('API key authentication failed and has been deactivated');
+          throw new Error(
+            'API key authentication failed and has been deactivated',
+          );
         }
 
         // Check if it's a rate limiting error
@@ -99,13 +107,18 @@ export class TriggerService {
           error.response?.data?.detail?.includes('Limited by global limiter') ||
           error.message?.includes('Limited by global limiter')
         ) {
-          apiKeyRateLimiterService.temporarilyBlockApiKey(apiKeyInfo.userId, 10);
+          apiKeyRateLimiterService.temporarilyBlockApiKey(
+            apiKeyInfo.userId,
+            10,
+          );
           throw new Error(
-            'Rate limit exceeded. API key has been temporarily blocked for 10 seconds'
+            'Rate limit exceeded. API key has been temporarily blocked for 10 seconds',
           );
         }
 
-        throw new Error(error.response?.data?.detail || 'Failed to fetch coefficients');
+        throw new Error(
+          error.response?.data?.detail || 'Failed to fetch coefficients',
+        );
       }
       throw error;
     }
@@ -136,7 +149,7 @@ export class TriggerService {
    */
   async createTrigger(
     userId: number,
-    data: CreateTriggerDto
+    data: CreateTriggerDto,
   ): Promise<SupplyTrigger> {
     const { selectedDates, ...triggerData } = data;
 
@@ -159,7 +172,10 @@ export class TriggerService {
    * Update a trigger - matches deprecated project logic
    * Only updates warehouseIds, supplyTypes, and isActive
    */
-  async updateTrigger(userId: number, data: UpdateTriggerDto): Promise<SupplyTrigger> {
+  async updateTrigger(
+    userId: number,
+    data: UpdateTriggerDto,
+  ): Promise<SupplyTrigger> {
     const trigger = await prisma.supplyTrigger.findFirst({
       where: { id: data.triggerId, userId },
     });
@@ -197,7 +213,10 @@ export class TriggerService {
    * Toggle trigger active status - with limit check when activating
    * Checks 30 trigger limit only when activating (not when deactivating)
    */
-  async toggleTrigger(userId: number, triggerId: string): Promise<SupplyTrigger> {
+  async toggleTrigger(
+    userId: number,
+    triggerId: string,
+  ): Promise<SupplyTrigger> {
     const trigger = await prisma.supplyTrigger.findFirst({
       where: { id: triggerId, userId },
     });
@@ -240,7 +259,7 @@ export class TriggerService {
    */
   async updateTriggerStatus(
     triggerId: string,
-    status: 'COMPLETED' | 'EXPIRED' | 'RELEVANT'
+    status: 'COMPLETED' | 'EXPIRED' | 'RELEVANT',
   ): Promise<void> {
     await prisma.supplyTrigger.update({
       where: { id: triggerId },
