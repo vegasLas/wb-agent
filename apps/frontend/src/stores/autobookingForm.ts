@@ -1,6 +1,6 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { autobookingAPI } from '../api';
+import { autobookingAPI, warehousesAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
 import { useViewStore } from './view';
 import { useUserStore } from './user';
@@ -132,15 +132,21 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
 
     try {
       validationLoading.value = true;
-      // Call API to validate warehouse and draft compatibility
-      // This is a placeholder - actual implementation depends on backend API
-      const { api } = require('../api');
-      const response = await api.post('/autobookings/validate', {
+      const userStore = useUserStore();
+      const accountId = userStore.selectedAccount?.id;
+
+      const response = await warehousesAPI.validateWarehouse({
+        accountId,
+        draftID: form.value.draftId,
         warehouseId: form.value.warehouseId,
         transitWarehouseId: form.value.transitWarehouseId,
-        draftId: form.value.draftId,
       });
-      validationResult.value = response.data;
+
+      if (response.success && response.data) {
+        validationResult.value = response.data as unknown as typeof validationResult.value;
+      } else {
+        validationResult.value = null;
+      }
     } catch (err) {
       console.error('Validation failed:', err);
       validationResult.value = null;

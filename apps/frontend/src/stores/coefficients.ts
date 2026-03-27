@@ -1,9 +1,9 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { api } from '../api';
+import { coefficientsAPI } from '../api';
+import type { Coefficient } from '../api/coefficients';
 
 export interface WarehouseCoefficient {
-  id: string;
   warehouseId: number;
   warehouseName: string;
   maxCoefficient: number;
@@ -13,17 +13,34 @@ export interface WarehouseCoefficient {
   updatedAt: string;
 }
 
+// Map WB API coefficient types to our internal supply types
+const BOX_TYPE_MAP: Record<number, string> = {
+  2: 'BOX',
+  3: 'MONOPALLETE',
+  4: 'SUPERSAFE',
+};
+
 export const useCoefficientsStore = defineStore('coefficients', () => {
   const coefficients = ref<WarehouseCoefficient[]>([]);
   const loading = ref(false);
 
-  async function loadCoefficients() {
-    if (coefficients.value.length > 0 || loading.value) return;
+  async function loadCoefficients(warehouseIDs?: number[]) {
+    if (loading.value) return;
 
     try {
       loading.value = true;
-      const response = await api.get('/coefficients');
-      coefficients.value = response.data as WarehouseCoefficient[];
+      const data = await coefficientsAPI.fetchCoefficients(warehouseIDs);
+
+      // Transform WB API response to internal format
+      coefficients.value = data.map((item: Coefficient) => ({
+        warehouseId: item.warehouseId,
+        warehouseName: item.warehouseName,
+        maxCoefficient: item.coefficient,
+        date: item.date,
+        supplyType: BOX_TYPE_MAP[item.boxTypeId] || String(item.boxTypeId),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
     } catch (error) {
       console.error('Error fetching coefficients:', error);
       throw error;

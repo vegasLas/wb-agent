@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { api } from '../api';
+import { warehousesAPI } from '../api';
+import { useUserStore } from './user';
 
 export interface Warehouse {
   ID: number;
@@ -33,20 +34,31 @@ export const useWarehousesStore = defineStore('warehouses', () => {
   async function fetchWarehouses() {
     if (warehouses.value.length > 0) return;
 
-    const response = await api.get('/warehouses');
-    if (response.data) {
-      warehouses.value = response.data;
+    const userStore = useUserStore();
+    const accountId = userStore.selectedAccount?.id;
+    if (!accountId) {
+      console.error('No account selected');
+      return;
     }
+
+    const data = await warehousesAPI.fetchWarehouses(accountId);
+    warehouses.value = data;
     isFetched.value = true;
   }
 
   async function fetchTransits(warehouseId: number) {
     loading.value = true;
     try {
-      const response = await api.get(`/warehouses/${warehouseId}/transits`);
-      if (response.data.success) {
-        transitWarehouses.value = response.data.data;
+      const userStore = useUserStore();
+      const accountId = userStore.selectedAccount?.id;
+      if (!accountId) {
+        console.error('No account selected');
+        transitWarehouses.value = [];
+        return;
       }
+
+      const data = await warehousesAPI.fetchTransits(accountId, warehouseId);
+      transitWarehouses.value = data;
     } catch (error) {
       console.error('Failed to fetch transits:', error);
       transitWarehouses.value = [];

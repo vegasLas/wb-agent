@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { api } from '../api';
+import { autobookingAPI } from '../api';
 import { useWarehousesStore } from './warehouses';
 import { AUTOBOOKING_STATUSES } from '../constants';
 import type { Autobooking } from '../types';
@@ -133,7 +133,7 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   async function activateAutobooking(booking: Autobooking) {
     try {
       loading.value = true;
-      await api.post(`/autobookings/${booking.id}/activate`);
+      await autobookingAPI.updateAutobooking(booking.id, { status: 'ACTIVE' });
       // Refresh the list to get updated status
       await fetchData(1);
     } catch (err) {
@@ -151,11 +151,7 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
         await warehouseStore.fetchWarehouses();
       }
 
-      const response = await api.get('/autobookings', {
-        params: { page: page || currentPage.value },
-      });
-
-      const data = response.data as AutobookingsResponse;
+      const data = await autobookingAPI.fetchAutobookings(page || currentPage.value);
 
       // Update the counts and autobookings
       statusCounts.value = data.counts;

@@ -2,7 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { useUserStore } from './user';
 import { useAccountsStore } from './accounts';
-import { api } from '../api';
+import { userAPI } from '../api';
 
 export const useAccountSupplierModalStore = defineStore(
   'accountSupplierModal',
@@ -109,9 +109,7 @@ export const useAccountSupplierModalStore = defineStore(
       try {
         // Update selected account if changed
         if (tempSelectedAccountId.value !== userStore.user.selectedAccountId) {
-          await api.put('/user/selected-account', {
-            accountId: tempSelectedAccountId.value,
-          });
+          await userAPI.updateSelectedAccount(tempSelectedAccountId.value);
           userStore.user.selectedAccountId = tempSelectedAccountId.value;
         }
 
