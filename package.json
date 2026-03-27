@@ -14,8 +14,8 @@
     "type-check": "nx type-check frontend",
     "test": "nx run-many -t test -p backend -- --forceExit",
     "test:frontend": "nx run-many -t test -p frontend",
-    "docker:build": "cp -r libs apps/backend/ && docker buildx build -t vegasslas/myapp-private:wb-test -f apps/backend/Dockerfile apps/backend && rm -rf apps/backend/libs",
-    "docker:build:push": "cp -r libs apps/backend/ && docker buildx build --platform linux/amd64 -t vegasslas/myapp-private:wb-test -f apps/backend/Dockerfile apps/backend && rm -rf apps/backend/libs && docker push vegasslas/myapp-private:wb-test",
+    "docker:build": "docker buildx build -t vegasslas/myapp-private:wb-test -f apps/backend/Dockerfile apps/backend",
+    "docker:build:push": "docker buildx build --platform linux/amd64 -t vegasslas/myapp-private:wb-test -f apps/backend/Dockerfile apps/backend --push",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f backend"

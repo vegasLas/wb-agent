@@ -25,8 +25,8 @@
     "noImplicitOverride": false,
     "noUnusedLocals": false,
     "paths": {
-      "@wb-monorepo/shared": ["../../libs/shared/src/index.ts"],
-      "@wb-monorepo/shared/*": ["../../libs/shared/src/*"]
+      "@wb-monorepo/shared": ["./libs/shared/src/index.ts"],
+      "@wb-monorepo/shared/*": ["./libs/shared/src/*"]
     }
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/**/__tests__/**/*"],
