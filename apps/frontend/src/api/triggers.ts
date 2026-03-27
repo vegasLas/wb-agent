@@ -13,11 +13,16 @@ export const triggersAPI = {
   },
 
   async updateTrigger(id: string, data: TriggerUpdateData): Promise<Trigger> {
-    const response = await apiClient.patch(`/triggers/${id}`, data);
+    const response = await apiClient.put('/triggers', { triggerId: id, ...data });
     return response.data.data;
   },
 
   async deleteTrigger(id: string): Promise<void> {
-    await apiClient.delete(`/triggers/${id}`);
+    await apiClient.delete('/triggers', { data: { triggerId: id } });
+  },
+
+  async toggleTrigger(id: string): Promise<Trigger> {
+    const response = await apiClient.patch('/triggers', { triggerId: id });
+    return response.data.data;
   },
 };
