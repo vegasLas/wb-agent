@@ -4,24 +4,19 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-
-// Extended Window interface for Telegram WebApp
-declare global {
-  interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Telegram?: any;
-  }
-}
+import { useMiniApp } from 'vue-tg';
 
 /**
- * Get Telegram initData from WebApp
- * Similar to how the deprecated project used getInitData() from vue-tg
+ * Get Telegram initData from WebApp using vue-tg
  */
 function getInitData(): string {
-  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-    return window.Telegram.WebApp.initData || '';
+  try {
+    const miniApp = useMiniApp();
+    return miniApp.initData || '';
+  } catch {
+    // Fallback if not in Telegram WebApp context
+    return '';
   }
-  return '';
 }
 
 // Create axios instance with base URL
@@ -38,7 +33,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     // Get initData from Telegram WebApp
     const initData = getInitData();
-
+    console.log(initData);
     if (initData && config.headers) {
       config.headers['x-init-data'] = initData;
     }

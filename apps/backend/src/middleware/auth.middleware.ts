@@ -29,13 +29,12 @@ declare module 'express' {
 export const authenticate = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     // Skip auth for excluded paths
     const path = req.path;
     if (
-      !path.startsWith('/api/') ||
       path.includes('_nuxt_icon') ||
       path.includes('payments/check') ||
       path.includes('webhooks/yookassa')
@@ -56,7 +55,7 @@ export const authenticate = async (
           const user = await prisma.user.findUnique({
             where: { telegramId: BigInt(initData.user.id) },
           });
-          
+
           if (user) {
             req.user = {
               id: user.id,
@@ -69,26 +68,26 @@ export const authenticate = async (
           logger.info('Technical mode: blocking user', userId);
           throw ApiError.forbidden(
             '🔧 Ведутся технические работы. Сервис временно недоступен. Пожалуйста, попробуйте позже.',
-            'TECHNICAL_MODE'
+            'TECHNICAL_MODE',
           );
         }
       } catch (error) {
         if (error instanceof ApiError && error.code === 'INIT_DATA_EXPIRED') {
           throw ApiError.unauthorized(
             'Сессия истекла. Пожалуйста, переоткройте кабинет для обновления данных авторизации.',
-            'SESSION_EXPIRED'
+            'SESSION_EXPIRED',
           );
         }
         throw ApiError.forbidden(
           '🔧 Ведутся технические работы. Сервис временно недоступен.',
-          'TECHNICAL_MODE'
+          'TECHNICAL_MODE',
         );
       }
     }
 
     // Normal authentication flow
     const initData = parseInitData(req);
-    
+
     // Find user
     const user = await prisma.user.findUnique({
       where: { telegramId: BigInt(initData.user.id) },
@@ -100,19 +99,21 @@ export const authenticate = async (
 
     // Check subscription for auth endpoints that require active subscription
     const authEndpointsRequiringSubscription = [
-      '/api/v1/auth/verify-phone',
-      '/api/v1/auth/verify-sms',
-      '/api/v1/auth/verify-two-factor',
+      '/v1/auth/verify-phone',
+      '/v1/auth/verify-sms',
+      '/v1/auth/verify-two-factor',
     ];
 
-    if (authEndpointsRequiringSubscription.some((endpoint) => path === endpoint)) {
+    if (
+      authEndpointsRequiringSubscription.some((endpoint) => path === endpoint)
+    ) {
       if (
         !user.subscriptionExpiresAt ||
         new Date(user.subscriptionExpiresAt) <= new Date()
       ) {
         throw ApiError.forbidden(
           'Требуется активная подписка. Для добавления новых аккаунтов необходима активная подписка.',
-          'SUBSCRIPTION_REQUIRED'
+          'SUBSCRIPTION_REQUIRED',
         );
       }
     }
@@ -123,20 +124,19 @@ export const authenticate = async (
       telegramId: initData.user.id.toString(),
       selectedAccountId: user.selectedAccountId,
     };
-
     next();
   } catch (error) {
     if (error instanceof ApiError) {
       next(error);
       return;
     }
-    
+
     if (error instanceof Error && error.message.includes('expired')) {
       next(
         ApiError.unauthorized(
           'Сессия истекла. Пожалуйста, переоткройте кабинет для обновления данных авторизации.',
-          'SESSION_EXPIRED'
-        )
+          'SESSION_EXPIRED',
+        ),
       );
       return;
     }

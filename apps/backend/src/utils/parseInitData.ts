@@ -27,7 +27,7 @@ export interface ParsedInitData {
  */
 export function parseInitData(req: Request): ParsedInitData {
   const initDataRaw = req.headers['x-init-data'] as string | undefined;
-  
+
   if (!initDataRaw) {
     throw ApiError.unauthorized('Missing initData');
   }
@@ -40,7 +40,6 @@ export function parseInitData(req: Request): ParsedInitData {
 
     // Parse the query string
     const params = new URLSearchParams(initDataRaw);
-    
     const userParam = params.get('user');
     if (!userParam) {
       throw new Error('No user data in initData');
