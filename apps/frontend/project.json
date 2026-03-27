@@ -6,33 +6,49 @@
   "tags": ["frontend"],
   "targets": {
     "serve": {
-      "executor": "nx:run-script",
+      "executor": "@nx/vite:dev-server",
       "options": {
-        "script": "dev"
+        "buildTarget": "frontend:build",
+        "hmr": true,
+        "configFile": "apps/frontend/vite.config.mts"
       }
     },
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
       "options": {
-        "script": "build"
+        "outputPath": "dist/apps/frontend",
+        "configFile": "apps/frontend/vite.config.mts"
       }
     },
     "preview": {
-      "executor": "nx:run-script",
+      "executor": "@nx/vite:preview-server",
       "options": {
-        "script": "preview"
+        "buildTarget": "frontend:build"
       }
     },
+    "type-check": {
+      "executor": "@nx/vite:type-check",
+      "options": {}
+    },
     "test": {
-      "executor": "nx:run-script",
+      "executor": "@nx/vite:test",
       "options": {
-        "script": "test"
+        "configFile": "apps/frontend/vite.config.mts"
       }
     },
     "lint": {
-      "executor": "nx:run-script",
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "lint"
+        "lintFilePatterns": ["apps/frontend/**/*.{ts,tsx,vue}"]
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "scp -r dist/apps/frontend/* wbsupplier:/var/www/html/wbmentor/"
       }
     }
   }

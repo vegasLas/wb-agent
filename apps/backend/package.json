@@ -13,6 +13,7 @@
     "db:studio": "prisma studio --schema=prisma/schema.prisma"
   },
   "dependencies": {
+    "tslib": "^2.3.0",
     "@prisma/client": "^6.5.0",
     "@telegram-apps/init-data-node": "^2.0.10",
     "axios": "^1.13.6",
@@ -21,6 +22,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.2.1",
+    "https-proxy-agent": "^7.0.6",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
