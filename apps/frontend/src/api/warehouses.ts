@@ -36,8 +36,8 @@ export interface ValidationResponse {
 }
 
 export const warehousesAPI = {
-  async fetchWarehouses(accountId: string): Promise<Warehouse[]> {
-    const response = await apiClient.get('/warehouses', { params: { accountId } });
+  async fetchWarehouses(): Promise<Warehouse[]> {
+    const response = await apiClient.get('/warehouses');
     return response.data.data;
   },
 

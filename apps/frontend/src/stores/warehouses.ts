@@ -32,18 +32,19 @@ export const useWarehousesStore = defineStore('warehouses', () => {
   }
 
   async function fetchWarehouses() {
-    if (warehouses.value.length > 0) return;
+    if (warehouses.value.length > 0 || loading.value) return;
 
-    const userStore = useUserStore();
-    const accountId = userStore.selectedAccount?.id;
-    if (!accountId) {
-      console.error('No account selected');
-      return;
+    loading.value = true;
+    try {
+      const data = await warehousesAPI.fetchWarehouses();
+      warehouses.value = data;
+    } catch (error) {
+      console.error('Failed to fetch warehouses:', error);
+      // Don't throw - allow app to continue even if warehouses fail to load
+    } finally {
+      isFetched.value = true;
+      loading.value = false;
     }
-
-    const data = await warehousesAPI.fetchWarehouses(accountId);
-    warehouses.value = data;
-    isFetched.value = true;
   }
 
   async function fetchTransits(warehouseId: number) {

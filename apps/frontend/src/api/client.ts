@@ -57,9 +57,10 @@ apiClient.interceptors.response.use(
 
       switch (status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
+          // Unauthorized - clear token but don't reload
+          // This prevents recursive reloads when API calls fail during app init
           localStorage.removeItem('auth_token');
-          window.location.href = '/';
+          console.error('Unauthorized - authentication required');
           break;
         case 403:
           // Forbidden
