@@ -1,4 +1,4 @@
-export { default as SkeletonMain } from './SkeletonMain.vue';
+// Note: SkeletonMain has been replaced by LoadingLayout and RouteContentSkeleton in components/layout/
 export { default as SkeletonAccount } from './SkeletonAccount.vue';
 export { default as SkeletonAutobookings } from './SkeletonAutobookings.vue';
 export { default as SkeletonStore } from './SkeletonStore.vue';
