@@ -33,13 +33,6 @@
         >
           кредиты
         </Button>
-        <Button
-          :severity="activeTab === 'api' ? 'primary' : 'secondary'"
-          size="small"
-          @click="activeTab = 'api'"
-        >
-          API
-        </Button>
       </div>
     </div>
 
@@ -70,10 +63,6 @@
         <PaymentTariffs @select="onSelectBookingTariff" />
       </div>
 
-      <!-- API Key Tab -->
-      <div v-else-if="activeTab === 'api'">
-        <SupplierApiKeyComponent />
-      </div>
     </div>
   </div>
 </template>
@@ -87,7 +76,7 @@ import Card from 'primevue/card';
 import Tag from 'primevue/tag';
 import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
 import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
-import SupplierApiKeyComponent from '../components/store/SupplierApiKeyComponent.vue';
+
 import type { SubscriptionTariff, BookingTariff } from '../constants';
 
 // Skeleton control
@@ -95,7 +84,7 @@ const { viewReady } = useViewReady();
 
 const userStore = useUserStore();
 
-const activeTab = ref<'subscription' | 'bookings' | 'api'>('subscription');
+const activeTab = ref<'subscription' | 'bookings'>('subscription');
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '-';
