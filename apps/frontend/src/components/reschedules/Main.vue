@@ -1,22 +1,10 @@
 <template>
-  <ReschedulesList v-if="viewStore.currentView === 'reschedules-main'" />
-  <ReschedulesForm
-    v-else-if="viewStore.currentView === 'reschedules-form'"
-    @back="viewStore.setView('reschedules-main')"
-  />
-  <ReschedulesUpdateForm
-    v-else-if="viewStore.currentView === 'reschedules-update'"
-    @back="viewStore.setView('reschedules-main')"
-  />
+  <RouterView />
 </template>
 
 <script setup lang="ts">
-import { useViewStore } from '../../stores/view';
-import ReschedulesList from './List.vue';
-import ReschedulesForm from './Form.vue';
-import ReschedulesUpdateForm from './UpdateForm.vue';
-
-const viewStore = useViewStore();
+// This component serves as a layout wrapper for reschedules routes
+// Child routes: List, Create (Form), Update (UpdateForm)
 </script>
 
 <style scoped>

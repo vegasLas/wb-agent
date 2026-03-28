@@ -31,12 +31,15 @@
           class="w-full"
         >
           <div class="flex items-center justify-between w-full">
-            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите архивные.</span>
+            <span
+              >Приобретите пакет кредитов, чтобы создать новые, или удалите
+              архивные.</span
+            >
             <Button
               variant="outlined"
               severity="primary"
               size="small"
-              @click="viewStore.setView('store-bookings')"
+              @click="navigateToStoreBookings"
             >
               купить
             </Button>
@@ -44,14 +47,15 @@
         </Message>
         <div v-else class="flex justify-between items-center">
           <Tag
-            :severity="userStore.user.autobookingCount === 0 ? 'danger' : 'info'"
+            :severity="
+              userStore.user.autobookingCount === 0 ? 'danger' : 'info'
+            "
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
           </Tag>
           <Button
-            v-if="!viewStore.isForm"
             severity="primary"
-            @click="viewStore.setView('autobookings-form')"
+            @click="navigateToCreate"
           >
             добавить
           </Button>
@@ -67,13 +71,21 @@
           @view-goods="handleViewGoods"
         />
 
-        <div v-if="!listStore.filteredBookings.length" class="text-center py-8 text-gray-500">
+        <div
+          v-if="!listStore.filteredBookings.length"
+          class="text-center py-8 text-gray-500"
+        >
           {{ noBookingsMessage }}
         </div>
-        
+
         <!-- Loading indicator for infinite scroll -->
-        <div v-if="listStore.loading && listStore.nextPage" class="text-center py-4">
-          <div class="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+        <div
+          v-if="listStore.loading && listStore.nextPage"
+          class="text-center py-4"
+        >
+          <div
+            class="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"
+          ></div>
         </div>
       </div>
     </template>
@@ -90,10 +102,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useInfiniteScroll } from '@vueuse/core';
 import { AUTOBOOKING_STATUSES } from '../../constants';
 import { useUserStore } from '../../stores/user';
-import { useViewStore } from '../../stores/view';
 import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useSupplierStore } from '../../stores/supplier';
 import InputText from 'primevue/inputtext';
@@ -105,14 +117,16 @@ import StatsCards from '../common/StatsCards.vue';
 import AutobookingBookingCard from './BookingCard.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 
+const router = useRouter();
 const userStore = useUserStore();
-const viewStore = useViewStore();
 const listStore = useAutobookingListStore();
 const supplierStore = useSupplierStore();
 
 // Goods modal state
 const showGoodsModal = ref(false);
-const draftGoods = ref<Array<{ article: string; image?: string; name: string; quantity: number }>>([]);
+const draftGoods = ref<
+  Array<{ article: string; image?: string; name: string; quantity: number }>
+>([]);
 const loadingGoods = ref(false);
 
 const noBookingsMessage = computed(() => {
@@ -145,6 +159,15 @@ function handleStatusClick(status: string) {
   listStore.selectedStatus = status;
 }
 
+// Navigation functions
+function navigateToCreate() {
+  router.push({ name: 'AutobookingCreate' });
+}
+
+function navigateToStoreBookings() {
+  router.push({ name: 'StoreBookings' });
+}
+
 // Handle view goods event from BookingCard
 const handleViewGoods = async (draftId: string, supplierId: string) => {
   try {
@@ -155,12 +178,13 @@ const handleViewGoods = async (draftId: string, supplierId: string) => {
 
     // For now, show the warehouse balances as goods
     // In the real app, this should call a separate API to get draft goods
-    draftGoods.value = response.map((good) => ({
-      article: good.supplierArticle,
-      image: undefined,
-      name: good.goodName,
-      quantity: good.quantity,
-    })) || [];
+    draftGoods.value =
+      response.map((good) => ({
+        article: good.supplierArticle,
+        image: undefined,
+        name: good.goodName,
+        quantity: good.quantity,
+      })) || [];
   } catch (error) {
     console.error('Failed to fetch draft goods:', error);
     draftGoods.value = [];
@@ -190,10 +214,11 @@ useInfiniteScroll(
       await listStore.loadNextPage();
     }
   },
-  { distance: 50, canLoadMore: () => Boolean(listStore.nextPage) }
+  { distance: 50, canLoadMore: () => Boolean(listStore.nextPage) },
 );
 
 onMounted(() => {
+  console.log('listStore.fetchData()');
   if (listStore.autobookings.length === 0) {
     listStore.fetchData();
   }

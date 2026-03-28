@@ -10,7 +10,7 @@
             <Button 
               severity="primary" 
               variant="outlined"
-              @click="viewStore.setView('store-subscription')"
+              @click="navigateToStoreSubscription"
             >
               Купить подписку
             </Button>
@@ -19,41 +19,26 @@
       </Message>
     </div>
 
-    <!-- Main View -->
-    <div v-else-if="viewStore.currentView === 'triggers-main'">
-      <Message
-        v-if="triggerStore.activeTriggersCount >= 30"
-        severity="warn"
-        :closable="false"
-        class="mb-4"
-      >
-        <div class="font-medium">Достигнут лимит активных таймслотов</div>
-        <div class="text-sm">У вас уже активировано максимальное количество таймслотов (30). Отключите некоторые таймслоты, чтобы активировать новые.</div>
-      </Message>
-      <TriggersList />
-    </div>
-
-    <!-- Form View -->
-    <TriggerForm
-      v-else-if="viewStore.currentView === 'triggers-form'"
-      @back="viewStore.setView('triggers-main')"
-    />
+    <!-- Router View for child routes -->
+    <RouterView v-else />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useTriggerStore } from '../../stores/triggers';
-import { useViewStore } from '../../stores/view';
 import { useUserStore } from '../../stores/user';
-import TriggersList from './TriggersList.vue';
-import TriggerForm from './TriggerForm.vue';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
 
+const router = useRouter();
 const triggerStore = useTriggerStore();
-const viewStore = useViewStore();
 const userStore = useUserStore();
+
+function navigateToStoreSubscription() {
+  router.push({ name: 'StoreSubscription' });
+}
 
 onMounted(async () => {
   if (triggerStore.triggers.length === 0) {

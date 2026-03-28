@@ -43,11 +43,12 @@
   <AutobookingHints
     v-model:show="showHintsModal"
   />
-  <BackButton @click="$emit('back')" />
+  <BackButton @click="goBack" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { BackButton, MainButton } from 'vue-tg';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
 import { useWarehousesStore } from '../../stores/warehouses';
@@ -57,6 +58,7 @@ import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 import AutobookingHints from './Hints.vue';
 
+const router = useRouter();
 const store = useAutobookingUpdateStore();
 const warehouseStore = useWarehousesStore();
 const draftStore = useDraftStore();
@@ -92,7 +94,9 @@ const canSubmit = computed(
   () => store.isValid && !loading.value && !isSubmitting.value,
 );
 
-const emit = defineEmits(['back']);
+function goBack() {
+  router.back();
+}
 
 async function handleSubmit(): Promise<void> {
   if (!canSubmit.value) return;
@@ -100,7 +104,7 @@ async function handleSubmit(): Promise<void> {
   try {
     isSubmitting.value = true;
     await store.updateAutobooking();
-    emit('back');
+    goBack();
   } catch (error) {
     console.error('Failed to update autobooking:', error);
   } finally {

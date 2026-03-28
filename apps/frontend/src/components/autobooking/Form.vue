@@ -13,7 +13,7 @@
           <Button
             variant="outlined"
             severity="primary"
-            @click="viewStore.setView('store-bookings')"
+            @click="navigateToStoreBookings"
           >
             Купить кредиты
           </Button>
@@ -62,15 +62,15 @@
   <AutobookingHints
     v-model:show="showHintsModal"
   />
-  <BackButton @click="$emit('back')" />
+  <BackButton @click="goBack" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { BackButton, MainButton } from 'vue-tg';
 import { useAutobookingFormStore } from '../../stores/autobookingForm';
 import { useUserStore } from '../../stores/user';
-import { useViewStore } from '../../stores/view';
 import { useDraftStore } from '../../stores/draft';
 import { useWarehousesStore } from '../../stores/warehouses';
 import Button from 'primevue/button';
@@ -79,9 +79,9 @@ import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 import AutobookingHints from './Hints.vue';
 
+const router = useRouter();
 const store = useAutobookingFormStore();
 const userStore = useUserStore();
-const viewStore = useViewStore();
 const draftStore = useDraftStore();
 const warehouseStore = useWarehousesStore();
 
@@ -112,14 +112,21 @@ const canSubmit = computed(() => {
   return store.isValid && !store.loading && userStore.user.autobookingCount > 0;
 });
 
-const emit = defineEmits(['back']);
+// Navigation functions
+function goBack() {
+  router.back();
+}
+
+function navigateToStoreBookings() {
+  router.push({ name: 'StoreBookings' });
+}
 
 // Handle form submission with auto-close on success
 async function handleSubmit() {
   try {
     const success = await store.submitForm();
     if (success) {
-      emit('back');
+      goBack();
     }
   } catch (error) {
     console.error('Failed to create autobooking:', error);

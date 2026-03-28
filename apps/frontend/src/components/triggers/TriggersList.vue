@@ -1,5 +1,15 @@
 <template>
   <div class="space-y-4">
+    <Message
+      v-if="triggerStore.activeTriggersCount >= 30"
+      severity="warn"
+      :closable="false"
+      class="mb-4"
+    >
+      <div class="font-medium">Достигнут лимит активных таймслотов</div>
+      <div class="text-sm">У вас уже активировано максимальное количество таймслотов (30). Отключите некоторые таймслоты, чтобы активировать новые.</div>
+    </Message>
+
     <!-- Status Filter Buttons -->
     <div class="flex gap-2">
       <Button
@@ -43,7 +53,7 @@
         severity="primary"
         size="small"
         :disabled="triggerStore.activeTriggersCount >= 30"
-        @click="viewStore.setView('triggers-form')"
+        @click="navigateToCreate"
       >
         <i class="pi pi-plus mr-1 text-xs"></i>
         добавить
@@ -211,19 +221,24 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import { useTriggerStore } from '../../stores/triggers';
 import { useWarehousesStore } from '../../stores/warehouses';
-import { useViewStore } from '../../stores/view';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
+import Message from 'primevue/message';
 import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
 
+const router = useRouter();
 const triggerStore = useTriggerStore();
 const warehouseStore = useWarehousesStore();
-const viewStore = useViewStore();
+
+function navigateToCreate() {
+  router.push({ name: 'TriggerCreate' });
+}
 
 function getSupplyTypeLabel(type: string): string {
   switch (type) {
