@@ -1,11 +1,19 @@
 <template>
   <div class="min-h-screen bg-white dark:bg-[#171819]">
-    <!-- Initial Loading Screen (shown only during first router guard execution) -->
-    <InitialLoading v-if="isInitializing" />
-    
-    <!-- Main Router View -->
-    <RouterView v-else />
-    
+    <!-- 
+      Route-based Skeleton Loading 
+      - Shown during: router guard initialization (Telegram + user data)
+      - Hidden when: view component signals ready via useViewReady()
+    -->
+    <LoadingLayout v-if="showSkeleton">
+      <component :is="currentRouteSkeleton" />
+    </LoadingLayout>
+
+    <!-- Main Router View - mounted but hidden while skeleton is shown -->
+    <div v-show="!showSkeleton">
+      <RouterView />
+    </div>
+
     <!-- Global Components -->
     <Toast position="top-right" />
     <ConfirmDialog />
@@ -13,21 +21,71 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
-import InitialLoading from '../components/layout/InitialLoading.vue';
+import LoadingLayout from '../components/layout/LoadingLayout.vue';
+import { useSkeleton } from '../composables/useSkeleton';
+import {
+  SkeletonAccount,
+  SkeletonAutobookings,
+  SkeletonStore,
+  SkeletonTriggers,
+  SkeletonReport,
+  SkeletonPayments,
+  SkeletonReschedules,
+} from '../components/skeleton';
 
 const router = useRouter();
-const isInitializing = ref(true);
+const route = useRoute();
+
+// Use skeleton composable for loading state management
+const { showSkeleton, markRouterReady, onNavigationStart, onNavigationEnd } =
+  useSkeleton();
+
+// Map route names to skeleton components
+const routeSkeletonMap: Record<string, any> = {
+  Account: SkeletonAccount,
+  Autobooking: SkeletonAutobookings,
+  AutobookingList: SkeletonAutobookings,
+  AutobookingCreate: SkeletonAutobookings,
+  AutobookingUpdate: SkeletonAutobookings,
+  Reschedules: SkeletonReschedules,
+  ReschedulesList: SkeletonReschedules,
+  ReschedulesCreate: SkeletonReschedules,
+  ReschedulesUpdate: SkeletonReschedules,
+  Triggers: SkeletonTriggers,
+  TriggersList: SkeletonTriggers,
+  TriggerCreate: SkeletonTriggers,
+  Reports: SkeletonReport,
+  Store: SkeletonStore,
+  StoreSubscription: SkeletonStore,
+  StoreBookings: SkeletonStore,
+  Payments: SkeletonPayments,
+  default: SkeletonAccount,
+};
+
+// Get the appropriate skeleton for current route
+const currentRouteSkeleton = computed(() => {
+  const routeName = route.name as string;
+  return routeSkeletonMap[routeName] || routeSkeletonMap.default;
+});
+
+// Setup router hooks to handle navigation loading state
+router.beforeEach(() => {
+  onNavigationStart();
+});
+
+router.afterEach(() => {
+  onNavigationEnd();
+});
 
 // Wait for router to resolve initial navigation
 onMounted(async () => {
-  // The router navigation guard will handle initialization
-  // We just need to wait for it to complete
   await router.isReady();
-  isInitializing.value = false;
+  markRouterReady();
+  // View remains in loading state until component calls viewReady()
 });
 </script>
 
