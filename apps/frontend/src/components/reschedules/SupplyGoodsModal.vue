@@ -7,7 +7,12 @@
   >
     <div class="max-h-[60vh] overflow-auto">
       <!-- Goods DataTable (when data exists) -->
-      <DataTable v-if="goods.length" :value="goods" size="small" class="p-datatable-sm">
+      <DataTable
+        v-if="goods.length"
+        :value="goods"
+        size="small"
+        class="p-datatable-sm"
+      >
         <Column header="" style="width: 4rem">
           <template #body="slotProps">
             <img
@@ -20,19 +25,27 @@
         </Column>
         <Column field="imtName" header="Название">
           <template #body="slotProps">
-            <span class="text-sm text-gray-900 dark:text-gray-100">{{ slotProps.data.imtName }}</span>
+            <span class="text-sm text-gray-900 dark:text-gray-100">{{
+              slotProps.data.imtName
+            }}</span>
           </template>
         </Column>
         <Column field="quantity" header="Количество">
           <template #body="slotProps">
-            <span class="text-sm text-gray-500 dark:text-gray-400">{{ slotProps.data.quantity }} шт.</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400"
+              >{{ slotProps.data.quantity }} шт.</span
+            >
           </template>
         </Column>
         <Column field="details" header="Детали">
           <template #body="slotProps">
             <div class="text-xs text-gray-600 dark:text-gray-400">
-              <div v-if="slotProps.data.brandName">{{ slotProps.data.brandName }}</div>
-              <div v-if="slotProps.data.subjectName">{{ slotProps.data.subjectName }}</div>
+              <div v-if="slotProps.data.brandName">
+                {{ slotProps.data.brandName }}
+              </div>
+              <div v-if="slotProps.data.subjectName">
+                {{ slotProps.data.subjectName }}
+              </div>
               <div v-if="slotProps.data.colorName" class="text-gray-500">
                 {{ slotProps.data.colorName }}
               </div>
@@ -42,10 +55,7 @@
       </DataTable>
 
       <!-- Loading State -->
-      <div
-        v-else-if="loading"
-        class="flex justify-center items-center py-12"
-      >
+      <div v-else-if="loading" class="flex justify-center items-center py-12">
         <i class="pi pi-refresh animate-spin text-4xl text-gray-400"></i>
       </div>
 

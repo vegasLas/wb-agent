@@ -2,11 +2,15 @@
   <Dialog
     v-model:visible="visible"
     header="Остатки на складе"
-    :style="{ width: '50vw' }"
     @hide="$emit('update:show', false)"
   >
     <div class="max-h-[60vh] overflow-auto">
-      <DataTable v-if="balances.length" :value="balances" size="small" class="p-datatable-sm">
+      <DataTable
+        v-if="balances.length"
+        :value="balances"
+        size="small"
+        class="p-datatable-sm"
+      >
         <Column field="supplierArticle" header="Артикул">
           <template #body="slotProps">
             {{ slotProps.data.supplierArticle }}

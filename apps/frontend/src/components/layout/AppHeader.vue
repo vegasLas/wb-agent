@@ -1,19 +1,20 @@
 <template>
-  <header class="border-b border-gray-200 dark:border-gray-800">
-    <div class="container mx-auto px-4 py-4">
+  <header>
+    <div class="container mx-auto px-2 py-4">
       <div class="flex items-center justify-between">
         <!-- Left: Navigation -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
           <Button
             ref="navMenuButton"
+            class="leading-none"
             :severity="isNavActive ? 'primary' : 'secondary'"
             @click="toggleNavMenu"
           >
             <i :class="currentNavItem.icon"></i>
-            <span class="ml-2">{{ currentNavItem.label }}</span>
-            <i class="pi pi-chevron-down ml-2"></i>
+            <span class="">{{ currentNavItem.label }}</span>
+            <i class="pi pi-chevron-down"></i>
           </Button>
-          
+
           <Menu ref="navMenu" :model="navItems" :popup="true" />
 
           <Button
@@ -27,7 +28,7 @@
         </div>
 
         <!-- Right: Actions -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
           <!-- Store Button -->
           <Button
             :severity="isStoreRoute ? 'primary' : 'secondary'"
@@ -37,7 +38,7 @@
           >
             <i class="pi pi-shopping-bag"></i>
           </Button>
-          
+
           <!-- Accounts Button -->
           <Button
             :severity="accountModalStore.showModal ? 'primary' : 'secondary'"
@@ -48,7 +49,7 @@
           >
             <i class="pi pi-users"></i>
           </Button>
-          
+
           <!-- User/Supplier Button -->
           <Button
             :severity="isAccountRoute ? 'primary' : 'secondary'"
@@ -56,7 +57,7 @@
             @click="navigateToAccount"
           >
             <template v-if="userStore.activeSupplier?.supplierName">
-              <span class="text-sm truncate max-w-[80px]">
+              <span class="text-sm truncate max-w-[60px]">
                 {{ userStore.activeSupplier.supplierName }}
               </span>
             </template>
@@ -97,37 +98,43 @@ const toggleNavMenu = (event: MouseEvent) => {
 
 // Navigation items - route to list views directly
 const navConfig = [
-  { id: 'autobooking', label: 'автоброни', icon: 'pi pi-calendar', route: 'AutobookingList' },
-  { id: 'triggers', label: 'слоты', icon: 'pi pi-clock', route: 'TriggersList' },
+  {
+    id: 'autobooking',
+    label: 'автоброни',
+    icon: 'pi pi-calendar',
+    route: 'AutobookingList',
+  },
+  {
+    id: 'triggers',
+    label: 'слоты',
+    icon: 'pi pi-clock',
+    route: 'TriggersList',
+  },
   { id: 'reports', label: 'отчеты', icon: 'pi pi-chart-pie', route: 'Reports' },
 ];
 
 // Route checks
 const currentNavItem = computed(() => {
   const routePrefix = route.name?.toString().split('-')[0].toLowerCase();
-  const item = navConfig.find(n => routePrefix?.startsWith(n.id));
+  const item = navConfig.find((n) => routePrefix?.startsWith(n.id));
   return item || navConfig[0];
 });
 
 const isNavActive = computed(() => {
-  return navConfig.some(n => route.name?.toString().startsWith(n.id));
+  return navConfig.some((n) => route.name?.toString().startsWith(n.id));
 });
 
-const navItems = computed(() => 
-  navConfig.map(item => ({
+const navItems = computed(() =>
+  navConfig.map((item) => ({
     label: item.label,
     icon: item.icon,
     command: () => router.push({ name: item.route }),
-  }))
+  })),
 );
 
-const isStoreRoute = computed(() => 
-  route.path.startsWith('/store')
-);
+const isStoreRoute = computed(() => route.path.startsWith('/store'));
 
-const isAccountRoute = computed(() => 
-  route.name === 'Account'
-);
+const isAccountRoute = computed(() => route.name === 'Account');
 
 // Navigation handlers
 const navigateToStore = () => router.push({ name: 'Store' });

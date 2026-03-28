@@ -1,7 +1,9 @@
 <template>
   <div class="payment-view">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Магазин</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        Магазин
+      </h1>
       <p class="text-gray-600 dark:text-gray-400">
         Управление подпиской и покупка кредитов для автобронирования
       </p>
@@ -13,10 +15,10 @@
         <nav class="flex gap-4">
           <button
             :class="[
-              'py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+              'leading-none py-2 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'subscription'
                 ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
             ]"
             @click="activeTab = 'subscription'"
           >
@@ -24,10 +26,10 @@
           </button>
           <button
             :class="[
-              'py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+              'leading-none py-2 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'credits'
                 ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
             ]"
             @click="activeTab = 'credits'"
           >
@@ -45,7 +47,8 @@
         </template>
         <template #content>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            Выберите период подписки. При длительной подписке предусмотрены скидки.
+            Выберите период подписки. При длительной подписке предусмотрены
+            скидки.
           </p>
           <SubscriptionTariffs />
         </template>
@@ -60,8 +63,8 @@
         </template>
         <template #content>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            Кредиты используются для автоматического бронирования поставок.
-            Один кредит = одна успешная бронь.
+            Кредиты используются для автоматического бронирования поставок. Один
+            кредит = одна успешная бронь.
           </p>
           <PaymentTariffs />
         </template>

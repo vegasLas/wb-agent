@@ -4,7 +4,7 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { vMaska } from 'maska/vue';
 import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
+import Lara from '@primeuix/themes/aura';
 import ConfirmationService from 'primevue/confirmationservice';
 import DialogService from 'primevue/dialogservice';
 import ToastService from 'primevue/toastservice';
@@ -22,7 +22,7 @@ app.use(router);
 // PrimeVue Configuration
 app.use(PrimeVue, {
   theme: {
-    preset: Aura,
+    preset: Lara,
     options: {
       prefix: 'p',
       darkModeSelector: '.dark',

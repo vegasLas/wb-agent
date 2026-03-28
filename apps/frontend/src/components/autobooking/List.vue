@@ -53,7 +53,7 @@
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
           </Tag>
-          <Button severity="primary" @click="navigateToCreate">
+          <Button severity="primary leading-none" @click="navigateToCreate">
             добавить
           </Button>
         </div>

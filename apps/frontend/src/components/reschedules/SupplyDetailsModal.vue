@@ -15,17 +15,16 @@
           <i class="pi pi-exclamation-circle text-blue-500 mt-0.5"></i>
           <div class="text-sm space-y-2 flex-1">
             <p class="text-blue-800 dark:text-blue-200">
-              <strong>Эта поставка была удалена</strong> из системы WB и
-              больше не существует.
+              <strong>Эта поставка была удалена</strong> из системы WB и больше
+              не существует.
             </p>
             <template v-if="!isRescheduleCompleted">
               <p class="text-blue-700 dark:text-blue-300">
-                <strong>Рекомендуется удалить</strong> это перепланирование,
-                так как оно больше не может быть выполнено.
+                <strong>Рекомендуется удалить</strong> это перепланирование, так
+                как оно больше не может быть выполнено.
               </p>
               <p class="font-medium text-blue-800 dark:text-blue-200">
-                Перепланирование для несуществующей поставки не будет
-                работать!
+                Перепланирование для несуществующей поставки не будет работать!
               </p>
             </template>
           </div>
@@ -46,23 +45,28 @@
       <template v-else>
         <!-- Supply Information Section -->
         <div v-if="supplyDetails" class="mb-6">
-          <div class="grid grid-cols-1 gap-3 p-4 rounded-lg text-sm bg-gray-50 dark:bg-gray-700">
-            <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+          <div
+            class="grid grid-cols-1 gap-3 p-4 rounded-lg text-sm bg-gray-50 dark:bg-gray-700"
+          >
+            <div
+              class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
+            >
               <i class="pi pi-building text-gray-500"></i>
               {{ supplyDetails.warehouseName }}
             </div>
-            <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+            <div
+              class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
+            >
               <i class="pi pi-box text-gray-500"></i>
               {{ getSupplyTypeLabel(supplyDetails.boxTypeName || '') }}
             </div>
-            <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+            <div
+              class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
+            >
               <i class="pi pi-calendar text-gray-500"></i>
               {{ formatSupplyDate(supplyDetails.supplyDate) }}
             </div>
-            <div
-              v-if="supplyDetails.statusId"
-              class="flex items-center gap-2"
-            >
+            <div v-if="supplyDetails.statusId" class="flex items-center gap-2">
               <i class="pi pi-info-circle text-gray-500"></i>
               <Tag
                 :value="getStatusName(supplyDetails.statusId)"
@@ -80,7 +84,12 @@
         </div>
 
         <!-- Goods DataTable (when data exists) -->
-        <DataTable v-if="supplyGoods.length" :value="supplyGoods" size="small" class="p-datatable-sm">
+        <DataTable
+          v-if="supplyGoods.length"
+          :value="supplyGoods"
+          size="small"
+          class="p-datatable-sm"
+        >
           <Column header="" style="width: 4rem">
             <template #body="slotProps">
               <img
@@ -93,17 +102,24 @@
           </Column>
           <Column field="imtName" header="Название">
             <template #body="slotProps">
-              <span class="text-sm text-gray-900 dark:text-gray-100">{{ slotProps.data.imtName }}</span>
+              <span class="text-sm text-gray-900 dark:text-gray-100">{{
+                slotProps.data.imtName
+              }}</span>
             </template>
           </Column>
           <Column field="quantity" header="Количество">
             <template #body="slotProps">
-              <span class="text-sm text-gray-500 dark:text-gray-400">{{ slotProps.data.quantity }} шт.</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400"
+                >{{ slotProps.data.quantity }} шт.</span
+              >
             </template>
           </Column>
           <Column field="brandName" header="Бренд">
             <template #body="slotProps">
-              <span v-if="slotProps.data.brandName" class="text-xs text-gray-600 dark:text-gray-400 font-medium">
+              <span
+                v-if="slotProps.data.brandName"
+                class="text-xs text-gray-600 dark:text-gray-400 font-medium"
+              >
                 {{ slotProps.data.brandName }}
               </span>
             </template>

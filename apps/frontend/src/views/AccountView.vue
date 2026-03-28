@@ -47,7 +47,11 @@
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold">подписка:</h3>
             <Tag
-              :value="subscriptionActive ? `осталось дней: ${subscriptionRemainingDays}` : 'неактивна'"
+              :value="
+                subscriptionActive
+                  ? `осталось дней: ${subscriptionRemainingDays}`
+                  : 'неактивна'
+              "
               :severity="subscriptionActive ? 'success' : 'danger'"
             />
           </div>
@@ -76,8 +80,16 @@
         </div>
       </template>
       <template #content>
-        <div v-if="user.payments && user.payments.length > 0" class="overflow-x-auto">
-          <DataTable :value="user.payments" scrollable scrollHeight="300px" class="p-datatable-sm">
+        <div
+          v-if="user.payments && user.payments.length > 0"
+          class="overflow-x-auto"
+        >
+          <DataTable
+            :value="user.payments"
+            scrollable
+            scrollHeight="300px"
+            class="p-datatable-sm"
+          >
             <Column field="createdAt" header="Дата">
               <template #body="{ data }">
                 {{ formatDate(data.createdAt) }}
@@ -91,7 +103,9 @@
             <Column field="status" header="Статус">
               <template #body="{ data }">
                 <Tag
-                  :value="data.status === 'succeeded' ? 'Оплачено' : 'Не оплачено'"
+                  :value="
+                    data.status === 'succeeded' ? 'Оплачено' : 'Не оплачено'
+                  "
                   :severity="data.status === 'succeeded' ? 'success' : 'warn'"
                 />
               </template>
@@ -144,7 +158,8 @@ if (action && ['change_supplier'].includes(action)) {
 }
 
 // Computed refs from store
-const { user, subscriptionActive, subscriptionRemainingDays } = storeToRefs(userStore);
+const { user, subscriptionActive, subscriptionRemainingDays } =
+  storeToRefs(userStore);
 
 // Signal that view is ready (user data is already loaded by router guard)
 onMounted(() => {
