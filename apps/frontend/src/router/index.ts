@@ -47,17 +47,15 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AccountView.vue'),
         meta: {
           title: 'Account',
-          requiresAuth: true,
         },
       },
       {
         path: 'autobooking',
-        name: 'Autobooking',
         component: () => import('../views/AutobookingView.vue'),
         meta: {
           title: 'Autobooking',
-          requiresAuth: true,
         },
+        redirect: { name: 'AutobookingList' },
         children: [
           {
             path: '',
@@ -78,12 +76,11 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'reschedules',
-        name: 'Reschedules',
         component: () => import('../views/ReschedulesView.vue'),
         meta: {
           title: 'Reschedules',
-          requiresAuth: true,
         },
+        redirect: { name: 'ReschedulesList' },
         children: [
           {
             path: '',
@@ -104,12 +101,11 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'triggers',
-        name: 'Triggers',
         component: () => import('../views/TriggersView.vue'),
         meta: {
           title: 'Triggers',
-          requiresAuth: true,
         },
+        redirect: { name: 'TriggersList' },
         children: [
           {
             path: '',
@@ -129,7 +125,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/ReportsView.vue'),
         meta: {
           title: 'Reports',
-          requiresAuth: true,
         },
       },
       {
@@ -138,7 +133,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StoreView.vue'),
         meta: {
           title: 'Store',
-          requiresAuth: true,
         },
       },
       {
@@ -147,7 +141,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StoreView.vue'),
         meta: {
           title: 'Store - Subscription',
-          requiresAuth: true,
           initialTab: 'subscription',
         },
       },
@@ -157,7 +150,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StoreView.vue'),
         meta: {
           title: 'Store - Bookings',
-          requiresAuth: true,
           initialTab: 'bookings',
         },
       },
@@ -167,7 +159,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/PaymentsView.vue'),
         meta: {
           title: 'Payments',
-          requiresAuth: true,
         },
       },
     ],
@@ -200,6 +191,8 @@ let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
 
 // Navigation guard for app initialization
 router.beforeEach(async (to, from, next) => {
+  console.log('[Router] Navigation started:', { from: from.name, to: to.name, path: to.path });
+  
   // Update page title
   const title = to.meta.title as string;
   if (title) {
@@ -208,38 +201,38 @@ router.beforeEach(async (to, from, next) => {
 
   // Skip initialization check for error pages and public routes
   if (to.meta.public) {
+    console.log('[Router] Public route, skipping init check');
     next();
     return;
   }
 
   // If we already have an init error, redirect to error page
   if (initError) {
+    console.log('[Router] Init error exists:', initError);
     next({ name: errorToRouteName(initError), replace: true });
     return;
   }
 
   // If not initialized yet, initialize the app
   if (!isAppInitialized) {
+    console.log('[Router] App not initialized, starting initialization...');
     try {
       await initializeApp();
       isAppInitialized = true;
+      console.log('[Router] App initialized, proceeding to:', to.name);
       next();
     } catch (error: any) {
+      console.error('[Router] Initialization failed:', error);
       initError = classifyError(error);
       next({ name: errorToRouteName(initError), replace: true });
     }
     return;
   }
 
-  // Check auth for protected routes
-  if (to.meta.requiresAuth) {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      next({ name: 'Account', replace: true });
-      return;
-    }
-  }
-
+  // Note: Authentication is handled via Telegram initData sent with each API request.
+  // The backend validates initData and returns appropriate errors (401/403).
+  // We don't use localStorage tokens in Telegram Mini Apps.
+  console.log('[Router] Navigation allowed to:', to.name);
   next();
 });
 
