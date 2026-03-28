@@ -10,7 +10,7 @@
     title="Пользователь не найден"
     message="Произошла ошибка при загрузке данных пользователя"
   />
-  <SkeletonMain v-else-if="!isLoaded" :view="viewStore.currentView" />
+  <SkeletonMain v-else-if="!isLoaded" :route-name="$route.name as string" />
   <AppMain
     v-else-if="isClientSide && isTgClient && userStore.isFetched"
     :show-main="isLoaded && isTgClient"
@@ -33,9 +33,7 @@ import ConfirmDialog from 'primevue/confirmdialog';
 // Stores
 import { useUserStore } from '../stores/user';
 import { useAutobookingListStore } from '../stores/autobookingList';
-import { useViewStore } from '../stores/view';
 import { useWarehousesStore } from '../stores/warehouses';
-import { useCoefficientsStore } from '../stores/coefficients';
 import { useTriggerStore } from '../stores/triggers';
 import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
 import { useRescheduleStore } from '../stores/reschedules';
@@ -46,31 +44,31 @@ import NotFound from '../components/NotFound.vue';
 import SkeletonMain from '../components/skeleton/SkeletonMain.vue';
 import AppMain from './AppMain.vue';
 
-// Types
-import type { ViewType } from '../types';
-
 // Store instances
 const userStore = useUserStore();
 const listAutobookingStore = useAutobookingListStore();
-const viewStore = useViewStore();
 const warehouseStore = useWarehousesStore();
-const coefficientsStore = useCoefficientsStore();
 const triggerStore = useTriggerStore();
 const accountModalStore = useAccountSupplierModalStore();
 const rescheduleStore = useRescheduleStore();
 
-// Computed loading state
+// Route
+const route = useRoute();
+
+// Computed loading state - based on current route
 const isLoaded = computed(() => {
   if (!userStore.isFetched || !warehouseStore.isFetched) return false;
-  console.log('Is loaded');
-  switch (viewStore.currentView) {
-    case 'autobookings-main':
-      return listAutobookingStore.isFetched;
-    case 'triggers-main':
-      return triggerStore.isFetched;
-    default:
-      return true;
+  
+  // Check route name for data loading requirements
+  const routeName = route.name;
+  if (routeName === 'Autobooking' || routeName === 'AutobookingList') {
+    return listAutobookingStore.isFetched;
   }
+  if (routeName === 'Triggers' || routeName === 'TriggersList') {
+    return triggerStore.isFetched;
+  }
+  
+  return true;
 });
 
 // State refs
@@ -79,19 +77,8 @@ const isClientSide = ref(false);
 const showTechnicalMaintenance = ref(false);
 const showSessionExpired = ref(false);
 
-// Route handling
-const route = useRoute();
-const view = route.query.view as ViewType;
-
-// Initialize view from query param
-if (
-  view &&
-  ['triggers-main', 'store', 'autobookings-main', 'account'].includes(view)
-) {
-  viewStore.setView(view);
-}
-
-if (view === 'auth') {
+// Handle auth query param
+if (route.query.auth === 'true') {
   accountModalStore.showModal = true;
 }
 
@@ -102,7 +89,6 @@ onMounted(async () => {
 
     // Fetch supplies if not loaded
     rescheduleStore.fetchReschedules();
-    // coefficientsStore.loadCoefficients();
     warehouseStore.fetchWarehouses();
 
     // Initialize Telegram WebApp
