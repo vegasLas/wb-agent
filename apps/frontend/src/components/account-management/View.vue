@@ -3,7 +3,6 @@
   <Dialog
     v-model:visible="isOpen"
     header="Управление аккаунтами"
-    :style="{ width: '50vw' }"
     :modal="true"
     :closable="true"
     @hide="closeModal"
