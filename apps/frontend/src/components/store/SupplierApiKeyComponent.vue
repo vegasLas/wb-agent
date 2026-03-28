@@ -9,7 +9,9 @@
         <div v-if="apiKeyStatus" class="mb-4">
           <Tag
             :severity="apiKeyStatus.valid ? 'success' : 'danger'"
-            :icon="apiKeyStatus.valid ? 'pi pi-check-circle' : 'pi pi-times-circle'"
+            :icon="
+              apiKeyStatus.valid ? 'pi pi-check-circle' : 'pi pi-times-circle'
+            "
             :value="apiKeyStatus.valid ? 'Ключ действителен' : 'Ошибка ключа'"
             class="mb-2"
           />
@@ -19,7 +21,10 @@
         </div>
 
         <!-- Current Key Display -->
-        <div v-if="userStore.user.supplierApiKey && !showEditForm" class="space-y-3">
+        <div
+          v-if="userStore.user.supplierApiKey && !showEditForm"
+          class="space-y-3"
+        >
           <div
             class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
           >
@@ -65,10 +70,15 @@
         </div>
 
         <!-- Input -->
-        <div v-if="!userStore.user.supplierApiKey || showEditForm" class="space-y-2">
+        <div
+          v-if="!userStore.user.supplierApiKey || showEditForm"
+          class="space-y-2"
+        >
           <label class="block text-sm font-medium">
             {{ userStore.user.supplierApiKey ? 'Новый API ключ' : 'API ключ' }}
-            <span v-if="formError" class="text-red-500 text-xs ml-2">{{ formError }}</span>
+            <span v-if="formError" class="text-red-500 text-xs ml-2">{{
+              formError
+            }}</span>
           </label>
           <div class="flex gap-2">
             <InputText
@@ -110,8 +120,18 @@
           <i class="pi pi-info-circle mr-1"></i>
           Как получить API ключ
         </h4>
-        <ol class="text-sm text-blue-800 dark:text-blue-300 list-decimal list-inside space-y-1">
-          <li>Войдите в <a href="https://seller.wildberries.ru" target="_blank" class="underline">WB Партнеры</a></li>
+        <ol
+          class="text-sm text-blue-800 dark:text-blue-300 list-decimal list-inside space-y-1"
+        >
+          <li>
+            Войдите в
+            <a
+              href="https://seller.wildberries.ru"
+              target="_blank"
+              class="underline"
+              >WB Партнеры</a
+            >
+          </li>
           <li>Перейдите в раздел "Настройки" → "Доступ к API"</li>
           <li>Скопируйте ключ и вставьте в поле выше</li>
         </ol>
@@ -119,11 +139,7 @@
     </Card>
 
     <!-- Error Alert -->
-    <Message
-      v-if="apiKeyStore.error"
-      severity="error"
-      class="mt-4"
-    >
+    <Message v-if="apiKeyStore.error" severity="error" class="mt-4">
       {{ apiKeyStore.error }}
     </Message>
   </div>
@@ -166,7 +182,9 @@ async function saveApiKey() {
     userStore.user.supplierApiKey = newApiKey.value.trim();
     newApiKey.value = '';
     showEditForm.value = false;
-    alert('API ключ успешно сохранен. Ваш API ключ прошел проверку и был сохранен в системе.');
+    alert(
+      'API ключ успешно сохранен. Ваш API ключ прошел проверку и был сохранен в системе.',
+    );
   } catch (error: any) {
     formError.value = error.message || 'Не удалось сохранить API ключ';
   }
@@ -174,7 +192,7 @@ async function saveApiKey() {
 
 async function handleDelete() {
   const confirmed = confirm(
-    'Удаление API ключа\n\nВы уверены, что хотите удалить API ключ? Это действие нельзя отменить.\n\nНажмите "OK" для удаления.'
+    'Удаление API ключа\n\nВы уверены, что хотите удалить API ключ? Это действие нельзя отменить.\n\nНажмите "OK" для удаления.',
   );
 
   if (confirmed) {
@@ -183,7 +201,9 @@ async function handleDelete() {
       userStore.user.supplierApiKey = undefined;
       alert('API ключ удален. Ваш API ключ был успешно удален из системы.');
     } catch (error) {
-      alert('Ошибка удаления. Не удалось удалить API ключ. Попробуйте еще раз.');
+      alert(
+        'Ошибка удаления. Не удалось удалить API ключ. Попробуйте еще раз.',
+      );
     }
   }
 }
@@ -205,6 +225,6 @@ function formatDate(date: Date): string {
 }
 
 onMounted(() => {
-  apiKeyStore.checkStatus();
+  // apiKeyStore.checkStatus();
 });
 </script>
