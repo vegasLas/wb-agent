@@ -3,8 +3,39 @@
 </template>
 
 <script setup lang="ts">
-// This component serves as a layout wrapper for reschedules routes
-// Child routes: List, Create (Form), Update (UpdateForm)
+import { onMounted } from 'vue';
+import { useUserStore } from '../stores/user';
+import { useRescheduleStore } from '../stores/reschedules';
+import { useRescheduleListStore } from '../stores/reschedules/list';
+import { useViewReady } from '../composables/useSkeleton';
+
+const userStore = useUserStore();
+const rescheduleStore = useRescheduleStore();
+const listStore = useRescheduleListStore();
+const { viewReady } = useViewReady();
+
+onMounted(async () => {
+  console.log('ReschedulesView onMounted - START');
+  try {
+    // Fetch supplies when view mounts
+    if (userStore.selectedAccount?.selectedSupplierId) {
+      await rescheduleStore.fetchSupplies(userStore.selectedAccount.selectedSupplierId);
+    }
+
+    // Set initial filter to show active reschedules
+    if (listStore.selectedStatus) {
+      listStore.updateFilter('status', [listStore.selectedStatus]);
+    }
+    console.log('ReschedulesView onMounted - data fetched');
+  } catch (err) {
+    console.error('ReschedulesView onMounted - fetch error:', err);
+  } finally {
+    // ALWAYS signal view ready, even if fetch failed
+    console.log('ReschedulesView onMounted - calling viewReady');
+    viewReady();
+    console.log('ReschedulesView onMounted - END');
+  }
+});
 </script>
 
 <style scoped>

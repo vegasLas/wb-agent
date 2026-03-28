@@ -86,6 +86,28 @@
       </div>
     </template>
 
+    <!-- Empty states when user conditions are not met -->
+    <div
+      v-else
+      class="text-center py-12 text-gray-500 dark:text-gray-400"
+    >
+      <template v-if="!userStore.selectedAccount">
+        <i class="pi pi-user text-4xl mb-4 block"></i>
+        <p class="text-lg font-medium">Аккаунт не выбран</p>
+        <p class="text-sm mt-2">Пожалуйста, выберите аккаунт Wildberries для продолжения</p>
+      </template>
+      <template v-else-if="!userStore.hasValidSupplier">
+        <i class="pi pi-building text-4xl mb-4 block"></i>
+        <p class="text-lg font-medium">Поставщик не выбран</p>
+        <p class="text-sm mt-2">Пожалуйста, выберите поставщика для продолжения</p>
+      </template>
+      <template v-else-if="!userStore.subscriptionActive">
+        <i class="pi pi-calendar-times text-4xl mb-4 block"></i>
+        <p class="text-lg font-medium">Подписка не активна</p>
+        <p class="text-sm mt-2">Ваша подписка истекла. Пожалуйста, продлите подписку.</p>
+      </template>
+    </div>
+
     <!-- Supply Details Modal -->
     <ReschedulesSupplyDetailsModal
       :show="supplyDetailsStore.showModal"
@@ -95,9 +117,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useViewReady } from '../../composables/useSkeleton';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
@@ -117,6 +138,8 @@ const userStore = useUserStore();
 const rescheduleStore = useRescheduleStore();
 const listStore = useRescheduleListStore();
 const supplyDetailsStore = useSupplyDetailsStore();
+
+// Note: Data fetching and viewReady() are handled in parent ReschedulesView.vue
 
 const noReschedulesMessage = computed(() => {
   return `Нет ${listStore.selectedStatus === 'ACTIVE' ? 'активных' : listStore.selectedStatus === 'COMPLETED' ? 'завершенных' : 'архивных'} перепланирований`;
@@ -176,25 +199,4 @@ function handleOpenDetails(reschedule: AutobookingReschedule) {
 }
 
 const scrollContainer = ref<HTMLElement | null>(null);
-
-// Skeleton control
-const { viewReady } = useViewReady();
-
-onMounted(async () => {
-  // Fetch supplies if not loaded
-  if (
-    rescheduleStore.supplies.length === 0 &&
-    userStore.selectedAccount?.selectedSupplierId
-  ) {
-    await rescheduleStore.fetchSupplies(userStore.selectedAccount.selectedSupplierId);
-  }
-
-  // Set initial filter to show active reschedules
-  if (listStore.selectedStatus) {
-    listStore.updateFilter('status', [listStore.selectedStatus]);
-  }
-
-  // Signal that view is ready
-  viewReady();
-});
 </script>

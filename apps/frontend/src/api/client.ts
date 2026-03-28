@@ -33,7 +33,6 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     // Get initData from Telegram WebApp
     const initData = getInitData();
-    console.log(initData);
     if (initData && config.headers) {
       config.headers['x-init-data'] = initData;
     }

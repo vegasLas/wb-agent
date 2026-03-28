@@ -95,10 +95,10 @@ const toggleNavMenu = (event: MouseEvent) => {
   navMenu.value?.toggle(event);
 };
 
-// Navigation items
+// Navigation items - route to list views directly
 const navConfig = [
-  { id: 'autobooking', label: 'автоброни', icon: 'pi pi-calendar', route: 'Autobooking' },
-  { id: 'triggers', label: 'слоты', icon: 'pi pi-clock', route: 'Triggers' },
+  { id: 'autobooking', label: 'автоброни', icon: 'pi pi-calendar', route: 'AutobookingList' },
+  { id: 'triggers', label: 'слоты', icon: 'pi pi-clock', route: 'TriggersList' },
   { id: 'reports', label: 'отчеты', icon: 'pi pi-chart-pie', route: 'Reports' },
 ];
 
