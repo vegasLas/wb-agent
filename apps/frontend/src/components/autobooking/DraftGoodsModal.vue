@@ -2,11 +2,15 @@
   <Dialog
     v-model:visible="visible"
     header="Товары в черновике"
-    :style="{ width: '50vw' }"
     @hide="$emit('update:show', false)"
   >
     <div class="max-h-[60vh] overflow-auto">
-      <DataTable v-if="goods.length" :value="goods" size="small" class="p-datatable-sm">
+      <DataTable
+        v-if="goods.length"
+        :value="goods"
+        size="small"
+        class="p-datatable-sm"
+      >
         <Column field="image" header="Фото">
           <template #body="slotProps">
             <img
@@ -15,7 +19,10 @@
               :alt="slotProps.data.name"
               class="h-12 w-12 object-cover rounded"
             />
-            <div v-else class="h-12 w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+            <div
+              v-else
+              class="h-12 w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400"
+            >
               <i class="pi pi-image text-xl"></i>
             </div>
           </template>
