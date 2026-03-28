@@ -108,6 +108,7 @@ import { AUTOBOOKING_STATUSES } from '../../constants';
 import { useUserStore } from '../../stores/user';
 import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useSupplierStore } from '../../stores/supplier';
+import { useViewReady } from '../../composables/useSkeleton';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
@@ -205,6 +206,9 @@ const handleModalClose = (isOpen: boolean) => {
 
 const scrollContainer = ref<HTMLElement | null>(null);
 
+// Skeleton control
+const { viewReady } = useViewReady();
+
 // Initialize infinite scroll
 useInfiniteScroll(
   scrollContainer,
@@ -217,11 +221,13 @@ useInfiniteScroll(
   { distance: 50, canLoadMore: () => Boolean(listStore.nextPage) },
 );
 
-onMounted(() => {
+onMounted(async () => {
   console.log('listStore.fetchData()');
   if (listStore.autobookings.length === 0) {
-    listStore.fetchData();
+    await listStore.fetchData();
   }
+  // Signal that view is ready after data is loaded
+  viewReady();
 });
 </script>
 
