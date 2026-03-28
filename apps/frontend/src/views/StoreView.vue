@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../stores/user';
+import { useViewReady } from '../composables/useSkeleton';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
@@ -88,6 +89,9 @@ import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
 import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
 import SupplierApiKeyComponent from '../components/store/SupplierApiKeyComponent.vue';
 import type { SubscriptionTariff, BookingTariff } from '../constants';
+
+// Skeleton control
+const { viewReady } = useViewReady();
 
 const userStore = useUserStore();
 
@@ -120,6 +124,7 @@ function handleSwitchToSubscription() {
 
 onMounted(() => {
   window.addEventListener('switch-to-subscription-tab', handleSwitchToSubscription);
+  viewReady();
 });
 
 onUnmounted(() => {

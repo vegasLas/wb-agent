@@ -191,6 +191,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useViewReady } from '../composables/useSkeleton';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { useReportStore } from '../stores/report';
@@ -426,8 +427,13 @@ const summaryStats = computed(() => {
   };
 });
 
-onMounted(() => {
-  reportViewStore.fetchReportData();
+// Skeleton control - call viewReady() when component is fully loaded
+const { viewReady } = useViewReady();
+
+onMounted(async () => {
+  await reportViewStore.fetchReportData();
+  // Signal that view is ready after data is loaded
+  viewReady();
 });
 </script>
 

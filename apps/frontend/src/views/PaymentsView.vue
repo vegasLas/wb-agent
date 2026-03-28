@@ -71,10 +71,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useViewReady } from '../composables/useSkeleton';
 import Card from 'primevue/card';
 import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
 import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
 
+// Skeleton control
+const { viewReady } = useViewReady();
+
 const activeTab = ref<'subscription' | 'credits'>('subscription');
+
+onMounted(() => {
+  viewReady();
+});
 </script>
