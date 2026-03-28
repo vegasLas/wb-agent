@@ -97,6 +97,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useViewReady } from '../../composables/useSkeleton';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
@@ -176,18 +177,24 @@ function handleOpenDetails(reschedule: AutobookingReschedule) {
 
 const scrollContainer = ref<HTMLElement | null>(null);
 
-onMounted(() => {
+// Skeleton control
+const { viewReady } = useViewReady();
+
+onMounted(async () => {
   // Fetch supplies if not loaded
   if (
     rescheduleStore.supplies.length === 0 &&
     userStore.selectedAccount?.selectedSupplierId
   ) {
-    rescheduleStore.fetchSupplies(userStore.selectedAccount.selectedSupplierId);
+    await rescheduleStore.fetchSupplies(userStore.selectedAccount.selectedSupplierId);
   }
 
   // Set initial filter to show active reschedules
   if (listStore.selectedStatus) {
     listStore.updateFilter('status', [listStore.selectedStatus]);
   }
+
+  // Signal that view is ready
+  viewReady();
 });
 </script>

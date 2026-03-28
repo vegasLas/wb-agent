@@ -29,12 +29,16 @@ import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTriggerStore } from '../stores/triggers';
 import { useUserStore } from '../stores/user';
+import { useViewReady } from '../composables/useSkeleton';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
 
 const router = useRouter();
 const triggerStore = useTriggerStore();
 const userStore = useUserStore();
+
+// Skeleton control
+const { viewReady } = useViewReady();
 
 function navigateToStoreSubscription() {
   router.push({ name: 'StoreSubscription' });
@@ -44,5 +48,6 @@ onMounted(async () => {
   if (triggerStore.triggers.length === 0) {
     await triggerStore.fetchTriggers();
   }
+  viewReady();
 });
 </script>

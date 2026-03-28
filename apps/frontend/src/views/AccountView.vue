@@ -116,6 +116,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import { onMounted } from 'vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
@@ -124,6 +125,10 @@ import Column from 'primevue/column';
 import SupplierApiKeyComponent from '../components/store/SupplierApiKeyComponent.vue';
 import { useUserStore } from '../stores/user';
 import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
+import { useViewReady } from '../composables/useSkeleton';
+
+// Skeleton control - call viewReady() when component is fully loaded
+const { viewReady } = useViewReady();
 
 // Stores
 const userStore = useUserStore();
@@ -140,6 +145,13 @@ if (action && ['change_supplier'].includes(action)) {
 
 // Computed refs from store
 const { user, subscriptionActive, subscriptionRemainingDays } = storeToRefs(userStore);
+
+// Signal that view is ready (user data is already loaded by router guard)
+onMounted(() => {
+  requestAnimationFrame(() => {
+    viewReady();
+  });
+});
 
 // Helper function to format date
 function formatDate(dateString: string): string {

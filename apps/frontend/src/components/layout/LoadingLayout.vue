@@ -1,27 +1,25 @@
 <template>
   <div class="min-h-screen bg-white dark:bg-[#171819]">
-    <!-- Header Skeleton -->
-    <header class="border-b border-gray-200 dark:border-gray-800">
-      <div class="container mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
-          <!-- Left side: Nav + Help -->
-          <div class="flex items-center gap-2">
-            <Skeleton width="8rem" height="2.25rem" border-radius="0.25rem" />
-            <Skeleton width="2.25rem" height="2.25rem" border-radius="0.25rem" />
-          </div>
-          
-          <!-- Right side: Store, Accounts, User -->
-          <div class="flex items-center gap-2">
-            <Skeleton width="2.25rem" height="2.25rem" border-radius="0.25rem" />
-            <Skeleton width="2.25rem" height="2.25rem" border-radius="0.25rem" />
-            <Skeleton width="6rem" height="2.25rem" border-radius="0.25rem" />
-          </div>
+    <main class="container mx-auto px-4 py-6">
+      <!-- Header Skeleton -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-2">
+          <!-- Navigation Dropdown Skeleton: h-9 w-32 -->
+          <Skeleton class="h-9 w-32" />
+          <!-- Help Button Skeleton: h-9 w-9 -->
+          <Skeleton class="h-9 w-9" />
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Store Button Skeleton: h-9 w-9 -->
+          <Skeleton class="h-9 w-9" />
+          <!-- Account Management Button Skeleton: h-9 w-9 -->
+          <Skeleton class="h-9 w-9" />
+          <!-- User Profile Button Skeleton: h-9 w-24 -->
+          <Skeleton class="h-9 w-24" />
         </div>
       </div>
-    </header>
 
-    <!-- Content Skeleton -->
-    <main class="container mx-auto px-4 py-6">
+      <!-- Content Skeleton -->
       <slot />
     </main>
   </div>
