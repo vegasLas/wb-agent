@@ -53,10 +53,7 @@
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
           </Tag>
-          <Button
-            severity="primary"
-            @click="navigateToCreate"
-          >
+          <Button severity="primary" @click="navigateToCreate">
             добавить
           </Button>
         </div>
@@ -101,14 +98,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInfiniteScroll } from '@vueuse/core';
 import { AUTOBOOKING_STATUSES } from '../../constants';
 import { useUserStore } from '../../stores/user';
 import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useSupplierStore } from '../../stores/supplier';
-import { useViewReady } from '../../composables/useSkeleton';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
@@ -117,7 +113,6 @@ import UserAlerts from '../global/UserAlerts.vue';
 import StatsCards from '../common/StatsCards.vue';
 import AutobookingBookingCard from './BookingCard.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
-
 const router = useRouter();
 const userStore = useUserStore();
 const listStore = useAutobookingListStore();
@@ -206,9 +201,6 @@ const handleModalClose = (isOpen: boolean) => {
 
 const scrollContainer = ref<HTMLElement | null>(null);
 
-// Skeleton control
-const { viewReady } = useViewReady();
-
 // Initialize infinite scroll
 useInfiniteScroll(
   scrollContainer,
@@ -220,15 +212,6 @@ useInfiniteScroll(
   },
   { distance: 50, canLoadMore: () => Boolean(listStore.nextPage) },
 );
-
-onMounted(async () => {
-  console.log('listStore.fetchData()');
-  if (listStore.autobookings.length === 0) {
-    await listStore.fetchData();
-  }
-  // Signal that view is ready after data is loaded
-  viewReady();
-});
 </script>
 
 <style scoped></style>
