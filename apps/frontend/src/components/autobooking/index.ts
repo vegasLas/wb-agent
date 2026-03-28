@@ -1,5 +1,4 @@
 // Autobooking Components
-export { default as AutobookingMain } from './Main.vue';
 export { default as AutobookingList } from './List.vue';
 export { default as AutobookingBookingCard } from './BookingCard.vue';
 export { default as AutobookingForm } from './Form.vue';

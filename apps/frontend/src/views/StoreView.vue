@@ -80,14 +80,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useUserStore } from '../../stores/user';
+import { useUserStore } from '../stores/user';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
-import SubscriptionTariffs from '../payment/SubscriptionTariffs.vue';
-import PaymentTariffs from '../payment/PaymentTariffs.vue';
-import SupplierApiKeyComponent from './SupplierApiKeyComponent.vue';
-import type { SubscriptionTariff, BookingTariff } from '../../constants';
+import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
+import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
+import SupplierApiKeyComponent from '../components/store/SupplierApiKeyComponent.vue';
+import type { SubscriptionTariff, BookingTariff } from '../constants';
 
 const userStore = useUserStore();
 

@@ -73,8 +73,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import Card from 'primevue/card';
-import PaymentTariffs from './PaymentTariffs.vue';
-import SubscriptionTariffs from './SubscriptionTariffs.vue';
+import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
+import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
 
 const activeTab = ref<'subscription' | 'credits'>('subscription');
 </script>

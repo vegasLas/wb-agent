@@ -193,18 +193,18 @@
 import { ref, computed, onMounted } from 'vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { useReportStore } from '../../stores/report';
-import { useUserStore } from '../../stores/user';
-import { useReportViewStore } from '../../stores/reportView';
-import UserAlerts from '../global/UserAlerts.vue';
-import MultiSelect from '../ui/MultiSelect.vue';
-import ReportCharts from './ReportCharts.vue';
-import WarehouseSuggestions from './WarehouseSuggestions.vue';
+import { useReportStore } from '../stores/report';
+import { useUserStore } from '../stores/user';
+import { useReportViewStore } from '../stores/reportView';
+import UserAlerts from '../components/global/UserAlerts.vue';
+import MultiSelect from '../components/ui/MultiSelect.vue';
+import ReportCharts from '../components/report/ReportCharts.vue';
+import WarehouseSuggestions from '../components/report/WarehouseSuggestions.vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import type { ReportItem } from '../../types';
+import type { ReportItem } from '../types';
 
 // Register Vue Date Picker
 const reportStore = useReportStore();

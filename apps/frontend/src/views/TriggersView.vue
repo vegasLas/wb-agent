@@ -27,8 +27,8 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTriggerStore } from '../../stores/triggers';
-import { useUserStore } from '../../stores/user';
+import { useTriggerStore } from '../stores/triggers';
+import { useUserStore } from '../stores/user';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
 

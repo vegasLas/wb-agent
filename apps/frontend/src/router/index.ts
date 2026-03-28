@@ -5,7 +5,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Account',
-    component: () => import('../components/account/AccountComponent.vue'),
+    component: () => import('../views/AccountView.vue'),
     meta: {
       title: 'Account',
       requiresAuth: true,
@@ -14,7 +14,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/autobooking',
     name: 'Autobooking',
-    component: () => import('../components/autobooking/Main.vue'),
+    component: () => import('../views/AutobookingView.vue'),
     meta: {
       title: 'Autobooking',
       requiresAuth: true,
@@ -40,7 +40,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/reschedules',
     name: 'Reschedules',
-    component: () => import('../components/reschedules/Main.vue'),
+    component: () => import('../views/ReschedulesView.vue'),
     meta: {
       title: 'Reschedules',
       requiresAuth: true,
@@ -66,7 +66,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/triggers',
     name: 'Triggers',
-    component: () => import('../components/triggers/TriggersMain.vue'),
+    component: () => import('../views/TriggersView.vue'),
     meta: {
       title: 'Triggers',
       requiresAuth: true,
@@ -87,7 +87,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/reports',
     name: 'Reports',
-    component: () => import('../components/report/ReportMain.vue'),
+    component: () => import('../views/ReportsView.vue'),
     meta: {
       title: 'Reports',
       requiresAuth: true,
@@ -96,7 +96,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/store',
     name: 'Store',
-    component: () => import('../components/store/StoreComponent.vue'),
+    component: () => import('../views/StoreView.vue'),
     meta: {
       title: 'Store',
       requiresAuth: true,
@@ -105,7 +105,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/store/subscription',
     name: 'StoreSubscription',
-    component: () => import('../components/store/StoreComponent.vue'),
+    component: () => import('../views/StoreView.vue'),
     meta: {
       title: 'Store - Subscription',
       requiresAuth: true,
@@ -115,7 +115,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/store/bookings',
     name: 'StoreBookings',
-    component: () => import('../components/store/StoreComponent.vue'),
+    component: () => import('../views/StoreView.vue'),
     meta: {
       title: 'Store - Bookings',
       requiresAuth: true,
@@ -125,7 +125,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/payments',
     name: 'Payments',
-    component: () => import('../components/payment/PaymentView.vue'),
+    component: () => import('../views/PaymentsView.vue'),
     meta: {
       title: 'Payments',
       requiresAuth: true,
