@@ -1,5 +1,4 @@
 import apiClient from './client';
-import type { SupplierInfo, ApiKeyStatus } from '../types';
 
 export interface GoodBalance {
   goodName: string;
@@ -9,29 +8,22 @@ export interface GoodBalance {
   quantity: number;
 }
 
+export interface BalancesResponse {
+  success: boolean;
+  data: Record<number, GoodBalance[]>;
+}
+
 export const supplierAPI = {
-  async fetchSupplierInfo(): Promise<SupplierInfo> {
-    const response = await apiClient.get('/supplier');
-    return response.data.data;
-  },
-
-  async updateSupplierApiKey(apiKey: string): Promise<void> {
-    await apiClient.patch('/supplier/api-key', { apiKey });
-  },
-
-  async checkApiKeyStatus(): Promise<ApiKeyStatus> {
-    const response = await apiClient.get('/supplier/api-key/status');
-    return response.data.data;
-  },
-
-  async deleteSupplierApiKey(): Promise<void> {
-    await apiClient.delete('/supplier/api-key');
-  },
-
-  async fetchWarehouseBalances(supplierId?: string): Promise<GoodBalance[]> {
-    const response = await apiClient.get('/supplier/balances', {
-      params: supplierId ? { supplierId } : undefined
-    });
-    return response.data.data || [];
+  /**
+   * GET /api/v1/suppliers/balances
+   * Get warehouse balances for the selected account
+   */
+  async fetchWarehouseBalances(accountId?: string, supplierId?: string): Promise<Record<number, GoodBalance[]>> {
+    const params: Record<string, string> = {};
+    if (accountId) params.accountId = accountId;
+    if (supplierId) params.supplierId = supplierId;
+    
+    const response = await apiClient.get<BalancesResponse>('/suppliers/balances', { params });
+    return response.data.data || {};
   },
 };
