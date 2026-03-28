@@ -25,20 +25,18 @@ export type ViewType =
 // User & Authentication Types
 // -----------------------------------------------------------------------------
 export interface User {
-  id: number;
-  telegramId: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  photoUrl?: string;
-  agreeTerms: boolean;
-  subscriptionExpiresAt: string | null;
+  name?: string;
   autobookingCount: number;
-  payments: Payment[];
+  subscriptionExpiresAt: string | null;
+  agreeTerms: boolean;
   selectedAccountId?: string;
+  payments: Payment[];
+  supplierApiKey?: {
+    isExistAPIKey: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
   accounts: Account[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface AuthResponse {
@@ -51,10 +49,10 @@ export interface AuthResponse {
 // -----------------------------------------------------------------------------
 export interface Account {
   id: string;
-  phoneWb: string;
-  isActive: boolean;
+  phoneWb?: string;
+  isActive?: boolean;
   suppliers: Supplier[];
-  selectedSupplierId: string | null;
+  selectedSupplierId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -87,72 +85,65 @@ export interface ApiKeyStatus {
 // -----------------------------------------------------------------------------
 export interface Autobooking {
   id: string;
-  name: string;
-  enabled: boolean;
-  userId?: number;
+  userId: number;
+  supplierId: string;
   draftId: string;
   warehouseId: number;
-  warehouseIds?: string[];
   transitWarehouseId?: number | null;
   transitWarehouseName?: string | null;
-  supplierId: string;
-  supplyType: string;
+  supplyType: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
   dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
-  startDate?: string | null;
-  endDate?: string | null;
-  customDates?: string[];
-  completedDates?: string[];
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  customDates?: Date[] | string[];
   maxCoefficient: number;
-  coefficient?: number;
-  monotype: boolean;
   monopalletCount?: number | null;
   status: 'ACTIVE' | 'ARCHIVED' | 'COMPLETED' | 'ERROR';
-  bookedAt?: string | null;
-  bookedDate?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export type AutobookingStatus = 'active' | 'paused' | 'completed' | 'failed';
 
 export interface AutobookingCreateData {
-  name: string;
+  accountId: string;
   draftId: string;
-  warehouseId: number | null;
+  warehouseId: number;
   transitWarehouseId?: number | null;
   transitWarehouseName?: string | null;
-  supplyType: string;
-  dateType: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  customDates?: (string | Date)[];
+  supplyType: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
+  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  customDates?: Date[] | string[];
   maxCoefficient: number;
   monopalletCount?: number | null;
 }
 
 export interface AutobookingUpdateData {
-  name?: string;
   draftId?: string;
-  warehouseId?: number | null;
+  warehouseId?: number;
   transitWarehouseId?: number | null;
   transitWarehouseName?: string | null;
-  supplyType?: string;
-  dateType?: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  customDates?: (string | Date)[];
+  supplyType?: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
+  dateType?: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  customDates?: Date[] | string[];
   maxCoefficient?: number;
   monopalletCount?: number | null;
+  status?: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
 }
 
 // -----------------------------------------------------------------------------
 // Warehouse Types
 // -----------------------------------------------------------------------------
 export interface Warehouse {
-  id: string;
+  ID: number;
   name: string;
   address?: string;
-  isActive: boolean;
+  workTime?: string;
+  acceptsQr?: boolean;
 }
 
 export interface WarehouseWithCoefficient extends Warehouse {
@@ -164,8 +155,10 @@ export interface WarehouseWithCoefficient extends Warehouse {
 // Coefficient Types
 // -----------------------------------------------------------------------------
 export interface Coefficient {
-  warehouseId: string;
-  boxTypeId?: number;
+  warehouseId: number;
+  warehouseName: string;
+  boxTypeId: number;
+  boxTypeName: string;
   coefficient: number;
   date: string;
 }
@@ -178,8 +171,7 @@ export type SearchMode =
   | 'TOMORROW'
   | 'WEEK'
   | 'UNTIL_FOUND'
-  | 'CUSTOM_DATES'
-  | 'RANGE';
+  | 'CUSTOM_DATES';
 
 export interface SupplyTrigger {
   id: string;
@@ -189,46 +181,53 @@ export interface SupplyTrigger {
   isActive: boolean;
   checkInterval: number;
   maxCoefficient: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   status: 'RELEVANT' | 'COMPLETED' | 'EXPIRED';
-  lastNotificationAt: string | null;
+  lastNotificationAt: Date | string | null;
   searchMode: SearchMode;
-  startDate?: string | null;
-  endDate?: string | null;
-  selectedDates: string[];
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  selectedDates: Date[] | string[];
 }
+
+// Alias for backward compatibility
+export type Trigger = SupplyTrigger;
 
 export interface CreateTriggerRequest {
   warehouseIds: number[];
   supplyTypes: ('BOX' | 'MONOPALLETE' | 'SUPERSAFE')[];
-  checkInterval: number;
+  checkInterval?: number;
   maxCoefficient: number;
-  searchMode: SearchMode;
-  startDate?: string | null;
-  endDate?: string | null;
-  selectedDates?: string[];
+  searchMode?: SearchMode;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  selectedDates?: Date[] | string[];
+}
+
+export interface UpdateTriggerRequest {
+  triggerId: string;
+  warehouseIds?: number[];
+  supplyTypes?: ('BOX' | 'MONOPALLETE' | 'SUPERSAFE')[];
+  isActive?: boolean;
 }
 
 // Legacy types for backward compatibility
-export interface Trigger {
-  id: string;
-  date: string;
-  warehouseId: string;
-  warehouseName: string;
-  maxCoefficient: number;
-  enabled: boolean;
-  createdAt: string;
-}
-
 export interface TriggerCreateData {
-  date: string;
-  warehouseIds: string[];
+  warehouseIds: number[];
+  supplyTypes: ('BOX' | 'MONOPALLETE' | 'SUPERSAFE')[];
   maxCoefficient: number;
+  checkInterval?: number;
+  searchMode?: SearchMode;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  selectedDates?: Date[] | string[];
 }
 
-export interface TriggerUpdateData extends Partial<TriggerCreateData> {
-  enabled?: boolean;
+export interface TriggerUpdateData {
+  warehouseIds?: number[];
+  supplyTypes?: ('BOX' | 'MONOPALLETE' | 'SUPERSAFE')[];
+  isActive?: boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -239,18 +238,18 @@ export interface AutobookingReschedule {
   userId: number;
   supplierId: string;
   warehouseId: number;
-  dateType: string;
-  startDate: string | null;
-  endDate: string | null;
-  customDates: string[];
-  completedDates: string[];
+  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES_SINGLE';
+  startDate: Date | string | null;
+  endDate: Date | string | null;
+  currentDate: Date | string;
+  customDates: Date[] | string[];
+  completedDates: Date[] | string[];
   maxCoefficient: number;
-  status: RescheduleStatus;
-  supplyType: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+  supplyType: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
   supplyId: string;
-  createdAt: string;
-  updatedAt: string;
-  currentDate: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export type RescheduleStatus = 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
@@ -276,55 +275,46 @@ export type RescheduleUpdateData = Partial<RescheduleCreateData>;
 // Create/Update API request types
 export interface CreateAutobookingRescheduleRequest {
   warehouseId: number;
-  dateType: string;
-  startDate?: string;
-  endDate?: string;
-  currentDate: string;
-  customDates?: string[];
+  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES_SINGLE';
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  currentDate: Date | string;
+  customDates?: Date[] | string[];
   maxCoefficient: number;
-  supplyType: string;
+  supplyType: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
   supplyId: string;
 }
 
 export interface UpdateAutobookingRescheduleRequest {
   id: string;
   warehouseId?: number;
-  dateType?: string;
-  startDate?: string;
-  endDate?: string;
-  currentDate?: string;
-  customDates?: string[];
+  dateType?: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES_SINGLE';
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  customDates?: Date[] | string[];
   maxCoefficient?: number;
-  supplyType?: string;
+  supplyType?: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
   supplyId?: string;
-  status?: string;
+  status?: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
 }
 
 // -----------------------------------------------------------------------------
 // Supply Types
 // -----------------------------------------------------------------------------
 export interface Supply {
-  id: string;
-  supplierId: number;
+  supplyId: number;
+  supplyDate: string;
   warehouseId: number;
-  date: string;
-  status: string;
-  goods: SupplyGood[];
-  supplyId?: number;
-  supplyDate?: string;
-  warehouseName?: string;
-  boxTypeName?: string;
-  statusId?: number;
-  statusName?: string;
+  warehouseName: string;
+  boxTypeName: string;
+  statusId: number;
+  statusName: string;
 }
 
 export interface SupplyGood {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
   imgSrc?: string;
   imtName?: string;
+  quantity?: number;
   barcode?: string;
   brandName?: string;
   subjectName?: string;
@@ -332,28 +322,26 @@ export interface SupplyGood {
 }
 
 export interface SupplyDetails {
-  id: string;
-  date: string;
-  warehouseId: string;
+  id: number;
+  supplyId: number;
+  supplyDate: string;
+  warehouseId: number;
   warehouseName: string;
-  goods: Array<{
-    sku: string;
-    quantity: number;
-  }>;
-  supplyDate?: string;
-  statusId?: number;
+  boxTypeName: string;
+  statusId: number;
+  statusName: string;
 }
 
 // -----------------------------------------------------------------------------
 // Draft Types
 // -----------------------------------------------------------------------------
 export interface Draft {
-  id: string;
-  supplierId: number;
-  name: string;
+  draftID: string;
+  supplierId: string;
+  draftName: string;
   goodsCount: number;
   goods?: DraftGood[];
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface DraftGood {
