@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { triggersAPI } from '../api';
-import { useViewStore } from './view';
 import { useWarehousesStore } from './warehouses';
 import type { SupplyTrigger, CreateTriggerRequest } from '../types';
 
@@ -77,7 +76,6 @@ export const useTriggerStore = defineStore('triggers', () => {
       if (trigger) {
         triggers.value.unshift(trigger);
       }
-      useViewStore().setView('triggers-main');
       return trigger;
     } catch (err) {
       error.value = 'Failed to create trigger';

@@ -35,11 +35,11 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import AccountCard from './AccountCard.vue';
 import AddAccountCard from './AddAccountCard.vue';
 import { useUserStore } from '../../stores/user';
-import { useViewStore } from '../../stores/view';
 import type { Account } from '../../stores/user';
 
 interface Props {
@@ -55,10 +55,10 @@ defineEmits<{
   'remove-account': [accountId: string];
 }>();
 
+const router = useRouter();
 const userStore = useUserStore();
-const viewStore = useViewStore();
 
 function openShop() {
-  viewStore.setView('store-subscription');
+  router.push({ name: 'StoreSubscription' });
 }
 </script>

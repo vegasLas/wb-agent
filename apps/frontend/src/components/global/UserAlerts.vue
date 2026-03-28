@@ -70,17 +70,14 @@ import { useRouter } from 'vue-router';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
 import { useUserStore } from '../../stores/user';
-import { useViewStore } from '../../stores/view';
 import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
 
 const router = useRouter();
 const userStore = useUserStore();
-const viewStore = useViewStore();
 const accountModalStore = useAccountSupplierModalStore();
 
 function navigateToSubscription() {
-  viewStore.setView('store-subscription');
-  router.push('/store');
+  router.push({ name: 'StoreSubscription' });
 }
 
 function openAccountModal() {
