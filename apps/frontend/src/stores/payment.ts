@@ -1,4 +1,4 @@
-import { ref, computed, readonly } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { paymentsAPI } from '../api';
 import type { Tariff, Payment } from '../types';
@@ -31,7 +31,8 @@ export const usePaymentStore = defineStore('payment', () => {
       isFetched.value = true;
       return data;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch tariffs';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch tariffs';
       error.value = errorMsg;
       throw err;
     } finally {
@@ -56,7 +57,8 @@ export const usePaymentStore = defineStore('payment', () => {
       payments.value.unshift(payment);
       return payment;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create payment';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to create payment';
       error.value = errorMsg;
       throw err;
     } finally {
