@@ -1,25 +1,46 @@
 import apiClient from './client';
 import type { User } from '../types';
 
+export interface UserResponse extends User {}
+
+export interface UpdateUserResponse {
+  success: boolean;
+}
+
 export const userAPI = {
+  /**
+   * GET /api/v1/user
+   * Get current user data
+   */
   async fetchUser(): Promise<User> {
-    const response = await apiClient.get('/user');
-    // Backend returns user data directly, not wrapped in data property
+    const response = await apiClient.get<UserResponse>('/user');
     return response.data;
   },
 
-  async logout(): Promise<{ success: boolean }> {
-    const response = await apiClient.post('/auth/logout');
+  /**
+   * POST /api/v1/user/update
+   * Update user data (agreeTerms or selectedAccountId)
+   */
+  async agreeToTerms(): Promise<UpdateUserResponse> {
+    const response = await apiClient.post<UpdateUserResponse>('/user/update', { agreeTerms: true });
     return response.data;
   },
 
-  async agreeToTerms(): Promise<{ success: boolean }> {
-    const response = await apiClient.post('/user/update', { agreeTerms: true });
+  /**
+   * POST /api/v1/user/update
+   * Update selected account
+   */
+  async updateSelectedAccount(accountId: string): Promise<UpdateUserResponse> {
+    const response = await apiClient.post<UpdateUserResponse>('/user/update', { selectedAccountId: accountId });
     return response.data;
   },
 
-  async updateSelectedAccount(accountId: string): Promise<{ success: boolean }> {
-    const response = await apiClient.post('/user/update', { selectedAccountId: accountId });
+  /**
+   * POST /api/v1/auth/logout
+   * Logout user (all accounts or specific account)
+   */
+  async logout(accountId?: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/logout', { accountId });
     return response.data;
   },
 };

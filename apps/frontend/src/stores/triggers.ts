@@ -109,6 +109,7 @@ export const useTriggerStore = defineStore('triggers', () => {
       loading.value = true;
       error.value = null;
       const data = await triggersAPI.fetchTriggers();
+      console.log('await triggersAPI.fetchTriggers(): ', data);
       triggers.value = data;
       return triggers.value;
     } catch (err) {

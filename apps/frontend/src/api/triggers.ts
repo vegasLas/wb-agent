@@ -1,28 +1,65 @@
 import apiClient from './client';
-import type { Trigger, TriggerCreateData, TriggerUpdateData } from '../types';
+import type { SupplyTrigger, CreateTriggerRequest, UpdateTriggerRequest } from '../types';
+
+export interface TriggersResponse {
+  success: boolean;
+  data: SupplyTrigger[];
+}
+
+export interface TriggerResponse {
+  success: boolean;
+  data: SupplyTrigger;
+}
+
+export interface DeleteTriggerResponse {
+  success: boolean;
+}
 
 export const triggersAPI = {
-  async fetchTriggers(): Promise<Trigger[]> {
-    const response = await apiClient.get('/triggers');
-    return response.data.data;
+  /**
+   * GET /api/v1/triggers
+   * Get all triggers for the authenticated user
+   */
+  async fetchTriggers(): Promise<SupplyTrigger[]> {
+    const response = await apiClient.get<SupplyTrigger[]>('/triggers');
+    return response.data;
   },
 
-  async createTrigger(data: TriggerCreateData): Promise<Trigger> {
-    const response = await apiClient.post('/triggers', data);
-    return response.data.data;
+  /**
+   * POST /api/v1/triggers
+   * Create a new trigger
+   */
+  async createTrigger(data: CreateTriggerRequest): Promise<SupplyTrigger> {
+    const response = await apiClient.post<SupplyTrigger>('/triggers', data);
+    return response.data;
   },
 
-  async updateTrigger(id: string, data: TriggerUpdateData): Promise<Trigger> {
-    const response = await apiClient.put('/triggers', { triggerId: id, ...data });
-    return response.data.data;
+  /**
+   * PUT /api/v1/triggers
+   * Update an existing trigger
+   */
+  async updateTrigger(id: string, data: Omit<UpdateTriggerRequest, 'triggerId'>): Promise<SupplyTrigger> {
+    const response = await apiClient.put<SupplyTrigger>('/triggers', {
+      triggerId: id,
+      ...data,
+    });
+    return response.data;
   },
 
+  /**
+   * PATCH /api/v1/triggers
+   * Toggle trigger active status
+   */
+  async toggleTrigger(id: string): Promise<SupplyTrigger> {
+    const response = await apiClient.patch<SupplyTrigger>('/triggers', { triggerId: id });
+    return response.data;
+  },
+
+  /**
+   * DELETE /api/v1/triggers
+   * Delete a trigger
+   */
   async deleteTrigger(id: string): Promise<void> {
     await apiClient.delete('/triggers', { data: { triggerId: id } });
-  },
-
-  async toggleTrigger(id: string): Promise<Trigger> {
-    const response = await apiClient.patch('/triggers', { triggerId: id });
-    return response.data.data;
   },
 };
