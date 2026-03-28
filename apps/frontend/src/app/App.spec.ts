@@ -3,12 +3,11 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createRouter, createWebHistory } from 'vue-router';
 import { createPinia, setActivePinia } from 'pinia';
 import App from './App.vue';
-import AppMain from './AppMain.vue';
 
 // Mock vue-tg
 vi.mock('vue-tg', () => ({
   useWebApp: () => ({
-    initData: '',
+    initData: 'test-data',
     ready: vi.fn(),
     expand: vi.fn(),
   }),
@@ -42,9 +41,16 @@ function createMockRouter() {
         meta: { title: 'Autobooking' },
       },
       {
+        path: '/error/session-expired',
+        name: 'SessionExpired',
+        component: { template: '<div>Session Expired</div>' },
+        meta: { title: 'Session Expired', public: true },
+      },
+      {
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: { template: '<div>Not Found</div>' },
+        meta: { title: 'Not Found', public: true },
       },
     ],
   });
@@ -63,12 +69,6 @@ describe('App', () => {
     const wrapper = mount(App, {
       global: {
         plugins: [router],
-        stubs: {
-          TechnicalMaintenanceError: true,
-          NotFound: true,
-          SkeletonMain: true,
-          AppMain: true,
-        },
       },
     });
 
@@ -77,82 +77,37 @@ describe('App', () => {
     // Component should mount without errors
     expect(wrapper.exists()).toBe(true);
   });
-});
 
-describe('AppMain', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia());
-  });
-
-  it('renders navigation', async () => {
+  it('shows initial loading state', async () => {
     const router = createMockRouter();
-    router.push('/');
-    await router.isReady();
-
-    const wrapper = mount(AppMain, {
-      props: {
-        showMain: true,
-      },
+    
+    const wrapper = mount(App, {
       global: {
         plugins: [router],
-        stubs: {
-          RouterView: true,
-          AccountManagementView: true,
-        },
+      },
+    });
+
+    // Should show loading initially before router is ready
+    expect(wrapper.findComponent({ name: 'InitialLoading' }).exists()).toBe(true);
+    
+    // Wait for router
+    await router.isReady();
+    await flushPromises();
+  });
+
+  it('renders error routes correctly', async () => {
+    const router = createMockRouter();
+    router.push('/error/session-expired');
+    await router.isReady();
+
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router],
       },
     });
 
     await flushPromises();
     
-    // Should have rendered content
     expect(wrapper.exists()).toBe(true);
-  });
-
-  it('renders with showMain prop', async () => {
-    const router = createMockRouter();
-    router.push('/');
-    await router.isReady();
-
-    const wrapper = mount(AppMain, {
-      props: {
-        showMain: true,
-      },
-      global: {
-        plugins: [router],
-        stubs: {
-          RouterView: true,
-          AccountManagementView: true,
-        },
-      },
-    });
-
-    await flushPromises();
-    
-    // Should have visible class
-    expect(wrapper.classes()).toContain('visible');
-  });
-
-  it('is invisible when showMain is false', async () => {
-    const router = createMockRouter();
-    router.push('/');
-    await router.isReady();
-
-    const wrapper = mount(AppMain, {
-      props: {
-        showMain: false,
-      },
-      global: {
-        plugins: [router],
-        stubs: {
-          RouterView: true,
-          AccountManagementView: true,
-        },
-      },
-    });
-
-    await flushPromises();
-    
-    // Should have invisible class
-    expect(wrapper.classes()).toContain('invisible');
   });
 });
