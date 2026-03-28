@@ -3,22 +3,21 @@
     v-model:visible="isOpen"
     header="Оплата"
     modal
+    class=""
     :style="{ width: '450px' }"
     :closable="true"
   >
     <!-- Error Display -->
-    <Message
-      v-if="error"
-      severity="error"
-      class="mb-4 w-full"
-    >
+    <Message v-if="error" severity="error" class="mb-4 w-full">
       {{ error }}
     </Message>
 
     <!-- Step 1: Email Input -->
     <div v-if="!paymentInitiated" class="space-y-4">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ tariffName }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          {{ tariffName }}
+        </h3>
         <Tag severity="info" :value="`${tariffPrice} ₽`" />
       </div>
 
@@ -27,17 +26,16 @@
       </p>
 
       <div class="space-y-2">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Email
         </label>
         <InputText
           v-model="emailInput"
           type="email"
           placeholder="example@mail.com"
-          :class="[
-            'w-full',
-            emailError ? 'p-invalid' : ''
-          ]"
+          :class="['w-full', emailError ? 'p-invalid' : '']"
         />
         <small v-if="emailError" class="p-error">{{ emailError }}</small>
       </div>
@@ -55,13 +53,13 @@
     <!-- Step 2: Success Message -->
     <div v-else class="text-center py-4">
       <i class="pi pi-check-circle text-green-500 text-6xl mb-4"></i>
-      <p class="text-lg font-medium mb-2 text-gray-900 dark:text-white">Ссылка на оплату отправлена</p>
+      <p class="text-lg font-medium mb-2 text-gray-900 dark:text-white">
+        Ссылка на оплату отправлена
+      </p>
       <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Мы отправили ссылку для оплаты в чат. Пожалуйста, проверьте сообщения.
       </p>
-      <Button @click="goToChat">
-        Перейти в чат
-      </Button>
+      <Button @click="goToChat"> Перейти в чат </Button>
     </div>
   </Dialog>
 </template>
@@ -166,7 +164,7 @@ watch(
       emailError.value = '';
       paymentInitiated.value = false;
     }
-  }
+  },
 );
 
 // Clear email error when user types valid email
