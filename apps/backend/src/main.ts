@@ -1,6 +1,6 @@
 /**
  * WB Refactored API - Main Entry Point
- * 
+ *
  * This is the Express.js API server that replaces the Nuxt 3 server-side code.
  * It provides the same business logic with a clean architecture:
  * - Routes (Controllers) → Services → Prisma → Database
