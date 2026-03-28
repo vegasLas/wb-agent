@@ -19,6 +19,23 @@ const routes: RouteRecordRaw[] = [
       title: 'Autobooking',
       requiresAuth: true,
     },
+    children: [
+      {
+        path: '',
+        name: 'AutobookingList',
+        component: () => import('../components/autobooking/List.vue'),
+      },
+      {
+        path: 'create',
+        name: 'AutobookingCreate',
+        component: () => import('../components/autobooking/Form.vue'),
+      },
+      {
+        path: 'update/:id',
+        name: 'AutobookingUpdate',
+        component: () => import('../components/autobooking/UpdateForm.vue'),
+      },
+    ],
   },
   {
     path: '/reschedules',
@@ -28,6 +45,23 @@ const routes: RouteRecordRaw[] = [
       title: 'Reschedules',
       requiresAuth: true,
     },
+    children: [
+      {
+        path: '',
+        name: 'ReschedulesList',
+        component: () => import('../components/reschedules/List.vue'),
+      },
+      {
+        path: 'create',
+        name: 'ReschedulesCreate',
+        component: () => import('../components/reschedules/Form.vue'),
+      },
+      {
+        path: 'update/:id',
+        name: 'ReschedulesUpdate',
+        component: () => import('../components/reschedules/UpdateForm.vue'),
+      },
+    ],
   },
   {
     path: '/triggers',
@@ -37,6 +71,18 @@ const routes: RouteRecordRaw[] = [
       title: 'Triggers',
       requiresAuth: true,
     },
+    children: [
+      {
+        path: '',
+        name: 'TriggersList',
+        component: () => import('../components/triggers/TriggersList.vue'),
+      },
+      {
+        path: 'create',
+        name: 'TriggerCreate',
+        component: () => import('../components/triggers/TriggerForm.vue'),
+      },
+    ],
   },
   {
     path: '/reports',
@@ -54,6 +100,26 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: 'Store',
       requiresAuth: true,
+    },
+  },
+  {
+    path: '/store/subscription',
+    name: 'StoreSubscription',
+    component: () => import('../components/store/StoreComponent.vue'),
+    meta: {
+      title: 'Store - Subscription',
+      requiresAuth: true,
+      initialTab: 'subscription',
+    },
+  },
+  {
+    path: '/store/bookings',
+    name: 'StoreBookings',
+    component: () => import('../components/store/StoreComponent.vue'),
+    meta: {
+      title: 'Store - Bookings',
+      requiresAuth: true,
+      initialTab: 'bookings',
     },
   },
   {

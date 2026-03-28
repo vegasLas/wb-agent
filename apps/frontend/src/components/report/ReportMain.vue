@@ -196,7 +196,6 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import { useReportStore } from '../../stores/report';
 import { useUserStore } from '../../stores/user';
 import { useReportViewStore } from '../../stores/reportView';
-import { useViewStore } from '../../stores/view';
 import UserAlerts from '../global/UserAlerts.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
 import ReportCharts from './ReportCharts.vue';
@@ -211,7 +210,6 @@ import type { ReportItem } from '../../types';
 const reportStore = useReportStore();
 const userStore = useUserStore();
 const reportViewStore = useReportViewStore();
-const viewStore = useViewStore();
 
 // Yesterday for max date
 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));

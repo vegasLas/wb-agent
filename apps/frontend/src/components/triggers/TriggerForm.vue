@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <Button variant="text" size="small" @click="$emit('back')">
+        <Button variant="text" size="small" @click="goBack">
           <i class="pi pi-arrow-left"></i>
         </Button>
         <h2 class="text-xl font-semibold">Создание таймслота</h2>
@@ -155,7 +155,7 @@
 
     <!-- Actions -->
     <div class="flex gap-2">
-      <Button variant="outlined" class="flex-1" @click="$emit('back')">
+      <Button variant="outlined" class="flex-1" @click="goBack">
         Отмена
       </Button>
       <Button
@@ -177,7 +177,7 @@
       text="Создать"
       @click="submitForm"
     />
-    <BackButton @click="$emit('back')" />
+    <BackButton @click="goBack" />
 
     <!-- Hints Modal -->
     <TriggerHints :show="showHintsModal" @close="showHintsModal = false" />
@@ -185,7 +185,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { BackButton, MainButton } from 'vue-tg';
@@ -201,10 +202,7 @@ import Slider from 'primevue/slider';
 import Tag from 'primevue/tag';
 import TriggerHints from './TriggerHints.vue';
 
-const emit = defineEmits<{
-  back: [];
-}>();
-
+const router = useRouter();
 const triggerFormStore = useTriggerFormStore();
 const triggerStore = useTriggerStore();
 const showHintsModal = ref(false);
@@ -261,6 +259,10 @@ const isFormValid = computed(() => {
     form.searchMode !== undefined
   );
 });
+
+function goBack() {
+  router.back();
+}
 
 function onSearchModeChange(mode: SearchMode) {
   // Reset dates when mode changes
@@ -370,7 +372,7 @@ async function submitForm() {
   try {
     formErrors.value = {};
     await triggerFormStore.createTrigger();
-    emit('back');
+    goBack();
   } catch (err: any) {
     if (err.message) {
       formErrors.value.general = err.message;

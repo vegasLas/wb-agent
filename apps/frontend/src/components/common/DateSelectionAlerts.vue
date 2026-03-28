@@ -77,7 +77,6 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
-import { useViewStore } from '../../stores/view';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
 
 interface Props {
@@ -92,7 +91,6 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const router = useRouter();
-const viewStore = useViewStore();
 const updateStore = useAutobookingUpdateStore();
 
 // Calculate available autobooking count considering update mode
@@ -116,7 +114,6 @@ const remainingCount = computed(() => {
 });
 
 function navigateToStore() {
-  viewStore.setView('store-subscription');
-  router.push('/store');
+  router.push({ name: 'StoreSubscription' });
 }
 </script>

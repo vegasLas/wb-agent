@@ -2,7 +2,6 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI, warehousesAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
-import { useViewStore } from './view';
 import { useUserStore } from './user';
 import { useWarehousesStore } from './warehouses';
 import type { Autobooking, AutobookingUpdateData } from '../types';
@@ -229,7 +228,6 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
     }
 
     const autobookingStore = useAutobookingStore();
-    const viewStore = useViewStore();
 
     try {
       loading.value = true;
@@ -257,7 +255,6 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
       autobookingStore.updateAutobookingInList(autobooking.id, autobooking);
       
       resetForm();
-      viewStore.setView('autobookings-main');
       
       return autobooking;
     } catch (err: unknown) {

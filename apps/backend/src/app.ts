@@ -4,7 +4,6 @@ import cors from 'cors';
 import compression from 'compression';
 import { env } from './config/env';
 import { logger } from './utils/logger';
-import { requestLogger } from './middleware/request-logger.middleware';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import routes from './routes';
 import { initializeMonitoringCleanupJobs } from './cron/monitoring-cleanup';
@@ -75,6 +74,6 @@ export async function startServer(): Promise<void> {
     logger.info(`🔗 Health check: http://localhost:${port}/health`);
 
     // Initialize monitoring cleanup cron jobs
-    initializeMonitoringCleanupJobs();
+    // initializeMonitoringCleanupJobs();
   });
 }

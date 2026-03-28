@@ -33,10 +33,10 @@
         <!-- Icons -->
         <div class="flex items-center gap-2">
           <Button
-            :severity="viewStore.mainView === 'store' ? 'primary' : 'secondary'"
+            :severity="isStoreRoute ? 'primary' : 'secondary'"
             variant="outlined"
             class="rounded"
-            @click="viewStore.setView('store')"
+            @click="navigateToStore"
           >
             <template #icon>
               <i class="pi pi-shopping-bag"></i>
@@ -54,12 +54,15 @@
             </template>
           </Button>
           <Button
-            :severity="viewStore.mainView === 'account' ? 'primary' : 'secondary'"
+            :severity="isAccountRoute ? 'primary' : 'secondary'"
             variant="outlined"
-            @click="viewStore.setView('account')"
+            @click="navigateToAccount"
           >
             <template #icon>
-              <i v-if="!userStore.activeSupplier?.supplierName" class="pi pi-user"></i>
+              <i
+                v-if="!userStore.activeSupplier?.supplierName"
+                class="pi pi-user"
+              ></i>
             </template>
             <span
               v-if="userStore.activeSupplier?.supplierName"
@@ -74,13 +77,12 @@
 
     <!-- Main Content -->
     <div class="mt-6">
-      <!-- View components will be rendered here based on current view -->
       <RouterView />
     </div>
 
     <!-- Help Modal -->
     <MainHelpModal v-model="showHelpModal" />
-    
+
     <!-- Account Management Modal -->
     <AccountManagementView v-model="accountModalStore.showModal" />
   </main>
@@ -88,13 +90,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 
 // PrimeVue imports
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 
 // Stores
-import { useViewStore } from '../stores/view';
 import { useUserStore } from '../stores/user';
 import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
 
@@ -102,14 +104,12 @@ import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
 import { AccountManagementView } from '../components/account-management';
 import { MainHelpModal } from '../components/help';
 
-// Types
-import type { ViewType } from '../types';
-
 const props = defineProps<{
   showMain: boolean;
 }>();
 
-const viewStore = useViewStore();
+const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
 const accountModalStore = useAccountSupplierModalStore();
 
@@ -124,37 +124,49 @@ const toggleNavMenu = (event: MouseEvent) => {
   navMenu.value?.toggle(event);
 };
 
+// Route checks
+const isStoreRoute = computed(() => 
+  route.name === 'Store' || route.name === 'StoreSubscription' || route.name === 'StoreBookings'
+);
+
+const isAccountRoute = computed(() => route.name === 'Account');
+
+// Navigation functions
+const navigateToStore = () => {
+  router.push({ name: 'Store' });
+};
+
+const navigateToAccount = () => {
+  router.push({ name: 'Account' });
+};
+
 // Navigation dropdown configuration
 const navigationOptions = [
   {
-    id: 'autobookings',
+    id: 'autobooking',
     label: 'автоброни',
     iconClass: 'pi pi-calendar',
-    view: 'autobookings-main',
+    routeName: 'Autobooking',
   },
   {
     id: 'triggers',
     label: 'слоты',
     iconClass: 'pi pi-clock',
-    view: 'triggers-main',
+    routeName: 'Triggers',
   },
   {
-    id: 'report',
+    id: 'reports',
     label: 'отчеты',
     iconClass: 'pi pi-chart-pie',
-    view: 'report',
+    routeName: 'Reports',
   },
 ];
 
-// Selected navigation item
+// Selected navigation item based on current route
 const selectedNavItem = computed(() => {
-  const currentView = viewStore.mainView;
+  const currentRouteName = route.name;
   const option = navigationOptions.find(
-    (opt) =>
-      currentView === opt.id ||
-      (currentView === 'triggers' && opt.id === 'triggers') ||
-      (currentView === 'autobookings' && opt.id === 'autobookings') ||
-      (currentView === 'report' && opt.id === 'report'),
+    (opt) => currentRouteName === opt.routeName || currentRouteName?.toString().startsWith(opt.id)
   );
   return option
     ? {
@@ -173,7 +185,7 @@ const navigationItems = computed(() =>
     label: option.label,
     icon: option.iconClass,
     command: () => {
-      viewStore.setView(option.view as ViewType);
+      router.push({ name: option.routeName });
     },
   })),
 );

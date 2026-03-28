@@ -2,7 +2,6 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { triggersAPI } from '../api';
 import { useTriggerStore } from './triggers';
-import { useViewStore } from './view';
 import { useWarehousesStore } from './warehouses';
 import { SUPPLY_TYPES } from '../constants';
 import type { CreateTriggerRequest, SearchMode } from '../types';
@@ -100,7 +99,6 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
     }
 
     const triggerStore = useTriggerStore();
-    const viewStore = useViewStore();
 
     try {
       loading.value = true;
@@ -110,7 +108,6 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
       triggerStore.triggers.unshift(trigger as unknown as typeof triggerStore.triggers[0]);
       
       resetForm();
-      viewStore.setView('triggers-main');
       
       return trigger;
     } catch (err: unknown) {

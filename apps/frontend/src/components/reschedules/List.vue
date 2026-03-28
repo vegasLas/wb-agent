@@ -36,7 +36,7 @@
               variant="outlined"
               severity="primary"
               size="small"
-              @click="viewStore.setView('store-bookings')"
+              @click="navigateToStoreBookings"
             >
               купить
             </Button>
@@ -49,9 +49,8 @@
             доступно кредитов: {{ userStore.user.autobookingCount }}
           </Tag>
           <Button
-            v-if="!viewStore.isForm"
             severity="primary"
-            @click="viewStore.setView('reschedules-form')"
+            @click="navigateToCreate"
           >
             <i class="pi pi-plus mr-1" />
             добавить
@@ -97,12 +96,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import Tag from 'primevue/tag';
 import { useUserStore } from '../../stores/user';
-import { useViewStore } from '../../stores/view';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useRescheduleListStore } from '../../stores/reschedules/list';
 import { useSupplyDetailsStore } from '../../stores/supplyDetails';
@@ -112,8 +111,8 @@ import ReschedulesCard from './Card.vue';
 import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
 import type { AutobookingReschedule, RescheduleStatus } from '../../types';
 
+const router = useRouter();
 const userStore = useUserStore();
-const viewStore = useViewStore();
 const rescheduleStore = useRescheduleStore();
 const listStore = useRescheduleListStore();
 const supplyDetailsStore = useSupplyDetailsStore();
@@ -147,11 +146,20 @@ function handleStatusClick(status: RescheduleStatus) {
   listStore.updateFilter('status', [status]);
 }
 
+// Navigation functions
+function navigateToCreate() {
+  router.push({ name: 'ReschedulesCreate' });
+}
+
+function navigateToStoreBookings() {
+  router.push({ name: 'StoreBookings' });
+}
+
 // Event handlers
 function handleUpdate(reschedule: AutobookingReschedule) {
   // Set the selected reschedule for updating
   rescheduleStore.setSelectedReschedule(reschedule);
-  viewStore.setView('reschedules-update');
+  router.push({ name: 'ReschedulesUpdate', params: { id: reschedule.id } });
 }
 
 async function handleDelete(id: string) {

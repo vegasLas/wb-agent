@@ -1,35 +1,145 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
+import { useRouter, useRoute } from 'vue-router';
 import type { ViewType } from '../types';
 
+/**
+ * @deprecated This store is deprecated and will be removed in a future version.
+ * Please use Vue Router directly instead:
+ * 
+ * import { useRouter, useRoute } from 'vue-router';
+ * const router = useRouter();
+ * const route = useRoute();
+ * 
+ * Navigation:
+ * - router.push({ name: 'Autobooking' }) - for autobooking list
+ * - router.push({ name: 'AutobookingCreate' }) - for creating autobooking
+ * - router.push({ name: 'AutobookingUpdate', params: { id } }) - for updating autobooking
+ * - router.push({ name: 'Triggers' }) - for triggers list
+ * - router.push({ name: 'TriggerCreate' }) - for creating trigger
+ * - router.push({ name: 'Reschedules' }) - for reschedules list
+ * - router.push({ name: 'ReschedulesCreate' }) - for creating reschedule
+ * - router.push({ name: 'ReschedulesUpdate', params: { id } }) - for updating reschedule
+ * - router.push({ name: 'Store' }) - for store
+ * - router.push({ name: 'StoreSubscription' }) - for subscription tab
+ * - router.push({ name: 'StoreBookings' }) - for bookings tab
+ * - router.push({ name: 'Account' }) - for account
+ * 
+ * Going back:
+ * - router.back()
+ */
 export const useViewStore = defineStore('view', () => {
-  const currentView = ref<ViewType>('autobookings-main');
+  // Get router and route instances
+  // Note: This will only work properly when called within component setup
+  let router: ReturnType<typeof useRouter> | undefined;
+  let route: ReturnType<typeof useRoute> | undefined;
+  
+  try {
+    router = useRouter();
+    route = useRoute();
+  } catch (e) {
+    // Router not available (e.g., during SSR or outside component context)
+  }
+
+  // Map current route to view type for backwards compatibility
+  const currentView = computed<ViewType>(() => {
+    if (!route?.name) return 'autobookings-main';
+    
+    const routeName = route.name as string;
+    
+    // Map route names to view types
+    if (routeName === 'Autobooking' || routeName === 'AutobookingList') return 'autobookings-main';
+    if (routeName === 'AutobookingCreate') return 'autobookings-form';
+    if (routeName === 'AutobookingUpdate') return 'autobookings-update';
+    if (routeName === 'Triggers' || routeName === 'TriggersList') return 'triggers-main';
+    if (routeName === 'TriggerCreate') return 'triggers-form';
+    if (routeName === 'Reschedules' || routeName === 'ReschedulesList') return 'reschedules-main';
+    if (routeName === 'ReschedulesCreate') return 'reschedules-form';
+    if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
+    if (routeName === 'Store') return 'store';
+    if (routeName === 'StoreSubscription') return 'store-subscription';
+    if (routeName === 'StoreBookings') return 'store-bookings';
+    if (routeName === 'Account') return 'account';
+    if (routeName === 'Reports') return 'report';
+    
+    return 'autobookings-main';
+  });
+
+  // Previous view is no longer tracked with router-based navigation
   const prevView = ref<ViewType | null>(null);
-  const isPrevView = computed(() => prevView.value !== null);
+  const isPrevView = computed(() => false);
 
+  /**
+   * @deprecated Use router.push() instead
+   */
   function setView(view: ViewType) {
-    // Don't update prevView if we're going to the same view
-    if (view !== currentView.value) {
-      prevView.value = currentView.value;
-      currentView.value = view;
+    console.warn('useViewStore.setView() is deprecated. Use router.push() instead.');
+    
+    if (!router) {
+      console.error('Router not available');
+      return;
+    }
+
+    // Map view type to route
+    const routeMap: Record<string, string> = {
+      'autobookings-main': 'Autobooking',
+      'autobookings-form': 'AutobookingCreate',
+      'autobookings-update': 'AutobookingUpdate',
+      'triggers-main': 'Triggers',
+      'triggers-form': 'TriggerCreate',
+      'reschedules-main': 'Reschedules',
+      'reschedules-form': 'ReschedulesCreate',
+      'reschedules-update': 'ReschedulesUpdate',
+      'store': 'Store',
+      'store-subscription': 'StoreSubscription',
+      'store-bookings': 'StoreBookings',
+      'account': 'Account',
+      'report': 'Reports',
+    };
+
+    const targetRoute = routeMap[view];
+    if (targetRoute) {
+      router.push({ name: targetRoute });
     }
   }
 
+  /**
+   * @deprecated Use router.back() instead
+   */
   function goBack() {
-    if (prevView.value) {
-      const targetView = prevView.value;
-      prevView.value = null; // Clear previous view after going back
-      currentView.value = targetView;
-    }
+    console.warn('useViewStore.goBack() is deprecated. Use router.back() instead.');
+    router?.back();
   }
 
+  /**
+   * @deprecated No longer needed with router-based navigation
+   */
   function clearPrevView() {
+    console.warn('useViewStore.clearPrevView() is deprecated and no longer needed.');
     prevView.value = null;
   }
 
-  const isForm = computed(() => currentView.value.endsWith('-form'));
+  /**
+   * Check if current view is a form (based on route name)
+   */
+  const isForm = computed(() => {
+    const formRoutes = ['AutobookingCreate', 'AutobookingUpdate', 'TriggerCreate', 'ReschedulesCreate', 'ReschedulesUpdate'];
+    return route ? formRoutes.includes(route.name as string) : false;
+  });
 
-  const mainView = computed(() => currentView.value.split('-')[0] as 'triggers' | 'autobookings' | 'reschedules' | 'store' | 'account' | 'report');
+  /**
+   * Get main view based on current route
+   */
+  const mainView = computed(() => {
+    const routeName = route?.name as string;
+    if (routeName?.startsWith('Autobooking')) return 'autobookings';
+    if (routeName?.startsWith('Trigger')) return 'triggers';
+    if (routeName?.startsWith('Reschedule')) return 'reschedules';
+    if (routeName?.startsWith('Store')) return 'store';
+    if (routeName === 'Account') return 'account';
+    if (routeName === 'Reports') return 'report';
+    return 'autobookings';
+  });
 
   return {
     setView,

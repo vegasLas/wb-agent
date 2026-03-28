@@ -168,11 +168,12 @@
   <ReschedulesHints :show="showHintsModal" @close="showHintsModal = false" />
 
   <!-- Telegram Back Button -->
-  <BackButton @click="emit('back')" />
+  <BackButton @click="goBack" />
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { BackButton, MainButton } from 'vue-tg';
 import Button from 'primevue/button';
@@ -187,12 +188,7 @@ import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
 import ReschedulesHints from './Hints.vue';
 import CoefficientHistoryAlert from '../triggers/CoefficientHistoryAlert.vue';
 
-interface Emits {
-  back: [];
-}
-
-const emit = defineEmits<Emits>();
-
+const router = useRouter();
 const rescheduleStore = useRescheduleStore();
 const formStore = useRescheduleCreateFormStore();
 const supplyDetailsStore = useSupplyDetailsStore();
@@ -220,11 +216,16 @@ onMounted(async () => {
   await formStore.initialize();
 });
 
+// Navigation
+function goBack() {
+  router.back();
+}
+
 // Event handlers
 async function handleSubmit() {
   const success = await formStore.submit();
   if (success) {
-    emit('back');
+    goBack();
   }
 }
 </script>

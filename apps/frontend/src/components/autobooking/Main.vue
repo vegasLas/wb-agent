@@ -1,22 +1,10 @@
 <template>
-  <AutobookingList v-if="viewStore.currentView === 'autobookings-main'" />
-  <AutobookingForm
-    v-else-if="viewStore.currentView === 'autobookings-form'"
-    @back="viewStore.setView('autobookings-main')"
-  />
-  <AutobookingUpdateForm
-    v-else-if="viewStore.currentView === 'autobookings-update'"
-    @back="viewStore.setView('autobookings-main')"
-  />
+  <RouterView />
 </template>
 
 <script setup lang="ts">
-import { useViewStore } from '../../stores/view';
-import AutobookingList from './List.vue';
-import AutobookingForm from './Form.vue';
-import AutobookingUpdateForm from './UpdateForm.vue';
-
-const viewStore = useViewStore();
+// This component serves as a layout wrapper for autobooking routes
+// Child routes: List, Create (Form), Update (UpdateForm)
 </script>
 
 <style scoped>

@@ -18,16 +18,17 @@
       </div>
     </div>
 
-    <SkeletonTriggers v-if="view === 'triggers-main'" />
-    <SkeletonAccount v-if="view === 'account'" />
-    <SkeletonStore v-if="view === 'store'" />
-    <SkeletonAutobookings v-if="view === 'autobookings-main'" />
-    <SkeletonReport v-if="view === 'report'" />
+    <SkeletonTriggers v-if="isTriggersRoute" />
+    <SkeletonAccount v-else-if="isAccountRoute" />
+    <SkeletonStore v-else-if="isStoreRoute" />
+    <SkeletonAutobookings v-else-if="isAutobookingRoute" />
+    <SkeletonReport v-else-if="isReportRoute" />
+    <SkeletonAutobookings v-else />
   </main>
 </template>
 
 <script setup lang="ts">
-import type { ViewType } from '../../types';
+import { computed } from 'vue';
 import Skeleton from 'primevue/skeleton';
 import SkeletonTriggers from './SkeletonTriggers.vue';
 import SkeletonAccount from './SkeletonAccount.vue';
@@ -35,7 +36,28 @@ import SkeletonStore from './SkeletonStore.vue';
 import SkeletonAutobookings from './SkeletonAutobookings.vue';
 import SkeletonReport from './SkeletonReport.vue';
 
-defineProps<{
-  view: ViewType;
+const props = defineProps<{
+  routeName: string;
 }>();
+
+const isTriggersRoute = computed(() => 
+  props.routeName === 'Triggers' || props.routeName === 'TriggersList' || props.routeName === 'TriggerCreate'
+);
+
+const isAccountRoute = computed(() => 
+  props.routeName === 'Account'
+);
+
+const isStoreRoute = computed(() => 
+  props.routeName === 'Store' || props.routeName === 'StoreSubscription' || props.routeName === 'StoreBookings'
+);
+
+const isAutobookingRoute = computed(() => 
+  props.routeName === 'Autobooking' || props.routeName === 'AutobookingList' || 
+  props.routeName === 'AutobookingCreate' || props.routeName === 'AutobookingUpdate'
+);
+
+const isReportRoute = computed(() => 
+  props.routeName === 'Reports'
+);
 </script>
