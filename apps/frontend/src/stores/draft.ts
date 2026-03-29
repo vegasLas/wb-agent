@@ -1,73 +1,175 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { draftsAPI } from '../api';
-import { useUserStore } from './user';
 import type { Draft, DraftGood } from '../types';
 
+export interface FetchDraftsOptions {
+  accountId: string;
+  supplierId: string;
+}
+
+interface FetchDraftGoodsOptions {
+  draftId: string;
+  accountId: string;
+  supplierId: string;
+}
+
+// API response types (internal to handle API variations)
+interface ApiDraftGood {
+  sa?: string;
+  article?: string;
+  imgSrc?: string;
+  image?: string;
+  subjectName?: string;
+  name?: string;
+  quantity: number;
+  [key: string]: unknown;
+}
+
 export const useDraftStore = defineStore('draft', () => {
+  // ============================================
   // State
+  // ============================================
   const drafts = ref<Draft[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
-  const selectedDraftId = ref<string | null>(null);
+
+  // Track last fetch params to avoid redundant fetches
+  const lastFetchKey = ref<string | null>(null);
+
+  // Modal state
   const showGoodsModal = ref(false);
   const draftGoods = ref<DraftGood[]>([]);
   const loadingGoods = ref(false);
 
+  // Active promise for request deduplication
+  let activeFetchPromise: Promise<Draft[]> | null = null;
+
+  // ============================================
   // Getters
-  const draftCount = computed(() => drafts.value.length);
-
-  const selectedDraft = computed(() =>
-    drafts.value.find((d) => d.id === selectedDraftId.value)
-  );
-
-  const getDraftById = computed(() => {
-    return (id: string) => drafts.value.find((d) => d.id === id);
-  });
-
+  // ============================================
   const draftOptions = computed(() =>
     drafts.value.map((d) => ({
       label: d.name,
       value: d.id,
-    }))
+    })),
   );
 
+  // ============================================
+  // Private Helpers
+  // ============================================
+
+  /**
+   * Maps API draft good to internal DraftGood type
+   * Handles multiple possible field names from the API
+   */
+  function mapDraftGood(good: ApiDraftGood): DraftGood {
+    return {
+      article: good.sa ?? good.article ?? '',
+      image: good.imgSrc ?? good.image ?? '',
+      name: good.subjectName ?? good.name ?? '',
+      quantity: good.quantity,
+    };
+  }
+
+  /**
+   * Creates a unique key for fetch params to track deduplication
+   */
+  function getFetchKey(accountId: string, supplierId: string): string {
+    return `${accountId}:${supplierId}`;
+  }
+
+  // ============================================
   // Actions
-  async function fetchDrafts() {
-    try {
-      loading.value = true;
-      error.value = null;
-      const data = await draftsAPI.fetchDrafts();
-      drafts.value = data;
-      return data;
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch drafts';
-      error.value = errorMsg;
-      throw err;
-    } finally {
-      loading.value = false;
+  // ============================================
+
+  /**
+   * Fetches drafts for the given account and supplier.
+   * Implements request deduplication - concurrent calls with same params
+   * will share the same promise.
+   */
+  async function fetchDrafts(
+    options: FetchDraftsOptions,
+    force = false,
+  ): Promise<Draft[]> {
+    const { accountId, supplierId } = options;
+    const fetchKey = getFetchKey(accountId, supplierId);
+
+    // If same fetch is already in progress, return the existing promise
+    if (activeFetchPromise && lastFetchKey.value === fetchKey && !force) {
+      return activeFetchPromise;
     }
+
+    // If data already exists for this key and not forcing refresh, return cached
+    if (!force && lastFetchKey.value === fetchKey && drafts.value.length > 0) {
+      return Promise.resolve(drafts.value);
+    }
+
+    loading.value = true;
+    error.value = null;
+    lastFetchKey.value = fetchKey;
+
+    // Create and store the promise for deduplication
+    activeFetchPromise = (async (): Promise<Draft[]> => {
+      try {
+        const data = await draftsAPI.fetchDrafts(accountId, supplierId);
+        drafts.value = data;
+        return data;
+      } catch (err: unknown) {
+        const errorMsg =
+          err instanceof Error ? err.message : 'Failed to fetch drafts';
+        error.value = errorMsg;
+        throw err;
+      } finally {
+        loading.value = false;
+        activeFetchPromise = null;
+      }
+    })();
+
+    return activeFetchPromise;
   }
 
-  function selectDraft(id: string | null) {
-    selectedDraftId.value = id;
+  /**
+   * Forces a refresh of drafts even if data exists.
+   */
+  async function refreshDrafts(options: FetchDraftsOptions): Promise<Draft[]> {
+    return fetchDrafts(options, true);
   }
 
-  async function showDraftGoods(draftId: string, supplierId?: string) {
+  /**
+   * Fetches and displays goods for a specific draft.
+   * Opens the modal and loads the goods data.
+   */
+  async function showDraftGoods(
+    draftId: string,
+    supplierId?: string,
+  ): Promise<void> {
+    // Get account info from user store via window context
+    // This is done lazily to avoid circular dependency
+    const { useUserStore } = await import('./user');
+    const userStore = useUserStore();
+
+    const accountId = userStore.selectedAccount?.id;
+    const effectiveSupplierId =
+      supplierId ?? userStore.activeSupplier?.supplierId;
+
+    if (!accountId || !effectiveSupplierId) {
+      console.error(
+        'Cannot fetch draft goods: missing accountId or supplierId',
+      );
+      return;
+    }
+
+    loadingGoods.value = true;
+    showGoodsModal.value = true;
+
     try {
-      loadingGoods.value = true;
-      showGoodsModal.value = true;
-
-      const userStore = useUserStore();
-      const accountId = userStore.selectedAccount?.id;
-
-      const data = await draftsAPI.fetchDraftGoods(draftId, accountId, supplierId);
-      draftGoods.value = data.map((good) => ({
-        article: (good as unknown as { sa?: string }).sa || (good as unknown as { article?: string }).article,
-        image: (good as unknown as { imgSrc?: string }).imgSrc || (good as unknown as { image?: string }).image,
-        name: (good as unknown as { subjectName?: string }).subjectName || (good as unknown as { name?: string }).name,
-        quantity: good.quantity,
-      })) || [];
+      const data = await draftsAPI.fetchDraftGoods(
+        draftId,
+        accountId,
+        effectiveSupplierId,
+      );
+      draftGoods.value = data.map(mapDraftGood);
     } catch (err: unknown) {
       console.error('Failed to fetch draft goods:', err);
       draftGoods.value = [];
@@ -76,31 +178,21 @@ export const useDraftStore = defineStore('draft', () => {
     }
   }
 
-  function closeGoodsModal() {
-    showGoodsModal.value = false;
-    draftGoods.value = [];
-  }
-
   return {
-    // State
+    // State (readonly to prevent direct mutations)
     drafts: readonly(drafts),
     loading: readonly(loading),
     error: readonly(error),
-    selectedDraftId: readonly(selectedDraftId),
     showGoodsModal: readonly(showGoodsModal),
     draftGoods: readonly(draftGoods),
     loadingGoods: readonly(loadingGoods),
 
     // Getters
-    draftCount,
-    selectedDraft,
-    getDraftById,
     draftOptions,
 
     // Actions
     fetchDrafts,
-    selectDraft,
+    refreshDrafts,
     showDraftGoods,
-    closeGoodsModal,
   };
 });

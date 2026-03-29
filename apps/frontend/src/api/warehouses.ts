@@ -28,11 +28,11 @@ export interface TransitsResponse {
 }
 
 export interface ValidationRequest {
-  accountId?: string;
+  accountId: string;
+  supplierId: string;
   draftID: string;
   warehouseId: number;
   transitWarehouseId?: number | null;
-  supplierId?: string;
 }
 
 export interface ValidationResponse {

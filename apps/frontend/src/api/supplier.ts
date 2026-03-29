@@ -18,10 +18,9 @@ export const supplierAPI = {
    * GET /api/v1/suppliers/balances
    * Get warehouse balances for the selected account
    */
-  async fetchWarehouseBalances(accountId?: string, supplierId?: string): Promise<Record<number, GoodBalance[]>> {
+  async fetchWarehouseBalances(accountId?: string): Promise<Record<number, GoodBalance[]>> {
     const params: Record<string, string> = {};
     if (accountId) params.accountId = accountId;
-    if (supplierId) params.supplierId = supplierId;
     
     const response = await apiClient.get<BalancesResponse>('/suppliers/balances', { params });
     return response.data.data || {};

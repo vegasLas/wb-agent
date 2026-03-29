@@ -16,12 +16,17 @@ export interface SuppliesResponse {
   totalCount: number;
 }
 
+export interface ListSuppliesRequest {
+  accountId: string;
+  supplierId: string;
+}
+
 export const suppliesAPI = {
   /**
    * POST /api/v1/supplies/list
    * List supplies for an account
    */
-  async listSupplies(accountId?: string, supplierId?: string): Promise<SuppliesResponse> {
+  async listSupplies(accountId: string, supplierId: string): Promise<SuppliesResponse> {
     const response = await apiClient.post<SuppliesResponse>('/supplies/list', {
       accountId,
       supplierId,
