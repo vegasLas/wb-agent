@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInfiniteScroll } from '@vueuse/core';
 import { AUTOBOOKING_STATUSES } from '../../constants';
@@ -106,18 +106,21 @@ import { useUserStore } from '../../stores/user';
 import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useSupplierStore } from '../../stores/supplier';
 import { draftsAPI } from '../../api';
+import { useViewReady } from '../../composables/useSkeleton';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Message from 'primevue/message';
-import UserAlerts from '../global/UserAlerts.vue';
-import StatsCards from '../common/StatsCards.vue';
-import AutobookingBookingCard from './BookingCard.vue';
-import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
+import UserAlerts from '../../components/global/UserAlerts.vue';
+import StatsCards from '../../components/common/StatsCards.vue';
+import AutobookingBookingCard from '../../components/autobooking/BookingCard.vue';
+import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsModal.vue';
+
 const router = useRouter();
 const userStore = useUserStore();
 const listStore = useAutobookingListStore();
 const supplierStore = useSupplierStore();
+const { viewReady } = useViewReady();
 
 // Goods modal state
 const showGoodsModal = ref(false);
@@ -173,7 +176,7 @@ const handleViewGoods = async (draftId: string, supplierId: string) => {
 
     // Use the current user's selected accountId and the supplierId from the booking
     const accountId = userStore.selectedAccount?.id;
-    
+
     if (!accountId || !supplierId) {
       console.error('Missing accountId or supplierId for fetching draft goods');
       draftGoods.value = [];
@@ -182,7 +185,7 @@ const handleViewGoods = async (draftId: string, supplierId: string) => {
 
     // Fetch actual draft goods from the API
     const goods = await draftsAPI.fetchDraftGoods(draftId, accountId, supplierId);
-    
+
     // Map the goods to the expected format
     draftGoods.value = goods.map((good) => ({
       article: good.sa || good.article || '',
@@ -222,6 +225,21 @@ useInfiniteScroll(
   },
   { distance: 50, canLoadMore: () => Boolean(listStore.nextPage) },
 );
+
+// ============================================
+// Lifecycle
+// ============================================
+onMounted(async () => {
+  try {
+    // Fetch data if not already loaded
+    if (listStore.autobookings.length === 0 && !listStore.isFetched) {
+      await listStore.fetchData();
+    }
+  } finally {
+    // ALWAYS signal view ready, even if fetch failed
+    viewReady();
+  }
+});
 </script>
 
 <style scoped></style>

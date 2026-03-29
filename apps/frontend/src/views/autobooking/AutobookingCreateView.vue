@@ -1,36 +1,30 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 p-3">
     <div class="flex items-center justify-end mb-6">
       <h3 class="text-xl text-center font-semibold flex-1">
-        Редактирование автобронирования
+        Создание автобронирования
       </h3>
-      <Button
-        variant="outlined"
-        severity="warn"
-        @click="showHintsModal = true"
-      >
+      <Button variant="outlined" severity="warn" @click="showHintsModal = true">
         <i class="pi pi-question-circle"></i>
       </Button>
     </div>
 
+    <!-- Template Selection -->
     <AutobookingFormFields
-      v-model:form="updateStore._form"
-      v-model:use-transit="updateStore._useTransit"
+      v-model:form="formStore._form"
+      v-model:use-transit="formStore._useTransit"
       :warehouse-options="warehouseOptions"
-      :validation-loading="updateStore.validationLoading"
-      :validation-result="updateStore.validationResult"
-      :suggested-coefficient="updateStore.suggestedCoefficient"
-      :supplier-id="updateStore.currentAutobooking?.supplierId"
+      :supplier-id="userStore.activeSupplier?.supplierId"
       @warehouse-change="handleWarehouseChange"
-      @validate-warehouse="updateStore.validateWarehouse"
     />
   </div>
 
+  <!-- Telegram Main Button -->
   <MainButton
     v-if="canSubmit"
-    :disabled="updateStore.loading"
-    :progress="isSubmitting || updateStore.loading"
-    text="Обновить"
+    :disabled="formStore.loading"
+    :progress="formStore.loading"
+    text="Создать"
     @click="handleSubmit"
   />
 
@@ -40,9 +34,7 @@
     :loading="draftStore.loadingGoods"
   />
 
-  <AutobookingHints
-    v-model:show="showHintsModal"
-  />
+  <AutobookingHints v-model:show="showHintsModal" />
   <BackButton @click="goBack" />
 </template>
 
@@ -50,24 +42,26 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { BackButton, MainButton } from 'vue-tg';
-import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
-import { useWarehousesStore } from '../../stores/warehouses';
-import { useDraftStore } from '../../stores/draft';
+import { useAutobookingFormStore } from '../../stores/autobookingForm';
 import { useUserStore } from '../../stores/user';
+import { useDraftStore } from '../../stores/draft';
+import { useWarehousesStore } from '../../stores/warehouses';
 import { useDraftsFetcher } from '../../composables/useDraftsFetcher';
+import { useViewReady } from '../../composables/useSkeleton';
 import Button from 'primevue/button';
-import AutobookingFormFields from './FormFields.vue';
-import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
-import AutobookingHints from './Hints.vue';
+import AutobookingFormFields from '../../components/autobooking/FormFields.vue';
+import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsModal.vue';
+import AutobookingHints from '../../components/autobooking/Hints.vue';
 
 // ============================================
 // Store Setup
 // ============================================
 const router = useRouter();
-const updateStore = useAutobookingUpdateStore();
-const warehouseStore = useWarehousesStore();
-const draftStore = useDraftStore();
+const formStore = useAutobookingFormStore();
 const userStore = useUserStore();
+const draftStore = useDraftStore();
+const warehouseStore = useWarehousesStore();
+const { viewReady } = useViewReady();
 
 // Use the drafts fetcher composable for automatic data fetching
 const draftsFetcher = useDraftsFetcher({ immediate: false });
@@ -76,7 +70,6 @@ const draftsFetcher = useDraftsFetcher({ immediate: false });
 // Local State
 // ============================================
 const showHintsModal = ref(false);
-const isSubmitting = ref(false);
 
 // ============================================
 // Computed
@@ -89,7 +82,7 @@ const warehouseOptions = computed(() =>
 );
 
 const canSubmit = computed(
-  () => updateStore.isValid && !updateStore.loading && !isSubmitting.value,
+  () => formStore.canSubmit && userStore.hasAutobookingCredits,
 );
 
 // ============================================
@@ -99,39 +92,56 @@ function goBack() {
   router.back();
 }
 
+function navigateToStoreBookings() {
+  router.push({ name: 'StoreBookings' });
+}
+
 /**
  * Handles warehouse selection change
+ * Delegates to warehouse store for transit fetching
  */
 function handleWarehouseChange(warehouseId: number) {
-  updateStore.handleWarehouseChange(warehouseId);
+  formStore.setWarehouse(warehouseId);
+
+  if (warehouseId) {
+    warehouseStore.fetchTransits(warehouseId);
+  }
 }
 
-async function handleSubmit(): Promise<void> {
-  if (!canSubmit.value) return;
+/**
+ * Handles form submission
+ * Navigates back on success
+ */
+async function handleSubmit() {
+  if (!formStore.canSubmit) {
+    return;
+  }
 
   try {
-    isSubmitting.value = true;
-    await updateStore.updateAutobooking();
-    goBack();
+    const success = await formStore.submitForm();
+    if (success) {
+      goBack();
+    }
   } catch (error) {
-    console.error('Failed to update autobooking:', error);
-  } finally {
-    isSubmitting.value = false;
+    // Error is already handled in the store
+    console.error('Failed to create autobooking:', error);
   }
 }
 
 // ============================================
-// Initialization
+// Lifecycle
 // ============================================
 onMounted(async () => {
-  await updateStore.initialize();
-  
-  if (warehouseStore.warehouses.length === 0) {
-    await warehouseStore.fetchWarehouses();
+  try {
+    if (warehouseStore.warehouses.length === 0) {
+      await warehouseStore.fetchWarehouses();
+    }
+    // Fetch drafts using the composable's unified method
+    await draftsFetcher.fetchIfEmpty();
+  } finally {
+    // Signal view is ready
+    viewReady();
   }
-  
-  // Fetch drafts using the composable's unified method
-  await draftsFetcher.fetchIfEmpty();
 });
 </script>
 
