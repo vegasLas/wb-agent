@@ -8,24 +8,6 @@ export interface FetchDraftsOptions {
   supplierId: string;
 }
 
-interface FetchDraftGoodsOptions {
-  draftId: string;
-  accountId: string;
-  supplierId: string;
-}
-
-// API response types (internal to handle API variations)
-interface ApiDraftGood {
-  sa?: string;
-  article?: string;
-  imgSrc?: string;
-  image?: string;
-  subjectName?: string;
-  name?: string;
-  quantity: number;
-  [key: string]: unknown;
-}
-
 export const useDraftStore = defineStore('draft', () => {
   // ============================================
   // State
@@ -50,27 +32,16 @@ export const useDraftStore = defineStore('draft', () => {
   // ============================================
   const draftOptions = computed(() =>
     drafts.value.map((d) => ({
-      label: d.name,
-      value: d.id,
+      label: d.createdAt
+        ? `${new Date(d.createdAt).toLocaleDateString('ru-RU')} | товары: ${d.goodQuantity}, артикулы: ${d.barcodeQuantity}`
+        : `${d.draftName} | товары: ${d.goodQuantity}, артикулы: ${d.barcodeQuantity}`,
+      value: d.draftID,
     })),
   );
 
   // ============================================
   // Private Helpers
   // ============================================
-
-  /**
-   * Maps API draft good to internal DraftGood type
-   * Handles multiple possible field names from the API
-   */
-  function mapDraftGood(good: ApiDraftGood): DraftGood {
-    return {
-      article: good.sa ?? good.article ?? '',
-      image: good.imgSrc ?? good.image ?? '',
-      name: good.subjectName ?? good.name ?? '',
-      quantity: good.quantity,
-    };
-  }
 
   /**
    * Creates a unique key for fetch params to track deduplication
@@ -113,6 +84,7 @@ export const useDraftStore = defineStore('draft', () => {
     activeFetchPromise = (async (): Promise<Draft[]> => {
       try {
         const data = await draftsAPI.fetchDrafts(accountId, supplierId);
+        console.log('data: ', data);
         drafts.value = data;
         return data;
       } catch (err: unknown) {
@@ -169,7 +141,7 @@ export const useDraftStore = defineStore('draft', () => {
         accountId,
         effectiveSupplierId,
       );
-      draftGoods.value = data.map(mapDraftGood);
+      draftGoods.value = data;
     } catch (err: unknown) {
       console.error('Failed to fetch draft goods:', err);
       draftGoods.value = [];
