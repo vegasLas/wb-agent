@@ -100,34 +100,68 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   }
 
   /**
+   * Get remaining dates that haven't been completed yet
+   */
+  function getRemainingDates(booking: Autobooking): (string | Date)[] {
+    if (
+      (booking.dateType !== 'CUSTOM_DATES' &&
+        booking.dateType !== 'CUSTOM_DATES_SINGLE') ||
+      !booking.customDates
+    )
+      return [];
+
+    const completedDates = booking.completedDates || [];
+    return booking.customDates.filter((date) => {
+      const dateToCheck = new Date(date);
+      dateToCheck.setHours(0, 0, 0, 0);
+
+      return !completedDates.some((completedDate) => {
+        const completed = new Date(completedDate);
+        completed.setHours(0, 0, 0, 0);
+        return completed.getTime() === dateToCheck.getTime();
+      });
+    });
+  }
+
+  /**
    * Check if booking dates are still relevant (not in the past)
    */
   function isBookingDatesRelevant(booking: Autobooking): boolean {
     const now = new Date();
-    
-    if (booking.dateType === 'WEEK' || booking.dateType === 'MONTH') {
-      if (!booking.startDate) return false;
-      const startDate = new Date(booking.startDate);
-      // Add buffer period based on date type
-      const bufferDays = booking.dateType === 'WEEK' ? 6 : 30;
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + bufferDays);
-      return endDate >= now;
+    now.setHours(0, 0, 0, 0);
+
+    switch (booking.dateType) {
+      case 'WEEK':
+        if (!booking.startDate) return false;
+        const weekEndDate = new Date(booking.startDate);
+        weekEndDate.setDate(weekEndDate.getDate() + 7);
+        return weekEndDate >= now;
+
+      case 'MONTH':
+        if (!booking.startDate) return false;
+        const monthEndDate = new Date(booking.startDate);
+        monthEndDate.setMonth(monthEndDate.getMonth() + 1);
+        return monthEndDate >= now;
+
+      case 'CUSTOM_PERIOD':
+        if (!booking.endDate) return false;
+        const endDate = new Date(booking.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate >= now;
+
+      case 'CUSTOM_DATES':
+      case 'CUSTOM_DATES_SINGLE':
+        if (!booking.customDates?.length) return false;
+        const remainingDates = getRemainingDates(booking);
+        return remainingDates.some((date) => {
+          const customDate = new Date(date);
+          customDate.setHours(0, 0, 0, 0);
+          return customDate >= now;
+        });
+
+      default:
+        return false;
     }
-    
-    if (booking.dateType === 'CUSTOM_PERIOD') {
-      if (!booking.endDate) return false;
-      const endDate = new Date(booking.endDate);
-      return endDate >= now;
-    }
-    
-    if (booking.dateType === 'CUSTOM_DATES' || booking.dateType === 'CUSTOM_DATES_SINGLE') {
-      if (!booking.customDates || booking.customDates.length === 0) return false;
-      // Check if any date is in the future
-      return booking.customDates.some(date => new Date(date) >= now);
-    }
-    
-    return true;
   }
 
   async function activateAutobooking(booking: Autobooking) {
@@ -195,6 +229,7 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     getStatusColor,
     getStatusText,
     getDateTypeText,
+    getRemainingDates,
     isBookingDatesRelevant,
     activateAutobooking,
     currentPage,
