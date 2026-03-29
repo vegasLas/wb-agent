@@ -62,7 +62,7 @@
     :balances="selectedWarehouseBalances"
     :loading="supplierStore.loadingBalances"
     :error="supplierStore.balancesError"
-    @retry="supplierStore.fetchWarehouseBalances(props.supplierId)"
+    @retry="supplierStore.fetchWarehouseBalances(props.accountId)"
   />
 </template>
 
@@ -86,7 +86,7 @@ interface Props {
   warehouseOptions: WarehouseOption[];
   transitOptions: WarehouseOption[];
   loading?: boolean;
-  supplierId?: string;
+  accountId?: string;
 }
 
 const props = defineProps<Props>();
@@ -130,7 +130,7 @@ function onWarehouseChange(value: string | number) {
 }
 
 // Fetch balances on mount
-if (props.supplierId) {
-  supplierStore.fetchWarehouseBalances(props.supplierId);
+if (props.accountId) {
+  supplierStore.fetchWarehouseBalances(props.accountId);
 }
 </script>

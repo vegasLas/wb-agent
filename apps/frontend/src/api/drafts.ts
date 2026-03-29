@@ -16,11 +16,15 @@ export const draftsAPI = {
    * POST /api/v1/suppliers/drafts/list
    * List drafts for the selected account
    */
-  async fetchDrafts(accountId?: string, supplierId?: string): Promise<Draft[]> {
-    const response = await apiClient.post<DraftsResponse>('/suppliers/drafts/list', {
-      accountId,
-      supplierId,
-    });
+  async fetchDrafts(accountId: string, supplierId: string): Promise<Draft[]> {
+    const response = await apiClient.post<DraftsResponse>(
+      '/suppliers/drafts/list',
+      {
+        accountId,
+        supplierId,
+      },
+    );
+    console.log('response.data: ', response.data);
     return response.data.data || [];
   },
 
@@ -29,8 +33,8 @@ export const draftsAPI = {
    * List goods for a specific draft
    */
   async fetchDraftGoods(
-    draftID: string, 
-    accountId?: string, 
+    draftID: string,
+    accountId?: string,
     supplierId?: string,
     options?: {
       search?: string;
@@ -38,14 +42,17 @@ export const draftsAPI = {
       subjects?: string[];
       limit?: number;
       offset?: number;
-    }
+    },
   ): Promise<DraftGood[]> {
-    const response = await apiClient.post<DraftGoodsResponse>('/suppliers/goods/draft', {
-      draftID,
-      accountId,
-      supplierId,
-      ...options,
-    });
+    const response = await apiClient.post<DraftGoodsResponse>(
+      '/suppliers/goods/draft',
+      {
+        draftID,
+        accountId,
+        supplierId,
+        ...options,
+      },
+    );
     return response.data.data || [];
   },
 };

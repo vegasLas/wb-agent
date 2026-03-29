@@ -55,6 +55,9 @@ export const useUserStore = defineStore('user', () => {
     return new Date(user.value.subscriptionExpiresAt) > new Date();
   });
 
+  // Computed property to check if user has autobooking credits
+  const hasAutobookingCredits = computed(() => user.value.autobookingCount > 0);
+
   const subscriptionRemainingDays = computed(() => {
     if (!user.value.subscriptionExpiresAt) return 0;
     const expirationDate = new Date(user.value.subscriptionExpiresAt);
@@ -195,6 +198,7 @@ export const useUserStore = defineStore('user', () => {
     notFound,
     subscriptionActive,
     subscriptionRemainingDays,
+    hasAutobookingCredits,
     selectedAccount,
     hasValidSupplier,
     activeSupplier,

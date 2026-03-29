@@ -14,22 +14,22 @@
     </div>
 
     <AutobookingFormFields
-      v-model:form="form"
-      v-model:use-transit="useTransit"
+      v-model:form="updateStore._form"
+      v-model:use-transit="updateStore._useTransit"
       :warehouse-options="warehouseOptions"
-      :validation-loading="store.validationLoading"
-      :validation-result="store.validationResult"
-      :suggested-coefficient="store.suggestedCoefficient"
-      :supplier-id="store.currentAutobooking?.supplierId"
-      @warehouse-change="store.handleWarehouseChange"
-      @validate-warehouse="store.validateWarehouse"
+      :validation-loading="updateStore.validationLoading"
+      :validation-result="updateStore.validationResult"
+      :suggested-coefficient="updateStore.suggestedCoefficient"
+      :supplier-id="updateStore.currentAutobooking?.supplierId"
+      @warehouse-change="handleWarehouseChange"
+      @validate-warehouse="updateStore.validateWarehouse"
     />
   </div>
 
   <MainButton
-    v-if="canSubmit && !loading"
-    :disabled="!canSubmit"
-    :progress="isSubmitting || loading"
+    v-if="canSubmit"
+    :disabled="updateStore.loading"
+    :progress="isSubmitting || updateStore.loading"
     text="Обновить"
     @click="handleSubmit"
   />
@@ -53,49 +53,57 @@ import { BackButton, MainButton } from 'vue-tg';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
 import { useWarehousesStore } from '../../stores/warehouses';
 import { useDraftStore } from '../../stores/draft';
+import { useUserStore } from '../../stores/user';
+import { useDraftsFetcher } from '../../composables/useDraftsFetcher';
 import Button from 'primevue/button';
 import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 import AutobookingHints from './Hints.vue';
 
+// ============================================
+// Store Setup
+// ============================================
 const router = useRouter();
-const store = useAutobookingUpdateStore();
+const updateStore = useAutobookingUpdateStore();
 const warehouseStore = useWarehousesStore();
 const draftStore = useDraftStore();
+const userStore = useUserStore();
 
+// Use the drafts fetcher composable for automatic data fetching
+const draftsFetcher = useDraftsFetcher({ immediate: false });
+
+// ============================================
+// Local State
+// ============================================
 const showHintsModal = ref(false);
 const isSubmitting = ref(false);
 
-const form = computed({
-  get: () => store.form,
-  set: (value) => {
-    // Update form fields in store
-    Object.assign(store.form, value);
-  },
-});
-
-const useTransit = computed({
-  get: () => store.useTransit,
-  set: (value) => {
-    store.useTransit = value;
-  },
-});
-
-const loading = computed(() => store.loading);
-
+// ============================================
+// Computed
+// ============================================
 const warehouseOptions = computed(() =>
   warehouseStore.warehouses.map((w) => ({
     label: w.name,
     value: w.ID,
-  }))
+  })),
 );
 
 const canSubmit = computed(
-  () => store.isValid && !loading.value && !isSubmitting.value,
+  () => updateStore.isValid && !updateStore.loading && !isSubmitting.value,
 );
 
+// ============================================
+// Event Handlers
+// ============================================
 function goBack() {
   router.back();
+}
+
+/**
+ * Handles warehouse selection change
+ */
+function handleWarehouseChange(warehouseId: number) {
+  updateStore.handleWarehouseChange(warehouseId);
 }
 
 async function handleSubmit(): Promise<void> {
@@ -103,7 +111,7 @@ async function handleSubmit(): Promise<void> {
 
   try {
     isSubmitting.value = true;
-    await store.updateAutobooking();
+    await updateStore.updateAutobooking();
     goBack();
   } catch (error) {
     console.error('Failed to update autobooking:', error);
@@ -112,14 +120,18 @@ async function handleSubmit(): Promise<void> {
   }
 }
 
+// ============================================
+// Initialization
+// ============================================
 onMounted(async () => {
-  await store.initialize();
+  await updateStore.initialize();
+  
   if (warehouseStore.warehouses.length === 0) {
     await warehouseStore.fetchWarehouses();
   }
-  if (draftStore.drafts.length === 0) {
-    await draftStore.fetchDrafts();
-  }
+  
+  // Fetch drafts using the composable's unified method
+  await draftsFetcher.fetchIfEmpty();
 });
 </script>
 

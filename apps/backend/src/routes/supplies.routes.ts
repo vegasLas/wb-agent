@@ -45,66 +45,31 @@ router.post(
   '/list',
   authenticate,
   [
-    body('accountId').isUUID().withMessage('Valid accountId is required'),
-    body('supplierId').optional().isString(),
+    body('accountId').isUUID().withMessage('Valid account ID is required'),
+    body('supplierId').notEmpty().withMessage('Supplier ID is required'),
   ],
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const user = (req as AuthenticatedRequest).user!;
-      const { accountId, supplierId: bodySupplierId } = req.body;
+      const { accountId, supplierId } = req.body;
 
-      // If no accountId provided in body, use user's selectedAccountId
-      const targetAccountId = accountId || user.selectedAccountId;
+      // Validate account belongs to user and contains the supplier
+      const account = await getValidatedAccount(user.id, accountId);
+
+      // Verify the supplier belongs to this account
+      const supplierExists = account.suppliers.some(
+        (s: { supplierId: string }) => s.supplierId === supplierId
+      );
       
-      if (!targetAccountId) {
-        throw new ApiError(400, 'No account selected for user');
-      }
-
-      const account = await getValidatedAccount(user.id, targetAccountId);
-
-      // Get the supplier ID - either from body or from account
-      let targetSupplierId = bodySupplierId;
-      let finalAccountId = account.id;
-
-      if (bodySupplierId) {
-        // Check if this supplier belongs to a different account that user has access to
-        const accountSupplierIds = account.suppliers.map((s: { supplierId: string }) => s.supplierId);
-        
-        if (!accountSupplierIds.includes(bodySupplierId)) {
-          // Find the account that contains this supplierId and ensure user owns it
-          const targetSupplier = await prisma.supplier.findFirst({
-            where: {
-              supplierId: bodySupplierId,
-              account: {
-                userId: user.id, // Ensure user owns this account
-              },
-            },
-            include: { account: true },
-          });
-
-          if (!targetSupplier) {
-            throw new ApiError(400, 'Specified supplier not found or not accessible');
-          }
-
-          finalAccountId = targetSupplier.account.id;
-          targetSupplierId = bodySupplierId;
-        }
-      }
-
-      // If no supplierId specified, use account's selected or first supplier
-      if (!targetSupplierId) {
-        targetSupplierId = account.selectedSupplierId || account.suppliers[0]?.supplierId;
-      }
-
-      if (!targetSupplierId) {
-        throw new ApiError(400, 'No supplier found for account');
+      if (!supplierExists) {
+        throw new ApiError(400, 'Supplier not found in the specified account');
       }
 
       const envInfo = await getUserEnvInfo(user.id);
 
       const result = await wbSupplierService.listSuppliesByAccount({
-        accountId: finalAccountId,
-        supplierId: targetSupplierId,
+        accountId,
+        supplierId,
         params: {
           pageNumber: 1,
           pageSize: 100, // Adjust as needed

@@ -1,6 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { supplierAPI, type GoodBalance } from '../api';
+import { useUserStore } from './user';
 import type { SupplierInfo } from '../types';
 
 export const useSupplierStore = defineStore('supplier', () => {
@@ -44,11 +45,16 @@ export const useSupplierStore = defineStore('supplier', () => {
     }
   }
 
-  async function fetchWarehouseBalances(supplierId?: string) {
+  async function fetchWarehouseBalances(accountId?: string) {
     try {
       loadingBalances.value = true;
       balancesError.value = null;
-      const data = await supplierAPI.fetchWarehouseBalances(supplierId);
+      
+      // If no accountId provided, use the current user's selected account
+      const userStore = useUserStore();
+      const effectiveAccountId = accountId ?? userStore.selectedAccount?.id;
+      
+      const data = await supplierAPI.fetchWarehouseBalances(effectiveAccountId);
       warehouseBalances.value = data;
       return data;
     } catch (err: unknown) {

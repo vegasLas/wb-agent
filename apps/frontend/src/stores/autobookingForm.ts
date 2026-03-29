@@ -1,77 +1,73 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { autobookingAPI, warehousesAPI } from '../api';
+import { autobookingAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
 import { useUserStore } from './user';
-import { useWarehousesStore } from './warehouses';
 import type { AutobookingCreateData } from '../types';
 
-interface FormState {
-  draftId: string;
-  warehouseId: number | null;
-  transitWarehouseId: number | null;
-  transitWarehouseName: string | null;
-  supplyType: string;
-  dateType: string;
-  startDate: string;
-  endDate: string;
-  customDates: (string | Date)[];
-  maxCoefficient: number;
-  monopalletCount: number | null;
-}
+// Form field types
+export type DateType = 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+export type SupplyType = 'SUPPLY' | 'MONOPALLETE' | 'QR_SUPPLY' | '';
+
+// Individual form fields for better reactivity and type safety
+const createDefaultFormState = () => ({
+  draftId: '',
+  warehouseId: null as number | null,
+  transitWarehouseId: null as number | null,
+  transitWarehouseName: null as string | null,
+  supplyType: '' as SupplyType,
+  dateType: 'WEEK' as DateType,
+  startDate: '',
+  endDate: '',
+  customDates: [] as (string | Date)[],
+  maxCoefficient: 0,
+  monopalletCount: null as number | null,
+});
+
+export type FormState = ReturnType<typeof createDefaultFormState>;
 
 export const useAutobookingFormStore = defineStore('autobookingForm', () => {
+  // ============================================
   // State
-  const form = ref<FormState>({
-    draftId: '',
-    warehouseId: null,
-    transitWarehouseId: null,
-    transitWarehouseName: null,
-    supplyType: '',
-    dateType: 'WEEK',
-    startDate: '',
-    endDate: '',
-    customDates: [],
-    maxCoefficient: 0,
-    monopalletCount: null,
-  });
-
+  // ============================================
+  const form = ref<FormState>(createDefaultFormState());
   const useTransit = ref(false);
   const loading = ref(false);
   const error = ref<string | null>(null);
-  const validationLoading = ref(false);
-  const validationResult = ref<{
-    result: {
-      metaInfo: {
-        monoMixQuantity: number;
-        palletQuantity: number;
-        supersafeQuantity: number;
-      };
-    };
-  } | null>(null);
-  const suggestedCoefficient = ref<number | null>(null);
 
-  const warehouseStore = useWarehousesStore();
-  const userStore = useUserStore();
-
+  // ============================================
   // Getters
-  const isValid = computed(() => {
-    if (!form.value.warehouseId) return false;
-    if (!form.value.draftId) return false;
-    if (!form.value.supplyType) return false;
-    if (!form.value.dateType) return false;
+  // ============================================
+  
+  /**
+   * Validates the form state
+   * Checks all required fields based on dateType and supplyType
+   */
+  const isValid = computed((): boolean => {
+    const { warehouseId, draftId, supplyType, dateType, startDate, endDate, customDates, monopalletCount } = form.value;
 
-    // Validate dates based on dateType
-    if (form.value.dateType === 'WEEK' || form.value.dateType === 'MONTH') {
-      return !!form.value.startDate;
-    } else if (form.value.dateType === 'CUSTOM_PERIOD') {
-      return !!(form.value.startDate && form.value.endDate);
-    } else if (form.value.dateType === 'CUSTOM_DATES' || form.value.dateType === 'CUSTOM_DATES_SINGLE') {
-      return form.value.customDates && form.value.customDates.length > 0;
+    // Required fields for all types
+    if (!warehouseId || !draftId || !supplyType || !dateType) {
+      return false;
     }
 
-    // Check monopallet count for MONOPALLETE
-    if (form.value.supplyType === 'MONOPALLETE' && !form.value.monopalletCount) {
+    // Date validation based on dateType
+    switch (dateType) {
+      case 'WEEK':
+      case 'MONTH':
+        if (!startDate) return false;
+        break;
+      case 'CUSTOM_PERIOD':
+        if (!startDate || !endDate) return false;
+        break;
+      case 'CUSTOM_DATES':
+      case 'CUSTOM_DATES_SINGLE':
+        if (!customDates || customDates.length === 0) return false;
+        break;
+    }
+
+    // Supply type specific validation
+    if (supplyType === 'MONOPALLETE' && (!monopalletCount || monopalletCount <= 0)) {
       return false;
     }
 
@@ -80,80 +76,60 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
 
   const canSubmit = computed(() => isValid.value && !loading.value);
 
-  const validate = computed(() => isValid.value);
-
-  const isSubmitting = computed(() => loading.value);
-
-  const isCreating = computed(() => loading.value);
-
-  const draftStore = computed(() => {
-    // Import dynamically to avoid circular dependency
-    const { useDraftStore } = require('./draft');
-    return useDraftStore();
-  });
-
+  // ============================================
   // Actions
+  // ============================================
+  
+  /**
+   * Resets the form to its default state
+   */
   function resetForm() {
-    form.value = {
-      draftId: '',
-      warehouseId: null,
-      transitWarehouseId: null,
-      transitWarehouseName: null,
-      supplyType: '',
-      dateType: 'WEEK',
-      startDate: '',
-      endDate: '',
-      customDates: [],
-      maxCoefficient: 0,
-      monopalletCount: null,
-    };
+    form.value = createDefaultFormState();
     useTransit.value = false;
     error.value = null;
-    validationResult.value = null;
   }
 
-  async function initialize() {
-    // Initialize form - fetch necessary data
-    if (warehouseStore.warehouses.length === 0) {
-      await warehouseStore.fetchWarehouses();
-    }
-    await draftStore.value.fetchDrafts();
+  /**
+   * Updates a specific form field
+   */
+  function updateField<K extends keyof FormState>(
+    field: K,
+    value: FormState[K]
+  ) {
+    form.value[field] = value;
   }
 
-  function handleWarehouseChange(warehouseId: number) {
+  /**
+   * Updates multiple form fields at once
+   */
+  function updateFields(updates: Partial<FormState>) {
+    Object.assign(form.value, updates);
+  }
+
+  /**
+   * Sets the warehouse and resets transit-related fields
+   */
+  function setWarehouse(warehouseId: number | null) {
     form.value.warehouseId = warehouseId;
-    // Fetch transit options for this warehouse
-    warehouseStore.fetchTransits(warehouseId);
-  }
-
-  async function validateWarehouse() {
-    if (!form.value.warehouseId || !form.value.draftId) return;
-
-    try {
-      validationLoading.value = true;
-      const userStore = useUserStore();
-      const accountId = userStore.selectedAccount?.id;
-
-      const response = await warehousesAPI.validateWarehouse({
-        accountId,
-        draftID: form.value.draftId,
-        warehouseId: form.value.warehouseId,
-        transitWarehouseId: form.value.transitWarehouseId,
-      });
-
-      if (response.success && response.data) {
-        validationResult.value = response.data as unknown as typeof validationResult.value;
-      } else {
-        validationResult.value = null;
-      }
-    } catch (err) {
-      console.error('Validation failed:', err);
-      validationResult.value = null;
-    } finally {
-      validationLoading.value = false;
+    if (!warehouseId) {
+      form.value.transitWarehouseId = null;
+      form.value.transitWarehouseName = null;
+      useTransit.value = false;
     }
   }
 
+  /**
+   * Sets the transit warehouse
+   */
+  function setTransitWarehouse(transitWarehouseId: number | null, transitWarehouseName: string | null = null) {
+    form.value.transitWarehouseId = transitWarehouseId;
+    form.value.transitWarehouseName = transitWarehouseName;
+  }
+
+  /**
+   * Submits the form to create a new autobooking
+   * Returns true on success, false on failure
+   */
   async function submitForm(): Promise<boolean> {
     if (!isValid.value) {
       error.value = 'Форма заполнена неверно';
@@ -161,6 +137,7 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
     }
 
     const autobookingStore = useAutobookingStore();
+    const userStore = useUserStore();
 
     try {
       loading.value = true;
@@ -199,29 +176,26 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
   }
 
   return {
-    // State
+    // State (readonly to prevent direct mutation from outside)
     form: readonly(form),
-    useTransit,
+    useTransit: readonly(useTransit),
     loading: readonly(loading),
     error: readonly(error),
-    validationLoading: readonly(validationLoading),
-    validationResult: readonly(validationResult),
-    suggestedCoefficient: readonly(suggestedCoefficient),
 
     // Getters
     isValid,
     canSubmit,
-    validate,
-    isSubmitting,
-    isCreating,
-    draftStore: draftStore.value,
-    warehouseStore,
 
     // Actions
     resetForm,
-    initialize,
-    handleWarehouseChange,
-    validateWarehouse,
+    updateField,
+    updateFields,
+    setWarehouse,
+    setTransitWarehouse,
     submitForm,
+
+    // Exposed for v-model binding (internal mutations allowed)
+    _useTransit: useTransit,
+    _form: form,
   };
 });

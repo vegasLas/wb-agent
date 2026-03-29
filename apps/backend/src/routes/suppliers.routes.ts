@@ -56,57 +56,30 @@ router.get(
   '/balances',
   authenticate,
   query('accountId').optional().isUUID(),
-  query('supplierId').optional().isString(),
   (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const { accountId, supplierId: querySupplierId } = req.query;
+      const { accountId } = req.query;
 
       let account;
-      let supplierId: string;
 
-      if (querySupplierId) {
-        // If supplierId provided, find account containing this supplier
-        account = await accountService.findAccountBySupplierId(
-          req.user!.id,
-          querySupplierId as string,
-        );
-
-        if (!account) {
-          throw new ApiError(400, 'Supplier not found in any of your accounts');
-        }
-
-        supplierId = querySupplierId as string;
-      } else if (accountId) {
+      if (accountId) {
         // Use provided accountId
         account = await getValidatedAccount(req.user!.id, accountId as string);
-        supplierId =
-          account.selectedSupplierId || account.suppliers[0]?.supplierId;
-
-        if (!supplierId) {
-          throw new ApiError(400, 'No supplier found for account');
-        }
       } else {
-        // Use selectedAccountId if no supplierId provided
+        // Use selectedAccountId
         const user = await userService.findById(req.user!.id);
         if (!user?.selectedAccountId) {
           throw new ApiError(400, 'No account selected for user');
         }
 
-        account = await accountService.getAccountById(
-          user.selectedAccountId,
-          req.user!.id,
-        );
+        account = await getValidatedAccount(req.user!.id, user.selectedAccountId);
+      }
 
-        if (!account) {
-          throw new ApiError(400, 'Selected account not found');
-        }
+      // Get supplierId from account's selected supplier or first supplier
+      const supplierId = account.selectedSupplierId || account.suppliers[0]?.supplierId;
 
-        supplierId =
-          account.selectedSupplierId || account.suppliers[0]?.supplierId;
-
-        if (!supplierId) {
-          throw new ApiError(400, 'No supplier found for account');
-        }
+      if (!supplierId) {
+        throw new ApiError(400, 'No supplier found for account');
       }
 
       const envInfo = await getUserEnvInfo(req.user!.id);
@@ -230,85 +203,37 @@ router.get(
 router.post(
   '/drafts/list',
   authenticate,
-  body('accountId').optional().isUUID(),
-  body('supplierId').optional().isString(),
+  body('accountId').isUUID().withMessage('Valid account ID is required'),
+  body('supplierId').notEmpty().withMessage('Supplier ID is required'),
   body('limit').optional().isInt(),
   body('offset').optional().isInt(),
   body('orderBy').optional().isObject(),
   (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const {
-        accountId: bodyAccountId,
-        supplierId: bodySupplierId,
+        accountId,
+        supplierId,
         limit,
         offset,
         orderBy,
       } = req.body;
 
-      let account;
-      let supplierId: string;
-      let targetAccountId: string;
-
-      const user = await userService.findById(req.user!.id);
-
-      if (bodySupplierId) {
-        // Find account containing this supplier
-        const targetSupplier = await prisma.supplier.findFirst({
-          where: {
-            supplierId: bodySupplierId,
-            account: {
-              userId: req.user!.id,
-            },
-          },
-          include: { account: true },
-        });
-
-        if (!targetSupplier) {
-          throw new ApiError(
-            400,
-            'Specified supplier not found or not accessible',
-          );
-        }
-
-        targetAccountId = targetSupplier.account.id;
-        supplierId = bodySupplierId;
-      } else if (bodyAccountId) {
-        targetAccountId = bodyAccountId;
-        account = await getValidatedAccount(req.user!.id, bodyAccountId);
-        supplierId =
-          account.selectedSupplierId || account.suppliers[0]?.supplierId;
-
-        if (!supplierId) {
-          throw new ApiError(400, 'No supplier found for account');
-        }
-      } else {
-        // Use selectedAccountId
-        if (!user?.selectedAccountId) {
-          throw new ApiError(400, 'No account selected for user');
-        }
-
-        targetAccountId = user.selectedAccountId;
-        account = await accountService.getAccountById(
-          targetAccountId,
-          req.user!.id,
-        );
-
-        if (!account) {
-          throw new ApiError(400, 'Selected account not found');
-        }
-
-        supplierId =
-          account.selectedSupplierId || account.suppliers[0]?.supplierId;
-
-        if (!supplierId) {
-          throw new ApiError(400, 'No supplier found for account');
-        }
+      // Validate account belongs to user and contains the supplier
+      const account = await getValidatedAccount(req.user!.id, accountId);
+      
+      // Verify the supplier belongs to this account
+      const supplierExists = account.suppliers.some(
+        (s) => s.supplierId === supplierId
+      );
+      
+      if (!supplierExists) {
+        throw new ApiError(400, 'Supplier not found in the specified account');
       }
 
       const envInfo = await getUserEnvInfo(req.user!.id);
 
       const result = await wbSupplierService.listDraftsByAccount({
-        accountId: targetAccountId,
+        accountId,
         supplierId,
         params: { limit, offset, orderBy },
         userAgent: envInfo.userAgent,

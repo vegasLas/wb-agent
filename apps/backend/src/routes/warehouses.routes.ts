@@ -224,6 +224,7 @@ router.post(
   '/validate',
   authenticate,
   body('accountId').isUUID().withMessage('Valid account ID is required'),
+  body('supplierId').notEmpty().withMessage('Supplier ID is required'),
   body('draftID').notEmpty().withMessage('Draft ID is required'),
   body('warehouseId')
     .isInt({ min: 1 })
@@ -232,10 +233,6 @@ router.post(
     .optional({ nullable: true })
     .isInt()
     .withMessage('Transit warehouse ID must be a number'),
-  body('supplierId')
-    .optional()
-    .isString()
-    .withMessage('Supplier ID must be a string'),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const errors = validationResult(req);
@@ -247,59 +244,34 @@ router.post(
 
       const {
         accountId,
+        supplierId,
         draftID,
         warehouseId,
         transitWarehouseId,
-        supplierId: bodySupplierId,
       } = req.body as {
         accountId: string;
+        supplierId: string;
         draftID: string;
         warehouseId: number;
         transitWarehouseId?: number | null;
-        supplierId?: string;
       };
 
-      // Get base account
+      // Validate account belongs to user and contains the supplier
       const account = await getValidatedAccount(req.user!.id, accountId);
       const envInfo = await getUserEnvInfo(req.user!.id);
 
-      // Determine target supplier and account
-      let targetSupplierId =
-        bodySupplierId ||
-        account.selectedSupplierId ||
-        account.suppliers[0]?.supplierId;
-      let targetAccountId = account.id;
-
-      // If supplierId is provided and different from account's supplier, find the correct account
-      if (
-        bodySupplierId &&
-        bodySupplierId !==
-          (account.selectedSupplierId || account.suppliers[0]?.supplierId)
-      ) {
-        // Find the account that contains this supplierId and ensure user owns it
-        const targetAccount = await accountService.findAccountBySupplierId(
-          req.user!.id,
-          bodySupplierId,
-        );
-
-        if (!targetAccount) {
-          throw new ApiError(
-            400,
-            'Specified supplier not found or not accessible',
-          );
-        }
-
-        targetAccountId = targetAccount.id;
-        targetSupplierId = bodySupplierId;
-      }
-
-      if (!targetSupplierId) {
-        throw new ApiError(400, 'No supplier found for account');
+      // Verify the supplier belongs to this account
+      const supplierExists = account.suppliers.some(
+        (s) => s.supplierId === supplierId
+      );
+      
+      if (!supplierExists) {
+        throw new ApiError(400, 'Supplier not found in the specified account');
       }
 
       const result = await wbSupplierService.validateWarehouseGoodsV2ByAccount({
-        accountId: targetAccountId,
-        supplierId: targetSupplierId,
+        accountId,
+        supplierId,
         params: {
           draftID,
           warehouseId,

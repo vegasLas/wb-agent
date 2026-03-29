@@ -270,7 +270,7 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
     // State
     currentAutobooking: readonly(currentAutobooking),
     form: readonly(form),
-    useTransit,
+    useTransit: readonly(useTransit),
     loading: readonly(loading),
     error: readonly(error),
     isFetched: readonly(isFetched),
@@ -292,5 +292,9 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
     handleWarehouseChange,
     validateWarehouse,
     updateAutobooking,
+    
+    // Exposed for v-model binding (internal mutations allowed)
+    _form: form,
+    _useTransit: useTransit,
   };
 });

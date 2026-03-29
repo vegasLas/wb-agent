@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-white dark:bg-[#171819]">
-    <!-- 
-      Route-based Skeleton Loading 
+    <!--
+      Route-based Skeleton Loading
       - Shown during: router guard initialization (Telegram + user data)
       - Hidden when: view component signals ready via useViewReady()
     -->
