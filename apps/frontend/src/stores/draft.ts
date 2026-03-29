@@ -30,14 +30,13 @@ export const useDraftStore = defineStore('draft', () => {
   // ============================================
   // Getters
   // ============================================
-  const draftOptions = computed(() =>
-    drafts.value.map((d) => ({
-      label: d.createdAt
-        ? `${new Date(d.createdAt).toLocaleDateString('ru-RU')} | товары: ${d.goodQuantity}, артикулы: ${d.barcodeQuantity}`
-        : `${d.draftName} | товары: ${d.goodQuantity}, артикулы: ${d.barcodeQuantity}`,
-      value: d.draftID,
+  const draftOptions = computed(() => [
+    { label: 'Выберите черновик', value: null },
+    ...drafts.value.map((d) => ({
+      label: `${new Date(d.createdAt).toLocaleDateString('ru-RU')} | товары: ${d.goodQuantity}, артикулы: ${d.barcodeQuantity}`,
+      value: d.id,
     })),
-  );
+  ]);
 
   // ============================================
   // Private Helpers
@@ -84,7 +83,6 @@ export const useDraftStore = defineStore('draft', () => {
     activeFetchPromise = (async (): Promise<Draft[]> => {
       try {
         const data = await draftsAPI.fetchDrafts(accountId, supplierId);
-        console.log('data: ', data);
         drafts.value = data;
         return data;
       } catch (err: unknown) {

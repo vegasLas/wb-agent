@@ -15,11 +15,12 @@ const listStore = useRescheduleListStore();
 const { viewReady } = useViewReady();
 
 onMounted(async () => {
-  console.log('ReschedulesView onMounted - START');
   try {
     // Fetch supplies when view mounts
     if (userStore.selectedAccount?.selectedSupplierId) {
-      await rescheduleStore.fetchSupplies(userStore.selectedAccount.selectedSupplierId);
+      await rescheduleStore.fetchSupplies(
+        userStore.selectedAccount.selectedSupplierId,
+      );
     }
 
     // Set initial filter to show active reschedules

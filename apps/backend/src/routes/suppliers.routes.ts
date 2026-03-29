@@ -72,11 +72,15 @@ router.get(
           throw new ApiError(400, 'No account selected for user');
         }
 
-        account = await getValidatedAccount(req.user!.id, user.selectedAccountId);
+        account = await getValidatedAccount(
+          req.user!.id,
+          user.selectedAccountId,
+        );
       }
 
       // Get supplierId from account's selected supplier or first supplier
-      const supplierId = account.selectedSupplierId || account.suppliers[0]?.supplierId;
+      const supplierId =
+        account.selectedSupplierId || account.suppliers[0]?.supplierId;
 
       if (!supplierId) {
         throw new ApiError(400, 'No supplier found for account');
@@ -139,11 +143,11 @@ router.get(
           brand,
           subject,
           supplierArticle, // quantityInTransitToClient
+          ,
+          ,
+          ,
           // quantityInTransitFromClient
           // totalInWarehouses
-          ,
-          ,
-          ,
           ...warehouseQuantities
         ] = row;
 
@@ -210,22 +214,16 @@ router.post(
   body('orderBy').optional().isObject(),
   (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const {
-        accountId,
-        supplierId,
-        limit,
-        offset,
-        orderBy,
-      } = req.body;
+      const { accountId, supplierId, limit, offset, orderBy } = req.body;
 
       // Validate account belongs to user and contains the supplier
       const account = await getValidatedAccount(req.user!.id, accountId);
-      
+
       // Verify the supplier belongs to this account
       const supplierExists = account.suppliers.some(
-        (s) => s.supplierId === supplierId
+        (s) => s.supplierId === supplierId,
       );
-      
+
       if (!supplierExists) {
         throw new ApiError(400, 'Supplier not found in the specified account');
       }
@@ -240,9 +238,17 @@ router.post(
         proxy: envInfo.proxy,
       });
 
+      // Transform WB API drafts to simplified format for frontend
+      const drafts = result.result.drafts.map((draft) => ({
+        id: draft.ID,
+        goodQuantity: draft.goodQuantity,
+        barcodeQuantity: draft.barcodeQuantity,
+        createdAt: draft.createdAt,
+      }));
+
       return res.json({
         success: true,
-        data: result.result.drafts,
+        data: drafts,
       });
     } catch (error) {
       logger.error('Failed to list drafts:', error);

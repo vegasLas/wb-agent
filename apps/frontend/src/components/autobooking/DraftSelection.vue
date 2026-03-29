@@ -36,7 +36,7 @@ interface Props {
   loading?: boolean;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 defineEmits<{
   'update:modelValue': [value: string];

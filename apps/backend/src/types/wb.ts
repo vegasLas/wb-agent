@@ -249,18 +249,33 @@ export interface ListDraftsResponse {
   id: string;
   jsonrpc: string;
   result: {
-    drafts: Draft[];
+    drafts: WBDraft[];
   };
 }
 
-export interface Draft {
-  id: string;
-  name: string;
-  supplierId: string;
-  totalQuantity: number;
-  totalGoods: number;
+/**
+ * Draft from WB API - internal raw format
+ */
+export interface WBDraft {
+  ID: string;
+  supplierID: string;
+  createdBy: number;
+  author: string;
+  goodQuantity: number;
+  barcodeQuantity: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Draft - simplified format for frontend
+ * Only includes fields the UI actually needs
+ */
+export interface Draft {
+  id: string;
+  goodQuantity: number;
+  barcodeQuantity: number;
+  createdAt: string;
 }
 
 export interface ValidateWarehouseGoodsResponse {

@@ -24,7 +24,6 @@ export const draftsAPI = {
         supplierId,
       },
     );
-    console.log('response.data: ', response.data);
     return response.data.data || [];
   },
 
