@@ -113,6 +113,12 @@
           class="text-xs"
         />
       </div>
+
+      <!-- Coefficient History -->
+      <CoefficientHistoryAlert
+        :warehouse-id="localForm.warehouseId"
+        :supply-type="localForm.supplyType"
+      />
     </div>
   </div>
 </template>
@@ -133,6 +139,7 @@ import DateSelection from '../common/DateSelection.vue';
 import DateSelectionAlerts from '../common/DateSelectionAlerts.vue';
 import AutobookingWarehouseSelection from './WarehouseSelection.vue';
 import AutobookingDraftSelection from './DraftSelection.vue';
+import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
 
 interface FormData {
   draftId: string;
@@ -348,6 +355,39 @@ watch(
 
       // Clear endDate for WEEK and MONTH types
       localForm.value.endDate = '';
+    }
+  },
+);
+
+// Watch for suggested coefficient changes to auto-set maxCoefficient
+watch(
+  () => props.suggestedCoefficient,
+  (newSuggestedCoefficient) => {
+    if (newSuggestedCoefficient !== null && newSuggestedCoefficient !== undefined) {
+      localForm.value.maxCoefficient = newSuggestedCoefficient;
+    }
+  },
+  { immediate: true },
+);
+
+// Watch for supply type changes to reset monopallet count when not MONOPALLETE
+watch(
+  () => localForm.value.supplyType,
+  (newSupplyType) => {
+    if (newSupplyType !== 'MONOPALLETE') {
+      localForm.value.monopalletCount = null;
+    }
+  },
+);
+
+// Watch for useTransit changes to fetch transits when enabled
+watch(
+  () => localUseTransit.value,
+  async (newValue) => {
+    if (newValue && localForm.value.warehouseId) {
+      await warehouseStore.fetchTransits(localForm.value.warehouseId);
+    } else {
+      localForm.value.transitWarehouseId = null;
     }
   },
 );

@@ -92,13 +92,19 @@
             <Button
               severity="info"
               size="small"
-              :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
+              :loading="autobookingStore.loading && autobookingStore.updatingId === booking.id"
               @click="updateCoefficient"
             >
               увеличить
             </Button>
           </div>
         </Message>
+
+        <!-- Coefficient History -->
+        <CoefficientHistoryAlert
+          :warehouse-id="booking.warehouseId"
+          :supply-type="booking.supplyType"
+        />
 
         <!-- Action Buttons -->
         <div class="flex justify-end gap-2 mt-2">
@@ -199,6 +205,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Message from 'primevue/message';
 import AutobookingDateInfo from './DateInfo.vue';
+import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
 import { formatDateShort, getSupplyTypeText } from '../../utils/formatters';
 
 const props = defineProps<{
@@ -266,12 +273,11 @@ async function updateCoefficient() {
   if (!confirmed) return;
   
   try {
-    // This would need to be implemented in the API and store
-    // await autobookingStore.updateBookingCoefficient(
-    //   props.booking.id,
-    //   suggestedCoefficientValue.value,
-    // );
-    alert('Коэффициент обновлен');
+    await autobookingStore.updateBookingCoefficient(
+      props.booking.id,
+      suggestedCoefficientValue.value,
+    );
+    alert('Коэффициент обновлен успешно');
   } catch (error) {
     console.error('Failed to update coefficient:', error);
     alert('Не удалось обновить коэффициент');

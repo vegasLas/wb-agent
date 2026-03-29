@@ -16,12 +16,19 @@ const { viewReady } = useViewReady();
 onMounted(async () => {
   console.log('AutobookingView onMounted - START');
   try {
-    // Fetch data when view mounts
-    await listStore.fetchData();
-    console.log(
-      'AutobookingView onMounted - data fetched, count:',
-      listStore.autobookings.length,
-    );
+    // Only fetch data if not already loaded
+    if (listStore.autobookings.length === 0 && !listStore.isFetched) {
+      await listStore.fetchData();
+      console.log(
+        'AutobookingView onMounted - data fetched, count:',
+        listStore.autobookings.length,
+      );
+    } else {
+      console.log(
+        'AutobookingView onMounted - data already loaded, count:',
+        listStore.autobookings.length,
+      );
+    }
   } catch (err) {
     console.error('AutobookingView onMounted - fetch error:', err);
   } finally {
