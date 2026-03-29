@@ -10,6 +10,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
   const error = ref<string | null>(null);
   const deletingId = ref<string | null>(null);
   const togglingId = ref<string | null>(null);
+  const updatingId = ref<string | null>(null);
 
   // Getters
   const activeAutobookings = computed(() =>
@@ -60,17 +61,36 @@ export const useAutobookingStore = defineStore('autobooking', () => {
   async function toggleAutobooking(id: string, enabled: boolean) {
     try {
       togglingId.value = id;
-      await autobookingAPI.toggleAutobooking(id, enabled);
-      const autobooking = autobookings.value.find((a) => a.id === id);
-      if (autobooking) {
-        autobooking.enabled = enabled;
+      const updated = await autobookingAPI.toggleAutobooking(id, enabled);
+      const index = autobookings.value.findIndex((a) => a.id === id);
+      if (index !== -1) {
+        autobookings.value[index] = { ...autobookings.value[index], ...updated };
       }
+      return updated;
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to toggle autobooking';
       error.value = errorMsg;
       throw err;
     } finally {
       togglingId.value = null;
+    }
+  }
+
+  async function updateBookingCoefficient(id: string, maxCoefficient: number) {
+    try {
+      updatingId.value = id;
+      const updated = await autobookingAPI.updateBookingCoefficient(id, maxCoefficient);
+      const index = autobookings.value.findIndex((a) => a.id === id);
+      if (index !== -1) {
+        autobookings.value[index] = { ...autobookings.value[index], ...updated };
+      }
+      return updated;
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to update coefficient';
+      error.value = errorMsg;
+      throw err;
+    } finally {
+      updatingId.value = null;
     }
   }
 
@@ -92,6 +112,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
     error: readonly(error),
     deletingId: readonly(deletingId),
     togglingId: readonly(togglingId),
+    updatingId: readonly(updatingId),
 
     // Getters
     activeAutobookings,
@@ -103,6 +124,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
     fetchAutobookings,
     deleteAutobooking,
     toggleAutobooking,
+    updateBookingCoefficient,
     addAutobooking,
     updateAutobookingInList,
   };
