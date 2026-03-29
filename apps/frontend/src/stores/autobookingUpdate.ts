@@ -211,8 +211,16 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
       } else {
         validationResult.value = null;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Validation failed:', err);
+      
+      // Handle inactive warehouse error specifically
+      if (err?.response?.data?.message === 'Inactive warehouse' || err?.message?.includes('Inactive warehouse')) {
+        form.value.warehouseId = null;
+        error.value = 'Выбранный склад неактивен';
+        alert('Ошибка валидации: Выбранный склад неактивен');
+      }
+      
       validationResult.value = null;
     } finally {
       validationLoading.value = false;

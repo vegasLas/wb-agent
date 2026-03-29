@@ -44,10 +44,15 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
    * Checks all required fields based on dateType and supplyType
    */
   const isValid = computed((): boolean => {
-    const { warehouseId, draftId, supplyType, dateType, startDate, endDate, customDates, monopalletCount } = form.value;
+    const { warehouseId, draftId, supplyType, dateType, startDate, endDate, customDates, monopalletCount, transitWarehouseId } = form.value;
 
     // Required fields for all types
     if (!warehouseId || !draftId || !supplyType || !dateType) {
+      return false;
+    }
+
+    // Transit warehouse validation (required when useTransit is true)
+    if (useTransit.value && !transitWarehouseId) {
       return false;
     }
 
