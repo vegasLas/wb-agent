@@ -335,14 +335,16 @@ export interface SupplyDetails {
 // -----------------------------------------------------------------------------
 // Draft Types
 // -----------------------------------------------------------------------------
+/**
+ * Draft - simplified format
+ * Only includes fields the UI actually needs
+ */
 export interface Draft {
-  draftID: string;
-  supplierId: string;
-  draftName: string;
+  id: string;
   goodQuantity: number;
   barcodeQuantity: number;
+  createdAt: string;
   goods?: DraftGood[];
-  createdAt?: string;
 }
 
 export interface DraftGood {
