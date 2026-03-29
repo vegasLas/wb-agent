@@ -105,7 +105,7 @@ const showBalancesModal = ref(false);
 // Computed for selected warehouse balances
 const selectedWarehouseBalances = computed(() => {
   if (!props.modelValue) return [];
-  return supplierStore.warehouseBalances;
+  return supplierStore.getBalancesForWarehouse(props.modelValue);
 });
 
 watch(

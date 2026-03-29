@@ -105,6 +105,7 @@ import { AUTOBOOKING_STATUSES } from '../../constants';
 import { useUserStore } from '../../stores/user';
 import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useSupplierStore } from '../../stores/supplier';
+import { draftsAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
@@ -165,27 +166,34 @@ function navigateToStoreBookings() {
 }
 
 // Handle view goods event from BookingCard
-const handleViewGoods = async (draftId: string, _supplierId: string) => {
+const handleViewGoods = async (draftId: string, supplierId: string) => {
   try {
     loadingGoods.value = true;
     showGoodsModal.value = true;
 
-    // Use the current user's selected accountId
+    // Use the current user's selected accountId and the supplierId from the booking
     const accountId = userStore.selectedAccount?.id;
-    const response = await supplierStore.fetchWarehouseBalances(accountId);
+    
+    if (!accountId || !supplierId) {
+      console.error('Missing accountId or supplierId for fetching draft goods');
+      draftGoods.value = [];
+      return;
+    }
 
-    // For now, show the warehouse balances as goods
-    // In the real app, this should call a separate API to get draft goods
-    draftGoods.value =
-      response.map((good) => ({
-        article: good.supplierArticle,
-        image: undefined,
-        name: good.goodName,
-        quantity: good.quantity,
-      })) || [];
+    // Fetch actual draft goods from the API
+    const goods = await draftsAPI.fetchDraftGoods(draftId, accountId, supplierId);
+    
+    // Map the goods to the expected format
+    draftGoods.value = goods.map((good) => ({
+      article: good.sa || good.article || '',
+      image: good.imgSrc || good.image,
+      name: good.subjectName || good.name || '',
+      quantity: good.quantity,
+    }));
   } catch (error) {
     console.error('Failed to fetch draft goods:', error);
     draftGoods.value = [];
+    alert('Не удалось загрузить товары из черновика');
   } finally {
     loadingGoods.value = false;
   }

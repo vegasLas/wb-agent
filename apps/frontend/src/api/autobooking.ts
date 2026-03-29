@@ -75,4 +75,22 @@ export const autobookingAPI = {
     const response = await apiClient.delete<DeleteAutobookingResponse>('/autobooking', { data: { id } });
     return response.data;
   },
+
+  /**
+   * PATCH /api/v1/autobooking/:id/toggle
+   * Toggle autobooking status (activate/archive)
+   */
+  async toggleAutobooking(id: string, enabled: boolean): Promise<Autobooking> {
+    const response = await apiClient.patch<UpdateAutobookingResponse>(`/autobooking/${id}/toggle`, { enabled });
+    return response.data.data;
+  },
+
+  /**
+   * PATCH /api/v1/autobooking/:id/coefficient
+   * Update autobooking coefficient
+   */
+  async updateBookingCoefficient(id: string, maxCoefficient: number): Promise<Autobooking> {
+    const response = await apiClient.patch<UpdateAutobookingResponse>(`/autobooking/${id}/coefficient`, { maxCoefficient });
+    return response.data.data;
+  },
 };

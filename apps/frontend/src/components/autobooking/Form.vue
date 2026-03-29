@@ -1,26 +1,5 @@
 <template>
-  <div class="space-y-4">
-    <!-- No Autobooking Count Alert -->
-    <Message
-      v-if="!userStore.hasAutobookingCredits"
-      severity="error"
-      class="w-full"
-    >
-      <div class="flex flex-col gap-2">
-        <div class="font-semibold">Недостаточно кредитов</div>
-        <div>Приобретите пакет кредитов, чтобы создать автобронирование.</div>
-        <div class="mt-2">
-          <Button
-            variant="outlined"
-            severity="primary"
-            @click="navigateToStoreBookings"
-          >
-            Купить кредиты
-          </Button>
-        </div>
-      </div>
-    </Message>
-
+  <div class="space-y-4 p-3">
     <div class="flex items-center justify-end mb-6">
       <h3 class="text-xl text-center font-semibold flex-1">
         Создание автобронирования

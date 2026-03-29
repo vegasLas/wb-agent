@@ -11,8 +11,8 @@ export const useSupplierStore = defineStore('supplier', () => {
   const error = ref<string | null>(null);
   const isFetched = ref(false);
   
-  // Warehouse balances state
-  const warehouseBalances = ref<GoodBalance[]>([]);
+  // Warehouse balances state (map of warehouseId to balances)
+  const warehouseBalances = ref<Record<number, GoodBalance[]>>({});
   const loadingBalances = ref(false);
   const balancesError = ref<string | null>(null);
 
@@ -23,7 +23,7 @@ export const useSupplierStore = defineStore('supplier', () => {
   
   const getBalancesForWarehouse = computed(() => {
     return (warehouseId: number) => {
-      return warehouseBalances.value;
+      return warehouseBalances.value[warehouseId] || [];
     };
   });
 
@@ -55,7 +55,7 @@ export const useSupplierStore = defineStore('supplier', () => {
       const effectiveAccountId = accountId ?? userStore.selectedAccount?.id;
       
       const data = await supplierAPI.fetchWarehouseBalances(effectiveAccountId);
-      warehouseBalances.value = data;
+      warehouseBalances.value = data || {};
       return data;
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch warehouse balances';

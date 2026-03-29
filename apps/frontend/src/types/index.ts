@@ -339,7 +339,8 @@ export interface Draft {
   draftID: string;
   supplierId: string;
   draftName: string;
-  goodsCount: number;
+  goodQuantity: number;
+  barcodeQuantity: number;
   goods?: DraftGood[];
   createdAt?: string;
 }
