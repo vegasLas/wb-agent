@@ -363,7 +363,10 @@ watch(
 watch(
   () => props.suggestedCoefficient,
   (newSuggestedCoefficient) => {
-    if (newSuggestedCoefficient !== null && newSuggestedCoefficient !== undefined) {
+    if (
+      newSuggestedCoefficient !== null &&
+      newSuggestedCoefficient !== undefined
+    ) {
       localForm.value.maxCoefficient = newSuggestedCoefficient;
     }
   },
