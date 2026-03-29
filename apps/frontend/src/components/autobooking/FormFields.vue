@@ -7,7 +7,7 @@
       :warehouse-options="warehouseOptions"
       :transit-options="warehouseStore.transitOptions"
       :loading="warehouseStore.loading"
-      :supplier-id="props.supplierId"
+      :account-id="userStore.selectedAccount?.id"
       @warehouse-change="handleWarehouseChange"
     />
 
@@ -107,7 +107,11 @@
         class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm text-blue-800 dark:text-blue-200"
       >
         Рекомендуемый коэффициент:
-        <Tag :value="String(suggestedCoefficient)" severity="warn" class="text-xs" />
+        <Tag
+          :value="String(suggestedCoefficient)"
+          severity="warn"
+          class="text-xs"
+        />
       </div>
     </div>
   </div>
@@ -163,7 +167,7 @@ interface Props {
   validationLoading?: boolean;
   validationResult?: ValidationResult | null;
   suggestedCoefficient?: number | null;
-  supplierId?: string;
+  accountId?: string;
 }
 
 const props = defineProps<Props>();
@@ -279,20 +283,22 @@ const availableSupplyTypes = computed(() => {
 
   const metaInfo = props.validationResult.result.metaInfo;
 
-  return supplyTypeOptions.filter(
-    (option) => (metaInfo as Record<string, number>)[option.metaKey] > 0,
-  ).map(o => ({ label: o.label, value: o.value }));
+  return supplyTypeOptions
+    .filter(
+      (option) => (metaInfo as Record<string, number>)[option.metaKey] > 0,
+    )
+    .map((o) => ({ label: o.label, value: o.value }));
 });
 
 // Computed property to show validation failure alert
 const showValidationFailureAlert = computed(() => {
   return Boolean(
     localForm.value.warehouseId &&
-    localForm.value.draftId &&
-    !props.validationLoading &&
-    props.validationResult?.result &&
-    (!props.validationResult.result.metaInfo ||
-      availableSupplyTypes.value.length === 0),
+      localForm.value.draftId &&
+      !props.validationLoading &&
+      props.validationResult?.result &&
+      (!props.validationResult.result.metaInfo ||
+        availableSupplyTypes.value.length === 0),
   );
 });
 
@@ -358,7 +364,9 @@ function handleCustomDatesChange(newDates: (string | Date)[]) {
     : availableCount.value;
 
   if (checkCount < 0) {
-    alert('Недостаточно кредитов. Выберите меньше дат или приобретите больше кредитов.');
+    alert(
+      'Недостаточно кредитов. Выберите меньше дат или приобретите больше кредитов.',
+    );
     return;
   }
 

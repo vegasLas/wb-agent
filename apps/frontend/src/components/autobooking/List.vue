@@ -165,12 +165,14 @@ function navigateToStoreBookings() {
 }
 
 // Handle view goods event from BookingCard
-const handleViewGoods = async (draftId: string, supplierId: string) => {
+const handleViewGoods = async (draftId: string, _supplierId: string) => {
   try {
     loadingGoods.value = true;
     showGoodsModal.value = true;
 
-    const response = await supplierStore.fetchWarehouseBalances(supplierId);
+    // Use the current user's selected accountId
+    const accountId = userStore.selectedAccount?.id;
+    const response = await supplierStore.fetchWarehouseBalances(accountId);
 
     // For now, show the warehouse balances as goods
     // In the real app, this should call a separate API to get draft goods
