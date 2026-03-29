@@ -1,6 +1,11 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
 import MainLayout from '../components/layout/MainLayout.vue';
+import {
+  AutobookingListView,
+  AutobookingCreateView,
+  AutobookingUpdateView,
+} from '../views/autobooking';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
@@ -49,30 +54,30 @@ const routes: RouteRecordRaw[] = [
           title: 'Account',
         },
       },
+      // Autobooking Routes (flat structure - each view is standalone)
       {
         path: 'autobooking',
-        component: () => import('../views/AutobookingView.vue'),
+        name: 'AutobookingList',
+        component: AutobookingListView,
         meta: {
-          title: 'Autobooking',
+          title: 'Автобронирования',
         },
-        redirect: { name: 'AutobookingList' },
-        children: [
-          {
-            path: '',
-            name: 'AutobookingList',
-            component: () => import('../components/autobooking/List.vue'),
-          },
-          {
-            path: 'create',
-            name: 'AutobookingCreate',
-            component: () => import('../components/autobooking/Form.vue'),
-          },
-          {
-            path: 'update/:id',
-            name: 'AutobookingUpdate',
-            component: () => import('../components/autobooking/UpdateForm.vue'),
-          },
-        ],
+      },
+      {
+        path: 'autobooking/create',
+        name: 'AutobookingCreate',
+        component: AutobookingCreateView,
+        meta: {
+          title: 'Создание автобронирования',
+        },
+      },
+      {
+        path: 'autobooking/update/:id',
+        name: 'AutobookingUpdate',
+        component: AutobookingUpdateView,
+        meta: {
+          title: 'Редактирование автобронирования',
+        },
       },
       {
         path: 'reschedules',
