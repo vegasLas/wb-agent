@@ -14,9 +14,9 @@
         <Column field="image" header="Фото">
           <template #body="slotProps">
             <img
-              v-if="slotProps.data.image"
-              :src="slotProps.data.image"
-              :alt="slotProps.data.name"
+              v-if="slotProps.data.imgSrc"
+              :src="slotProps.data.imgSrc"
+              :alt="slotProps.data.imtName"
               class="h-12 w-12 object-cover rounded"
             />
             <div
@@ -29,7 +29,7 @@
         </Column>
         <Column field="article" header="Артикул">
           <template #body="slotProps">
-            {{ slotProps.data.name || slotProps.data.article }}
+            {{ slotProps.data.nmSa }}
           </template>
         </Column>
         <Column field="quantity" header="Количество">
