@@ -14,6 +14,7 @@
       v-model:form="formStore._form"
       v-model:use-transit="formStore._useTransit"
       :warehouse-options="warehouseOptions"
+      :suggested-coefficient="formStore.suggestedCoefficient"
       :supplier-id="userStore.activeSupplier?.supplierId"
       @warehouse-change="handleWarehouseChange"
     />

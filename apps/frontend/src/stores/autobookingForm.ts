@@ -34,6 +34,7 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
   const useTransit = ref(false);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const suggestedCoefficient = ref<number | null>(null);
 
   // ============================================
   // Getters
@@ -44,10 +45,15 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
    * Checks all required fields based on dateType and supplyType
    */
   const isValid = computed((): boolean => {
-    const { warehouseId, draftId, supplyType, dateType, startDate, endDate, customDates, monopalletCount, transitWarehouseId } = form.value;
+    const { warehouseId, draftId, supplyType, dateType, startDate, endDate, customDates, monopalletCount, transitWarehouseId, maxCoefficient } = form.value;
 
     // Required fields for all types
     if (!warehouseId || !draftId || !supplyType || !dateType) {
+      return false;
+    }
+
+    // Coefficient is required (must be > 0)
+    if (!maxCoefficient || maxCoefficient <= 0) {
       return false;
     }
 
@@ -69,6 +75,8 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
       case 'CUSTOM_DATES_SINGLE':
         if (!customDates || customDates.length === 0) return false;
         break;
+      default:
+        return false;
     }
 
     // Supply type specific validation
@@ -186,6 +194,7 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
     useTransit: readonly(useTransit),
     loading: readonly(loading),
     error: readonly(error),
+    suggestedCoefficient: readonly(suggestedCoefficient),
 
     // Getters
     isValid,

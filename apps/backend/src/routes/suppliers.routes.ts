@@ -17,7 +17,6 @@ import { ApiError } from '../utils/errors';
 import { convertWarehouseName } from '../utils/warehouseNames';
 import { logger } from '../utils/logger';
 import { GoodBalance } from '../types/wb';
-import { prisma } from '../config/database';
 
 const router = Router();
 
