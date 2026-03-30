@@ -99,6 +99,11 @@ export const useAutobookingUpdateStore = defineStore('autobookingUpdate', () => 
     if (!form.value.supplyType) return false;
     if (!form.value.dateType) return false;
 
+    // Coefficient is required (must be > 0)
+    if (!form.value.maxCoefficient || form.value.maxCoefficient <= 0) {
+      return false;
+    }
+
     // Validate dates based on dateType
     if (form.value.dateType === 'WEEK' || form.value.dateType === 'MONTH') {
       return !!form.value.startDate;
