@@ -153,7 +153,7 @@ export const useDraftStore = defineStore('draft', () => {
     drafts: readonly(drafts),
     loading: readonly(loading),
     error: readonly(error),
-    showGoodsModal: readonly(showGoodsModal),
+    showGoodsModal: showGoodsModal,
     draftGoods: readonly(draftGoods),
     loadingGoods: readonly(loadingGoods),
 
