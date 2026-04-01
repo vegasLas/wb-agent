@@ -10,6 +10,42 @@ const showSkeletonState = computed(
   () => routerInitializing.value || viewIsLoading.value || isNavigating.value,
 );
 
+// Map paths to route names (used when router is not ready yet)
+const pathToRouteNameMap = [
+  { pattern: /^\/$/, routeName: 'Account' },
+  { pattern: /^\/autobooking(\/|$)/, routeName: 'Autobooking' },
+  { pattern: /^\/reschedules(\/|$)/, routeName: 'Reschedules' },
+  { pattern: /^\/triggers(\/|$)/, routeName: 'Triggers' },
+  { pattern: /^\/reports(\/|$)/, routeName: 'Reports' },
+  { pattern: /^\/store(\/|$)/, routeName: 'Store' },
+  { pattern: /^\/payments(\/|$)/, routeName: 'Payments' },
+];
+
+/**
+ * Get route name by current URL path (works immediately without router)
+ * Used to detect the correct skeleton before Vue Router is ready
+ */
+function getRouteNameByPath(path: string): string {
+  for (const { pattern, routeName } of pathToRouteNameMap) {
+    if (pattern.test(path)) {
+      return routeName;
+    }
+  }
+  return 'Account';
+}
+
+/**
+ * Get the effective route name for skeleton selection.
+ * Uses the provided route name if available, otherwise falls back to path-based detection.
+ */
+function getEffectiveRouteName(routeName: string | undefined | null): string {
+  if (routeName) {
+    return routeName;
+  }
+  // Fallback to path-based detection when route name is not available
+  return getRouteNameByPath(window.location.pathname);
+}
+
 /**
  * Composable for managing skeleton loading state
  *
@@ -63,6 +99,7 @@ export function useSkeleton() {
     resetRouterState,
     onNavigationStart,
     onNavigationEnd,
+    getEffectiveRouteName,
   };
 }
 

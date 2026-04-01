@@ -41,8 +41,13 @@ const router = useRouter();
 const route = useRoute();
 
 // Use skeleton composable for loading state management
-const { showSkeleton, markRouterReady, onNavigationStart, onNavigationEnd } =
-  useSkeleton();
+const {
+  showSkeleton,
+  markRouterReady,
+  onNavigationStart,
+  onNavigationEnd,
+  getEffectiveRouteName,
+} = useSkeleton();
 
 // Map route names to skeleton components
 const routeSkeletonMap: Record<string, any> = {
@@ -67,8 +72,9 @@ const routeSkeletonMap: Record<string, any> = {
 };
 
 // Get the appropriate skeleton for current route
+// Uses getEffectiveRouteName which falls back to path-based detection when route name is null/undefined
 const currentRouteSkeleton = computed(() => {
-  const routeName = route.name as string;
+  const routeName = getEffectiveRouteName(route.name as string);
   return routeSkeletonMap[routeName] || routeSkeletonMap.default;
 });
 
