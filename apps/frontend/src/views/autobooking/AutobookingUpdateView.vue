@@ -9,7 +9,7 @@
         severity="warn"
         @click="showHintsModal = true"
       >
-        <i class="pi pi-question-circle"></i>
+        <i class="pi pi-question-circle" />
       </Button>
     </div>
 

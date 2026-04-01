@@ -1,13 +1,15 @@
 <template>
   <div v-if="tempSelectedAccount">
     <div class="flex items-center justify-between mb-3">
-      <h4 class="text-lg font-medium">Выберите поставщика</h4>
+      <h4 class="text-lg font-medium">
+        Выберите поставщика
+      </h4>
       <Button
         size="small"
         outlined
         :loading="refreshingSuppliers"
-        @click="$emit('refresh')"
         aria-label="Обновить список поставщиков"
+        @click="$emit('refresh')"
       >
         <i class="pi pi-refresh" />
       </Button>

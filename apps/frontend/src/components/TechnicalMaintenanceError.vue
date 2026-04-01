@@ -5,11 +5,13 @@
         <div class="maintenance-content">
           <!-- Icon -->
           <div class="maintenance-icon">
-            <i class="pi pi-cog text-6xl text-blue-500"></i>
+            <i class="pi pi-cog text-6xl text-blue-500" />
           </div>
 
           <!-- Title -->
-          <h2 class="maintenance-title">Ведутся технические работы</h2>
+          <h2 class="maintenance-title">
+            Ведутся технические работы
+          </h2>
 
           <!-- Description -->
           <p class="maintenance-description">

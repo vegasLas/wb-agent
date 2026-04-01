@@ -11,50 +11,80 @@
         size="small"
         class="p-datatable-sm"
       >
-        <Column field="supplierArticle" header="Артикул">
+        <Column
+          field="supplierArticle"
+          header="Артикул"
+        >
           <template #body="slotProps">
             {{ slotProps.data.supplierArticle }}
           </template>
         </Column>
-        <Column field="brand" header="Бренд">
+        <Column
+          field="brand"
+          header="Бренд"
+        >
           <template #body="slotProps">
             {{ slotProps.data.brand }}
           </template>
         </Column>
-        <Column field="subject" header="Предмет">
+        <Column
+          field="subject"
+          header="Предмет"
+        >
           <template #body="slotProps">
             {{ slotProps.data.subject }}
           </template>
         </Column>
-        <Column field="quantity" header="Количество">
+        <Column
+          field="quantity"
+          header="Количество"
+        >
           <template #body="slotProps">
             {{ slotProps.data.quantity }} шт.
           </template>
         </Column>
       </DataTable>
 
-      <div v-else-if="loading" class="flex justify-center items-center py-12">
-        <i class="pi pi-spin pi-spinner text-2xl text-blue-500"></i>
+      <div
+        v-else-if="loading"
+        class="flex justify-center items-center py-12"
+      >
+        <i class="pi pi-spin pi-spinner text-2xl text-blue-500" />
       </div>
 
-      <div v-else-if="error" class="text-center py-12">
-        <div class="text-red-500 mb-4">{{ error }}</div>
-        <Button severity="danger" variant="outlined" @click="$emit('retry')">
+      <div
+        v-else-if="error"
+        class="text-center py-12"
+      >
+        <div class="text-red-500 mb-4">
+          {{ error }}
+        </div>
+        <Button
+          severity="danger"
+          variant="outlined"
+          @click="$emit('retry')"
+        >
           Попробовать снова
         </Button>
       </div>
 
-      <div v-else class="text-center py-12 text-gray-500">
+      <div
+        v-else
+        class="text-center py-12 text-gray-500"
+      >
         Остатки не найдены
       </div>
     </div>
 
     <template #footer>
       <div class="flex justify-between items-center">
-        <p v-if="balances.length" class="text-sm text-gray-500">
+        <p
+          v-if="balances.length"
+          class="text-sm text-gray-500"
+        >
           Всего товаров: {{ totalQuantity }} шт.
         </p>
-        <div></div>
+        <div />
       </div>
     </template>
   </Dialog>

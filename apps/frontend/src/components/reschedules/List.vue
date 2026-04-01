@@ -7,8 +7,8 @@
     <template
       v-if="
         userStore.selectedAccount &&
-        userStore.hasValidSupplier &&
-        userStore.subscriptionActive
+          userStore.hasValidSupplier &&
+          userStore.subscriptionActive
       "
     >
       <!-- Stats -->
@@ -31,7 +31,8 @@
           class="mb-2"
         >
           <div class="flex items-center justify-between gap-2">
-            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите архивные.</span>
+            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите
+              архивные.</span>
             <Button
               variant="outlined"
               severity="primary"
@@ -42,9 +43,14 @@
             </Button>
           </div>
         </Message>
-        <div v-else class="flex justify-between items-center">
+        <div
+          v-else
+          class="flex justify-between items-center"
+        >
           <Tag
-            :severity="userStore.user.autobookingCount === 0 ? 'danger' : 'info'"
+            :severity="
+              userStore.user.autobookingCount === 0 ? 'danger' : 'info'
+            "
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
           </Tag>
@@ -59,7 +65,10 @@
       </div>
 
       <!-- List Content -->
-      <div ref="scrollContainer" class="space-y-3">
+      <div
+        ref="scrollContainer"
+        class="space-y-3"
+      >
         <ReschedulesCard
           v-for="reschedule in listStore.filteredReschedules"
           :key="reschedule.id"
@@ -77,12 +86,6 @@
         </div>
 
         <!-- Preloader -->
-        <div
-          v-if="rescheduleStore.loading && rescheduleStore.currentPage > 1"
-          class="flex justify-center items-center py-4"
-        >
-          <div class="h-12 w-full max-w-[300px] bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-        </div>
       </div>
     </template>
 
@@ -92,19 +95,31 @@
       class="text-center py-12 text-gray-500 dark:text-gray-400"
     >
       <template v-if="!userStore.selectedAccount">
-        <i class="pi pi-user text-4xl mb-4 block"></i>
-        <p class="text-lg font-medium">Аккаунт не выбран</p>
-        <p class="text-sm mt-2">Пожалуйста, выберите аккаунт Wildberries для продолжения</p>
+        <i class="pi pi-user text-4xl mb-4 block" />
+        <p class="text-lg font-medium">
+          Аккаунт не выбран
+        </p>
+        <p class="text-sm mt-2">
+          Пожалуйста, выберите аккаунт Wildberries для продолжения
+        </p>
       </template>
       <template v-else-if="!userStore.hasValidSupplier">
-        <i class="pi pi-building text-4xl mb-4 block"></i>
-        <p class="text-lg font-medium">Поставщик не выбран</p>
-        <p class="text-sm mt-2">Пожалуйста, выберите поставщика для продолжения</p>
+        <i class="pi pi-building text-4xl mb-4 block" />
+        <p class="text-lg font-medium">
+          Поставщик не выбран
+        </p>
+        <p class="text-sm mt-2">
+          Пожалуйста, выберите поставщика для продолжения
+        </p>
       </template>
       <template v-else-if="!userStore.subscriptionActive">
-        <i class="pi pi-calendar-times text-4xl mb-4 block"></i>
-        <p class="text-lg font-medium">Подписка не активна</p>
-        <p class="text-sm mt-2">Ваша подписка истекла. Пожалуйста, продлите подписку.</p>
+        <i class="pi pi-calendar-times text-4xl mb-4 block" />
+        <p class="text-lg font-medium">
+          Подписка не активна
+        </p>
+        <p class="text-sm mt-2">
+          Ваша подписка истекла. Пожалуйста, продлите подписку.
+        </p>
       </template>
     </div>
 

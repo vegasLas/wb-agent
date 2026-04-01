@@ -36,10 +36,15 @@ export const supplyDetailsAPI = {
    * GET /api/v1/supplies/supply-details
    * Get details for a specific supply
    */
-  async fetchSupplyDetails(supplyId: string | number): Promise<SupplyDetailsResponse> {
-    const response = await apiClient.get<SupplyDetailsResponse>('/supplies/supply-details', { 
-      params: { supplyId } 
-    });
+  async fetchSupplyDetails(
+    supplyId: string | number,
+  ): Promise<SupplyDetailsResponse> {
+    const response = await apiClient.get<SupplyDetailsResponse>(
+      '/supplies/supply-details',
+      {
+        params: { supplyId },
+      },
+    );
     return response.data;
   },
 };

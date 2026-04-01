@@ -5,7 +5,9 @@
       <template #content>
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Текущий аккаунт</h3>
+            <h3 class="text-lg font-semibold">
+              Текущий аккаунт
+            </h3>
             <Button
               size="small"
               variant="outlined"
@@ -18,16 +20,14 @@
           <div class="space-y-2">
             <div class="flex items-center gap-2">
               <i class="pi pi-mobile text-blue-500" />
-              <span class="text-sm"
-                >Аккаунт:
+              <span class="text-sm">Аккаунт:
                 {{
                   userStore.selectedAccount
                     ? !userStore.selectedAccount.phoneWb
                       ? 'Номер не указан'
                       : userStore.selectedAccount.phoneWb
                     : 'Не выбран'
-                }}</span
-              >
+                }}</span>
             </div>
             <div class="flex items-center gap-2">
               <i class="pi pi-building text-green-500" />
@@ -45,7 +45,9 @@
       <template #content>
         <div class="flex flex-col space-y-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">подписка:</h3>
+            <h3 class="text-lg font-semibold">
+              подписка:
+            </h3>
             <Tag
               :value="
                 subscriptionActive
@@ -63,7 +65,9 @@
     <Card>
       <template #content>
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">кредитов:</h3>
+          <h3 class="text-lg font-semibold">
+            кредитов:
+          </h3>
           <span class="text-lg font-medium">{{ user.autobookingCount }}</span>
         </div>
       </template>
@@ -76,7 +80,9 @@
     <Card>
       <template #title>
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">история платежей</h3>
+          <h3 class="text-lg font-semibold">
+            история платежей
+          </h3>
         </div>
       </template>
       <template #content>
@@ -87,20 +93,29 @@
           <DataTable
             :value="user.payments"
             scrollable
-            scrollHeight="300px"
+            scroll-height="300px"
             class="p-datatable-sm"
           >
-            <Column field="createdAt" header="Дата">
+            <Column
+              field="createdAt"
+              header="Дата"
+            >
               <template #body="{ data }">
                 {{ formatDate(data.createdAt) }}
               </template>
             </Column>
-            <Column field="tariffId" header="Тариф">
+            <Column
+              field="tariffId"
+              header="Тариф"
+            >
               <template #body="{ data }">
                 {{ getTariffTitle(data.tariffId) }}
               </template>
             </Column>
-            <Column field="status" header="Статус">
+            <Column
+              field="status"
+              header="Статус"
+            >
               <template #body="{ data }">
                 <Tag
                   :value="
@@ -110,7 +125,10 @@
                 />
               </template>
             </Column>
-            <Column field="amount" header="Сумма">
+            <Column
+              field="amount"
+              header="Сумма"
+            >
               <template #body="{ data }">
                 {{ data.amount }} {{ data.currency || 'RUB' }}
               </template>
@@ -118,7 +136,10 @@
           </DataTable>
         </div>
 
-        <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
+        <div
+          v-else
+          class="text-center py-8 text-gray-500 dark:text-gray-400"
+        >
           <i class="pi pi-database text-5xl mx-auto mb-2 opacity-50 block" />
           <p>Нет платежей</p>
         </div>

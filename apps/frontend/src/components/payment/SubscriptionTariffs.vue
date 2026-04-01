@@ -7,7 +7,9 @@
     >
       <template #title>
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">{{ tariff.name }}</h3>
+          <h3 class="text-lg font-semibold">
+            {{ tariff.name }}
+          </h3>
           <Tag
             v-if="tariff.discount"
             severity="warn"
@@ -20,7 +22,9 @@
         <!-- Price and Button -->
         <div class="space-y-4">
           <div class="flex items-center gap-2">
-            <p class="text-2xl font-bold">{{ tariff.price }} ₽</p>
+            <p class="text-2xl font-bold">
+              {{ tariff.price }} ₽
+            </p>
             <p
               v-if="tariff.discount"
               class="text-sm text-gray-400 line-through"

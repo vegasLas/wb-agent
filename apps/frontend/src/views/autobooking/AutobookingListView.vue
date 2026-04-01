@@ -7,8 +7,8 @@
     <template
       v-if="
         userStore.selectedAccount &&
-        userStore.hasValidSupplier &&
-        userStore.subscriptionActive
+          userStore.hasValidSupplier &&
+          userStore.subscriptionActive
       "
     >
       <!-- Stats -->
@@ -31,10 +31,8 @@
           class="w-full"
         >
           <div class="flex items-center justify-between w-full">
-            <span
-              >Приобретите пакет кредитов, чтобы создать новые, или удалите
-              архивные.</span
-            >
+            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите
+              архивные.</span>
             <Button
               variant="outlined"
               severity="primary"
@@ -45,7 +43,10 @@
             </Button>
           </div>
         </Message>
-        <div v-else class="flex justify-between items-center">
+        <div
+          v-else
+          class="flex justify-between items-center"
+        >
           <Tag
             :severity="
               userStore.user.autobookingCount === 0 ? 'danger' : 'info'
@@ -53,14 +54,20 @@
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
           </Tag>
-          <Button severity="primary leading-none" @click="navigateToCreate">
+          <Button
+            severity="primary leading-none"
+            @click="navigateToCreate"
+          >
             добавить
           </Button>
         </div>
       </div>
 
       <!-- List Content -->
-      <div ref="scrollContainer" class="space-y-3">
+      <div
+        ref="scrollContainer"
+        class="space-y-3"
+      >
         <AutobookingBookingCard
           v-for="booking in listStore.filteredBookings"
           :key="booking.id"
@@ -73,16 +80,6 @@
           class="text-center py-8 text-gray-500"
         >
           {{ noBookingsMessage }}
-        </div>
-
-        <!-- Loading indicator for infinite scroll -->
-        <div
-          v-if="listStore.loading && listStore.nextPage"
-          class="text-center py-4"
-        >
-          <div
-            class="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"
-          ></div>
         </div>
       </div>
     </template>
@@ -119,7 +116,6 @@ import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsM
 const router = useRouter();
 const userStore = useUserStore();
 const listStore = useAutobookingListStore();
-const supplierStore = useSupplierStore();
 const { viewReady } = useViewReady();
 
 // Goods modal state
@@ -184,7 +180,11 @@ const handleViewGoods = async (draftId: string, supplierId: string) => {
     }
 
     // Fetch actual draft goods from the API
-    const goods = await draftsAPI.fetchDraftGoods(draftId, accountId, supplierId);
+    const goods = await draftsAPI.fetchDraftGoods(
+      draftId,
+      accountId,
+      supplierId,
+    );
 
     // Map the goods to the expected format
     draftGoods.value = goods.map((good) => ({
@@ -214,16 +214,32 @@ const handleModalClose = (isOpen: boolean) => {
 
 const scrollContainer = ref<HTMLElement | null>(null);
 
+function getTotalForSelectedStatus(): number {
+  if (listStore.selectedStatus === AUTOBOOKING_STATUSES.ARCHIVED) {
+    return (
+      (listStore.statusCounts[AUTOBOOKING_STATUSES.ARCHIVED] || 0) +
+      (listStore.statusCounts[AUTOBOOKING_STATUSES.ERROR] || 0)
+    );
+  }
+  return listStore.statusCounts[listStore.selectedStatus] || 0;
+}
+
 // Initialize infinite scroll
 useInfiniteScroll(
   scrollContainer,
   async () => {
-    // Only load more if we're not already loading and there's a next page
-    if (!listStore.loading && listStore.nextPage) {
-      await listStore.loadNextPage();
-    }
+    if (!listStore.nextPage) return;
+    console.log('useInfiniteScroll');
+    const totalForStatus = getTotalForSelectedStatus();
+    if (listStore.filteredBookings.length >= totalForStatus) return;
+    await listStore.loadNextPage();
   },
-  { distance: 50, canLoadMore: () => Boolean(listStore.nextPage) },
+  {
+    distance: 100,
+    canLoadMore: () =>
+      Boolean(listStore.nextPage) &&
+      listStore.filteredBookings.length < getTotalForSelectedStatus(),
+  },
 );
 
 // ============================================

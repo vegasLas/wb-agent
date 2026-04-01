@@ -26,7 +26,10 @@
     <label class="text-sm text-gray-700 dark:text-gray-300">Использовать транзитный склад</label>
   </div>
 
-  <div v-if="useTransit" class="space-y-2">
+  <div
+    v-if="useTransit"
+    class="space-y-2"
+  >
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
       Транзитный склад <span class="text-red-500">*</span>
     </label>
@@ -43,7 +46,10 @@
   </div>
 
   <!-- Warehouse Balances Button -->
-  <div v-if="modelValue" class="flex justify-end">
+  <div
+    v-if="modelValue"
+    class="flex justify-end"
+  >
     <Button
       severity="info"
       variant="outlined"

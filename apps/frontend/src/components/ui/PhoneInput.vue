@@ -13,7 +13,7 @@
         list: { class: 'w-48' }
       }"
     >
-      <template #value="{ value }">
+      <template #value="{ value: _value }">
         <div class="flex items-center gap-1">
           <span class="text-lg">{{ selectedCountry.flag }}</span>
           <span class="text-gray-900 dark:text-white text-sm font-medium">{{ selectedCountry.dialCode }}</span>

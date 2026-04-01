@@ -1,5 +1,9 @@
 import apiClient from './client';
-import type { SupplyTrigger, CreateTriggerRequest, UpdateTriggerRequest } from '../types';
+import type {
+  SupplyTrigger,
+  CreateTriggerRequest,
+  UpdateTriggerRequest,
+} from '../types';
 
 export interface TriggersResponse {
   success: boolean;
@@ -38,7 +42,10 @@ export const triggersAPI = {
    * PUT /api/v1/triggers
    * Update an existing trigger
    */
-  async updateTrigger(id: string, data: Omit<UpdateTriggerRequest, 'triggerId'>): Promise<SupplyTrigger> {
+  async updateTrigger(
+    id: string,
+    data: Omit<UpdateTriggerRequest, 'triggerId'>,
+  ): Promise<SupplyTrigger> {
     const response = await apiClient.put<SupplyTrigger>('/triggers', {
       triggerId: id,
       ...data,
@@ -51,7 +58,9 @@ export const triggersAPI = {
    * Toggle trigger active status
    */
   async toggleTrigger(id: string): Promise<SupplyTrigger> {
-    const response = await apiClient.patch<SupplyTrigger>('/triggers', { triggerId: id });
+    const response = await apiClient.patch<SupplyTrigger>('/triggers', {
+      triggerId: id,
+    });
     return response.data;
   },
 

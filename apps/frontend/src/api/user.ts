@@ -1,7 +1,7 @@
 import apiClient from './client';
 import type { User } from '../types';
 
-export interface UserResponse extends User {}
+export type UserResponse = User
 
 export interface UpdateUserResponse {
   success: boolean;
@@ -22,7 +22,9 @@ export const userAPI = {
    * Update user data (agreeTerms or selectedAccountId)
    */
   async agreeToTerms(): Promise<UpdateUserResponse> {
-    const response = await apiClient.post<UpdateUserResponse>('/user/update', { agreeTerms: true });
+    const response = await apiClient.post<UpdateUserResponse>('/user/update', {
+      agreeTerms: true,
+    });
     return response.data;
   },
 
@@ -31,7 +33,9 @@ export const userAPI = {
    * Update selected account
    */
   async updateSelectedAccount(accountId: string): Promise<UpdateUserResponse> {
-    const response = await apiClient.post<UpdateUserResponse>('/user/update', { selectedAccountId: accountId });
+    const response = await apiClient.post<UpdateUserResponse>('/user/update', {
+      selectedAccountId: accountId,
+    });
     return response.data;
   },
 
@@ -39,8 +43,13 @@ export const userAPI = {
    * POST /api/v1/auth/logout
    * Logout user (all accounts or specific account)
    */
-  async logout(accountId?: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/logout', { accountId });
+  async logout(
+    accountId?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.post<{
+      success: boolean;
+      message: string;
+    }>('/auth/logout', { accountId });
     return response.data;
   },
 };

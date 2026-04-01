@@ -12,7 +12,7 @@
           </div>
 
           <!-- Center: Spacer -->
-          <div></div>
+          <div />
 
           <!-- Right: Actions -->
           <div class="flex gap-2">

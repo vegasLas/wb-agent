@@ -7,8 +7,8 @@
     <template
       v-if="
         userStore.user.selectedAccountId &&
-        userStore.hasValidSupplier &&
-        userStore.subscriptionActive
+          userStore.hasValidSupplier &&
+          userStore.subscriptionActive
       "
     >
       <!-- Date Range Selection -->
@@ -135,7 +135,7 @@
             <DataTable
               :value="sortedTopProducts"
               scrollable
-              scrollHeight="flex"
+              scroll-height="flex"
               class="p-datatable-sm"
             >
               <Column
@@ -151,14 +151,17 @@
       </Card>
 
       <!-- View Toggle Buttons -->
-      <div v-if="!reportStore.loading" class="mb-6 flex space-x-2">
+      <div
+        v-if="!reportStore.loading"
+        class="mb-6 flex space-x-2"
+      >
         <Button
           :severity="reportViewStore.activeView === 'charts' ? 'primary' : 'secondary'"
           :variant="reportViewStore.activeView === 'charts' ? 'filled' : 'outlined'"
           size="small"
           @click="reportViewStore.setActiveView('charts')"
         >
-          <i class="pi pi-chart-pie mr-1"></i>
+          <i class="pi pi-chart-pie mr-1" />
           Графики
         </Button>
         <Button
@@ -167,7 +170,7 @@
           size="small"
           @click="reportViewStore.setActiveView('suggestions')"
         >
-          <i class="pi pi-lightbulb mr-1"></i>
+          <i class="pi pi-lightbulb mr-1" />
           Рекомендации
         </Button>
       </div>

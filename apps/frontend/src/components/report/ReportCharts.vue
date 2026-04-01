@@ -6,7 +6,7 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-clock text-5xl mb-4 text-blue-500 animate-pulse"></i>
+        <i class="pi pi-clock text-5xl mb-4 text-blue-500 animate-pulse" />
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Отчет создается
         </h3>
@@ -18,7 +18,7 @@
           <div
             class="bg-blue-500 h-2 rounded-full animate-pulse"
             style="width: 60%"
-          ></div>
+          />
         </div>
         <p class="text-sm text-gray-500 mt-2">
           Система обрабатывает ваш запрос...
@@ -32,15 +32,20 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-exclamation-triangle text-5xl mb-4 text-red-500"></i>
+        <i class="pi pi-exclamation-triangle text-5xl mb-4 text-red-500" />
         <h3 class="text-xl font-semibold text-red-600 mb-2">
           Ошибка загрузки отчета
         </h3>
         <p class="text-lg text-gray-700 dark:text-gray-300 mb-4 max-w-md">
           {{ error }}
         </p>
-        <Button severity="danger" variant="outlined" class="mt-2" @click="$emit('retry')">
-          <i class="pi pi-refresh mr-2"></i>
+        <Button
+          severity="danger"
+          variant="outlined"
+          class="mt-2"
+          @click="$emit('retry')"
+        >
+          <i class="pi pi-refresh mr-2" />
           Попробовать снова
         </Button>
       </template>
@@ -52,7 +57,7 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-spin pi-refresh text-5xl mb-4 text-blue-500"></i>
+        <i class="pi pi-spin pi-refresh text-5xl mb-4 text-blue-500" />
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Загрузка отчета
         </h3>
@@ -63,7 +68,10 @@
     </Card>
 
     <!-- Data visualization -->
-    <div v-else-if="itemsByWarehouse && itemsByWarehouse.length > 0" class="space-y-8">
+    <div
+      v-else-if="itemsByWarehouse && itemsByWarehouse.length > 0"
+      class="space-y-8"
+    >
       <div
         v-for="{ warehouse, items } in itemsByWarehouse"
         :key="warehouse"
@@ -79,13 +87,13 @@
     <Card
       v-else-if="
         data &&
-        (data.items.length === 0 || !data.items) &&
-        (!itemsByWarehouse || itemsByWarehouse.length === 0)
+          (data.items.length === 0 || !data.items) &&
+          (!itemsByWarehouse || itemsByWarehouse.length === 0)
       "
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-database text-5xl mb-4 text-gray-400"></i>
+        <i class="pi pi-database text-5xl mb-4 text-gray-400" />
         <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
           Нет данных о продажах
         </h3>
@@ -101,7 +109,7 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-chart-bar text-5xl mb-4 text-gray-400"></i>
+        <i class="pi pi-chart-bar text-5xl mb-4 text-gray-400" />
         <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
           Выберите период для отчета
         </h3>

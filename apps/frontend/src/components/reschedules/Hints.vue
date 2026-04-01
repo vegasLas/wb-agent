@@ -30,10 +30,8 @@
         </ul>
         <div class="mt-2 text-sm">
           <span class="text-blue-500">💡 Совет:</span>
-          <span class="text-gray-600 dark:text-gray-400"
-            >Используйте перепланирование для поставок с высокими
-            коэффициентами.</span
-          >
+          <span class="text-gray-600 dark:text-gray-400">Используйте перепланирование для поставок с высокими
+            коэффициентами.</span>
         </div>
       </div>
 
@@ -65,14 +63,15 @@
           <span class="text-yellow-500">⚠️ Важно:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Если поставка не отображается в списке, значит её нельзя
-            перепланировать (возможно, уже забронирована или завершена).</span
-          >
+            перепланировать (возможно, уже забронирована или завершена).</span>
         </div>
       </div>
 
       <!-- Склад -->
       <div class="space-y-2">
-        <h4 class="font-medium text-gray-900 dark:text-white">Выбор склада</h4>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Выбор склада
+        </h4>
         <ul class="list-disc pl-4 text-sm text-gray-600 dark:text-gray-400">
           <li>
             <strong>Гибкость:</strong> Можете выбрать любой доступный склад, не
@@ -91,7 +90,9 @@
 
       <!-- Тип поставки -->
       <div class="space-y-2">
-        <h4 class="font-medium text-gray-900 dark:text-white">Тип поставки</h4>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Тип поставки
+        </h4>
         <p class="text-sm text-gray-600 dark:text-gray-400">
           Выберите подходящий тип упаковки:
         </p>
@@ -111,8 +112,7 @@
           <span class="text-blue-500">💡 Выбор типа:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Может отличаться от исходной поставки, выберите наиболее подходящий
-            для ваших товаров.</span
-          >
+            для ваших товаров.</span>
         </div>
       </div>
 
@@ -147,8 +147,7 @@
           <span class="text-green-500">🎯 Стратегия:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Более широкие периоды увеличивают шансы на успешное
-            перепланирование.</span
-          >
+            перепланирование.</span>
         </div>
       </div>
 
@@ -183,8 +182,7 @@
           <span class="text-orange-500">💰 Совет:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Начните с коэффициента 5-10, можете повысить при
-            необходимости.</span
-          >
+            необходимости.</span>
         </div>
       </div>
 
@@ -248,7 +246,10 @@
       </div>
     </div>
     <template #footer>
-      <Button label="Закрыть" @click="visible = false" />
+      <Button
+        label="Закрыть"
+        @click="visible = false"
+      />
     </template>
   </Dialog>
 </template>

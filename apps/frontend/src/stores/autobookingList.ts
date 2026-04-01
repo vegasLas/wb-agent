@@ -5,7 +5,16 @@ import { useWarehousesStore } from './warehouses';
 import { AUTOBOOKING_STATUSES } from '../constants';
 import type { Autobooking } from '../types';
 
-type BadgeColor = 'gray' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'indigo' | 'purple' | 'pink';
+type BadgeColor =
+  | 'gray'
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'blue'
+  | 'indigo'
+  | 'purple'
+  | 'pink';
 
 interface StatusCounts {
   [key: string]: number;
@@ -32,7 +41,7 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   const warehouseStore = useWarehousesStore();
 
   const filteredBookings = computed(() => {
-    let filtered = autobookings.value;
+    let filtered = [...autobookings.value];
 
     // Filter by status
     if (selectedStatus.value) {
@@ -90,11 +99,11 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
 
   function getDateTypeText(dateType: string): string {
     const typeMap: Record<string, string> = {
-      'WEEK': 'Неделя',
-      'MONTH': 'Месяц',
-      'CUSTOM_PERIOD': 'Свой период',
-      'CUSTOM_DATES': 'Выбранные даты',
-      'CUSTOM_DATES_SINGLE': 'Выбранные даты (одна)',
+      WEEK: 'Неделя',
+      MONTH: 'Месяц',
+      CUSTOM_PERIOD: 'Свой период',
+      CUSTOM_DATES: 'Выбранные даты',
+      CUSTOM_DATES_SINGLE: 'Выбранные даты (одна)',
     };
     return typeMap[dateType] || dateType;
   }
@@ -131,26 +140,29 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     now.setHours(0, 0, 0, 0);
 
     switch (booking.dateType) {
-      case 'WEEK':
+      case 'WEEK': {
         if (!booking.startDate) return false;
         const weekEndDate = new Date(booking.startDate);
         weekEndDate.setDate(weekEndDate.getDate() + 7);
         return weekEndDate >= now;
+      }
 
-      case 'MONTH':
+      case 'MONTH': {
         if (!booking.startDate) return false;
         const monthEndDate = new Date(booking.startDate);
         monthEndDate.setMonth(monthEndDate.getMonth() + 1);
         return monthEndDate >= now;
+      }
 
-      case 'CUSTOM_PERIOD':
+      case 'CUSTOM_PERIOD': {
         if (!booking.endDate) return false;
         const endDate = new Date(booking.endDate);
         endDate.setHours(0, 0, 0, 0);
         return endDate >= now;
+      }
 
       case 'CUSTOM_DATES':
-      case 'CUSTOM_DATES_SINGLE':
+      case 'CUSTOM_DATES_SINGLE': {
         if (!booking.customDates?.length) return false;
         const remainingDates = getRemainingDates(booking);
         return remainingDates.some((date) => {
@@ -158,6 +170,7 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
           customDate.setHours(0, 0, 0, 0);
           return customDate >= now;
         });
+      }
 
       default:
         return false;
@@ -184,8 +197,9 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
       if (warehouseStore.warehouses.length === 0) {
         await warehouseStore.fetchWarehouses();
       }
-
-      const data = await autobookingAPI.fetchAutobookings(page || currentPage.value);
+      const data = await autobookingAPI.fetchAutobookings(
+        page || currentPage.value,
+      );
 
       // Update the counts and autobookings
       statusCounts.value = data.counts;
@@ -212,7 +226,6 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
 
   async function loadNextPage() {
     if (!nextPage.value) return;
-
     await fetchData(nextPage.value);
   }
 

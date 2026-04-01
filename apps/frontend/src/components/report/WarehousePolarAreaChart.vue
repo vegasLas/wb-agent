@@ -14,7 +14,12 @@
             :data="chartData"
             :options="chartOptions"
           />
-          <p v-else class="text-gray-500 text-center py-8">Нет данных</p>
+          <p
+            v-else
+            class="text-gray-500 text-center py-8"
+          >
+            Нет данных
+          </p>
         </div>
 
         <!-- Table -->
@@ -24,20 +29,32 @@
               <DataTable
                 :value="sortedItems"
                 scrollable
-                scrollHeight="flex"
+                scroll-height="flex"
                 class="p-datatable-sm"
               >
-                <Column field="vendorCode" header="Артикул" sortable>
+                <Column
+                  field="vendorCode"
+                  header="Артикул"
+                  sortable
+                >
                   <template #body="{ data }">
                     <span class="font-medium">{{ data.vendorCode }}</span>
                   </template>
                 </Column>
-                <Column field="orderedQty" header="Заказано" sortable>
+                <Column
+                  field="orderedQty"
+                  header="Заказано"
+                  sortable
+                >
                   <template #body="{ data }">
                     {{ data.orderedQty.toLocaleString('ru-RU') }}
                   </template>
                 </Column>
-                <Column field="stockQty" header="Остаток" sortable>
+                <Column
+                  field="stockQty"
+                  header="Остаток"
+                  sortable
+                >
                   <template #body="{ data }">
                     {{ data.stockQty.toLocaleString('ru-RU') }}
                   </template>

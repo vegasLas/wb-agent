@@ -13,10 +13,13 @@
           size="small"
           @click="toggleExpanded"
         >
-          <i :class="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+          <i :class="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" />
         </Button>
       </div>
-      <div v-if="isExpanded" class="space-y-1 max-h-60 overflow-y-auto">
+      <div
+        v-if="isExpanded"
+        class="space-y-1 max-h-60 overflow-y-auto"
+      >
         <div
           v-for="(coefficient, index) in coefficientHistory"
           :key="index"

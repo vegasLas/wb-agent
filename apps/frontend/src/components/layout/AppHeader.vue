@@ -10,12 +10,16 @@
             :severity="isNavActive ? 'primary' : 'secondary'"
             @click="toggleNavMenu"
           >
-            <i :class="currentNavItem.icon"></i>
+            <i :class="currentNavItem.icon" />
             <span class="">{{ currentNavItem.label }}</span>
-            <i class="pi pi-chevron-down"></i>
+            <i class="pi pi-chevron-down" />
           </Button>
 
-          <Menu ref="navMenu" :model="navItems" :popup="true" />
+          <Menu
+            ref="navMenu"
+            :model="navItems"
+            :popup="true"
+          />
 
           <Button
             severity="warning"
@@ -23,7 +27,7 @@
             class="rounded"
             @click="$emit('show-help')"
           >
-            <i class="pi pi-question-circle"></i>
+            <i class="pi pi-question-circle" />
           </Button>
         </div>
 
@@ -36,7 +40,7 @@
             class="rounded"
             @click="navigateToStore"
           >
-            <i class="pi pi-shopping-bag"></i>
+            <i class="pi pi-shopping-bag" />
           </Button>
 
           <!-- Accounts Button -->
@@ -44,10 +48,10 @@
             :severity="accountModalStore.showModal ? 'primary' : 'secondary'"
             variant="outlined"
             class="rounded"
-            @click="$emit('show-accounts')"
             aria-label="Управление аккаунтами"
+            @click="$emit('show-accounts')"
           >
-            <i class="pi pi-users"></i>
+            <i class="pi pi-users" />
           </Button>
 
           <!-- User/Supplier Button -->
@@ -62,7 +66,7 @@
               </span>
             </template>
             <template v-else>
-              <i class="pi pi-user"></i>
+              <i class="pi pi-user" />
             </template>
           </Button>
         </div>

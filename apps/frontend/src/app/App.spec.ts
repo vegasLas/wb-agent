@@ -73,14 +73,14 @@ describe('App', () => {
     });
 
     await flushPromises();
-    
+
     // Component should mount without errors
     expect(wrapper.exists()).toBe(true);
   });
 
   it('shows initial loading state', async () => {
     const router = createMockRouter();
-    
+
     const wrapper = mount(App, {
       global: {
         plugins: [router],
@@ -88,8 +88,10 @@ describe('App', () => {
     });
 
     // Should show loading initially before router is ready
-    expect(wrapper.findComponent({ name: 'InitialLoading' }).exists()).toBe(true);
-    
+    expect(wrapper.findComponent({ name: 'InitialLoading' }).exists()).toBe(
+      true,
+    );
+
     // Wait for router
     await router.isReady();
     await flushPromises();
@@ -107,7 +109,7 @@ describe('App', () => {
     });
 
     await flushPromises();
-    
+
     expect(wrapper.exists()).toBe(true);
   });
 });

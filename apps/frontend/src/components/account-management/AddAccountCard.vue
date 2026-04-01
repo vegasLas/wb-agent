@@ -10,7 +10,9 @@
         <i class="pi pi-plus text-gray-500" />
       </div>
       <div>
-        <div class="font-medium">Добавить аккаунт</div>
+        <div class="font-medium">
+          Добавить аккаунт
+        </div>
         <div class="text-sm text-gray-500 dark:text-gray-400">
           Авторизовать дополнительный WB аккаунт
         </div>

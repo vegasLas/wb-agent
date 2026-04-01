@@ -108,7 +108,7 @@ export function useTelegram(): UseTelegramReturn {
       if (tg?.showAlert) {
         tg.showAlert(message, resolve);
       } else {
-        // eslint-disable-next-line no-alert
+         
         alert(message);
         resolve();
       }
@@ -124,7 +124,7 @@ export function useTelegram(): UseTelegramReturn {
           resolve(confirmed);
         });
       } else {
-        // eslint-disable-next-line no-alert
+         
         const confirmed = confirm(message);
         resolve(confirmed);
       }
