@@ -273,6 +273,7 @@ export interface WBDraft {
  */
 export interface Draft {
   id: string;
+  supplierId: string;
   goodQuantity: number;
   barcodeQuantity: number;
   createdAt: string;
