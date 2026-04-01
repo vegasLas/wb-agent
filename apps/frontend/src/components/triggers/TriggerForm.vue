@@ -113,14 +113,12 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Период поиска <span class="text-red-500">*</span>
             </label>
-            <VueDatePicker
-              v-model="dateRange"
+            <DatePicker
+              :model-value="dateRangeValue"
+              selection-mode="range"
               :min-date="new Date()"
-              :enable-time-picker="false"
-              format="dd.MM.yyyy"
-              range
-              locale="ru-RU"
-              auto-apply
+              :show-time="false"
+              date-format="dd.mm.yy"
               placeholder="Выберите период"
               @update:model-value="onDateRangeChange"
             />
@@ -209,8 +207,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { VueDatePicker } from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
+import DatePicker from 'primevue/datepicker';
 import { BackButton, MainButton } from 'vue-tg';
 import { useTriggerFormStore } from '../../stores/triggerForm';
 import { useTriggerStore } from '../../stores/triggers';
@@ -228,8 +225,15 @@ const router = useRouter();
 const triggerFormStore = useTriggerFormStore();
 const triggerStore = useTriggerStore();
 const showHintsModal = ref(false);
-const dateRange = ref<[Date, Date] | null>(null);
 const formErrors = ref<Record<string, string>>({});
+
+// Computed for date range picker
+const dateRangeValue = computed(() => {
+  const start = triggerFormStore.form.startDate;
+  const end = triggerFormStore.form.endDate;
+  if (!start || !end) return null;
+  return [new Date(start), new Date(end)];
+});
 
 // Selected dates for CUSTOM_DATES mode
 const selectedDates = computed({
@@ -364,12 +368,12 @@ function handleUntilFoundMode() {
   triggerFormStore.form.selectedDates = [];
 }
 
-function onDateRangeChange(rangeDates: [Date, Date] | null) {
-  if (!rangeDates || !Array.isArray(rangeDates) || rangeDates.length !== 2) {
+function onDateRangeChange(val: Date | Date[] | (Date | null)[] | null | undefined) {
+  if (!Array.isArray(val) || val.length !== 2 || !val[0] || !val[1]) {
     return;
   }
 
-  const [start, end] = rangeDates;
+  const [start, end] = val;
 
   // Set start to beginning of day and end to end of day
   const startDate = new Date(start);

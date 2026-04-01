@@ -31,7 +31,7 @@ export const useDraftStore = defineStore('draft', () => {
   // Getters
   // ============================================
   const draftOptions = computed(() => [
-    { label: 'Выберите черновик', value: null },
+    { label: 'Выберите черновик', value: '' },
     ...drafts.value.map((d) => ({
       label: `${new Date(d.createdAt).toLocaleDateString('ru-RU')} | товары: ${d.goodQuantity}, артикулы: ${d.barcodeQuantity}`,
       value: d.id,

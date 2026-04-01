@@ -22,18 +22,15 @@
           <div
             class="flex flex-col sm:flex-row gap-4 items-start sm:items-center"
           >
-            <VueDatePicker
-              v-model="pickerDateRange"
-              :dark="isDark"
-              auto-apply
-              :enable-time-picker="false"
-              format="dd.MM.yyyy"
-              locale="ru-RU"
-              range
+            <DatePicker
+              :model-value="reportViewStore.pickerDateRangeArray"
+              selection-mode="range"
+              :show-time="false"
+              date-format="dd.mm.yy"
               placeholder="Выберите период"
               :max-date="yesterday"
               class="mt-1 w-full sm:w-auto"
-              :class="{ 'dark-datepicker': isDark }"
+              @update:model-value="onDateRangeChange"
             />
             <Button
               severity="primary"
@@ -119,13 +116,11 @@
             </h4>
             <MultiSelect
               v-model="selectedColumns"
-              :options="
-                availableColumns.map((col) => ({
-                  value: col.key,
-                  label: col.label,
-                }))
-              "
+              :options="availableColumns"
+              option-label="label"
+              option-value="key"
               placeholder="Выберите колонки"
+              display="chip"
               class="w-full sm:w-64"
             />
           </div>
@@ -195,13 +190,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useViewReady } from '../composables/useSkeleton';
-import { VueDatePicker } from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
+import DatePicker from 'primevue/datepicker';
 import { useReportStore } from '../stores/report';
 import { useUserStore } from '../stores/user';
 import { useReportViewStore } from '../stores/reportView';
 import UserAlerts from '../components/global/UserAlerts.vue';
-import MultiSelect from '../components/ui/MultiSelect.vue';
+import MultiSelect from 'primevue/multiselect';
 import ReportCharts from '../components/report/ReportCharts.vue';
 import WarehouseSuggestions from '../components/report/WarehouseSuggestions.vue';
 import Button from 'primevue/button';
@@ -210,7 +204,6 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import type { ReportItem } from '../types';
 
-// Register Vue Date Picker
 const reportStore = useReportStore();
 const userStore = useUserStore();
 const reportViewStore = useReportViewStore();
@@ -218,22 +211,13 @@ const reportViewStore = useReportViewStore();
 // Yesterday for max date
 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
 
-// Dark mode detection
-const isDark = computed(() => {
-  return document.documentElement.classList.contains('dark');
-});
-
-// Computed property for VueDatePicker v-model
-const pickerDateRange = computed({
-  get: () => reportViewStore.pickerDateRangeArray,
-  set: (val) => {
-    if (val && val.length === 2) {
-      reportViewStore.setDateRange({ start: val[0], end: val[1] });
-    } else {
-      reportViewStore.setDateRange({ start: null, end: null });
-    }
-  },
-});
+function onDateRangeChange(val: Date | Date[] | (Date | null)[] | null | undefined) {
+  if (Array.isArray(val) && val.length === 2 && val[0] && val[1]) {
+    reportViewStore.setDateRange({ start: val[0], end: val[1] });
+  } else {
+    reportViewStore.setDateRange({ start: null, end: null });
+  }
+}
 
 // Table column options
 interface ColumnOption {
@@ -439,17 +423,3 @@ onMounted(async () => {
   viewReady();
 });
 </script>
-
-<style scoped>
-/* Dark mode styles for date picker */
-:deep(.dark-datepicker) .dp__theme_dark {
-  --dp-background-color: #1f2937;
-  --dp-text-color: #f3f4f6;
-  --dp-hover-color: #374151;
-  --dp-hover-text-color: #f3f4f6;
-  --dp-primary-color: #3b82f6;
-  --dp-primary-text-color: #fff;
-  --dp-secondary-color: #4b5563;
-  --dp-border-color: #4b5563;
-}
-</style>

@@ -2,7 +2,9 @@
   <div class="space-y-4">
     <!-- Date Type Selection -->
     <div class="form-group">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         Тип периода <span class="text-red-500">*</span>
       </label>
       <Select
@@ -18,59 +20,51 @@
 
     <template v-if="dateType">
       <!-- For WEEK and MONTH types -->
-      <div
-        v-if="['WEEK', 'MONTH'].includes(dateType)"
-        class="form-group"
-      >
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <div v-if="['WEEK', 'MONTH'].includes(dateType)" class="form-group">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           Дата начала <span class="text-red-500">*</span>
         </label>
-        <VueDatePicker
-          :model-value="startDate"
-          auto-apply
-          :dark="colorScheme === 'dark'"
+        <DatePicker
+          :model-value="startDateValue"
+          selection-mode="single"
           :min-date="new Date()"
           :disabled-dates="
             props.mode === 'reschedule' && props.supplyDate
               ? getDisabledDates()
               : []
           "
-          :enable-time-picker="false"
-          format="dd.MM.yyyy"
+          :show-time="false"
+          date-format="dd.mm.yy"
           placeholder="Выберите дату начала"
-          locale="ru-RU"
+          locale="ru"
           class="w-full"
-          @update:model-value="
-            (value: Date) =>
-              $emit('update:startDate', value?.toISOString().split('T')[0] || '')
-          "
+          @update:model-value="onSingleDateChange"
         />
       </div>
 
       <!-- For CUSTOM_PERIOD type -->
-      <div
-        v-if="dateType === 'CUSTOM_PERIOD'"
-        class="form-group"
-      >
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <div v-if="dateType === 'CUSTOM_PERIOD'" class="form-group">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           Выберите период <span class="text-red-500">*</span>
         </label>
-        <VueDatePicker
-          :model-value="dateRange"
-          :dark="colorScheme === 'dark'"
-          auto-apply
-          :enable-time-picker="false"
+        <DatePicker
+          :model-value="dateRangeValue"
+          selection-mode="range"
           :min-date="new Date()"
           :disabled-dates="
             props.mode === 'reschedule' && props.supplyDate
               ? getDisabledDates()
               : []
           "
-          format="dd.MM.yyyy"
-          :range="{ minRange: 0, maxRange: 30 }"
+          :show-time="false"
+          date-format="dd.mm.yy"
           placeholder="Выберите период"
           class="w-full"
-          @update:model-value="onDateRangeChange"
+          @update:model-value="onPrimeDateRangeChange"
         />
       </div>
 
@@ -79,15 +73,20 @@
         v-if="dateType === 'CUSTOM_DATES' || dateType === 'CUSTOM_DATES_SINGLE'"
         class="form-group"
       >
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           Выберите даты <span class="text-red-500">*</span>
         </label>
         <MultiSelect
           :model-value="customDates as string[]"
-          :searchable="false"
           :options="availableDatesOptions()"
+          option-label="label"
+          option-value="value"
           placeholder="Выберите даты"
-          @update:model-value="$emit('update:customDates', $event)"
+          display="chip"
+          class="w-full"
+          @update:model-value="onCustomDatesChange"
         />
       </div>
     </template>
@@ -96,13 +95,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { VueDatePicker } from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
-import { useWebAppTheme } from 'vue-tg';
 import Select from 'primevue/select';
-import MultiSelect from '../ui/MultiSelect.vue';
-
-const { colorScheme } = useWebAppTheme();
+import DatePicker from 'primevue/datepicker';
+import MultiSelect from 'primevue/multiselect';
 
 interface Props {
   dateType?: string;
@@ -149,24 +144,62 @@ const availableDateTypeOptions = computed(() => {
 
 // Create computed properties for template access
 const dateType = computed(() => props.dateType);
-const startDate = computed(() => props.startDate);
 const customDates = computed(() => props.customDates);
-const dateRange = computed({
-  get: () => {
-    if (!props.startDate || !props.endDate) return null;
-    return [new Date(props.startDate), new Date(props.endDate)];
-  },
-  set: (value: [Date, Date]) => {
-    emit('update:startDate', value[0].toISOString().split('T')[0]);
-    emit('update:endDate', value[1].toISOString().split('T')[0]);
-  },
+
+// Convert string date to Date object for DatePicker
+const startDateValue = computed(() => {
+  if (!props.startDate) return null;
+  if (typeof props.startDate === 'string') {
+    const [year, month, day] = props.startDate.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return props.startDate;
 });
 
-function onDateRangeChange(dates: [Date, Date]) {
-  if (!dates?.length) return null;
-  dateRange.value = dates;
-  emit('update:startDate', dates[0].toISOString().split('T')[0]);
-  emit('update:endDate', dates[1].toISOString().split('T')[0]);
+// Convert date range to array format for PrimeVue DatePicker
+const dateRangeValue = computed(() => {
+  if (!props.startDate || !props.endDate) return null;
+  const start =
+    typeof props.startDate === 'string'
+      ? parseDateString(props.startDate)
+      : props.startDate;
+  const end =
+    typeof props.endDate === 'string'
+      ? parseDateString(props.endDate)
+      : props.endDate;
+  return [start, end];
+});
+
+function parseDateString(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function onPrimeDateRangeChange(
+  dates: Date | Date[] | (Date | null)[] | null | undefined,
+) {
+  if (!Array.isArray(dates) || dates.length !== 2 || !dates[0] || !dates[1]) {
+    emit('update:startDate', '');
+    emit('update:endDate', '');
+    return;
+  }
+  const [start, end] = dates;
+  emit('update:startDate', start.toISOString().split('T')[0]);
+  emit('update:endDate', end.toISOString().split('T')[0]);
+}
+
+function onSingleDateChange(
+  value: Date | Date[] | (Date | null)[] | null | undefined,
+) {
+  if (value instanceof Date) {
+    emit('update:startDate', value.toISOString().split('T')[0]);
+  } else {
+    emit('update:startDate', '');
+  }
+}
+
+function onCustomDatesChange(value: (string | Date)[]) {
+  emit('update:customDates', value);
 }
 
 function getDisabledDates(): Date[] {

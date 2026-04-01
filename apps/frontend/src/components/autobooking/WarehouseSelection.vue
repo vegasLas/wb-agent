@@ -9,6 +9,7 @@
       :options="warehouseOptions"
       option-label="label"
       option-value="value"
+      editable
       placeholder="Выберите склад"
       class="w-full"
       @update:model-value="onWarehouseChange"
@@ -21,15 +22,16 @@
       :model-value="useTransit"
       :binary="true"
       :disabled="isServiceCenter"
-      @update:model-value="(value) => $emit('update:useTransit', value as boolean)"
+      @update:model-value="
+        (value) => $emit('update:useTransit', value as boolean)
+      "
     />
-    <label class="text-sm text-gray-700 dark:text-gray-300">Использовать транзитный склад</label>
+    <label class="text-sm text-gray-700 dark:text-gray-300"
+      >Использовать транзитный склад</label
+    >
   </div>
 
-  <div
-    v-if="useTransit"
-    class="space-y-2"
-  >
+  <div v-if="useTransit" class="space-y-2">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
       Транзитный склад <span class="text-red-500">*</span>
     </label>
@@ -41,15 +43,14 @@
       placeholder="Выберите транзитный склад"
       :disabled="!modelValue"
       class="w-full"
-      @update:model-value="(value) => $emit('update:transitWarehouseId', Number(value))"
+      @update:model-value="
+        (value) => $emit('update:transitWarehouseId', Number(value))
+      "
     />
   </div>
 
   <!-- Warehouse Balances Button -->
-  <div
-    v-if="modelValue"
-    class="flex justify-end"
-  >
+  <div v-if="modelValue" class="flex justify-end">
     <Button
       severity="info"
       variant="outlined"
@@ -121,7 +122,8 @@ watch(
       const selectedWarehouse = props.warehouseOptions.find(
         (w) => w.value === modelValue,
       );
-      isServiceCenter.value = selectedWarehouse?.label.startsWith('СЦ ') || false;
+      isServiceCenter.value =
+        selectedWarehouse?.label.startsWith('СЦ ') || false;
       if (isServiceCenter.value && props.useTransit) {
         emit('update:useTransit', false);
       }
