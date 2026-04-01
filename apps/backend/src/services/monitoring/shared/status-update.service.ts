@@ -258,12 +258,13 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
         if (!startDate) return [];
         return this.generateDateRange(startDate, 30, today);
 
-      case 'CUSTOM_PERIOD':
+      case 'CUSTOM_PERIOD': {
         if (!startDate || !endDate) return [];
         const daysDiff = Math.ceil(
           (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         );
         return this.generateDateRange(startDate, daysDiff + 1, today);
+      }
 
       default:
         return [];

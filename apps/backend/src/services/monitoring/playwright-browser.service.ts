@@ -472,7 +472,9 @@ export class PlaywrightBrowserService {
 
             dateSelected = true;
             break;
-          } catch {}
+          } catch {
+            // no-op
+          }
         }
 
         if (!dateSelected) {

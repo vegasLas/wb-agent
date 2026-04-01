@@ -27,7 +27,7 @@ describe('SharedUserTrackingService', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { /* intentionally empty */ });
     service = new SharedUserTrackingService();
   });
 

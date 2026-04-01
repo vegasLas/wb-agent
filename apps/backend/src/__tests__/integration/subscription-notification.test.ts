@@ -85,12 +85,12 @@ describe('SubscriptionNotificationService', () => {
     test('should handle errors in scheduled job', async () => {
       const consoleSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { /* intentionally empty */ });
 
       service.init();
 
       // Get the scheduled function
-      const scheduledFn = (mockSchedule.scheduleJob as jest.Mock).mock.calls[0][1] as Function;
+      const scheduledFn = (mockSchedule.scheduleJob as jest.Mock).mock.calls[0][1] as () => Promise<void>;
 
       // Mock checkSubscriptionExpirations to throw error
       jest.spyOn(service, 'checkSubscriptionExpirations').mockRejectedValue(
@@ -405,7 +405,7 @@ describe('SubscriptionNotificationService', () => {
     test('should handle errors gracefully', async () => {
       const consoleSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { /* intentionally empty */ });
 
       (mockPrismaVar.user.findMany as jest.Mock).mockRejectedValue(
         new Error('Database error'),
@@ -530,7 +530,7 @@ describe('SubscriptionNotificationService', () => {
       };
 
       mockTBOT.sendMessage.mockRejectedValue(error);
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { /* intentionally empty */ });
 
       await (service as any)['sendExpirationNotification'](notification);
 
@@ -561,7 +561,7 @@ describe('SubscriptionNotificationService', () => {
       };
 
       mockTBOT.sendMessage.mockRejectedValue(error);
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { /* intentionally empty */ });
 
       await (service as any)['sendExpirationNotification'](notification);
 
@@ -586,7 +586,7 @@ describe('SubscriptionNotificationService', () => {
       mockTBOT.sendMessage.mockRejectedValue(error);
       const consoleSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { /* intentionally empty */ });
 
       await (service as any)['sendExpirationNotification'](notification);
 
