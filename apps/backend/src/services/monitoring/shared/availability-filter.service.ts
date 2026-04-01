@@ -143,7 +143,7 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
         ).filter(date => !completedDateStrings.includes(date.toDateString()));
         break;
 
-      case 'CUSTOM_PERIOD':
+      case 'CUSTOM_PERIOD': {
         if (!item.startDate || !item.endDate) return [];
         const daysDiff = Math.ceil(
           (item.endDate.getTime() - item.startDate.getTime()) /
@@ -155,6 +155,7 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
           daysDiff + 1
         ).filter(date => !completedDateStrings.includes(date.toDateString()));
         break;
+      }
 
       default:
         return [];

@@ -135,8 +135,8 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
 
     // Setup default mocks for executor
     mockExecutorService.createRescheduleTask.mockResolvedValue(undefined);
-    mockExecutorService.addSuccessfulReschedule.mockImplementation(() => {});
-    mockExecutorService.logSuccessfulReschedule.mockImplementation(() => {});
+    mockExecutorService.addSuccessfulReschedule.mockImplementation(() => { /* intentionally empty */ });
+    mockExecutorService.logSuccessfulReschedule.mockImplementation(() => { /* intentionally empty */ });
     mockExecutorService.handleRescheduleProcessingError.mockResolvedValue(
       undefined,
     );
@@ -156,19 +156,19 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       .mockReturnValue(false);
     jest
       .spyOn(sharedProcessingStateService, 'markRescheduleAsProcessed')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* intentionally empty */ });
     jest
       .spyOn(sharedProcessingStateService, 'resetRescheduleState')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* intentionally empty */ });
     jest
       .spyOn(sharedUserTrackingService, 'isUserRunning')
       .mockReturnValue(false);
     jest
       .spyOn(sharedUserTrackingService, 'trackUsersAsRunning')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* intentionally empty */ });
     jest
       .spyOn(sharedUserTrackingService, 'removeUsersFromRunning')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* intentionally empty */ });
     jest
       .spyOn(sharedBanService, 'isUserBlacklisted')
       .mockReturnValue(false);

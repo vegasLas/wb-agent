@@ -116,8 +116,8 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
     (mockPrisma.user.findFirst as jest.Mock).mockResolvedValue(null);
 
     // Mock notification service methods
-    jest.spyOn(autobookingNotificationService, 'updateAutobookingStatus').mockImplementation(async () => {});
-    jest.spyOn(autobookingNotificationService, 'sendSuccessNotification').mockImplementation(async () => {});
+    jest.spyOn(autobookingNotificationService, 'updateAutobookingStatus').mockImplementation(async () => { /* intentionally empty */ });
+    jest.spyOn(autobookingNotificationService, 'sendSuccessNotification').mockImplementation(async () => { /* intentionally empty */ });
 
     // Mock bookingErrorService
     mockBookingErrorService.isCriticalBookingError.mockReturnValue(false);

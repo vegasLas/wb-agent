@@ -139,10 +139,10 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
     // Mock notification service methods
     jest
       .spyOn(autobookingNotificationService, 'updateAutobookingStatus')
-      .mockImplementation(async () => {});
+      .mockImplementation(async () => { /* intentionally empty */ });
     jest
       .spyOn(autobookingNotificationService, 'sendSuccessNotification')
-      .mockImplementation(async () => {});
+      .mockImplementation(async () => { /* intentionally empty */ });
 
     // Mock bookingErrorService
     mockBookingErrorService.isCriticalBookingError.mockReturnValue(false);
