@@ -8,17 +8,27 @@
     :closable="true"
   >
     <!-- Error Display -->
-    <Message v-if="error" severity="error" class="mb-4 w-full">
+    <Message
+      v-if="error"
+      severity="error"
+      class="mb-4 w-full"
+    >
       {{ error }}
     </Message>
 
     <!-- Step 1: Email Input -->
-    <div v-if="!paymentInitiated" class="space-y-4">
+    <div
+      v-if="!paymentInitiated"
+      class="space-y-4"
+    >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ tariffName }}
         </h3>
-        <Tag severity="info" :value="`${tariffPrice} ₽`" />
+        <Tag
+          severity="info"
+          :value="`${tariffPrice} ₽`"
+        />
       </div>
 
       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -37,29 +47,44 @@
           placeholder="example@mail.com"
           :class="['w-full', emailError ? 'p-invalid' : '']"
         />
-        <small v-if="emailError" class="p-error">{{ emailError }}</small>
+        <small
+          v-if="emailError"
+          class="p-error"
+        >{{ emailError }}</small>
       </div>
 
       <div class="flex justify-end gap-3 mt-6">
-        <Button variant="text" severity="secondary" @click="close">
+        <Button
+          variant="text"
+          severity="secondary"
+          @click="close"
+        >
           Отмена
         </Button>
-        <Button :loading="loading" @click="handleEmailSubmit">
+        <Button
+          :loading="loading"
+          @click="handleEmailSubmit"
+        >
           Продолжить
         </Button>
       </div>
     </div>
 
     <!-- Step 2: Success Message -->
-    <div v-else class="text-center py-4">
-      <i class="pi pi-check-circle text-green-500 text-6xl mb-4"></i>
+    <div
+      v-else
+      class="text-center py-4"
+    >
+      <i class="pi pi-check-circle text-green-500 text-6xl mb-4" />
       <p class="text-lg font-medium mb-2 text-gray-900 dark:text-white">
         Ссылка на оплату отправлена
       </p>
       <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Мы отправили ссылку для оплаты в чат. Пожалуйста, проверьте сообщения.
       </p>
-      <Button @click="goToChat"> Перейти в чат </Button>
+      <Button @click="goToChat">
+        Перейти в чат
+      </Button>
     </div>
   </Dialog>
 </template>

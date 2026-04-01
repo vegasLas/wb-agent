@@ -1,7 +1,12 @@
 <template>
   <div @click.stop>
-    <h4 class="text-lg font-medium mb-3">Выберите аккаунт WB</h4>
-    <div v-if="hasAccounts" class="space-y-2 max-h-60 overflow-y-auto">
+    <h4 class="text-lg font-medium mb-3">
+      Выберите аккаунт WB
+    </h4>
+    <div
+      v-if="hasAccounts"
+      class="space-y-2 max-h-60 overflow-y-auto"
+    >
       <AccountCard
         v-for="account in accounts"
         :key="account.id"
@@ -23,7 +28,12 @@
           <h5 class="font-medium text-orange-900 dark:text-orange-100 mb-1">
             Требуется подписка
           </h5>
-          <Button label="Купить подписку" size="small" severity="warn" @click="openShop" />
+          <Button
+            label="Купить подписку"
+            size="small"
+            severity="warn"
+            @click="openShop"
+          />
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@
         class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
       >
         <div class="flex items-start gap-3">
-          <i class="pi pi-exclamation-circle text-blue-500 mt-0.5"></i>
+          <i class="pi pi-exclamation-circle text-blue-500 mt-0.5" />
           <div class="text-sm space-y-2 flex-1">
             <p class="text-blue-800 dark:text-blue-200">
               <strong>Эта поставка была удалена</strong> из системы WB и больше
@@ -36,7 +36,7 @@
             :loading="rescheduleStore.loading"
             @click="handleDelete"
           >
-            <i class="pi pi-trash mr-1"></i>
+            <i class="pi pi-trash mr-1" />
             Удалить
           </Button>
         </div>
@@ -44,30 +44,36 @@
 
       <template v-else>
         <!-- Supply Information Section -->
-        <div v-if="supplyDetails" class="mb-6">
+        <div
+          v-if="supplyDetails"
+          class="mb-6"
+        >
           <div
             class="grid grid-cols-1 gap-3 p-4 rounded-lg text-sm bg-gray-50 dark:bg-gray-700"
           >
             <div
               class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
             >
-              <i class="pi pi-building text-gray-500"></i>
+              <i class="pi pi-building text-gray-500" />
               {{ supplyDetails.warehouseName }}
             </div>
             <div
               class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
             >
-              <i class="pi pi-box text-gray-500"></i>
+              <i class="pi pi-box text-gray-500" />
               {{ getSupplyTypeLabel(supplyDetails.boxTypeName || '') }}
             </div>
             <div
               class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
             >
-              <i class="pi pi-calendar text-gray-500"></i>
+              <i class="pi pi-calendar text-gray-500" />
               {{ formatSupplyDate(supplyDetails.supplyDate) }}
             </div>
-            <div v-if="supplyDetails.statusId" class="flex items-center gap-2">
-              <i class="pi pi-info-circle text-gray-500"></i>
+            <div
+              v-if="supplyDetails.statusId"
+              class="flex items-center gap-2"
+            >
+              <i class="pi pi-info-circle text-gray-500" />
               <Tag
                 :value="getStatusName(supplyDetails.statusId)"
                 :severity="getStatusSeverity(supplyDetails.statusId)"
@@ -90,31 +96,41 @@
           size="small"
           class="p-datatable-sm"
         >
-          <Column header="" style="width: 4rem">
+          <Column
+            header=""
+            style="width: 4rem"
+          >
             <template #body="slotProps">
               <img
                 v-if="slotProps.data.imgSrc"
                 :src="slotProps.data.imgSrc"
                 class="w-10 h-10 rounded object-cover"
                 :alt="slotProps.data.imtName"
-              />
+              >
             </template>
           </Column>
-          <Column field="imtName" header="Название">
+          <Column
+            field="imtName"
+            header="Название"
+          >
             <template #body="slotProps">
               <span class="text-sm text-gray-900 dark:text-gray-100">{{
                 slotProps.data.imtName
               }}</span>
             </template>
           </Column>
-          <Column field="quantity" header="Количество">
+          <Column
+            field="quantity"
+            header="Количество"
+          >
             <template #body="slotProps">
-              <span class="text-sm text-gray-500 dark:text-gray-400"
-                >{{ slotProps.data.quantity }} шт.</span
-              >
+              <span class="text-sm text-gray-500 dark:text-gray-400">{{ slotProps.data.quantity }} шт.</span>
             </template>
           </Column>
-          <Column field="brandName" header="Бренд">
+          <Column
+            field="brandName"
+            header="Бренд"
+          >
             <template #body="slotProps">
               <span
                 v-if="slotProps.data.brandName"
@@ -131,7 +147,7 @@
           v-else-if="loadingSupplyDetails"
           class="flex justify-center items-center py-12"
         >
-          <i class="pi pi-refresh animate-spin text-4xl text-gray-400"></i>
+          <i class="pi pi-refresh animate-spin text-4xl text-gray-400" />
         </div>
 
         <!-- Error State -->
@@ -143,13 +159,19 @@
         </div>
 
         <!-- Empty State -->
-        <div v-else class="text-center py-12 text-gray-500">
+        <div
+          v-else
+          class="text-center py-12 text-gray-500"
+        >
           Товары не найдены
         </div>
       </template>
     </div>
     <template #footer>
-      <Button label="Закрыть" @click="visible = false" />
+      <Button
+        label="Закрыть"
+        @click="visible = false"
+      />
     </template>
   </Dialog>
 </template>

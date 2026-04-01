@@ -42,15 +42,23 @@
       <div v-if="activeTab === 'subscription'">
         <Card class="mb-4">
           <template #title>
-            <h3 class="font-medium">Статус подписки</h3>
+            <h3 class="font-medium">
+              Статус подписки
+            </h3>
           </template>
           <template #content>
-            <div v-if="userStore.subscriptionActive" class="text-green-600">
-              <i class="pi pi-check-circle mr-1"></i>
+            <div
+              v-if="userStore.subscriptionActive"
+              class="text-green-600"
+            >
+              <i class="pi pi-check-circle mr-1" />
               Активна до {{ formatDate(userStore.user.subscriptionExpiresAt) }}
             </div>
-            <div v-else class="text-red-500">
-              <i class="pi pi-times-circle mr-1"></i>
+            <div
+              v-else
+              class="text-red-500"
+            >
+              <i class="pi pi-times-circle mr-1" />
               Не активна
             </div>
           </template>
@@ -62,7 +70,6 @@
       <div v-else-if="activeTab === 'bookings'">
         <PaymentTariffs @select="onSelectBookingTariff" />
       </div>
-
     </div>
   </div>
 </template>

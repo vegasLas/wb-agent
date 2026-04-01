@@ -6,8 +6,12 @@
       :closable="false"
       class="mb-4"
     >
-      <div class="font-medium">Достигнут лимит активных таймслотов</div>
-      <div class="text-sm">У вас уже активировано максимальное количество таймслотов (30). Отключите некоторые таймслоты, чтобы активировать новые.</div>
+      <div class="font-medium">
+        Достигнут лимит активных таймслотов
+      </div>
+      <div class="text-sm">
+        У вас уже активировано максимальное количество таймслотов (30). Отключите некоторые таймслоты, чтобы активировать новые.
+      </div>
     </Message>
 
     <!-- Status Filter Buttons -->
@@ -55,7 +59,7 @@
         :disabled="triggerStore.activeTriggersCount >= 30"
         @click="navigateToCreate"
       >
-        <i class="pi pi-plus mr-1 text-xs"></i>
+        <i class="pi pi-plus mr-1 text-xs" />
         добавить
       </Button>
     </div>
@@ -71,7 +75,7 @@
         <div class="flex flex-col gap-3">
           <!-- Warehouses section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-building text-gray-500 flex-shrink-0"></i>
+            <i class="pi pi-building text-gray-500 flex-shrink-0" />
             <div class="flex flex-wrap gap-2">
               <Tag
                 v-for="warehouseId in trigger.warehouseIds"
@@ -85,7 +89,7 @@
 
           <!-- Supply types section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-box text-gray-500 flex-shrink-0"></i>
+            <i class="pi pi-box text-gray-500 flex-shrink-0" />
             <div class="flex flex-wrap gap-2">
               <Tag
                 v-for="type in trigger.supplyTypes"
@@ -99,9 +103,13 @@
 
           <!-- Search mode section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-calendar text-gray-500 flex-shrink-0"></i>
+            <i class="pi pi-calendar text-gray-500 flex-shrink-0" />
             <div class="flex flex-wrap gap-2 items-center">
-              <Tag severity="secondary" :value="getSearchModeLabel(trigger.searchMode)" class="text-xs" />
+              <Tag
+                severity="secondary"
+                :value="getSearchModeLabel(trigger.searchMode)"
+                class="text-xs"
+              />
               <Tag
                 v-if="['RANGE', 'WEEK'].includes(trigger.searchMode) && trigger.startDate && trigger.endDate"
                 severity="warn"
@@ -131,7 +139,7 @@
 
           <!-- Check interval section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-clock text-gray-500 flex-shrink-0"></i>
+            <i class="pi pi-clock text-gray-500 flex-shrink-0" />
             <div class="flex flex-col gap-1">
               <span class="text-xs text-gray-600 dark:text-gray-400">
                 Повторная проверка через: {{ trigger.checkInterval }} мин
@@ -141,7 +149,7 @@
 
           <!-- Free/Paid and coefficient section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-dollar text-gray-500 flex-shrink-0"></i>
+            <i class="pi pi-dollar text-gray-500 flex-shrink-0" />
             <div class="flex flex-wrap gap-2">
               <Tag
                 :severity="trigger.maxCoefficient === 0 ? 'success' : 'info'"
@@ -162,14 +170,14 @@
             v-if="trigger.lastNotificationAt"
             class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400"
           >
-            <i class="pi pi-bell text-xs"></i>
+            <i class="pi pi-bell text-xs" />
             Посл. уведомление:
             {{ formatDateTime(trigger.lastNotificationAt) }}
           </div>
 
           <!-- Created Date -->
           <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
-            <i class="pi pi-calendar text-xs"></i>
+            <i class="pi pi-calendar text-xs" />
             Создан: {{ formatDate(trigger.createdAt) }}
           </div>
 
@@ -187,13 +195,13 @@
             :loading="triggerStore.togglingId === trigger.id"
             :disabled="
               triggerStore.togglingId === trigger.id ||
-              trigger.status !== 'RELEVANT' ||
-              (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
+                trigger.status !== 'RELEVANT' ||
+                (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
             "
             size="small"
             @click="triggerStore.toggleTrigger(trigger.id)"
           >
-            <i :class="[getActionButtonIcon(trigger), 'mr-1 text-xs']"></i>
+            <i :class="[getActionButtonIcon(trigger), 'mr-1 text-xs']" />
             {{ getActionButtonLabel(trigger) }}
           </Button>
 
@@ -204,7 +212,7 @@
             :loading="triggerStore.deletingId === trigger.id"
             @click="triggerStore.deleteTrigger(trigger.id)"
           >
-            <i class="pi pi-trash text-xs"></i>
+            <i class="pi pi-trash text-xs" />
           </Button>
         </div>
       </template>

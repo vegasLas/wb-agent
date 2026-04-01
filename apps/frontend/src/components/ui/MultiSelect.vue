@@ -10,7 +10,10 @@
         >
           <span class="block truncate text-gray-500">{{ placeholder }}</span>
           <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-            <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+            <ChevronUpDownIcon
+              class="h-5 w-5 text-gray-400"
+              aria-hidden="true"
+            />
           </span>
         </ListboxButton>
         <transition
@@ -41,7 +44,10 @@
                   v-if="selected"
                   class="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600"
                 >
-                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                  <CheckIcon
+                    class="h-5 w-5"
+                    aria-hidden="true"
+                  />
                 </span>
               </li>
             </ListboxOption>

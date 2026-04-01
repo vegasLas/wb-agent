@@ -7,9 +7,13 @@
           <div class="flex-1">
             <!-- Warehouse section -->
             <div class="flex items-center gap-2">
-              <i class="pi pi-building text-gray-500 text-sm"></i>
+              <i class="pi pi-building text-gray-500 text-sm" />
               <div class="flex flex-col gap-1">
-                <Tag :value="warehouseStore.getWarehouseName(booking.warehouseId)" severity="secondary" class="w-fit" />
+                <Tag
+                  :value="warehouseStore.getWarehouseName(booking.warehouseId)"
+                  severity="secondary"
+                  class="w-fit"
+                />
                 <Tag
                   v-if="booking.transitWarehouseId"
                   severity="secondary"
@@ -23,7 +27,7 @@
 
           <!-- Supplier section moved to top right -->
           <div class="flex items-center gap-1 ml-2">
-            <i class="pi pi-user text-gray-500 text-sm"></i>
+            <i class="pi pi-user text-gray-500 text-sm" />
             <Tag
               :value="getSupplierName(booking.supplierId)"
               :severity="isSupplierActive ? 'info' : 'danger'"
@@ -33,8 +37,11 @@
 
         <!-- Supply Type section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-box text-gray-500 text-sm"></i>
-          <Tag :value="getSupplyTypeText(booking.supplyType)" severity="secondary" />
+          <i class="pi pi-box text-gray-500 text-sm" />
+          <Tag
+            :value="getSupplyTypeText(booking.supplyType)"
+            severity="secondary"
+          />
         </div>
 
         <!-- MonopalletCount for MONOPALLETE supply type -->
@@ -42,7 +49,7 @@
           v-if="booking.supplyType === 'MONOPALLETE' && booking.monopalletCount"
           class="flex items-center gap-2"
         >
-          <i class="pi pi-th-large text-gray-500 text-sm"></i>
+          <i class="pi pi-th-large text-gray-500 text-sm" />
           <Tag
             :value="booking.monopalletCount + ' ' + (booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет')"
             severity="info"
@@ -54,7 +61,10 @@
 
         <!-- Coefficient section -->
         <div class="flex items-center gap-2">
-          <i :class="booking.maxCoefficient ? 'pi pi-dollar' : 'pi pi-check-circle'" class="text-gray-500 text-sm"></i>
+          <i
+            :class="booking.maxCoefficient ? 'pi pi-dollar' : 'pi pi-check-circle'"
+            class="text-gray-500 text-sm"
+          />
           <Tag
             :value="booking.maxCoefficient ? 'Макс. коэффициент: ' + booking.maxCoefficient : 'Бесплатная'"
             :severity="booking.maxCoefficient ? 'warn' : 'success'"
@@ -63,7 +73,7 @@
 
         <!-- Status section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-info-circle text-gray-500 text-sm"></i>
+          <i class="pi pi-info-circle text-gray-500 text-sm" />
           <Tag
             :value="listStore.getStatusText(booking.status)"
             :severity="getStatusSeverity(booking.status)"
@@ -72,7 +82,7 @@
 
         <!-- Created Date -->
         <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
-          <i class="pi pi-calendar text-sm"></i>
+          <i class="pi pi-calendar text-sm" />
           Создан: {{ formatDateShort(booking.createdAt) }}
         </div>
 
@@ -84,7 +94,7 @@
         >
           <div class="flex items-center justify-between w-full">
             <div class="flex items-center gap-2">
-              <i class="pi pi-arrow-circle-up"></i>
+              <i class="pi pi-arrow-circle-up" />
               <span class="text-sm">
                 Рекомендуемый макс. коэффициент: {{ suggestedCoefficientValue }}.
               </span>
@@ -116,7 +126,7 @@
             :disabled="!userStore.getSupplierById(booking.supplierId)"
             @click="viewGoods"
           >
-            <i class="pi pi-eye"></i>
+            <i class="pi pi-eye" />
           </Button>
 
           <!-- Update button for active autobookings -->
@@ -127,7 +137,7 @@
             size="small"
             @click="openUpdateForm"
           >
-            <i class="pi pi-pencil"></i>
+            <i class="pi pi-pencil" />
           </Button>
 
           <!-- Archive button for active autobookings -->
@@ -139,7 +149,7 @@
             :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
             @click="archiveAutobooking"
           >
-            <i class="pi pi-archive"></i>
+            <i class="pi pi-archive" />
           </Button>
 
           <!-- Activate button or Not Relevant badge for archived items -->
@@ -152,7 +162,7 @@
               :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
               @click="activateAutobooking"
             >
-              <i class="pi pi-play"></i>
+              <i class="pi pi-play" />
             </Button>
             <Tag
               v-else
@@ -174,8 +184,8 @@
           <Button
             v-if="
               booking.status === 'ACTIVE' ||
-              booking.status === 'ARCHIVED' ||
-              booking.status === 'ERROR'
+                booking.status === 'ARCHIVED' ||
+                booking.status === 'ERROR'
             "
             severity="danger"
             variant="outlined"
@@ -183,7 +193,7 @@
             :loading="autobookingStore.deletingId === booking.id"
             @click="deleteAutobooking"
           >
-            <i class="pi pi-trash"></i>
+            <i class="pi pi-trash" />
           </Button>
         </div>
       </div>

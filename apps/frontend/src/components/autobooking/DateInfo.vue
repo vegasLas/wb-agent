@@ -2,7 +2,11 @@
   <div class="flex items-center gap-2">
     <i class="pi pi-calendar text-gray-500 text-sm" />
     <div class="flex flex-col gap-2">
-      <Tag :value="listStore.getDateTypeText(booking.dateType)" severity="secondary" class="w-fit" />
+      <Tag
+        :value="listStore.getDateTypeText(booking.dateType)"
+        severity="secondary"
+        class="w-fit"
+      />
       <!-- Period Type and Date Range -->
       <div class="flex flex-col gap-2">
         <!-- Date Range Badge based on Period Type -->
@@ -29,7 +33,10 @@
     </div>
   </div>
   <!-- Completed Dates Section -->
-  <div v-if="booking.completedDates?.length" class="flex items-center gap-2">
+  <div
+    v-if="booking.completedDates?.length"
+    class="flex items-center gap-2"
+  >
     <i class="pi pi-check-circle text-gray-500 text-sm" />
     <div class="grid grid-cols-2 gap-2">
       <Tag
@@ -47,7 +54,12 @@ import { computed } from 'vue';
 import Tag from 'primevue/tag';
 import type { Autobooking } from '../../types';
 import { useAutobookingListStore } from '../../stores/autobookingList';
-import { formatDateShort, getWeekEndDate, getMonthEndDate, formatDateRange } from '../../utils/formatters';
+import {
+  formatDateShort,
+  getWeekEndDate,
+  getMonthEndDate,
+  formatDateRange,
+} from '../../utils/formatters';
 
 const props = defineProps<{
   booking: Autobooking;
@@ -72,7 +84,10 @@ const getDateRangeText = computed(() => {
           )
         : '';
     case 'CUSTOM_PERIOD':
-      return formatDateRange(props.booking.startDate || '', props.booking.endDate || '');
+      return formatDateRange(
+        props.booking.startDate || '',
+        props.booking.endDate || '',
+      );
     default:
       return '';
   }

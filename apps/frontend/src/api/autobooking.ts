@@ -1,5 +1,9 @@
 import apiClient from './client';
-import type { Autobooking, AutobookingCreateData, AutobookingUpdateData } from '../types';
+import type {
+  Autobooking,
+  AutobookingCreateData,
+  AutobookingUpdateData,
+} from '../types';
 
 export interface StatusCounts {
   ACTIVE: number;
@@ -45,7 +49,10 @@ export const autobookingAPI = {
    * Get user's autobookings with counts
    */
   async fetchAutobookings(page?: number): Promise<AutobookingsResponse> {
-    const response = await apiClient.get<AutobookingsResponse>('/autobooking', { params: { page } });
+    console.log('fetchAutobookings');
+    const response = await apiClient.get<AutobookingsResponse>('/autobooking', {
+      params: { page },
+    });
     return response.data;
   },
 
@@ -54,7 +61,10 @@ export const autobookingAPI = {
    * Create new autobooking
    */
   async createAutobooking(data: AutobookingCreateData): Promise<Autobooking> {
-    const response = await apiClient.post<CreateAutobookingResponse>('/autobooking', data);
+    const response = await apiClient.post<CreateAutobookingResponse>(
+      '/autobooking',
+      data,
+    );
     return response.data.data;
   },
 
@@ -62,8 +72,14 @@ export const autobookingAPI = {
    * PUT /api/v1/autobooking
    * Update autobooking
    */
-  async updateAutobooking(id: string, data: AutobookingUpdateData): Promise<Autobooking> {
-    const response = await apiClient.put<UpdateAutobookingResponse>('/autobooking', { id, ...data });
+  async updateAutobooking(
+    id: string,
+    data: AutobookingUpdateData,
+  ): Promise<Autobooking> {
+    const response = await apiClient.put<UpdateAutobookingResponse>(
+      '/autobooking',
+      { id, ...data },
+    );
     return response.data.data;
   },
 
@@ -72,7 +88,10 @@ export const autobookingAPI = {
    * Delete autobooking
    */
   async deleteAutobooking(id: string): Promise<DeleteAutobookingResponse> {
-    const response = await apiClient.delete<DeleteAutobookingResponse>('/autobooking', { data: { id } });
+    const response = await apiClient.delete<DeleteAutobookingResponse>(
+      '/autobooking',
+      { data: { id } },
+    );
     return response.data;
   },
 
@@ -81,7 +100,10 @@ export const autobookingAPI = {
    * Toggle autobooking status (activate/archive)
    */
   async toggleAutobooking(id: string, enabled: boolean): Promise<Autobooking> {
-    const response = await apiClient.patch<UpdateAutobookingResponse>(`/autobooking/${id}/toggle`, { enabled });
+    const response = await apiClient.patch<UpdateAutobookingResponse>(
+      `/autobooking/${id}/toggle`,
+      { enabled },
+    );
     return response.data.data;
   },
 
@@ -89,8 +111,14 @@ export const autobookingAPI = {
    * PATCH /api/v1/autobooking/:id/coefficient
    * Update autobooking coefficient
    */
-  async updateBookingCoefficient(id: string, maxCoefficient: number): Promise<Autobooking> {
-    const response = await apiClient.patch<UpdateAutobookingResponse>(`/autobooking/${id}/coefficient`, { maxCoefficient });
+  async updateBookingCoefficient(
+    id: string,
+    maxCoefficient: number,
+  ): Promise<Autobooking> {
+    const response = await apiClient.patch<UpdateAutobookingResponse>(
+      `/autobooking/${id}/coefficient`,
+      { maxCoefficient },
+    );
     return response.data.data;
   },
 };

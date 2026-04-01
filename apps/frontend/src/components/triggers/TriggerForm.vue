@@ -3,22 +3,31 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <Button variant="text" size="small" @click="goBack">
-          <i class="pi pi-arrow-left"></i>
+        <Button
+          variant="text"
+          size="small"
+          @click="goBack"
+        >
+          <i class="pi pi-arrow-left" />
         </Button>
-        <h2 class="text-xl font-semibold">Создание таймслота</h2>
+        <h2 class="text-xl font-semibold">
+          Создание таймслота
+        </h2>
       </div>
       <Button
         variant="text"
         size="small"
         @click="showHintsModal = true"
       >
-        <i class="pi pi-question-circle text-yellow-600"></i>
+        <i class="pi pi-question-circle text-yellow-600" />
       </Button>
     </div>
 
     <!-- Form -->
-    <Card class="shadow-sm" :pt="{ root: { class: 'rounded-lg border border-gray-200 dark:border-gray-700' }, content: { class: 'p-4' } }">
+    <Card
+      class="shadow-sm"
+      :pt="{ root: { class: 'rounded-lg border border-gray-200 dark:border-gray-700' }, content: { class: 'p-4' } }"
+    >
       <template #content>
         <div class="space-y-5">
           <!-- Warehouses -->
@@ -29,14 +38,17 @@
             <MultiSelect
               v-model="triggerFormStore.form.warehouseIds"
               :options="triggerFormStore.warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
+              option-label="label"
+              option-value="value"
               placeholder="Выберите склады"
               class="w-full"
-              :maxSelectedLabels="3"
-              :selectionLimit="3"
+              :max-selected-labels="3"
+              :selection-limit="3"
             />
-            <p v-if="formErrors.warehouseIds" class="mt-1 text-sm text-red-600">
+            <p
+              v-if="formErrors.warehouseIds"
+              class="mt-1 text-sm text-red-600"
+            >
               {{ formErrors.warehouseIds }}
             </p>
           </div>
@@ -49,12 +61,15 @@
             <MultiSelect
               v-model="triggerFormStore.form.supplyTypes"
               :options="triggerFormStore.supplyTypesOptions"
-              optionLabel="label"
-              optionValue="value"
+              option-label="label"
+              option-value="value"
               placeholder="Выберите типы коробов"
               class="w-full"
             />
-            <p v-if="formErrors.supplyTypes" class="mt-1 text-sm text-red-600">
+            <p
+              v-if="formErrors.supplyTypes"
+              class="mt-1 text-sm text-red-600"
+            >
               {{ formErrors.supplyTypes }}
             </p>
           </div>
@@ -67,8 +82,8 @@
             <Select
               v-model="triggerFormStore.form.checkInterval"
               :options="TRIGGER_INTERVALS.map(i => ({ label: i.label, value: i.value }))"
-              optionLabel="label"
-              optionValue="value"
+              option-label="label"
+              option-value="value"
               placeholder="Интервал проверки"
               class="w-full"
             />
@@ -85,8 +100,8 @@
             <Select
               v-model="triggerFormStore.form.searchMode"
               :options="triggerFormStore.searchModeOptions"
-              optionLabel="label"
-              optionValue="value"
+              option-label="label"
+              option-value="value"
               placeholder="Выберите режим поиска"
               class="w-full"
               @update:model-value="onSearchModeChange"
@@ -119,8 +134,8 @@
             <MultiSelect
               v-model="selectedDates"
               :options="availableDatesOptions"
-              optionLabel="label"
-              optionValue="value"
+              option-label="label"
+              option-value="value"
               placeholder="Выберите даты"
               class="w-full"
             />
@@ -155,7 +170,11 @@
 
     <!-- Actions -->
     <div class="flex gap-2">
-      <Button variant="outlined" class="flex-1" @click="goBack">
+      <Button
+        variant="outlined"
+        class="flex-1"
+        @click="goBack"
+      >
         Отмена
       </Button>
       <Button
@@ -180,7 +199,10 @@
     <BackButton @click="goBack" />
 
     <!-- Hints Modal -->
-    <TriggerHints :show="showHintsModal" @close="showHintsModal = false" />
+    <TriggerHints
+      :show="showHintsModal"
+      @close="showHintsModal = false"
+    />
   </div>
 </template>
 

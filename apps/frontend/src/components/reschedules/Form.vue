@@ -38,8 +38,8 @@
               severity="info"
               variant="outlined"
               :loading="loadingSupplies"
-              @click="formStore.refreshSupplies"
               class="flex-shrink-0"
+              @click="formStore.refreshSupplies"
             >
               <i class="pi pi-refresh" />
             </Button>
@@ -59,7 +59,10 @@
         </div>
 
         <!-- Supply Information Toggle -->
-        <div v-if="selectedSupply" class="flex items-center justify-end">
+        <div
+          v-if="selectedSupply"
+          class="flex items-center justify-end"
+        >
           <Button
             size="small"
             variant="outlined"
@@ -81,10 +84,10 @@
           :custom-dates="customDates"
           mode="reschedule"
           :supply-date="selectedSupply?.supplyDate"
-          @update:dateType="formStore.handleDateTypeChange"
-          @update:startDate="formStore.handleStartDateChange"
-          @update:endDate="formStore.handleEndDateChange"
-          @update:customDates="formStore.handleCustomDatesChange"
+          @update:date-type="formStore.handleDateTypeChange"
+          @update:start-date="formStore.handleStartDateChange"
+          @update:end-date="formStore.handleEndDateChange"
+          @update:custom-dates="formStore.handleCustomDatesChange"
         />
 
         <!-- Max Coefficient -->
@@ -99,16 +102,16 @@
               type="range"
               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
               :value="maxCoefficientInput"
+              :step="1"
+              :min="0"
+              :max="20"
               @input="
                 (e) =>
                   formStore.handleMaxCoefficientChange(
                     Number((e.target as HTMLInputElement).value),
                   )
               "
-              :step="1"
-              :min="0"
-              :max="20"
-            />
+            >
             <div class="min-w-[4rem] text-center">
               <Tag severity="secondary">
                 {{ maxCoefficientInput }}
@@ -134,7 +137,9 @@
         class="mb-4"
       >
         <div class="text-sm space-y-2">
-          <p class="font-semibold mb-2">Важная информация</p>
+          <p class="font-semibold mb-2">
+            Важная информация
+          </p>
           <p>
             <strong>Автоматическое перепланирование</strong> работает как
             автобронирование — бот будет пытаться перепланировать поставку, но
@@ -165,7 +170,10 @@
   />
 
   <!-- Hints Modal -->
-  <ReschedulesHints :show="showHintsModal" @close="showHintsModal = false" />
+  <ReschedulesHints
+    :show="showHintsModal"
+    @close="showHintsModal = false"
+  />
 
   <!-- Telegram Back Button -->
   <BackButton @click="goBack" />

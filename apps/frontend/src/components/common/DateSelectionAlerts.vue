@@ -6,7 +6,9 @@
       severity="info"
       icon="pi pi-info-circle"
     >
-      <div class="font-semibold mb-2">📋 Режим "Выбрать даты (одна)":</div>
+      <div class="font-semibold mb-2">
+        📋 Режим "Выбрать даты (одна)":
+      </div>
       <ul class="ml-4 space-y-1 text-sm">
         <li>
           • <strong>Стоимость:</strong> Использует только 1 кредит независимо
@@ -34,7 +36,9 @@
       icon="pi pi-exclamation-triangle"
     >
       <div class="space-y-2">
-        <div class="font-semibold mb-2">📋 Режим "Выбрать даты":</div>
+        <div class="font-semibold mb-2">
+          📋 Режим "Выбрать даты":
+        </div>
         <ul class="ml-4 space-y-1 text-sm">
           <li>
             • <strong>Стоимость:</strong> Каждая выбранная дата использует 1
@@ -58,7 +62,10 @@
             {{ remainingCount }} кредитов.
           </span>
         </p>
-        <div v-if="availableCount < (customDates?.length || 0)" class="mt-3">
+        <div
+          v-if="availableCount < (customDates?.length || 0)"
+          class="mt-3"
+        >
           <Button
             severity="primary"
             size="small"

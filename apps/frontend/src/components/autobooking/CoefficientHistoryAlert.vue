@@ -6,17 +6,22 @@
   >
     <div class="space-y-2">
       <div class="flex items-center justify-between">
-        <p class="text-sm font-medium">Последние коэффициенты:</p>
+        <p class="text-sm font-medium">
+          Последние коэффициенты:
+        </p>
         <Button
           text
           size="small"
-          @click="toggleExpanded"
           class="text-xs"
+          @click="toggleExpanded"
         >
-          <i :class="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+          <i :class="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" />
         </Button>
       </div>
-      <div v-if="isExpanded" class="space-y-1 max-h-60 overflow-y-auto">
+      <div
+        v-if="isExpanded"
+        class="space-y-1 max-h-60 overflow-y-auto"
+      >
         <div
           v-for="(coefficient, index) in coefficientHistory"
           :key="index"

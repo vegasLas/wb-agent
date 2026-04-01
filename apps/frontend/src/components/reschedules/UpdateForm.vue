@@ -10,14 +10,19 @@
           text
           @click="showHintsModal = true"
         >
-          <i class="pi pi-question-circle"></i>
+          <i class="pi pi-question-circle" />
         </Button>
       </div>
 
       <form class="space-y-6">
         <!-- Supply Section -->
-        <div v-if="reschedule" class="space-y-3">
-          <h4 class="font-medium text-gray-900 dark:text-white">Поставка</h4>
+        <div
+          v-if="reschedule"
+          class="space-y-3"
+        >
+          <h4 class="font-medium text-gray-900 dark:text-white">
+            Поставка
+          </h4>
 
           <!-- Supply Information (read-only) -->
           <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -49,7 +54,7 @@
                 text
                 @click="supplyDetailsStore.openModal(reschedule.supplyId)"
               >
-                <i class="pi pi-info-circle mr-1"></i>
+                <i class="pi pi-info-circle mr-1" />
                 детали
               </Button>
             </div>
@@ -64,10 +69,10 @@
 
         <!-- Date Selection -->
         <DateSelection
-          v-model:dateType="formData.selectedDateType"
-          v-model:startDate="formData.startDateInput"
-          v-model:endDate="formData.endDateInput"
-          v-model:customDates="formData.customDates"
+          v-model:date-type="formData.selectedDateType"
+          v-model:start-date="formData.startDateInput"
+          v-model:end-date="formData.endDateInput"
+          v-model:custom-dates="formData.customDates"
           mode="reschedule"
           :supply-date="reschedule?.currentDate"
         />
@@ -79,13 +84,13 @@
           </label>
           <div class="flex items-center gap-4">
             <input
+              v-model="formData.maxCoefficientInput"
               type="range"
               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-              v-model="formData.maxCoefficientInput"
               :step="1"
               :min="0"
               :max="20"
-            />
+            >
             <div class="min-w-[4rem] text-center">
               <span class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                 {{ formData.maxCoefficientInput }}
@@ -106,7 +111,9 @@
           v-if="reschedule && reschedule.completedDates.length > 0"
           class="space-y-2"
         >
-          <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Выполненные даты:</div>
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Выполненные даты:
+          </div>
           <div class="flex flex-wrap gap-2">
             <span
               v-for="date in reschedule.completedDates"
@@ -130,7 +137,10 @@
     />
 
     <!-- Hints Modal -->
-    <ReschedulesHints :show="showHintsModal" @close="showHintsModal = false" />
+    <ReschedulesHints
+      :show="showHintsModal"
+      @close="showHintsModal = false"
+    />
     
     <!-- Telegram Back Button -->
     <BackButton @click="goBack" />

@@ -1,12 +1,18 @@
 <template>
   <div class="flex flex-col items-center justify-center min-h-[80vh] px-4">
     <div class="text-center">
-      <div class="text-6xl font-bold text-gray-300 mb-4">404</div>
-      <div class="text-red-500 w-16 h-16 mb-4 mx-auto">
-        <i class="pi pi-exclamation-triangle text-6xl"></i>
+      <div class="text-6xl font-bold text-gray-300 mb-4">
+        404
       </div>
-      <h2 class="text-2xl font-semibold mb-2">{{ title }}</h2>
-      <p class="text-gray-600 dark:text-gray-400 mb-6">{{ message }}</p>
+      <div class="text-red-500 w-16 h-16 mb-4 mx-auto">
+        <i class="pi pi-exclamation-triangle text-6xl" />
+      </div>
+      <h2 class="text-2xl font-semibold mb-2">
+        {{ title }}
+      </h2>
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        {{ message }}
+      </p>
       <Button
         v-if="showButton"
         severity="primary"

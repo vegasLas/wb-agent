@@ -104,7 +104,11 @@
           заданным параметрам. Вы получите уведомление, когда подходящий слот
           будет найден.
         </p>
-        <Button severity="primary" class="w-full" @click="$emit('close')">
+        <Button
+          severity="primary"
+          class="w-full"
+          @click="$emit('close')"
+        >
           Понятно
         </Button>
       </div>

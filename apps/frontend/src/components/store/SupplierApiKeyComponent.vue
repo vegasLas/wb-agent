@@ -2,11 +2,16 @@
   <div class="api-key-component space-y-4">
     <Card>
       <template #title>
-        <h3 class="font-medium">API ключ поставщика</h3>
+        <h3 class="font-medium">
+          API ключ поставщика
+        </h3>
       </template>
       <template #content>
         <!-- Status -->
-        <div v-if="apiKeyStatus" class="mb-4">
+        <div
+          v-if="apiKeyStatus"
+          class="mb-4"
+        >
           <Tag
             :severity="apiKeyStatus.valid ? 'success' : 'danger'"
             :icon="
@@ -15,7 +20,10 @@
             :value="apiKeyStatus.valid ? 'Ключ действителен' : 'Ошибка ключа'"
             class="mb-2"
           />
-          <p v-if="apiKeyStatus.message" class="text-sm text-gray-500 mt-1">
+          <p
+            v-if="apiKeyStatus.message"
+            class="text-sm text-gray-500 mt-1"
+          >
             {{ apiKeyStatus.message }}
           </p>
         </div>
@@ -32,7 +40,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-green-600 dark:text-green-400">
-                    <i class="pi pi-check mr-1"></i>
+                    <i class="pi pi-check mr-1" />
                     API ключ успешно сохранен
                   </p>
                   <p class="text-xs text-gray-500 mt-1">
@@ -45,26 +53,26 @@
                     variant="outlined"
                     size="small"
                     :loading="apiKeyStore.loading"
-                    @click="handleDelete"
                     title="Удалить API ключ"
+                    @click="handleDelete"
                   >
-                    <i class="pi pi-trash"></i>
+                    <i class="pi pi-trash" />
                   </Button>
 
                   <Button
                     severity="primary"
                     variant="outlined"
                     size="small"
-                    @click="showEditForm = true"
                     title="Изменить API ключ"
+                    @click="showEditForm = true"
                   >
-                    <i class="pi pi-pencil"></i>
+                    <i class="pi pi-pencil" />
                   </Button>
                 </div>
               </div>
             </div>
             <div class="flex items-center ml-3">
-              <i class="pi pi-shield text-green-500 text-2xl"></i>
+              <i class="pi pi-shield text-green-500 text-2xl" />
             </div>
           </div>
         </div>
@@ -76,7 +84,10 @@
         >
           <label class="block text-sm font-medium">
             {{ userStore.user.supplierApiKey ? 'Новый API ключ' : 'API ключ' }}
-            <span v-if="formError" class="text-red-500 text-xs ml-2">{{
+            <span
+              v-if="formError"
+              class="text-red-500 text-xs ml-2"
+            >{{
               formError
             }}</span>
           </label>
@@ -100,10 +111,10 @@
               severity="secondary"
               variant="text"
               size="small"
-              @click="cancelEdit"
               title="Отмена"
+              @click="cancelEdit"
             >
-              <i class="pi pi-times"></i>
+              <i class="pi pi-times" />
             </Button>
           </div>
           <p class="text-xs text-gray-500">
@@ -117,7 +128,7 @@
     <Card>
       <template #content>
         <h4 class="font-medium text-blue-900 dark:text-blue-200 mb-2">
-          <i class="pi pi-info-circle mr-1"></i>
+          <i class="pi pi-info-circle mr-1" />
           Как получить API ключ
         </h4>
         <ol
@@ -129,8 +140,7 @@
               href="https://seller.wildberries.ru"
               target="_blank"
               class="underline"
-              >WB Партнеры</a
-            >
+            >WB Партнеры</a>
           </li>
           <li>Перейдите в раздел "Настройки" → "Доступ к API"</li>
           <li>Скопируйте ключ и вставьте в поле выше</li>
@@ -139,7 +149,11 @@
     </Card>
 
     <!-- Error Alert -->
-    <Message v-if="apiKeyStore.error" severity="error" class="mt-4">
+    <Message
+      v-if="apiKeyStore.error"
+      severity="error"
+      class="mt-4"
+    >
       {{ apiKeyStore.error }}
     </Message>
   </div>

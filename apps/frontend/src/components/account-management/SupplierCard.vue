@@ -14,10 +14,15 @@
         <i class="pi pi-shop text-white" />
       </div>
       <div>
-        <div class="font-medium">{{ supplier.supplierName }}</div>
+        <div class="font-medium">
+          {{ supplier.supplierName }}
+        </div>
       </div>
     </div>
-    <div v-if="isSelected" class="text-blue-600">
+    <div
+      v-if="isSelected"
+      class="text-blue-600"
+    >
       <i class="pi pi-check-circle" />
     </div>
   </div>
