@@ -79,8 +79,8 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Количество монопаллет <span class="text-red-500">*</span>
       </label>
-      <InputText
-        v-model.number="localForm.monopalletCount"
+      <InputNumber
+        v-model="localForm.monopalletCount"
         type="number"
         placeholder="Введите количество монопаллет"
         class="w-full"
@@ -132,7 +132,7 @@ import { useUserStore } from '../../stores/user';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
 import { useWarehousesStore } from '../../stores/warehouses';
 import Select from 'primevue/select';
-import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
 import Slider from 'primevue/slider';
 import Message from 'primevue/message';
 import Tag from 'primevue/tag';
