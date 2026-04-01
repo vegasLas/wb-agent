@@ -240,6 +240,7 @@ router.post(
       // Transform WB API drafts to simplified format for frontend
       const drafts = result.result.drafts.map((draft) => ({
         id: draft.ID,
+        supplierId: draft.supplierID,
         goodQuantity: draft.goodQuantity,
         barcodeQuantity: draft.barcodeQuantity,
         createdAt: draft.createdAt,

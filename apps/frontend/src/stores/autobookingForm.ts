@@ -1,13 +1,31 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { autobookingAPI } from '../api';
+import { autobookingAPI, warehousesAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
 import { useUserStore } from './user';
+import { useDraftStore } from './draft';
 import type { AutobookingCreateData } from '../types';
 
 // Form field types
-export type DateType = 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+export type DateType =
+  | 'WEEK'
+  | 'MONTH'
+  | 'CUSTOM_PERIOD'
+  | 'CUSTOM_DATES'
+  | 'CUSTOM_DATES_SINGLE';
 export type SupplyType = 'SUPPLY' | 'MONOPALLETE' | 'QR_SUPPLY' | '';
+
+// Validation result type
+export interface ValidationResult {
+  result: {
+    metaInfo: {
+      monoMixQuantity: number;
+      palletQuantity: number;
+      supersafeQuantity: number;
+    };
+    errors?: Array<{ message: string }>;
+  };
+}
 
 // Individual form fields for better reactivity and type safety
 const createDefaultFormState = () => ({
@@ -36,16 +54,32 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
   const error = ref<string | null>(null);
   const suggestedCoefficient = ref<number | null>(null);
 
+  // Validation state
+  const validationLoading = ref(false);
+  const validationError = ref<string | null>(null);
+  const validationResult = ref<ValidationResult | null>(null);
+
   // ============================================
   // Getters
   // ============================================
-  
+
   /**
    * Validates the form state
    * Checks all required fields based on dateType and supplyType
    */
   const isValid = computed((): boolean => {
-    const { warehouseId, draftId, supplyType, dateType, startDate, endDate, customDates, monopalletCount, transitWarehouseId, maxCoefficient } = form.value;
+    const {
+      warehouseId,
+      draftId,
+      supplyType,
+      dateType,
+      startDate,
+      endDate,
+      customDates,
+      monopalletCount,
+      transitWarehouseId,
+      maxCoefficient,
+    } = form.value;
 
     // Required fields for all types
     if (!warehouseId || !draftId || !supplyType || !dateType) {
@@ -80,7 +114,10 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
     }
 
     // Supply type specific validation
-    if (supplyType === 'MONOPALLETE' && (!monopalletCount || monopalletCount <= 0)) {
+    if (
+      supplyType === 'MONOPALLETE' &&
+      (!monopalletCount || monopalletCount <= 0)
+    ) {
       return false;
     }
 
@@ -92,7 +129,7 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
   // ============================================
   // Actions
   // ============================================
-  
+
   /**
    * Resets the form to its default state
    */
@@ -107,7 +144,7 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
    */
   function updateField<K extends keyof FormState>(
     field: K,
-    value: FormState[K]
+    value: FormState[K],
   ) {
     form.value[field] = value;
   }
@@ -134,7 +171,10 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
   /**
    * Sets the transit warehouse
    */
-  function setTransitWarehouse(transitWarehouseId: number | null, transitWarehouseName: string | null = null) {
+  function setTransitWarehouse(
+    transitWarehouseId: number | null,
+    transitWarehouseName: string | null = null,
+  ) {
     form.value.transitWarehouseId = transitWarehouseId;
     form.value.transitWarehouseName = transitWarehouseName;
   }
@@ -180,11 +220,69 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
 
       return true;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create autobooking';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to create autobooking';
       error.value = errorMsg;
       return false;
     } finally {
       loading.value = false;
+    }
+  }
+
+  /**
+   * Validates warehouse goods for selected draft
+   * Checks if warehouse can accept goods from the draft
+   */
+  async function validateWarehouse(): Promise<boolean> {
+    const draftStore = useDraftStore();
+    const userStore = useUserStore();
+
+    if (!form.value.draftId || !form.value.warehouseId) {
+      validationError.value = 'Выберите черновик и склад для валидации';
+      return false;
+    }
+    const accountId = userStore.selectedAccount?.id;
+    if (!accountId) {
+      validationError.value = 'Не выбран аккаунт';
+      return false;
+    }
+
+    // Get supplierId from selected draft
+    const draft = draftStore.drafts.find((d) => d.id === form.value.draftId);
+    const supplierId = draft?.supplierId;
+
+    if (!supplierId) {
+      validationError.value = 'Не найден поставщик для черновика';
+      return false;
+    }
+
+    try {
+      validationLoading.value = true;
+      validationError.value = null;
+
+      const response = await warehousesAPI.validateWarehouse({
+        accountId,
+        supplierId,
+        draftID: form.value.draftId,
+        warehouseId: form.value.warehouseId,
+        transitWarehouseId: form.value.transitWarehouseId,
+      });
+
+      if (response.data?.result) {
+        validationResult.value = response.data as ValidationResult;
+        return true;
+      } else {
+        validationResult.value = null;
+        return false;
+      }
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Ошибка при валидации склада';
+      validationError.value = errorMsg;
+      validationResult.value = null;
+      return false;
+    } finally {
+      validationLoading.value = false;
     }
   }
 
@@ -207,6 +305,12 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
     setWarehouse,
     setTransitWarehouse,
     submitForm,
+    validateWarehouse,
+
+    // Validation
+    validationLoading,
+    validationError,
+    validationResult,
 
     // Exposed for v-model binding (internal mutations allowed)
     _useTransit: useTransit,

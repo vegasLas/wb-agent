@@ -4,11 +4,7 @@
       <h3 class="text-xl text-center font-semibold flex-1">
         Создание автобронирования
       </h3>
-      <Button
-        variant="outlined"
-        severity="warn"
-        @click="showHintsModal = true"
-      >
+      <Button variant="outlined" severity="warn" @click="showHintsModal = true">
         <i class="pi pi-question-circle" />
       </Button>
     </div>
@@ -19,8 +15,11 @@
       v-model:use-transit="formStore._useTransit"
       :warehouse-options="warehouseOptions"
       :suggested-coefficient="formStore.suggestedCoefficient"
+      :validation-loading="formStore.validationLoading"
+      :validation-result="formStore.validationResult"
       :supplier-id="userStore.activeSupplier?.supplierId"
       @warehouse-change="handleWarehouseChange"
+      @validate-warehouse="formStore.validateWarehouse"
     />
   </div>
 
