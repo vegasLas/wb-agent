@@ -180,9 +180,20 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   async function activateAutobooking(booking: Autobooking) {
     try {
       loading.value = true;
-      await autobookingAPI.updateAutobooking(booking.id, { status: 'ACTIVE' });
-      // Refresh the list to get updated status
-      await fetchData(1);
+      const updated = await autobookingAPI.updateAutobooking(booking.id, { status: 'ACTIVE' });
+      
+      // Update the booking in the local list instead of fetching
+      const index = autobookings.value.findIndex((a) => a.id === booking.id);
+      if (index !== -1) {
+        const oldStatus = autobookings.value[index].status;
+        autobookings.value[index] = { ...autobookings.value[index], ...updated };
+        
+        // Update status counts
+        if (statusCounts.value[oldStatus] > 0) {
+          statusCounts.value[oldStatus]--;
+        }
+        statusCounts.value['ACTIVE'] = (statusCounts.value['ACTIVE'] || 0) + 1;
+      }
     } catch (err) {
       error.value = 'Failed to activate autobooking';
       throw err;

@@ -1,6 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI } from '../api';
+import { useAutobookingListStore } from './autobookingList';
 import type { Autobooking } from '../types';
 
 export const useAutobookingStore = defineStore('autobooking', () => {
@@ -45,10 +46,25 @@ export const useAutobookingStore = defineStore('autobooking', () => {
   }
 
   async function deleteAutobooking(id: string) {
+    const listStore = useAutobookingListStore();
+    
     try {
       deletingId.value = id;
+      
+      // Get the booking before deletion to update counts
+      const booking = listStore.autobookings.find((a) => a.id === id);
+      const status = booking?.status;
+      
       await autobookingAPI.deleteAutobooking(id);
+      
+      // Update both stores
       autobookings.value = autobookings.value.filter((a) => a.id !== id);
+      listStore.autobookings = listStore.autobookings.filter((a) => a.id !== id);
+      
+      // Update status counts
+      if (status && listStore.statusCounts[status] > 0) {
+        listStore.statusCounts[status]--;
+      }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to delete autobooking';
       error.value = errorMsg;
@@ -58,17 +74,38 @@ export const useAutobookingStore = defineStore('autobooking', () => {
     }
   }
 
-  async function toggleAutobooking(id: string, enabled: boolean) {
+  async function archiveAutobooking(id: string) {
+    const listStore = useAutobookingListStore();
+    
     try {
       togglingId.value = id;
-      const updated = await autobookingAPI.toggleAutobooking(id, enabled);
+      const updated = await autobookingAPI.updateAutobooking(id, { status: 'ARCHIVED' });
+      
+      // Update autobooking store
       const index = autobookings.value.findIndex((a) => a.id === id);
       if (index !== -1) {
         autobookings.value[index] = { ...autobookings.value[index], ...updated };
       }
+      
+      // Update list store - update the booking status and status counts
+      const listIndex = listStore.autobookings.findIndex((a) => a.id === id);
+      if (listIndex !== -1) {
+        const oldStatus = listStore.autobookings[listIndex].status;
+        listStore.autobookings[listIndex] = { 
+          ...listStore.autobookings[listIndex], 
+          ...updated 
+        };
+        
+        // Update status counts
+        if (listStore.statusCounts[oldStatus] > 0) {
+          listStore.statusCounts[oldStatus]--;
+        }
+        listStore.statusCounts['ARCHIVED'] = (listStore.statusCounts['ARCHIVED'] || 0) + 1;
+      }
+      
       return updated;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to toggle autobooking';
+      const errorMsg = err instanceof Error ? err.message : 'Failed to archive autobooking';
       error.value = errorMsg;
       throw err;
     } finally {
@@ -123,7 +160,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
     // Actions
     fetchAutobookings,
     deleteAutobooking,
-    toggleAutobooking,
+    archiveAutobooking,
     updateBookingCoefficient,
     addAutobooking,
     updateAutobookingInList,
