@@ -27,7 +27,7 @@
             :class="[
               'ml-2 px-2 py-0.5 rounded text-xs font-medium',
               listStore.selectedStatus === stat.status
-                ? 'bg-white text-blue-600'
+                ? 'bg-white text-blue-600 dark:text-blue-400'
                 : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
             ]"
           >
@@ -46,9 +46,9 @@
         <Message
           v-if="userStore.user.autobookingCount === 0"
           severity="error"
-          class="mb-2"
+          class="w-full"
         >
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center justify-between w-full">
             <span>Приобретите пакет кредитов, чтобы создать новые, или удалите
               архивные.</span>
             <Button
@@ -76,17 +76,13 @@
             severity="primary"
             @click="navigateToCreate"
           >
-            <i class="pi pi-plus mr-1" />
             добавить
           </Button>
         </div>
       </div>
 
       <!-- List Content -->
-      <div
-        ref="scrollContainer"
-        class="space-y-3"
-      >
+      <div class="space-y-3">
         <ReschedulesCard
           v-for="reschedule in listStore.filteredReschedules"
           :key="reschedule.id"
@@ -105,40 +101,6 @@
       </div>
     </template>
 
-    <!-- Empty states when user conditions are not met -->
-    <div
-      v-else
-      class="text-center py-12 text-gray-500 dark:text-gray-400"
-    >
-      <template v-if="!userStore.selectedAccount">
-        <i class="pi pi-user text-4xl mb-4 block" />
-        <p class="text-lg font-medium">
-          Аккаунт не выбран
-        </p>
-        <p class="text-sm mt-2">
-          Пожалуйста, выберите аккаунт Wildberries для продолжения
-        </p>
-      </template>
-      <template v-else-if="!userStore.hasValidSupplier">
-        <i class="pi pi-building text-4xl mb-4 block" />
-        <p class="text-lg font-medium">
-          Поставщик не выбран
-        </p>
-        <p class="text-sm mt-2">
-          Пожалуйста, выберите поставщика для продолжения
-        </p>
-      </template>
-      <template v-else-if="!userStore.subscriptionActive">
-        <i class="pi pi-calendar-times text-4xl mb-4 block" />
-        <p class="text-lg font-medium">
-          Подписка не активна
-        </p>
-        <p class="text-sm mt-2">
-          Ваша подписка истекла. Пожалуйста, продлите подписку.
-        </p>
-      </template>
-    </div>
-
     <!-- Supply Details Modal -->
     <ReschedulesSupplyDetailsModal
       :show="supplyDetailsStore.showModal"
@@ -148,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -170,8 +132,6 @@ const rescheduleStore = useRescheduleStore();
 const listStore = useRescheduleListStore();
 const supplyDetailsStore = useSupplyDetailsStore();
 const { viewReady } = useViewReady();
-
-const scrollContainer = ref<HTMLElement | null>(null);
 
 const noReschedulesMessage = computed(() => {
   return `Нет ${listStore.selectedStatus === 'ACTIVE' ? 'активных' : listStore.selectedStatus === 'COMPLETED' ? 'завершенных' : 'архивных'} перепланирований`;

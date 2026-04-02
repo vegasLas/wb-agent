@@ -1,10 +1,10 @@
 <template>
   <Dialog
-    :visible="show"
+    v-model:visible="visible"
     header="Инструкция по созданию таймслота"
     modal
     :style="{ width: '90vw', maxWidth: '600px' }"
-    @update:visible="$emit('close')"
+    @hide="$emit('update:show', false)"
   >
     <div class="space-y-4 text-sm">
       <div>
@@ -96,35 +96,23 @@
         </p>
       </div>
     </div>
-
-    <template #footer>
-      <div class="space-y-4">
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          После создания таймслот начнет автоматически искать слоты согласно
-          заданным параметрам. Вы получите уведомление, когда подходящий слот
-          будет найден.
-        </p>
-        <Button
-          severity="primary"
-          class="w-full"
-          @click="$emit('close')"
-        >
-          Понятно
-        </Button>
-      </div>
-    </template>
   </Dialog>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 
-defineProps<{
+const props = defineProps<{
   show: boolean;
 }>();
 
-defineEmits<{
-  close: [];
+const emit = defineEmits<{
+  'update:show': [value: boolean];
 }>();
+
+const visible = computed({
+  get: () => props.show,
+  set: (value) => emit('update:show', value),
+});
 </script>

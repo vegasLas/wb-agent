@@ -9,10 +9,16 @@
             <div class="flex items-center gap-2">
               <i class="pi pi-building text-gray-500 dark:text-gray-400" />
               <div class="flex flex-col gap-1">
-                <Tag severity="secondary" class="w-fit">
+                <Tag
+                  severity="secondary"
+                  class="w-fit"
+                >
                   {{ warehouseStore.getWarehouseName(reschedule.warehouseId) }}
                 </Tag>
-                <Tag severity="info" class="w-fit">
+                <Tag
+                  severity="info"
+                  class="w-fit"
+                >
                   Поставка: {{ reschedule.supplyId }}
                 </Tag>
               </div>
@@ -47,7 +53,10 @@
         <div class="flex items-center gap-2">
           <i class="pi pi-calendar text-gray-500 dark:text-gray-400" />
           <div class="flex flex-col gap-2">
-            <Tag severity="secondary" class="w-fit">
+            <Tag
+              severity="secondary"
+              class="w-fit"
+            >
               {{ getDateTypeLabel(reschedule.dateType) }}
             </Tag>
             <!-- Period Type and Date Range -->
@@ -120,7 +129,11 @@
         <!-- Action Buttons -->
         <div class="flex justify-end gap-2 mt-2">
           <!-- View details button - only show if supply exists -->
-          <Button size="small" variant="outlined" @click="emit('open-details')">
+          <Button
+            size="small"
+            variant="outlined"
+            @click="emit('open-details')"
+          >
             <i class="pi pi-info-circle mr-1" />
             детали
           </Button>

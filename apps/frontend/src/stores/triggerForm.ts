@@ -147,5 +147,8 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
     initializeWarehouses,
     createTrigger,
     submitForm,
+
+    // Exposed for v-model binding (internal mutations allowed)
+    _form: form,
   };
 });

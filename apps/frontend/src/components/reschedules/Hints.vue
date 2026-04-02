@@ -4,6 +4,7 @@
     header="Инструкция по перепланированию"
     :style="{ width: '90vw', maxWidth: '600px' }"
     :modal="true"
+    @hide="$emit('update:show', false)"
   >
     <div class="max-h-[70vh] overflow-auto space-y-4">
       <!-- Что такое перепланирование -->
@@ -245,34 +246,23 @@
         </ul>
       </div>
     </div>
-    <template #footer>
-      <Button
-        label="Закрыть"
-        @click="visible = false"
-      />
-    </template>
   </Dialog>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 
 const props = defineProps<{
   show: boolean;
 }>();
 
 const emit = defineEmits<{
-  close: [];
+  'update:show': [value: boolean];
 }>();
 
 const visible = computed({
   get: () => props.show,
-  set: (value: boolean) => {
-    if (!value) {
-      emit('close');
-    }
-  },
+  set: (value) => emit('update:show', value),
 });
 </script>

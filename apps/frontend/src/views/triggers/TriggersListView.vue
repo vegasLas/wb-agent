@@ -1,39 +1,21 @@
 <template>
-  <div class="space-y-4">
-    <!-- Subscription Alert -->
-    <div v-if="!userStore.subscriptionActive">
-      <Message
-        severity="error"
-        :closable="false"
-        class="mb-4"
-      >
-        <div class="flex flex-col gap-2">
-          <div class="font-medium">
-            Подписка не активна
-          </div>
-          <div class="text-sm">
-            Для использования сервиса требуется активная подписка. Пожалуйста, оформите подписку для продолжения работы.
-          </div>
-          <div class="mt-2">
-            <Button 
-              severity="primary" 
-              variant="outlined"
-              @click="navigateToStoreSubscription"
-            >
-              Купить подписку
-            </Button>
-          </div>
-        </div>
-      </Message>
-    </div>
+  <div class="space-y-3">
+    <!-- User Alerts -->
+    <UserAlerts />
 
-    <!-- Main Content - Only show if subscription is active -->
-    <template v-else>
+    <!-- Display content only if user has selected account, valid supplier and subscription is active -->
+    <template
+      v-if="
+        userStore.selectedAccount &&
+          userStore.hasValidSupplier &&
+          userStore.subscriptionActive
+      "
+    >
       <Message
         v-if="triggerStore.activeTriggersCount >= 30"
         severity="warn"
         :closable="false"
-        class="mb-4"
+        class="w-full"
       >
         <div class="font-medium">
           Достигнут лимит активных таймслотов
@@ -59,7 +41,7 @@
             :class="[
               'ml-2 px-2 py-0.5 rounded text-xs font-medium',
               triggerStore.selectedStatus === status
-                ? 'bg-white text-blue-600'
+                ? 'bg-white text-blue-600 dark:text-blue-400'
                 : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
             ]"
           >
@@ -73,22 +55,20 @@
         v-model="triggerStore.searchQuery"
         type="text"
         :placeholder="getSearchPlaceholder()"
-        class="mb-4 w-full"
+        class="w-full"
       />
 
       <!-- Header with count and create button -->
       <div class="flex items-center justify-between gap-4">
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <Tag severity="info">
           активных таймслотов: {{ triggerStore.activeTriggersCount }}/30
-        </span>
+        </Tag>
 
         <Button
           severity="primary"
-          size="small"
           :disabled="triggerStore.activeTriggersCount >= 30"
           @click="navigateToCreate"
         >
-          <i class="pi pi-plus mr-1 text-xs" />
           добавить
         </Button>
       </div>
@@ -270,6 +250,7 @@ import { useTriggerStore } from '../../stores/triggers';
 import { useWarehousesStore } from '../../stores/warehouses';
 import { useUserStore } from '../../stores/user';
 import { useViewReady } from '../../composables/useSkeleton';
+import UserAlerts from '../../components/global/UserAlerts.vue';
 import CoefficientHistoryAlert from '../../components/triggers/CoefficientHistoryAlert.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
 
@@ -281,10 +262,6 @@ const { viewReady } = useViewReady();
 
 function navigateToCreate() {
   router.push({ name: 'TriggerCreate' });
-}
-
-function navigateToStoreSubscription() {
-  router.push({ name: 'StoreSubscription' });
 }
 
 function getSupplyTypeLabel(type: string): string {
