@@ -20,7 +20,10 @@
 
     <template v-if="dateType">
       <!-- For WEEK and MONTH types -->
-      <div v-if="['WEEK', 'MONTH'].includes(dateType)" class="form-group">
+      <div
+        v-if="['WEEK', 'MONTH'].includes(dateType)"
+        class="form-group"
+      >
         <label
           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
@@ -45,7 +48,10 @@
       </div>
 
       <!-- For CUSTOM_PERIOD type -->
-      <div v-if="dateType === 'CUSTOM_PERIOD'" class="form-group">
+      <div
+        v-if="dateType === 'CUSTOM_PERIOD'"
+        class="form-group"
+      >
         <label
           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >

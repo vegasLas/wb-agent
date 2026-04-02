@@ -1,6 +1,8 @@
 <template>
   <Dialog
     v-model:visible="visible"
+    position="bottom"
+    :modal="true"
     header="Остатки на складе"
     @hide="$emit('update:show', false)"
   >
@@ -17,22 +19,6 @@
         >
           <template #body="slotProps">
             {{ slotProps.data.supplierArticle }}
-          </template>
-        </Column>
-        <Column
-          field="brand"
-          header="Бренд"
-        >
-          <template #body="slotProps">
-            {{ slotProps.data.brand }}
-          </template>
-        </Column>
-        <Column
-          field="subject"
-          header="Предмет"
-        >
-          <template #body="slotProps">
-            {{ slotProps.data.subject }}
           </template>
         </Column>
         <Column

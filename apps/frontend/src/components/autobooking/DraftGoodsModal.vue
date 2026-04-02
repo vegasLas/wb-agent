@@ -1,6 +1,9 @@
 <template>
   <Dialog
     v-model:visible="visible"
+    position="bottom"
+    :modal="true"
+    :draggable="false"
     header="Товары в черновике"
     @hide="$emit('update:show', false)"
   >
@@ -80,7 +83,7 @@ interface DraftGood {
 
 interface Props {
   show: boolean;
-  goods: DraftGood[];
+  goods: readonly DraftGood[];
   loading: boolean;
 }
 
