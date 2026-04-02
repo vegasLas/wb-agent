@@ -13,7 +13,7 @@ export type DateType =
   | 'CUSTOM_PERIOD'
   | 'CUSTOM_DATES'
   | 'CUSTOM_DATES_SINGLE';
-export type SupplyType = 'SUPPLY' | 'MONOPALLETE' | 'QR_SUPPLY' | '';
+export type SupplyType = 'BOX' | 'MONOPALLETE' | 'SUPERSAFE' | '';
 
 // Validation result type
 export interface ValidationResult {
@@ -197,15 +197,16 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
       error.value = null;
 
       const createData: AutobookingCreateData = {
+        accountId: userStore.selectedAccount!.id,
         draftId: form.value.draftId,
-        warehouseId: form.value.warehouseId,
+        warehouseId: form.value.warehouseId!,
         transitWarehouseId: form.value.transitWarehouseId,
         transitWarehouseName: form.value.transitWarehouseName,
-        supplyType: form.value.supplyType,
+        supplyType: form.value.supplyType as 'BOX' | 'MONOPALLETE' | 'SUPERSAFE',
         dateType: form.value.dateType,
         startDate: form.value.startDate || null,
         endDate: form.value.endDate || null,
-        customDates: form.value.customDates,
+        customDates: form.value.customDates as string[],
         maxCoefficient: form.value.maxCoefficient,
         monopalletCount: form.value.monopalletCount,
       };

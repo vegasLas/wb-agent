@@ -20,9 +20,9 @@
         >
           <template #body="slotProps">
             <img
-              v-if="slotProps.data.imgSrc"
-              :src="slotProps.data.imgSrc"
-              :alt="slotProps.data.imtName"
+              v-if="slotProps.data.imgSrc || slotProps.data.image"
+              :src="slotProps.data.imgSrc || slotProps.data.image"
+              :alt="slotProps.data.imtName || slotProps.data.name"
               class="h-12 w-12 object-cover rounded"
             >
             <div
@@ -38,7 +38,7 @@
           header="Артикул"
         >
           <template #body="slotProps">
-            {{ slotProps.data.nmSa }}
+            {{ slotProps.data.nmSa || slotProps.data.sa || slotProps.data.article }}
           </template>
         </Column>
         <Column
@@ -76,8 +76,12 @@ import Column from 'primevue/column';
 
 interface DraftGood {
   article?: string;
+  sa?: string;
+  nmSa?: string;
   image?: string;
-  name: string;
+  imgSrc?: string;
+  name?: string;
+  imtName?: string;
   quantity: number;
 }
 
