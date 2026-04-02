@@ -6,6 +6,15 @@ import {
   AutobookingCreateView,
   AutobookingUpdateView,
 } from '../views/autobooking';
+import {
+  ReschedulesListView,
+  ReschedulesCreateView,
+  ReschedulesUpdateView,
+} from '../views/reschedules';
+import {
+  TriggersListView,
+  TriggersCreateView,
+} from '../views/triggers';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
@@ -79,50 +88,47 @@ const routes: RouteRecordRaw[] = [
           title: 'Редактирование автобронирования',
         },
       },
+      // Reschedules Routes (flat structure - each view is standalone)
       {
         path: 'reschedules',
-        component: () => import('../views/ReschedulesView.vue'),
+        name: 'ReschedulesList',
+        component: ReschedulesListView,
         meta: {
-          title: 'Reschedules',
+          title: 'Перепланирования',
         },
-        redirect: { name: 'ReschedulesList' },
-        children: [
-          {
-            path: '',
-            name: 'ReschedulesList',
-            component: () => import('../components/reschedules/List.vue'),
-          },
-          {
-            path: 'create',
-            name: 'ReschedulesCreate',
-            component: () => import('../components/reschedules/Form.vue'),
-          },
-          {
-            path: 'update/:id',
-            name: 'ReschedulesUpdate',
-            component: () => import('../components/reschedules/UpdateForm.vue'),
-          },
-        ],
       },
       {
-        path: 'triggers',
-        component: () => import('../views/TriggersView.vue'),
+        path: 'reschedules/create',
+        name: 'ReschedulesCreate',
+        component: ReschedulesCreateView,
         meta: {
-          title: 'Triggers',
+          title: 'Создание перепланирования',
         },
-        redirect: { name: 'TriggersList' },
-        children: [
-          {
-            path: '',
-            name: 'TriggersList',
-            component: () => import('../components/triggers/TriggersList.vue'),
-          },
-          {
-            path: 'create',
-            name: 'TriggerCreate',
-            component: () => import('../components/triggers/TriggerForm.vue'),
-          },
-        ],
+      },
+      {
+        path: 'reschedules/update/:id',
+        name: 'ReschedulesUpdate',
+        component: ReschedulesUpdateView,
+        meta: {
+          title: 'Редактирование перепланирования',
+        },
+      },
+      // Triggers Routes (flat structure - each view is standalone)
+      {
+        path: 'triggers',
+        name: 'TriggersList',
+        component: TriggersListView,
+        meta: {
+          title: 'Таймслоты',
+        },
+      },
+      {
+        path: 'triggers/create',
+        name: 'TriggerCreate',
+        component: TriggersCreateView,
+        meta: {
+          title: 'Создание таймслота',
+        },
       },
       {
         path: 'reports',
