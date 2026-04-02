@@ -21,12 +21,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useColorMode } from '@vueuse/core';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import LoadingLayout from '../components/layout/LoadingLayout.vue';
 import { useSkeleton } from '../composables/useSkeleton';
+import { useTelegram } from '../composables/useTelegram';
 import {
   SkeletonAccount,
   SkeletonAutobookings,
@@ -36,6 +38,20 @@ import {
   SkeletonPayments,
   SkeletonReschedules,
 } from '../components/skeleton';
+
+// Initialize color mode with proper configuration for class-based dark mode
+const colorMode = useColorMode({
+  attribute: 'class',
+  selector: 'html',
+});
+
+// Watch Telegram's color scheme and apply it
+const { colorScheme: telegramColorScheme } = useTelegram();
+watch(telegramColorScheme, (newScheme) => {
+  if (newScheme) {
+    colorMode.value = newScheme;
+  }
+}, { immediate: true });
 
 const router = useRouter();
 const route = useRoute();
