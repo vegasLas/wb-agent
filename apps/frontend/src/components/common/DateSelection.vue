@@ -8,6 +8,7 @@
         Тип периода <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <Select
+        :key="`datetype-${dateType}-${availableDateTypeOptions.length}`"
         :model-value="dateType"
         :options="availableDateTypeOptions"
         option-label="label"
@@ -20,10 +21,7 @@
 
     <template v-if="dateType">
       <!-- For WEEK and MONTH types -->
-      <div
-        v-if="['WEEK', 'MONTH'].includes(dateType)"
-        class="form-group"
-      >
+      <div v-if="['WEEK', 'MONTH'].includes(dateType)" class="form-group">
         <label
           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
@@ -48,10 +46,7 @@
       </div>
 
       <!-- For CUSTOM_PERIOD type -->
-      <div
-        v-if="dateType === 'CUSTOM_PERIOD'"
-        class="form-group"
-      >
+      <div v-if="dateType === 'CUSTOM_PERIOD'" class="form-group">
         <label
           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
@@ -85,6 +80,7 @@
           Выберите даты <span class="text-red-500 dark:text-red-400">*</span>
         </label>
         <MultiSelect
+          :key="`dates-${customDates?.length || 0}`"
           :model-value="customDates as string[]"
           :options="availableDatesOptions()"
           option-label="label"

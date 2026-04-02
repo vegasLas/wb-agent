@@ -26,6 +26,7 @@
         Тип поставки <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <Select
+        :key="`supply-${availableSupplyTypes.length}-${localForm.supplyType}`"
         v-model="localForm.supplyType"
         :options="availableSupplyTypes"
         option-label="label"
@@ -38,15 +39,9 @@
     </div>
 
     <!-- Validation Failure Alert -->
-    <Message
-      v-if="showValidationFailureAlert"
-      severity="error"
-      class="w-full"
-    >
+    <Message v-if="showValidationFailureAlert" severity="error" class="w-full">
       <div class="space-y-2 text-sm">
-        <p class="font-medium">
-          Ошибка валидации склада и черновика
-        </p>
+        <p class="font-medium">Ошибка валидации склада и черновика</p>
         <p>
           К сожалению, выбранный склад не принимает товары из этого черновика.
           Это может быть связано с:
@@ -81,12 +76,10 @@
     />
 
     <!-- Monopallet Count (only for MONOPALLETE supply type) -->
-    <div
-      v-if="localForm.supplyType === 'MONOPALLETE'"
-      class="space-y-2"
-    >
+    <div v-if="localForm.supplyType === 'MONOPALLETE'" class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Количество монопаллет <span class="text-red-500 dark:text-red-400">*</span>
+        Количество монопаллет
+        <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <InputNumber
         v-model="localForm.monopalletCount"
@@ -99,7 +92,8 @@
     <!-- Coefficient -->
     <div class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Максимальный коэффициент <span class="text-red-500 dark:text-red-400">*</span>
+        Максимальный коэффициент
+        <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <div class="flex items-center gap-4">
         <Slider
@@ -109,10 +103,7 @@
           class="flex-1"
         />
         <div class="min-w-[4rem] text-center">
-          <Tag
-            :value="String(localForm.maxCoefficient)"
-            severity="secondary"
-          />
+          <Tag :value="String(localForm.maxCoefficient)" severity="secondary" />
         </div>
       </div>
       <div
@@ -153,7 +144,6 @@ import DateSelectionAlerts from '../common/DateSelectionAlerts.vue';
 import AutobookingWarehouseSelection from './WarehouseSelection.vue';
 import AutobookingDraftSelection from './DraftSelection.vue';
 import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
-
 interface FormData {
   draftId: string;
   warehouseId: number | null;
@@ -239,9 +229,7 @@ watch(
   (newForm) => {
     isUpdatingFromParent.value = true;
     localForm.value = { ...newForm };
-    nextTick(() => {
-      isUpdatingFromParent.value = false;
-    });
+    isUpdatingFromParent.value = false;
   },
   { deep: true, immediate: true },
 );
@@ -251,9 +239,7 @@ watch(
   (newUseTransit) => {
     isUpdatingFromParent.value = true;
     localUseTransit.value = newUseTransit;
-    nextTick(() => {
-      isUpdatingFromParent.value = false;
-    });
+    isUpdatingFromParent.value = false;
   },
   { immediate: true },
 );
@@ -427,10 +413,5 @@ function handleCustomDatesChange(newDates: (string | Date)[]) {
 
   // Update the dates
   localForm.value.customDates = newDates;
-}
-
-// Helper for nextTick
-function nextTick(fn: () => void) {
-  setTimeout(fn, 0);
 }
 </script>

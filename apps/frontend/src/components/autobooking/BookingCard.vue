@@ -7,7 +7,9 @@
           <div class="flex-1">
             <!-- Warehouse section -->
             <div class="flex items-center gap-2">
-              <i class="pi pi-building text-gray-500 dark:text-gray-400 text-sm" />
+              <i
+                class="pi pi-building text-gray-500 dark:text-gray-400 text-sm"
+              />
               <div class="flex flex-col gap-1">
                 <Tag
                   :value="warehouseStore.getWarehouseName(booking.warehouseId)"
@@ -19,7 +21,10 @@
                   severity="secondary"
                   class="w-fit"
                 >
-                  Транзит: {{ warehouseStore.getWarehouseName(booking.transitWarehouseId) }}
+                  Транзит:
+                  {{
+                    warehouseStore.getWarehouseName(booking.transitWarehouseId)
+                  }}
                 </Tag>
               </div>
             </div>
@@ -51,7 +56,11 @@
         >
           <i class="pi pi-th-large text-gray-500 dark:text-gray-400 text-sm" />
           <Tag
-            :value="booking.monopalletCount + ' ' + (booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет')"
+            :value="
+              booking.monopalletCount +
+              ' ' +
+              (booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет')
+            "
             severity="info"
           />
         </div>
@@ -62,18 +71,26 @@
         <!-- Coefficient section -->
         <div class="flex items-center gap-2">
           <i
-            :class="booking.maxCoefficient ? 'pi pi-dollar' : 'pi pi-check-circle'"
+            :class="
+              booking.maxCoefficient ? 'pi pi-dollar' : 'pi pi-check-circle'
+            "
             class="text-gray-500 dark:text-gray-400 text-sm"
           />
           <Tag
-            :value="booking.maxCoefficient ? 'Макс. коэффициент: ' + booking.maxCoefficient : 'Бесплатная'"
+            :value="
+              booking.maxCoefficient
+                ? 'макс. коэффициент: ' + booking.maxCoefficient
+                : 'Бесплатная'
+            "
             :severity="booking.maxCoefficient ? 'warn' : 'success'"
           />
         </div>
 
         <!-- Status section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-info-circle text-gray-500 dark:text-gray-400 text-sm" />
+          <i
+            class="pi pi-info-circle text-gray-500 dark:text-gray-400 text-sm"
+          />
           <Tag
             :value="listStore.getStatusText(booking.status)"
             :severity="getStatusSeverity(booking.status)"
@@ -81,7 +98,9 @@
         </div>
 
         <!-- Created Date -->
-        <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
+        <div
+          class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400"
+        >
           <i class="pi pi-calendar text-sm" />
           Создан: {{ formatDateShort(booking.createdAt) }}
         </div>
@@ -96,13 +115,17 @@
             <div class="flex items-center gap-2">
               <i class="pi pi-arrow-circle-up" />
               <span class="text-sm">
-                Рекомендуемый макс. коэффициент: {{ suggestedCoefficientValue }}.
+                Рекомендуемый макс. коэффициент:
+                {{ suggestedCoefficientValue }}.
               </span>
             </div>
             <Button
               severity="info"
               size="small"
-              :loading="autobookingStore.loading && autobookingStore.updatingId === booking.id"
+              :loading="
+                autobookingStore.loading &&
+                autobookingStore.updatingId === booking.id
+              "
               @click="updateCoefficient"
             >
               увеличить
@@ -147,7 +170,10 @@
             variant="outlined"
             size="small"
             icon="pi pi-folder"
-            :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
+            :loading="
+              autobookingStore.loading &&
+              autobookingStore.togglingId === booking.id
+            "
             @click="archiveAutobooking"
           />
 
@@ -158,7 +184,10 @@
               severity="success"
               variant="outlined"
               size="small"
-              :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
+              :loading="
+                autobookingStore.loading &&
+                autobookingStore.togglingId === booking.id
+              "
               @click="activateAutobooking"
             >
               <i class="pi pi-play" />
@@ -183,8 +212,8 @@
           <Button
             v-if="
               booking.status === 'ACTIVE' ||
-                booking.status === 'ARCHIVED' ||
-                booking.status === 'ERROR'
+              booking.status === 'ARCHIVED' ||
+              booking.status === 'ERROR'
             "
             severity="danger"
             variant="outlined"
@@ -278,13 +307,13 @@ function openUpdateForm() {
 
 async function updateCoefficient() {
   if (suggestedCoefficientValue.value === null) return;
-  
+
   const confirmed = confirm(
-    `Вы уверены, что хотите увеличить коэффициент для этого автобронирования до ${suggestedCoefficientValue.value}?`
+    `Вы уверены, что хотите увеличить коэффициент для этого автобронирования до ${suggestedCoefficientValue.value}?`,
   );
-  
+
   if (!confirmed) return;
-  
+
   try {
     await autobookingStore.updateBookingCoefficient(
       props.booking.id,
@@ -298,9 +327,11 @@ async function updateCoefficient() {
 }
 
 async function archiveAutobooking() {
-  const confirmed = confirm('Вы уверены, что хотите архивировать это автобронирование?');
+  const confirmed = confirm(
+    'Вы уверены, что хотите архивировать это автобронирование?',
+  );
   if (!confirmed) return;
-  
+
   try {
     await autobookingStore.archiveAutobooking(props.booking.id);
   } catch (error) {
@@ -318,9 +349,11 @@ async function activateAutobooking() {
 }
 
 async function deleteAutobooking() {
-  const confirmed = confirm('Вы уверены, что хотите удалить это автобронирование?');
+  const confirmed = confirm(
+    'Вы уверены, что хотите удалить это автобронирование?',
+  );
   if (!confirmed) return;
-  
+
   try {
     await autobookingStore.deleteAutobooking(props.booking.id);
   } catch (error) {

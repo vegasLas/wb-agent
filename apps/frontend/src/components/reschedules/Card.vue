@@ -9,16 +9,10 @@
             <div class="flex items-center gap-2">
               <i class="pi pi-building text-gray-500 dark:text-gray-400" />
               <div class="flex flex-col gap-1">
-                <Tag
-                  severity="secondary"
-                  class="w-fit"
-                >
+                <Tag severity="secondary" class="w-fit">
                   {{ warehouseStore.getWarehouseName(reschedule.warehouseId) }}
                 </Tag>
-                <Tag
-                  severity="info"
-                  class="w-fit"
-                >
+                <Tag severity="info" class="w-fit">
                   Поставка: {{ reschedule.supplyId }}
                 </Tag>
               </div>
@@ -30,7 +24,11 @@
             <i class="pi pi-user text-gray-500 dark:text-gray-400" />
             <Tag
               :severity="isSupplierActive ? 'info' : 'danger'"
-              :class="isSupplierActive ? 'bg-blue-500 dark:bg-blue-600 text-white' : ''"
+              :class="
+                isSupplierActive
+                  ? 'bg-blue-500 dark:bg-blue-600 text-white'
+                  : ''
+              "
             >
               {{ getSupplierName(reschedule.supplierId) }}
             </Tag>
@@ -49,10 +47,7 @@
         <div class="flex items-center gap-2">
           <i class="pi pi-calendar text-gray-500 dark:text-gray-400" />
           <div class="flex flex-col gap-2">
-            <Tag
-              severity="secondary"
-              class="w-fit"
-            >
+            <Tag severity="secondary" class="w-fit">
               {{ getDateTypeLabel(reschedule.dateType) }}
             </Tag>
             <!-- Period Type and Date Range -->
@@ -60,7 +55,9 @@
               <!-- Date Range Badge based on Period Type -->
               <Tag
                 v-if="
-                  ['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(reschedule.dateType)
+                  ['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(
+                    reschedule.dateType,
+                  )
                 "
                 severity="warn"
                 class="w-fit"
@@ -91,7 +88,7 @@
         <div class="flex items-center gap-2">
           <i class="pi pi-dollar text-gray-500 dark:text-gray-400" />
           <Tag severity="warn">
-            Макс. коэффициент: {{ reschedule.maxCoefficient }}
+            макс. коэффициент: {{ reschedule.maxCoefficient }}
           </Tag>
         </div>
 
@@ -113,7 +110,9 @@
         </div>
 
         <!-- Created Date -->
-        <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
+        <div
+          class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400"
+        >
           <i class="pi pi-calendar-plus" />
           Создан: {{ formatDate(reschedule.createdAt) }}
         </div>
@@ -121,11 +120,7 @@
         <!-- Action Buttons -->
         <div class="flex justify-end gap-2 mt-2">
           <!-- View details button - only show if supply exists -->
-          <Button
-            size="small"
-            variant="outlined"
-            @click="emit('open-details')"
-          >
+          <Button size="small" variant="outlined" @click="emit('open-details')">
             <i class="pi pi-info-circle mr-1" />
             детали
           </Button>
@@ -307,7 +302,10 @@ const getDateRangeText = computed(() => {
   }
 });
 
-function formatDateRange(startDate: string | Date | null, endDate: string | Date | null): string {
+function formatDateRange(
+  startDate: string | Date | null,
+  endDate: string | Date | null,
+): string {
   if (!startDate || !endDate) return '';
   const start = formatDate(startDate);
   const end = formatDate(endDate);

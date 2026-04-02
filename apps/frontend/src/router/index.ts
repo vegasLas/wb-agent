@@ -11,10 +11,7 @@ import {
   ReschedulesCreateView,
   ReschedulesUpdateView,
 } from '../views/reschedules';
-import {
-  TriggersListView,
-  TriggersCreateView,
-} from '../views/triggers';
+import { TriggersListView, TriggersCreateView } from '../views/triggers';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
@@ -49,7 +46,7 @@ const routes: RouteRecordRaw[] = [
       public: true,
     },
   },
-  
+
   // Main Application Routes (wrapped in MainLayout)
   {
     path: '/',
@@ -85,7 +82,7 @@ const routes: RouteRecordRaw[] = [
         name: 'AutobookingUpdate',
         component: AutobookingUpdateView,
         meta: {
-          title: 'Редактирование автобронирования',
+          title: 'Редактирование',
         },
       },
       // Reschedules Routes (flat structure - each view is standalone)
@@ -174,7 +171,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  
+
   // 404 Catch-all
   {
     path: '/:pathMatch(.*)*',
@@ -202,8 +199,12 @@ let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
 
 // Navigation guard for app initialization
 router.beforeEach(async (to, from, next) => {
-  console.log('[Router] Navigation started:', { from: from.name, to: to.name, path: to.path });
-  
+  console.log('[Router] Navigation started:', {
+    from: from.name,
+    to: to.name,
+    path: to.path,
+  });
+
   // Update page title
   const title = to.meta.title as string;
   if (title) {
@@ -250,37 +251,39 @@ router.beforeEach(async (to, from, next) => {
 // Initialize app (Telegram + user data)
 async function initializeApp(): Promise<void> {
   const { initTelegram, initUserData } = useAppState();
-  
+
   // Initialize Telegram first
   const { isTgClient } = await initTelegram();
-  
+
   if (!isTgClient) {
     throw new Error('NOT_TG_CLIENT');
   }
-  
+
   // Initialize user data
   await initUserData();
 }
 
 // Classify error type
-function classifyError(error: any): 'session_expired' | 'maintenance' | 'not_found' {
+function classifyError(
+  error: any,
+): 'session_expired' | 'maintenance' | 'not_found' {
   if (error?.data?.data?.expired === true) {
     return 'session_expired';
   }
-  
+
   if (error?.status === 503 || error?.statusCode === 503) {
     return 'maintenance';
   }
-  
+
   return 'not_found';
 }
 
 // Map error type to route name
 function errorToRouteName(error: string): string {
   const map: Record<string, string> = {
-    'session_expired': 'SessionExpired',
-    'maintenance': 'Maintenance',
-    'not_found': 'UserNotFound',
+    session_expired: 'SessionExpired',
+    maintenance: 'Maintenance',
+    not_found: 'UserNotFound',
   };
   return map[error] || 'UserNotFound';
 }
