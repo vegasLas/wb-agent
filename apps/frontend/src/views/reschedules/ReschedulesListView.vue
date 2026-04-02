@@ -102,8 +102,6 @@
         >
           {{ noReschedulesMessage }}
         </div>
-
-        <!-- Preloader -->
       </div>
     </template>
 
@@ -150,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -160,9 +158,10 @@ import { useUserStore } from '../../stores/user';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useRescheduleListStore } from '../../stores/reschedules/list';
 import { useSupplyDetailsStore } from '../../stores/supplyDetails';
-import UserAlerts from '../global/UserAlerts.vue';
-import ReschedulesCard from './Card.vue';
-import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
+import { useViewReady } from '../../composables/useSkeleton';
+import UserAlerts from '../../components/global/UserAlerts.vue';
+import ReschedulesCard from '../../components/reschedules/Card.vue';
+import ReschedulesSupplyDetailsModal from '../../components/reschedules/SupplyDetailsModal.vue';
 import type { AutobookingReschedule, RescheduleStatus } from '../../types';
 
 const router = useRouter();
@@ -170,8 +169,9 @@ const userStore = useUserStore();
 const rescheduleStore = useRescheduleStore();
 const listStore = useRescheduleListStore();
 const supplyDetailsStore = useSupplyDetailsStore();
+const { viewReady } = useViewReady();
 
-// Note: Data fetching and viewReady() are handled in parent ReschedulesView.vue
+const scrollContainer = ref<HTMLElement | null>(null);
 
 const noReschedulesMessage = computed(() => {
   return `Нет ${listStore.selectedStatus === 'ACTIVE' ? 'активных' : listStore.selectedStatus === 'COMPLETED' ? 'завершенных' : 'архивных'} перепланирований`;
@@ -230,5 +230,29 @@ function handleOpenDetails(reschedule: AutobookingReschedule) {
   supplyDetailsStore.openModal(reschedule.supplyId);
 }
 
-const scrollContainer = ref<HTMLElement | null>(null);
+// ============================================
+// Lifecycle
+// ============================================
+onMounted(async () => {
+  try {
+    // Fetch supplies when view mounts
+    if (userStore.selectedAccount?.selectedSupplierId) {
+      await rescheduleStore.fetchSupplies(
+        userStore.selectedAccount.selectedSupplierId,
+      );
+    }
+
+    // Set initial filter to show active reschedules
+    if (listStore.selectedStatus) {
+      listStore.updateFilter('status', [listStore.selectedStatus]);
+    }
+  } catch (err) {
+    console.error('ReschedulesListView fetch error:', err);
+  } finally {
+    // ALWAYS signal view ready, even if fetch failed
+    viewReady();
+  }
+});
 </script>
+
+<style scoped></style>

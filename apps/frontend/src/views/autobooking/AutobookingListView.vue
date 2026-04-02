@@ -11,12 +11,32 @@
           userStore.subscriptionActive
       "
     >
-      <!-- Stats -->
-      <StatsCards
-        :stats="statsData"
-        :selected-status="listStore.selectedStatus"
-        @status-click="handleStatusClick"
-      />
+      <!-- Status Filter Buttons -->
+      <div class="flex gap-2">
+        <Button
+          v-for="stat in statsData"
+          :key="stat.status"
+          :variant="
+            listStore.selectedStatus === stat.status ? 'filled' : 'outlined'
+          "
+          severity="primary"
+          size="small"
+          class="flex-1 justify-between"
+          @click="handleStatusClick(stat.status)"
+        >
+          <span class="truncate">{{ stat.label }}</span>
+          <span
+            :class="[
+              'ml-2 px-2 py-0.5 rounded text-xs font-medium',
+              listStore.selectedStatus === stat.status
+                ? 'bg-white text-blue-600'
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+            ]"
+          >
+            {{ stat.count }}
+          </span>
+        </Button>
+      </div>
 
       <!-- Search and Filters -->
       <div class="space-y-3">
@@ -109,7 +129,6 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Message from 'primevue/message';
 import UserAlerts from '../../components/global/UserAlerts.vue';
-import StatsCards from '../../components/common/StatsCards.vue';
 import AutobookingBookingCard from '../../components/autobooking/BookingCard.vue';
 import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsModal.vue';
 

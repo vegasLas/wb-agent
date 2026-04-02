@@ -2,9 +2,7 @@
 export { default as AccountView } from './AccountView.vue';
 export { default as PaymentsView } from './PaymentsView.vue';
 export { default as ReportsView } from './ReportsView.vue';
-export { default as ReschedulesView } from './ReschedulesView.vue';
 export { default as StoreView } from './StoreView.vue';
-export { default as TriggersView } from './TriggersView.vue';
 
 // Autobooking Views
 export {
@@ -12,3 +10,16 @@ export {
   AutobookingCreateView,
   AutobookingUpdateView,
 } from './autobooking';
+
+// Reschedules Views
+export {
+  ReschedulesListView,
+  ReschedulesCreateView,
+  ReschedulesUpdateView,
+} from './reschedules';
+
+// Triggers Views
+export {
+  TriggersListView,
+  TriggersCreateView,
+} from './triggers';

@@ -1,5 +1,4 @@
 import { ref } from 'vue';
-import { useColorMode } from '@vueuse/core';
 import { useUserStore } from '../stores/user';
 import { useWarehousesStore } from '../stores/warehouses';
 import { useRescheduleStore } from '../stores/reschedules';
@@ -22,7 +21,6 @@ export function useAppState() {
     const { colorScheme } = vueTg.useWebAppTheme();
     const initData = vueTg.useWebApp().initData;
     
-    useColorMode().preference = colorScheme.value;
     telegramColorScheme.value = colorScheme.value;
     
     return {
