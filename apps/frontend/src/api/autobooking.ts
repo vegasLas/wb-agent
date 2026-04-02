@@ -96,18 +96,6 @@ export const autobookingAPI = {
   },
 
   /**
-   * PATCH /api/v1/autobooking/:id/toggle
-   * Toggle autobooking status (activate/archive)
-   */
-  async toggleAutobooking(id: string, enabled: boolean): Promise<Autobooking> {
-    const response = await apiClient.patch<UpdateAutobookingResponse>(
-      `/autobooking/${id}/toggle`,
-      { enabled },
-    );
-    return response.data.data;
-  },
-
-  /**
    * PATCH /api/v1/autobooking/:id/coefficient
    * Update autobooking coefficient
    */
