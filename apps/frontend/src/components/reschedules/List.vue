@@ -11,12 +11,30 @@
           userStore.subscriptionActive
       "
     >
-      <!-- Stats -->
-      <StatsCards
-        :stats="statsData"
-        :selected-status="listStore.selectedStatus"
-        @status-click="(value) => handleStatusClick(value as RescheduleStatus)"
-      />
+      <!-- Status Filter Buttons -->
+      <div class="flex gap-2">
+        <Button
+          v-for="stat in statsData"
+          :key="stat.status"
+          :variant="listStore.selectedStatus === stat.status ? 'filled' : 'outlined'"
+          severity="primary"
+          size="small"
+          class="flex-1 justify-between"
+          @click="handleStatusClick(stat.status as RescheduleStatus)"
+        >
+          <span class="truncate">{{ stat.label }}</span>
+          <span
+            :class="[
+              'ml-2 px-2 py-0.5 rounded text-xs font-medium',
+              listStore.selectedStatus === stat.status
+                ? 'bg-white text-blue-600'
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+            ]"
+          >
+            {{ stat.count }}
+          </span>
+        </Button>
+      </div>
 
       <!-- Search and Filters -->
       <div class="space-y-3">
@@ -142,7 +160,6 @@ import { useUserStore } from '../../stores/user';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useRescheduleListStore } from '../../stores/reschedules/list';
 import { useSupplyDetailsStore } from '../../stores/supplyDetails';
-import StatsCards from '../common/StatsCards.vue';
 import UserAlerts from '../global/UserAlerts.vue';
 import ReschedulesCard from './Card.vue';
 import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
