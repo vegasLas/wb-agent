@@ -156,7 +156,7 @@ Base path: `/api/v1/suppliers`
 
 | Method | Endpoint | Description | Request Body | Response |
 |--------|----------|-------------|--------------|----------|
-| GET | `/balances` | Get warehouse balances | Query: `accountId?`, `supplierId?` | `BalancesResponse` |
+| GET | `/balances` | Get warehouse balances | Query: `accountId?`, `supplierId?` | `WarehouseBalance[]` |
 | POST | `/drafts/list` | List drafts | `{ accountId?, supplierId?, limit?, offset?, orderBy? }` | `DraftsResponse` |
 | POST | `/goods/draft` | Get draft goods | `{ draftID, accountId?, supplierId?, search?, brands?, subjects?, limit?, offset? }` | `DraftGoodsResponse` |
 
@@ -169,6 +169,11 @@ interface GoodBalance {
   subject: string;
   supplierArticle: string;
   quantity: number;
+}
+
+interface WarehouseBalance {
+  warehouseId: number;
+  goods: GoodBalance[];
 }
 
 interface Draft {
