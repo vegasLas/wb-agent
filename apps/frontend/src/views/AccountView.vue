@@ -19,7 +19,7 @@
 
           <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <i class="pi pi-mobile text-blue-500" />
+              <i class="pi pi-mobile text-blue-500 dark:text-blue-400" />
               <span class="text-sm">Аккаунт:
                 {{
                   userStore.selectedAccount
@@ -30,7 +30,7 @@
                 }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <i class="pi pi-building text-green-500" />
+              <i class="pi pi-building text-green-500 dark:text-green-400" />
               <span class="text-sm">{{
                 userStore.activeSupplier?.supplierName || 'Поставщик не выбран'
               }}</span>

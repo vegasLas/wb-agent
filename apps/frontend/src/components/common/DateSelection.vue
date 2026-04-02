@@ -5,7 +5,7 @@
       <label
         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
       >
-        Тип периода <span class="text-red-500">*</span>
+        Тип периода <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <Select
         :model-value="dateType"
@@ -27,7 +27,7 @@
         <label
           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
-          Дата начала <span class="text-red-500">*</span>
+          Дата начала <span class="text-red-500 dark:text-red-400">*</span>
         </label>
         <DatePicker
           :model-value="startDateValue"
@@ -55,7 +55,7 @@
         <label
           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
-          Выберите период <span class="text-red-500">*</span>
+          Выберите период <span class="text-red-500 dark:text-red-400">*</span>
         </label>
         <DatePicker
           :model-value="dateRangeValue"
@@ -82,7 +82,7 @@
         <label
           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
-          Выберите даты <span class="text-red-500">*</span>
+          Выберите даты <span class="text-red-500 dark:text-red-400">*</span>
         </label>
         <MultiSelect
           :model-value="customDates as string[]"

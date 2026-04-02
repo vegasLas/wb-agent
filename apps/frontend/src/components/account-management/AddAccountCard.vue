@@ -7,7 +7,7 @@
       <div
         class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
       >
-        <i class="pi pi-plus text-gray-500" />
+        <i class="pi pi-plus text-gray-500 dark:text-gray-400" />
       </div>
       <div>
         <div class="font-medium">
@@ -18,7 +18,7 @@
         </div>
       </div>
     </div>
-    <i class="pi pi-arrow-right text-gray-400" />
+    <i class="pi pi-arrow-right text-gray-400 dark:text-gray-500" />
   </div>
 </template>
 

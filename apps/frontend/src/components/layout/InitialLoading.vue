@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col items-center justify-center p-4">
     <!-- Logo / Brand -->
     <div class="mb-8">
-      <div class="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+      <div class="w-16 h-16 bg-blue-600 dark:bg-blue-700 rounded-xl flex items-center justify-center shadow-lg">
         <i class="pi pi-box text-white text-3xl" />
       </div>
     </div>

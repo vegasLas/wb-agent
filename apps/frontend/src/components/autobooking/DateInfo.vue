@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center gap-2">
-    <i class="pi pi-calendar text-gray-500 text-sm" />
+    <i class="pi pi-calendar text-gray-500 dark:text-gray-400 text-sm" />
     <div class="flex flex-col gap-2">
       <Tag
         :value="listStore.getDateTypeText(booking.dateType)"
@@ -37,7 +37,7 @@
     v-if="booking.completedDates?.length"
     class="flex items-center gap-2"
   >
-    <i class="pi pi-check-circle text-gray-500 text-sm" />
+    <i class="pi pi-check-circle text-gray-500 dark:text-gray-400 text-sm" />
     <div class="grid grid-cols-2 gap-2">
       <Tag
         v-for="date in booking.completedDates"

@@ -12,7 +12,7 @@
         class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
       >
         <div class="flex items-start gap-3">
-          <i class="pi pi-exclamation-circle text-blue-500 mt-0.5" />
+          <i class="pi pi-exclamation-circle text-blue-500 dark:text-blue-400 mt-0.5" />
           <div class="text-sm space-y-2 flex-1">
             <p class="text-blue-800 dark:text-blue-200">
               <strong>Эта поставка была удалена</strong> из системы WB и больше
@@ -54,26 +54,26 @@
             <div
               class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
             >
-              <i class="pi pi-building text-gray-500" />
+              <i class="pi pi-building text-gray-500 dark:text-gray-400" />
               {{ supplyDetails.warehouseName }}
             </div>
             <div
               class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
             >
-              <i class="pi pi-box text-gray-500" />
+              <i class="pi pi-box text-gray-500 dark:text-gray-400" />
               {{ getSupplyTypeLabel(supplyDetails.boxTypeName || '') }}
             </div>
             <div
               class="flex items-center gap-2 text-gray-700 dark:text-gray-300"
             >
-              <i class="pi pi-calendar text-gray-500" />
+              <i class="pi pi-calendar text-gray-500 dark:text-gray-400" />
               {{ formatSupplyDate(supplyDetails.supplyDate) }}
             </div>
             <div
               v-if="supplyDetails.statusId"
               class="flex items-center gap-2"
             >
-              <i class="pi pi-info-circle text-gray-500" />
+              <i class="pi pi-info-circle text-gray-500 dark:text-gray-400" />
               <Tag
                 :value="getStatusName(supplyDetails.statusId)"
                 :severity="getStatusSeverity(supplyDetails.statusId)"
@@ -153,7 +153,7 @@
         <!-- Error State -->
         <div
           v-else-if="supplyGoodsError"
-          class="text-center py-12 text-red-500"
+          class="text-center py-12 text-red-500 dark:text-red-400"
         >
           {{ supplyGoodsError }}
         </div>
@@ -161,7 +161,7 @@
         <!-- Empty State -->
         <div
           v-else
-          class="text-center py-12 text-gray-500"
+          class="text-center py-12 text-gray-500 dark:text-gray-400"
         >
           Товары не найдены
         </div>

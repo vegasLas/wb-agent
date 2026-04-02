@@ -5,7 +5,7 @@
         <div class="maintenance-content">
           <!-- Icon -->
           <div class="maintenance-icon">
-            <i class="pi pi-cog text-6xl text-blue-500" />
+            <i class="pi pi-cog text-6xl text-blue-500 dark:text-blue-400" />
           </div>
 
           <!-- Title -->

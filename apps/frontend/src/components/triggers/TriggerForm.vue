@@ -19,7 +19,7 @@
         size="small"
         @click="showHintsModal = true"
       >
-        <i class="pi pi-question-circle text-yellow-600" />
+        <i class="pi pi-question-circle text-yellow-600 dark:text-yellow-400" />
       </Button>
     </div>
 
@@ -33,7 +33,7 @@
           <!-- Warehouses -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Склады (максимум 3) <span class="text-red-500">*</span>
+              Склады (максимум 3) <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <MultiSelect
               v-model="triggerFormStore.form.warehouseIds"
@@ -47,7 +47,7 @@
             />
             <p
               v-if="formErrors.warehouseIds"
-              class="mt-1 text-sm text-red-600"
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
             >
               {{ formErrors.warehouseIds }}
             </p>
@@ -56,7 +56,7 @@
           <!-- Supply Types -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Типы коробов <span class="text-red-500">*</span>
+              Типы коробов <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <MultiSelect
               v-model="triggerFormStore.form.supplyTypes"
@@ -68,7 +68,7 @@
             />
             <p
               v-if="formErrors.supplyTypes"
-              class="mt-1 text-sm text-red-600"
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
             >
               {{ formErrors.supplyTypes }}
             </p>
@@ -77,7 +77,7 @@
           <!-- Check Interval -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Интервал проверки <span class="text-red-500">*</span>
+              Интервал проверки <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <Select
               v-model="triggerFormStore.form.checkInterval"
@@ -87,7 +87,7 @@
               placeholder="Интервал проверки"
               class="w-full"
             />
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Через сколько после срабатывания таймслота снова проверять склады
             </p>
           </div>
@@ -95,7 +95,7 @@
           <!-- Search Mode -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Режим поиска <span class="text-red-500">*</span>
+              Режим поиска <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <Select
               v-model="triggerFormStore.form.searchMode"
@@ -111,7 +111,7 @@
           <!-- Date Range (for RANGE mode) -->
           <div v-if="triggerFormStore.showDatePicker">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Период поиска <span class="text-red-500">*</span>
+              Период поиска <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <DatePicker
               :model-value="dateRangeValue"
@@ -127,7 +127,7 @@
           <!-- Selected Dates (for CUSTOM_DATES mode) -->
           <div v-if="triggerFormStore.showRangePicker">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Выбрать даты <span class="text-red-500">*</span>
+              Выбрать даты <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <MultiSelect
               v-model="selectedDates"
@@ -158,7 +158,7 @@
                 class="min-w-[3rem] justify-center"
               />
             </div>
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               0 означает поиск только бесплатных слотов
             </p>
           </div>

@@ -6,7 +6,7 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-clock text-5xl mb-4 text-blue-500 animate-pulse" />
+        <i class="pi pi-clock text-5xl mb-4 text-blue-500 dark:text-blue-400 animate-pulse" />
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Отчет создается
         </h3>
@@ -16,7 +16,7 @@
         </p>
         <div class="w-64 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
-            class="bg-blue-500 h-2 rounded-full animate-pulse"
+            class="bg-blue-500 dark:bg-blue-600 h-2 rounded-full animate-pulse"
             style="width: 60%"
           />
         </div>
@@ -32,8 +32,8 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-exclamation-triangle text-5xl mb-4 text-red-500" />
-        <h3 class="text-xl font-semibold text-red-600 mb-2">
+        <i class="pi pi-exclamation-triangle text-5xl mb-4 text-red-500 dark:text-red-400" />
+        <h3 class="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
           Ошибка загрузки отчета
         </h3>
         <p class="text-lg text-gray-700 dark:text-gray-300 mb-4 max-w-md">
@@ -57,7 +57,7 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-spin pi-refresh text-5xl mb-4 text-blue-500" />
+        <i class="pi pi-spin pi-refresh text-5xl mb-4 text-blue-500 dark:text-blue-400" />
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Загрузка отчета
         </h3>

@@ -23,7 +23,7 @@
     <!-- Supply Type Selection -->
     <div class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Тип поставки <span class="text-red-500">*</span>
+        Тип поставки <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <Select
         v-model="localForm.supplyType"
@@ -86,7 +86,7 @@
       class="space-y-2"
     >
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Количество монопаллет <span class="text-red-500">*</span>
+        Количество монопаллет <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <InputNumber
         v-model="localForm.monopalletCount"
@@ -99,7 +99,7 @@
     <!-- Coefficient -->
     <div class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Максимальный коэффициент <span class="text-red-500">*</span>
+        Максимальный коэффициент <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <div class="flex items-center gap-4">
         <Slider

@@ -2,7 +2,7 @@
   <!-- Warehouse Selection -->
   <div class="space-y-2">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-      Склад <span class="text-red-500">*</span>
+      Склад <span class="text-red-500 dark:text-red-400">*</span>
     </label>
     <Select
       :model-value="modelValue || ''"
@@ -34,7 +34,7 @@
     class="space-y-2"
   >
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-      Транзитный склад <span class="text-red-500">*</span>
+      Транзитный склад <span class="text-red-500 dark:text-red-400">*</span>
     </label>
     <Select
       :model-value="transitWarehouseId || ''"

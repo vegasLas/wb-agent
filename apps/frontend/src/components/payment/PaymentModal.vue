@@ -75,7 +75,7 @@
       v-else
       class="text-center py-4"
     >
-      <i class="pi pi-check-circle text-green-500 text-6xl mb-4" />
+      <i class="pi pi-check-circle text-green-500 dark:text-green-400 text-6xl mb-4" />
       <p class="text-lg font-medium mb-2 text-gray-900 dark:text-white">
         Ссылка на оплату отправлена
       </p>

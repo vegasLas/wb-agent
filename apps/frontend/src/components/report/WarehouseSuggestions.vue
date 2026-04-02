@@ -112,7 +112,7 @@
       class="mt-8 text-center py-12"
     >
       <template #content>
-        <i class="pi pi-spin pi-refresh text-3xl mx-auto mb-4 text-blue-500" />
+        <i class="pi pi-spin pi-refresh text-3xl mx-auto mb-4 text-blue-500 dark:text-blue-400" />
         <p class="text-gray-500 dark:text-gray-400">
           Анализ рекомендаций...
         </p>
@@ -152,9 +152,9 @@ const { suggestions } = useWarehouseSuggestions();
 
 const getPriorityIconClass = (priority: 'high' | 'medium' | 'low') => {
   return {
-    high: 'pi pi-exclamation-triangle text-red-500',
-    medium: 'pi pi-exclamation-circle text-yellow-500',
-    low: 'pi pi-info-circle text-blue-500',
+    high: 'pi pi-exclamation-triangle text-red-500 dark:text-red-400',
+    medium: 'pi pi-exclamation-circle text-yellow-500 dark:text-yellow-400',
+    low: 'pi pi-info-circle text-blue-500 dark:text-blue-400',
   }[priority];
 };
 
