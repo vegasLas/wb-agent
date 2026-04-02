@@ -1,6 +1,6 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { supplierAPI, type GoodBalance } from '../api';
+import { supplierAPI, type WarehouseBalance } from '../api';
 import { useUserStore } from './user';
 import type { SupplierInfo } from '../types';
 
@@ -10,9 +10,9 @@ export const useSupplierStore = defineStore('supplier', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const isFetched = ref(false);
-  
-  // Warehouse balances state (map of warehouseId to balances)
-  const warehouseBalances = ref<Record<number, GoodBalance[]>>({});
+
+  // Warehouse balances state (array of warehouse balances)
+  const warehouseBalances = ref<WarehouseBalance[]>([]);
   const loadingBalances = ref(false);
   const balancesError = ref<string | null>(null);
 
@@ -20,10 +20,13 @@ export const useSupplierStore = defineStore('supplier', () => {
   const hasSupplier = computed(() => !!supplierInfo.value);
 
   const supplierName = computed(() => supplierInfo.value?.name || '');
-  
+
   const getBalancesForWarehouse = computed(() => {
     return (warehouseId: number) => {
-      return warehouseBalances.value[warehouseId] || [];
+      const warehouseBalance = warehouseBalances.value.find(
+        (wb) => wb.warehouseId === warehouseId,
+      );
+      return warehouseBalance?.goods || [];
     };
   });
 
@@ -37,7 +40,8 @@ export const useSupplierStore = defineStore('supplier', () => {
       isFetched.value = true;
       return data;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch supplier info';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch supplier info';
       error.value = errorMsg;
       throw err;
     } finally {
@@ -49,16 +53,19 @@ export const useSupplierStore = defineStore('supplier', () => {
     try {
       loadingBalances.value = true;
       balancesError.value = null;
-      
+
       // If no accountId provided, use the current user's selected account
       const userStore = useUserStore();
       const effectiveAccountId = accountId ?? userStore.selectedAccount?.id;
-      
+
       const data = await supplierAPI.fetchWarehouseBalances(effectiveAccountId);
-      warehouseBalances.value = data || {};
+      warehouseBalances.value = data || [];
       return data;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch warehouse balances';
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Failed to fetch warehouse balances';
       balancesError.value = errorMsg;
       throw err;
     } finally {

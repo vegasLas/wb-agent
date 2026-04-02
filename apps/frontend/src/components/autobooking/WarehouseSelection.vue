@@ -26,12 +26,13 @@
         (value) => $emit('update:useTransit', value as boolean)
       "
     />
-    <label class="text-sm text-gray-700 dark:text-gray-300"
-      >Использовать транзитный склад</label
-    >
+    <label class="text-sm text-gray-700 dark:text-gray-300">Использовать транзитный склад</label>
   </div>
 
-  <div v-if="useTransit" class="space-y-2">
+  <div
+    v-if="useTransit"
+    class="space-y-2"
+  >
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
       Транзитный склад <span class="text-red-500">*</span>
     </label>
@@ -50,7 +51,10 @@
   </div>
 
   <!-- Warehouse Balances Button -->
-  <div v-if="modelValue" class="flex justify-end">
+  <div
+    v-if="modelValue"
+    class="flex justify-end"
+  >
     <Button
       severity="info"
       variant="outlined"
@@ -95,7 +99,6 @@ interface Props {
   loading?: boolean;
   accountId?: string;
 }
-
 const props = defineProps<Props>();
 const emit = defineEmits<{
   'update:modelValue': [value: number];
@@ -112,12 +115,18 @@ const showBalancesModal = ref(false);
 // Computed for selected warehouse balances
 const selectedWarehouseBalances = computed(() => {
   if (!props.modelValue) return [];
+  console.log('props.modelValue: ', props.modelValue);
+  console.log(
+    'supplierStore.getBalancesForWarehouse(props.modelValue): ',
+    supplierStore.getBalancesForWarehouse(props.modelValue),
+  );
   return supplierStore.getBalancesForWarehouse(props.modelValue);
 });
 
 watch(
   () => props.modelValue,
   (modelValue) => {
+    console.log('modelValue: ', modelValue);
     if (modelValue) {
       const selectedWarehouse = props.warehouseOptions.find(
         (w) => w.value === modelValue,
@@ -133,12 +142,13 @@ watch(
 
 function onWarehouseChange(value: string | number) {
   const numValue = Number(value);
+  console.log(numValue);
   emit('update:modelValue', numValue);
   emit('warehouse-change', numValue);
 }
 
 // Fetch balances on mount
-if (props.accountId) {
+if (props.accountId && supplierStore.warehouseBalances.length === 0) {
   supplierStore.fetchWarehouseBalances(props.accountId);
 }
 </script>
