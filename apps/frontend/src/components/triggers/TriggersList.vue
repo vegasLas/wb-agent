@@ -30,7 +30,7 @@
           :class="[
             'ml-2 px-2 py-0.5 rounded text-xs font-medium',
             triggerStore.selectedStatus === status
-              ? 'bg-white text-blue-600'
+              ? 'bg-white text-blue-600 dark:text-blue-400'
               : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
           ]"
         >
@@ -75,7 +75,7 @@
         <div class="flex flex-col gap-3">
           <!-- Warehouses section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-building text-gray-500 flex-shrink-0" />
+            <i class="pi pi-building text-gray-500 dark:text-gray-400 flex-shrink-0" />
             <div class="flex flex-wrap gap-2">
               <Tag
                 v-for="warehouseId in trigger.warehouseIds"
@@ -89,7 +89,7 @@
 
           <!-- Supply types section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-box text-gray-500 flex-shrink-0" />
+            <i class="pi pi-box text-gray-500 dark:text-gray-400 flex-shrink-0" />
             <div class="flex flex-wrap gap-2">
               <Tag
                 v-for="type in trigger.supplyTypes"
@@ -103,7 +103,7 @@
 
           <!-- Search mode section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-calendar text-gray-500 flex-shrink-0" />
+            <i class="pi pi-calendar text-gray-500 dark:text-gray-400 flex-shrink-0" />
             <div class="flex flex-wrap gap-2 items-center">
               <Tag
                 severity="secondary"
@@ -139,7 +139,7 @@
 
           <!-- Check interval section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-clock text-gray-500 flex-shrink-0" />
+            <i class="pi pi-clock text-gray-500 dark:text-gray-400 flex-shrink-0" />
             <div class="flex flex-col gap-1">
               <span class="text-xs text-gray-600 dark:text-gray-400">
                 Повторная проверка через: {{ trigger.checkInterval }} мин
@@ -149,7 +149,7 @@
 
           <!-- Free/Paid and coefficient section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-dollar text-gray-500 flex-shrink-0" />
+            <i class="pi pi-dollar text-gray-500 dark:text-gray-400 flex-shrink-0" />
             <div class="flex flex-wrap gap-2">
               <Tag
                 :severity="trigger.maxCoefficient === 0 ? 'success' : 'info'"

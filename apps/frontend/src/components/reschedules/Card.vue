@@ -7,7 +7,7 @@
           <div class="flex-1">
             <!-- Warehouse section -->
             <div class="flex items-center gap-2">
-              <i class="pi pi-building text-gray-500" />
+              <i class="pi pi-building text-gray-500 dark:text-gray-400" />
               <div class="flex flex-col gap-1">
                 <Tag
                   severity="secondary"
@@ -27,10 +27,10 @@
 
           <!-- Supplier section moved to top right -->
           <div class="flex items-center gap-1 ml-2">
-            <i class="pi pi-user text-gray-500" />
+            <i class="pi pi-user text-gray-500 dark:text-gray-400" />
             <Tag
               :severity="isSupplierActive ? 'info' : 'danger'"
-              :class="isSupplierActive ? 'bg-blue-500 text-white' : ''"
+              :class="isSupplierActive ? 'bg-blue-500 dark:bg-blue-600 text-white' : ''"
             >
               {{ getSupplierName(reschedule.supplierId) }}
             </Tag>
@@ -39,7 +39,7 @@
 
         <!-- Supply Type section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-th-large text-gray-500" />
+          <i class="pi pi-th-large text-gray-500 dark:text-gray-400" />
           <Tag :severity="getSupplyTypeSeverity(reschedule.supplyType)">
             {{ getSupplyTypeText(reschedule.supplyType) }}
           </Tag>
@@ -47,7 +47,7 @@
 
         <!-- Date Information section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-calendar text-gray-500" />
+          <i class="pi pi-calendar text-gray-500 dark:text-gray-400" />
           <div class="flex flex-col gap-2">
             <Tag
               severity="secondary"
@@ -89,7 +89,7 @@
 
         <!-- Coefficient section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-dollar text-gray-500" />
+          <i class="pi pi-dollar text-gray-500 dark:text-gray-400" />
           <Tag severity="warn">
             Макс. коэффициент: {{ reschedule.maxCoefficient }}
           </Tag>
@@ -100,7 +100,7 @@
           v-if="reschedule.completedDates?.length"
           class="flex items-center gap-2"
         >
-          <i class="pi pi-check-circle text-green-500" />
+          <i class="pi pi-check-circle text-green-500 dark:text-green-400" />
           <div class="grid grid-cols-2 gap-2">
             <Tag
               v-for="date in reschedule.completedDates"

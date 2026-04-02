@@ -8,13 +8,13 @@
       {{ label }}
       <span
         v-if="required"
-        class="text-red-500"
+        class="text-red-500 dark:text-red-400"
       >*</span>
     </label>
     <slot :invalid="!!error" />
     <small
       v-if="error"
-      class="p-error text-xs text-red-500"
+      class="p-error text-xs text-red-500 dark:text-red-400"
     >{{ error }}</small>
   </div>
 </template>

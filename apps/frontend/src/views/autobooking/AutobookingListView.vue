@@ -29,7 +29,7 @@
             :class="[
               'ml-2 px-2 py-0.5 rounded text-xs font-medium',
               listStore.selectedStatus === stat.status
-                ? 'bg-white text-blue-600'
+                ? 'bg-white text-blue-600 dark:text-blue-400'
                 : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
             ]"
           >

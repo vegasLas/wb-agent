@@ -4,7 +4,7 @@
       <div class="text-6xl font-bold text-gray-300 mb-4">
         404
       </div>
-      <div class="text-red-500 w-16 h-16 mb-4 mx-auto">
+      <div class="text-red-500 dark:text-red-400 w-16 h-16 mb-4 mx-auto">
         <i class="pi pi-exclamation-triangle text-6xl" />
       </div>
       <h2 class="text-2xl font-semibold mb-2">

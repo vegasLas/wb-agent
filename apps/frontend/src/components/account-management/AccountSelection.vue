@@ -23,7 +23,7 @@
       class="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"
     >
       <div class="flex items-start gap-3">
-        <i class="pi pi-exclamation-triangle text-orange-600 mt-0.5 flex-shrink-0" />
+        <i class="pi pi-exclamation-triangle text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
         <div class="flex-1">
           <h5 class="font-medium text-orange-900 dark:text-orange-100 mb-1">
             Требуется подписка

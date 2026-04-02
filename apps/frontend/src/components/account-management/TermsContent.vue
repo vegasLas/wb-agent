@@ -49,7 +49,7 @@
           <a
             href="https://seller.wildberries.ru/supplier-settings/supplier-users"
             target="_blank"
-            class="text-blue-500 hover:underline"
+            class="text-blue-500 dark:text-blue-400 hover:underline"
           >
             https://seller.wildberries.ru/supplier-settings/supplier-users
           </a>

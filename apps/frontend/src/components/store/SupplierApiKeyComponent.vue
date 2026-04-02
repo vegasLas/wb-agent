@@ -43,7 +43,7 @@
                     <i class="pi pi-check mr-1" />
                     API ключ успешно сохранен
                   </p>
-                  <p class="text-xs text-gray-500 mt-1">
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Обновлен: {{ formatDate(new Date()) }}
                   </p>
                 </div>
@@ -72,7 +72,7 @@
               </div>
             </div>
             <div class="flex items-center ml-3">
-              <i class="pi pi-shield text-green-500 text-2xl" />
+              <i class="pi pi-shield text-green-500 dark:text-green-400 text-2xl" />
             </div>
           </div>
         </div>
@@ -86,7 +86,7 @@
             {{ userStore.user.supplierApiKey ? 'Новый API ключ' : 'API ключ' }}
             <span
               v-if="formError"
-              class="text-red-500 text-xs ml-2"
+              class="text-red-500 dark:text-red-400 text-xs ml-2"
             >{{
               formError
             }}</span>
@@ -117,7 +117,7 @@
               <i class="pi pi-times" />
             </Button>
           </div>
-          <p class="text-xs text-gray-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400">
             API ключ можно получить в личном кабинете WB Партнеры
           </p>
         </div>

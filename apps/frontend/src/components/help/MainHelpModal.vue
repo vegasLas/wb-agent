@@ -11,7 +11,7 @@
       <!-- Autobookings Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-calendar text-blue-600 text-lg" />
+          <i class="pi pi-calendar text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Автоброни
           </h4>
@@ -47,7 +47,7 @@
       <!-- Reschedules Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-refresh text-blue-600 text-lg" />
+          <i class="pi pi-refresh text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Перепланирование
           </h4>
@@ -80,7 +80,7 @@
       <!-- Triggers Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-clock text-blue-600 text-lg" />
+          <i class="pi pi-clock text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Слоты
           </h4>
@@ -115,7 +115,7 @@
       <!-- Report Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-chart-pie text-blue-600 text-lg" />
+          <i class="pi pi-chart-pie text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Отчеты
           </h4>
@@ -143,7 +143,7 @@
       <!-- Store Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-shopping-bag text-blue-600 text-lg" />
+          <i class="pi pi-shopping-bag text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Магазин
           </h4>
@@ -162,7 +162,7 @@
       <!-- Account Management Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-users text-blue-600 text-lg" />
+          <i class="pi pi-users text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Управление аккаунтами
           </h4>
@@ -191,7 +191,7 @@
       <!-- Account Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-user text-blue-600 text-lg" />
+          <i class="pi pi-user text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Профиль
           </h4>

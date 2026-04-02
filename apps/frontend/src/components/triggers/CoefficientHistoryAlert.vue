@@ -47,7 +47,7 @@
             :value="'коэф: ' + coefficient.maxCoefficient"
             class="text-xs"
           />
-          <span class="text-gray-500">
+          <span class="text-gray-500 dark:text-gray-400">
             обновлен: {{ formatCaptureDate(coefficient.updatedAt) }}
           </span>
         </div>

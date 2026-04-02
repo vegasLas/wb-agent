@@ -29,7 +29,7 @@
           </li>
         </ul>
         <div class="mt-2 text-sm">
-          <span class="text-blue-500">💡 Совет:</span>
+          <span class="text-blue-500 dark:text-blue-400">💡 Совет:</span>
           <span class="text-gray-600 dark:text-gray-400">Используйте перепланирование для поставок с высокими
             коэффициентами.</span>
         </div>
@@ -60,7 +60,7 @@
           </li>
         </ul>
         <div class="mt-2 text-sm">
-          <span class="text-yellow-500">⚠️ Важно:</span>
+          <span class="text-yellow-500 dark:text-yellow-400">⚠️ Важно:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Если поставка не отображается в списке, значит её нельзя
             перепланировать (возможно, уже забронирована или завершена).</span>
@@ -109,7 +109,7 @@
           </li>
         </ul>
         <div class="mt-2 text-sm">
-          <span class="text-blue-500">💡 Выбор типа:</span>
+          <span class="text-blue-500 dark:text-blue-400">💡 Выбор типа:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Может отличаться от исходной поставки, выберите наиболее подходящий
             для ваших товаров.</span>
@@ -144,7 +144,7 @@
           </li>
         </ul>
         <div class="mt-2 text-sm">
-          <span class="text-green-500">🎯 Стратегия:</span>
+          <span class="text-green-500 dark:text-green-400">🎯 Стратегия:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Более широкие периоды увеличивают шансы на успешное
             перепланирование.</span>
@@ -179,7 +179,7 @@
           </li>
         </ul>
         <div class="mt-2 text-sm">
-          <span class="text-orange-500">💰 Совет:</span>
+          <span class="text-orange-500 dark:text-orange-400">💰 Совет:</span>
           <span class="text-gray-600 dark:text-gray-400">
             Начните с коэффициента 5-10, можете повысить при
             необходимости.</span>

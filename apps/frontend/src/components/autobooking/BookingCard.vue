@@ -7,7 +7,7 @@
           <div class="flex-1">
             <!-- Warehouse section -->
             <div class="flex items-center gap-2">
-              <i class="pi pi-building text-gray-500 text-sm" />
+              <i class="pi pi-building text-gray-500 dark:text-gray-400 text-sm" />
               <div class="flex flex-col gap-1">
                 <Tag
                   :value="warehouseStore.getWarehouseName(booking.warehouseId)"
@@ -27,7 +27,7 @@
 
           <!-- Supplier section moved to top right -->
           <div class="flex items-center gap-1 ml-2">
-            <i class="pi pi-user text-gray-500 text-sm" />
+            <i class="pi pi-user text-gray-500 dark:text-gray-400 text-sm" />
             <Tag
               :value="getSupplierName(booking.supplierId)"
               :severity="isSupplierActive ? 'info' : 'danger'"
@@ -37,7 +37,7 @@
 
         <!-- Supply Type section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-box text-gray-500 text-sm" />
+          <i class="pi pi-box text-gray-500 dark:text-gray-400 text-sm" />
           <Tag
             :value="getSupplyTypeText(booking.supplyType)"
             severity="secondary"
@@ -49,7 +49,7 @@
           v-if="booking.supplyType === 'MONOPALLETE' && booking.monopalletCount"
           class="flex items-center gap-2"
         >
-          <i class="pi pi-th-large text-gray-500 text-sm" />
+          <i class="pi pi-th-large text-gray-500 dark:text-gray-400 text-sm" />
           <Tag
             :value="booking.monopalletCount + ' ' + (booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет')"
             severity="info"
@@ -63,7 +63,7 @@
         <div class="flex items-center gap-2">
           <i
             :class="booking.maxCoefficient ? 'pi pi-dollar' : 'pi pi-check-circle'"
-            class="text-gray-500 text-sm"
+            class="text-gray-500 dark:text-gray-400 text-sm"
           />
           <Tag
             :value="booking.maxCoefficient ? 'Макс. коэффициент: ' + booking.maxCoefficient : 'Бесплатная'"
@@ -73,7 +73,7 @@
 
         <!-- Status section -->
         <div class="flex items-center gap-2">
-          <i class="pi pi-info-circle text-gray-500 text-sm" />
+          <i class="pi pi-info-circle text-gray-500 dark:text-gray-400 text-sm" />
           <Tag
             :value="listStore.getStatusText(booking.status)"
             :severity="getStatusSeverity(booking.status)"

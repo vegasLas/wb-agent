@@ -27,7 +27,7 @@
             >
             <div
               v-else
-              class="h-12 w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400"
+              class="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 dark:text-gray-500"
             >
               <i class="pi pi-image text-xl" />
             </div>
@@ -55,12 +55,12 @@
         v-else-if="loading"
         class="flex justify-center items-center py-12"
       >
-        <i class="pi pi-spin pi-spinner text-2xl text-blue-500" />
+        <i class="pi pi-spin pi-spinner text-2xl text-blue-500 dark:text-blue-400" />
       </div>
 
       <div
         v-else
-        class="text-center py-12 text-gray-500"
+        class="text-center py-12 text-gray-500 dark:text-gray-400"
       >
         Товары не найдены
       </div>

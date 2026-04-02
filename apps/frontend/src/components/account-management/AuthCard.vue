@@ -15,7 +15,7 @@
         class="space-y-4"
       >
         <div class="text-center">
-          <i class="pi pi-mobile text-5xl mx-auto mb-4 text-blue-500 block" />
+          <i class="pi pi-mobile text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block" />
           <h4 class="text-lg font-medium mb-2">
             Введите номер телефона
           </h4>
@@ -40,7 +40,7 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Номер телефона <span class="text-red-500">*</span>
+            Номер телефона <span class="text-red-500 dark:text-red-400">*</span>
           </label>
           <InputText
             v-model="phoneNumber"
@@ -77,7 +77,7 @@
         class="space-y-4"
       >
         <div class="text-center">
-          <i class="pi pi-comments text-5xl mx-auto mb-4 text-blue-500 block" />
+          <i class="pi pi-comments text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block" />
           <h4 class="text-lg font-medium mb-2">
             Введите SMS код
           </h4>
@@ -102,7 +102,7 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            SMS код <span class="text-red-500">*</span>
+            SMS код <span class="text-red-500 dark:text-red-400">*</span>
           </label>
           <InputText
             v-model="smsCode"
@@ -140,7 +140,7 @@
         class="space-y-4"
       >
         <div class="text-center">
-          <i class="pi pi-shield text-5xl mx-auto mb-4 text-blue-500 block" />
+          <i class="pi pi-shield text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block" />
           <h4 class="text-lg font-medium mb-2">
             Двухфакторная аутентификация
           </h4>
@@ -165,7 +165,7 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Код из email <span class="text-red-500">*</span>
+            Код из email <span class="text-red-500 dark:text-red-400">*</span>
           </label>
           <InputText
             v-model="twoFactorCode"
@@ -203,7 +203,7 @@
         class="space-y-4"
       >
         <div class="text-center">
-          <i class="pi pi-exclamation-triangle text-5xl mx-auto mb-4 text-red-500 block" />
+          <i class="pi pi-exclamation-triangle text-5xl mx-auto mb-4 text-red-500 dark:text-red-400 block" />
           <h4 class="text-lg font-medium mb-2 text-red-600 dark:text-red-400">
             Ошибка авторизации
           </h4>
@@ -235,7 +235,7 @@
         class="space-y-4"
       >
         <div class="text-center">
-          <i class="pi pi-check-circle text-5xl mx-auto mb-4 text-green-500 block" />
+          <i class="pi pi-check-circle text-5xl mx-auto mb-4 text-green-500 dark:text-green-400 block" />
           <h4
             class="text-lg font-medium mb-2 text-green-600 dark:text-green-400"
           >
@@ -250,7 +250,7 @@
 
     <!-- Step indicator -->
     <div class="flex justify-center mt-4">
-      <div class="text-xs text-gray-500">
+      <div class="text-xs text-gray-500 dark:text-gray-400">
         Шаг {{ getCurrentStep() }} из 3
       </div>
     </div>

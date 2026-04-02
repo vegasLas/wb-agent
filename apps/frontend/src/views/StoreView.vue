@@ -49,14 +49,14 @@
           <template #content>
             <div
               v-if="userStore.subscriptionActive"
-              class="text-green-600"
+              class="text-green-600 dark:text-green-400"
             >
               <i class="pi pi-check-circle mr-1" />
               Активна до {{ formatDate(userStore.user.subscriptionExpiresAt) }}
             </div>
             <div
               v-else
-              class="text-red-500"
+              class="text-red-500 dark:text-red-400"
             >
               <i class="pi pi-times-circle mr-1" />
               Не активна

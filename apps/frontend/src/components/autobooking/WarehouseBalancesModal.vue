@@ -35,14 +35,14 @@
         v-else-if="loading"
         class="flex justify-center items-center py-12"
       >
-        <i class="pi pi-spin pi-spinner text-2xl text-blue-500" />
+        <i class="pi pi-spin pi-spinner text-2xl text-blue-500 dark:text-blue-400" />
       </div>
 
       <div
         v-else-if="error"
         class="text-center py-12"
       >
-        <div class="text-red-500 mb-4">
+        <div class="text-red-500 dark:text-red-400 mb-4">
           {{ error }}
         </div>
         <Button
@@ -56,7 +56,7 @@
 
       <div
         v-else
-        class="text-center py-12 text-gray-500"
+        class="text-center py-12 text-gray-500 dark:text-gray-400"
       >
         Остатки не найдены
       </div>
@@ -66,7 +66,7 @@
       <div class="flex justify-between items-center">
         <p
           v-if="balances.length"
-          class="text-sm text-gray-500"
+          class="text-sm text-gray-500 dark:text-gray-400"
         >
           Всего товаров: {{ totalQuantity }} шт.
         </p>

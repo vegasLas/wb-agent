@@ -23,7 +23,7 @@
         <div class="flex items-center gap-2 w-full">
           <span class="text-lg">{{ option.flag }}</span>
           <span class="text-gray-900 dark:text-white">{{ option.name }}</span>
-          <span class="text-gray-500 text-sm ml-auto">{{ option.dialCode }}</span>
+          <span class="text-gray-500 dark:text-gray-400 text-sm ml-auto">{{ option.dialCode }}</span>
         </div>
       </template>
     </Select>
