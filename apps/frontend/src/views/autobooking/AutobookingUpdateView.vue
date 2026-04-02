@@ -1,14 +1,10 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 p-3">
     <div class="flex items-center justify-end mb-6">
       <h3 class="text-xl text-center font-semibold flex-1">
         Редактирование автобронирования
       </h3>
-      <Button
-        variant="outlined"
-        severity="warn"
-        @click="showHintsModal = true"
-      >
+      <Button variant="outlined" severity="warn" @click="showHintsModal = true">
         <i class="pi pi-question-circle" />
       </Button>
     </div>
@@ -89,7 +85,11 @@ const warehouseOptions = computed(() =>
 );
 
 const canSubmit = computed(
-  () => updateStore.isValid && !updateStore.loading && !isSubmitting.value,
+  () =>
+    updateStore.isValid &&
+    updateStore.hasChanges &&
+    !updateStore.loading &&
+    !isSubmitting.value,
 );
 
 // ============================================
@@ -133,6 +133,15 @@ onMounted(async () => {
 
     // Fetch drafts using the composable's unified method
     await draftsFetcher.fetchIfEmpty();
+
+    // If no autobooking is loaded (e.g., after page reload),
+    // redirect to the list view instead of restoring from storage
+    if (!updateStore.currentAutobooking) {
+      router.push({ name: 'AutobookingList' });
+      return;
+    }
+
+    await updateStore.validateWarehouse();
   } finally {
     // Signal view is ready
     viewReady();
