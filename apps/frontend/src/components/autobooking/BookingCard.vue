@@ -143,14 +143,13 @@
           <!-- Archive button for active autobookings -->
           <Button
             v-if="booking.status === 'ACTIVE'"
-            severity="warn"
+            severity="secondary"
             variant="outlined"
             size="small"
+            icon="pi pi-folder"
             :loading="autobookingStore.loading && autobookingStore.togglingId === booking.id"
             @click="archiveAutobooking"
-          >
-            <i class="pi pi-archive" />
-          </Button>
+          />
 
           <!-- Activate button or Not Relevant badge for archived items -->
           <template v-if="booking.status === 'ARCHIVED'">
@@ -203,6 +202,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import type { Autobooking } from '../../types';
 import { useAutobookingStore } from '../../stores/autobooking';
 import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
@@ -226,6 +226,7 @@ const emit = defineEmits<{
   'view-goods': [draftId: string, supplierId: string];
 }>();
 
+const router = useRouter();
 const autobookingStore = useAutobookingStore();
 const updateStore = useAutobookingUpdateStore();
 const listStore = useAutobookingListStore();
@@ -271,6 +272,8 @@ function openUpdateForm() {
   // Create deep copy of booking to avoid mutations
   const bookingCopy = JSON.parse(JSON.stringify(props.booking));
   updateStore.loadAutobooking(bookingCopy);
+  // Navigate to update view
+  router.push({ name: 'AutobookingUpdate', params: { id: props.booking.id } });
 }
 
 async function updateCoefficient() {
@@ -295,10 +298,14 @@ async function updateCoefficient() {
 }
 
 async function archiveAutobooking() {
+  const confirmed = confirm('Вы уверены, что хотите архивировать это автобронирование?');
+  if (!confirmed) return;
+  
   try {
-    await autobookingStore.toggleAutobooking(props.booking.id, false);
+    await autobookingStore.archiveAutobooking(props.booking.id);
   } catch (error) {
     console.error('Failed to archive autobooking:', error);
+    alert('Не удалось архивировать автобронирование');
   }
 }
 
