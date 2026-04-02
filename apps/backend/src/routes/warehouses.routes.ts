@@ -11,6 +11,7 @@ import { wbWarehouseService } from '../services/wb-warehouse.service';
 import { wbSupplierService } from '../services/wb-supplier.service';
 import { accountService } from '../services/account.service';
 import { userService } from '../services/user.service';
+import { cacheService } from '../services/cache.service';
 import { ApiError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { UserEnvInfo } from '../types/wb';
@@ -20,9 +21,6 @@ const router = Router();
 // Cache configuration
 const CACHE_KEY = 'warehouses';
 const CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
-
-// In-memory cache (in production, use Redis or similar)
-const cache = new Map<string, { data: unknown; timestamp: number }>();
 
 /**
  * Helper to get user environment info
@@ -72,11 +70,11 @@ router.get(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Check cache first
-      const cachedData = cache.get(CACHE_KEY);
-      if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
+      const cachedData = cacheService.get<unknown[]>(CACHE_KEY, CACHE_DURATION);
+      if (cachedData) {
         res.json({
           success: true,
-          data: cachedData.data,
+          data: cachedData,
           cached: true,
         });
         return;
@@ -157,7 +155,7 @@ router.get(
       );
 
       // Store in cache
-      cache.set(CACHE_KEY, { data: warehouses, timestamp: Date.now() });
+      cacheService.set(CACHE_KEY, warehouses);
 
       res.json({
         success: true,
@@ -313,19 +311,13 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const cachedData = cache.get(CACHE_KEY);
+      const cachedData = cacheService.get<unknown[]>(CACHE_KEY, CACHE_DURATION);
 
       res.json({
         success: true,
         data: {
           hasCache: !!cachedData,
-          cacheAge: cachedData ? Date.now() - cachedData.timestamp : null,
-          cacheExpiry: cachedData
-            ? cachedData.timestamp + CACHE_DURATION
-            : null,
-          warehouseCount: cachedData
-            ? (cachedData.data as unknown[]).length
-            : 0,
+          warehouseCount: cachedData ? cachedData.length : 0,
         },
       });
     } catch (error) {
@@ -343,7 +335,7 @@ router.post(
   authenticate,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      cache.delete(CACHE_KEY);
+      cacheService.delete(CACHE_KEY);
 
       res.json({
         success: true,

@@ -16,7 +16,8 @@ import { userService } from '../services/user.service';
 import { ApiError } from '../utils/errors';
 import { convertWarehouseName } from '../utils/warehouseNames';
 import { logger } from '../utils/logger';
-import { GoodBalance } from '../types/wb';
+import { GoodBalance, Warehouse } from '../types/wb';
+import { cacheService } from '../services/cache.service';
 
 const router = Router();
 
@@ -97,32 +98,40 @@ router.get(
 
       if (!response.data?.table?.data) {
         logger.warn('No data found in balances response');
-        return res.json({
-          success: true,
-          data: {},
-        });
+        return res.json([]);
       }
 
       const headerFront = response.data.table.headerFront;
       if (!headerFront) {
-        return res.json({
-          success: true,
-          data: {},
-        });
+        return res.json([]);
       }
-
       // Get warehouse names from the second header row, starting from index 6
       // Skip first 6 columns: brand, subject, supplierArticle, transitToClient, transitFromClient, totalInWarehouses
       const warehouseNames = headerFront[1]?.cells
         ?.slice(6)
         .map((cell) => cell.value);
-
       if (!warehouseNames) {
-        return res.json({
-          success: true,
-          data: {},
-        });
+        return res.json([]);
       }
+
+      // Get cached warehouses for name to ID mapping
+      const CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
+      const warehouses = cacheService.get<Warehouse[]>(
+        'warehouses',
+        CACHE_DURATION,
+      );
+      if (!warehouses) {
+        throw new ApiError(
+          503,
+          'Warehouse data not available. Please refresh warehouses first.',
+        );
+      }
+
+      // Create warehouse name to ID mapping
+      const warehouseMapping = new Map<string, number>();
+      warehouses.forEach((warehouse) => {
+        warehouseMapping.set(warehouse.name, warehouse.ID);
+      });
 
       // Convert English warehouse names to Russian for proper mapping
       const russianWarehouseNames = warehouseNames.map((name) =>
@@ -131,9 +140,6 @@ router.get(
 
       // Process data rows to extract balances by warehouse
       const balancesByWarehouse: Record<number, GoodBalance[]> = {};
-
-      // Build warehouse ID mapping from account suppliers data
-      const warehouseMapping = new Map<string, number>();
 
       response.data.table.data.forEach((row) => {
         if (row.length < 6) return; // Skip incomplete rows
@@ -154,25 +160,11 @@ router.get(
         if (!brand || !subject || !supplierArticle) return;
 
         russianWarehouseNames.forEach((russianWarehouseName, index) => {
+          const warehouseId = warehouseMapping.get(russianWarehouseName);
           const quantityStr = warehouseQuantities[index] || '0';
           const quantity = parseInt(quantityStr) || 0;
 
-          if (quantity > 0) {
-            // Use warehouse name hash as ID if not in mapping yet
-            // This is a temporary solution until warehouse cache is implemented
-            if (!warehouseMapping.has(russianWarehouseName)) {
-              warehouseMapping.set(
-                russianWarehouseName,
-                Math.abs(
-                  russianWarehouseName.split('').reduce((acc, char) => {
-                    return acc + char.charCodeAt(0);
-                  }, 0),
-                ),
-              );
-            }
-
-            const warehouseId = warehouseMapping.get(russianWarehouseName)!;
-
+          if (warehouseId && quantity > 0) {
             if (!balancesByWarehouse[warehouseId]) {
               balancesByWarehouse[warehouseId] = [];
             }
@@ -188,10 +180,15 @@ router.get(
         });
       });
 
-      return res.json({
-        success: true,
-        data: balancesByWarehouse,
-      });
+      // Convert to array format
+      const balancesArray = Object.entries(balancesByWarehouse).map(
+        ([warehouseId, goods]) => ({
+          warehouseId: parseInt(warehouseId),
+          goods,
+        }),
+      );
+
+      return res.json(balancesArray);
     } catch (error) {
       logger.error('Failed to get balances:', error);
       next(error);
