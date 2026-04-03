@@ -10,7 +10,8 @@
         Достигнут лимит активных таймслотов
       </div>
       <div class="text-sm">
-        У вас уже активировано максимальное количество таймслотов (30). Отключите некоторые таймслоты, чтобы активировать новые.
+        У вас уже активировано максимальное количество таймслотов (30).
+        Отключите некоторые таймслоты, чтобы активировать новые.
       </div>
     </Message>
 
@@ -19,7 +20,9 @@
       <Button
         v-for="status in ['RELEVANT', 'COMPLETED', 'EXPIRED'] as const"
         :key="status"
-        :variant="triggerStore.selectedStatus === status ? 'filled' : 'outlined'"
+        :variant="
+          triggerStore.selectedStatus === status ? 'filled' : 'outlined'
+        "
         severity="primary"
         size="small"
         class="flex-1 justify-between"
@@ -69,13 +72,15 @@
       v-for="trigger in triggerStore.filteredTriggers"
       :key="trigger.id"
       class="shadow-sm"
-      :pt="{ root: { class: 'rounded-lg border border-gray-200 dark:border-gray-700' }, content: { class: 'p-4' } }"
+      :pt="{ content: { class: 'p-4' } }"
     >
       <template #content>
         <div class="flex flex-col gap-3">
           <!-- Warehouses section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-building text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <i
+              class="pi pi-building text-gray-500 dark:text-gray-400 flex-shrink-0"
+            />
             <div class="flex flex-wrap gap-2">
               <Tag
                 v-for="warehouseId in trigger.warehouseIds"
@@ -89,7 +94,9 @@
 
           <!-- Supply types section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-box text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <i
+              class="pi pi-box text-gray-500 dark:text-gray-400 flex-shrink-0"
+            />
             <div class="flex flex-wrap gap-2">
               <Tag
                 v-for="type in trigger.supplyTypes"
@@ -103,7 +110,9 @@
 
           <!-- Search mode section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-calendar text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <i
+              class="pi pi-calendar text-gray-500 dark:text-gray-400 flex-shrink-0"
+            />
             <div class="flex flex-wrap gap-2 items-center">
               <Tag
                 severity="secondary"
@@ -111,13 +120,24 @@
                 class="text-xs"
               />
               <Tag
-                v-if="['RANGE', 'WEEK'].includes(trigger.searchMode) && trigger.startDate && trigger.endDate"
+                v-if="
+                  ['RANGE', 'WEEK'].includes(trigger.searchMode) &&
+                    trigger.startDate &&
+                    trigger.endDate
+                "
                 severity="warn"
-                :value="formatDate(trigger.startDate) + ' - ' + formatDate(trigger.endDate)"
+                :value="
+                  formatDate(trigger.startDate) +
+                    ' - ' +
+                    formatDate(trigger.endDate)
+                "
                 class="text-xs"
               />
               <div
-                v-else-if="trigger.searchMode !== 'UNTIL_FOUND' && trigger.selectedDates?.length"
+                v-else-if="
+                  trigger.searchMode !== 'UNTIL_FOUND' &&
+                    trigger.selectedDates?.length
+                "
                 class="flex flex-wrap gap-1"
               >
                 <Tag
@@ -139,7 +159,9 @@
 
           <!-- Check interval section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-clock text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <i
+              class="pi pi-clock text-gray-500 dark:text-gray-400 flex-shrink-0"
+            />
             <div class="flex flex-col gap-1">
               <span class="text-xs text-gray-600 dark:text-gray-400">
                 Повторная проверка через: {{ trigger.checkInterval }} мин
@@ -149,7 +171,9 @@
 
           <!-- Free/Paid and coefficient section -->
           <div class="flex items-center gap-2">
-            <i class="pi pi-dollar text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <i
+              class="pi pi-dollar text-gray-500 dark:text-gray-400 flex-shrink-0"
+            />
             <div class="flex flex-wrap gap-2">
               <Tag
                 :severity="trigger.maxCoefficient === 0 ? 'success' : 'info'"
@@ -176,7 +200,9 @@
           </div>
 
           <!-- Created Date -->
-          <div class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
+          <div
+            class="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400"
+          >
             <i class="pi pi-calendar text-xs" />
             Создан: {{ formatDate(trigger.createdAt) }}
           </div>
@@ -338,7 +364,18 @@ function getActionButtonIcon(trigger: SupplyTrigger): string {
   }
 }
 
-function getActionButtonColor(trigger: SupplyTrigger): 'warn' | 'secondary' | 'success' | 'info' | 'primary' | 'danger' | 'help' | 'contrast' | undefined {
+function getActionButtonColor(
+  trigger: SupplyTrigger,
+):
+  | 'warn'
+  | 'secondary'
+  | 'success'
+  | 'info'
+  | 'primary'
+  | 'danger'
+  | 'help'
+  | 'contrast'
+  | undefined {
   switch (trigger.status) {
     case 'COMPLETED':
       return 'info';

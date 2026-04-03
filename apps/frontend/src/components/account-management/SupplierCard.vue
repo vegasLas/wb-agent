@@ -2,7 +2,8 @@
   <div
     class="flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-800"
     :class="{
-      'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20': isSelected,
+      'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20':
+        isSelected,
       'border-gray-200 dark:border-gray-700': !isSelected,
     }"
     @click="$emit('select', supplier.supplierId)"
