@@ -35,7 +35,9 @@
         v-else-if="loading"
         class="flex justify-center items-center py-12"
       >
-        <i class="pi pi-spin pi-spinner text-2xl text-blue-500 dark:text-blue-400" />
+        <i
+          class="pi pi-spin pi-spinner text-2xl text-blue-500 dark:text-blue-400"
+        />
       </div>
 
       <div

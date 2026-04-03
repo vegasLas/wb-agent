@@ -25,7 +25,9 @@ RUN npm install
 COPY . .
 
 # Install Playwright browser
-# RUN npx playwright install chromium
+RUN npx playwright install chromium
+RUN npx playwright install-deps
+
 
 # Generate Prisma client
 RUN npx prisma generate --schema=prisma/schema.prisma
@@ -67,6 +69,9 @@ COPY package*.json ./
 # Copy node_modules from builder, then prune dev dependencies
 COPY --from=builder /app/node_modules ./node_modules
 RUN npm prune --omit=dev
+
+# Copy Playwright browsers from builder
+COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Copy built application
 COPY --from=builder /app/dist ./dist

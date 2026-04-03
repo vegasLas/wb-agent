@@ -1,6 +1,7 @@
 <template>
   <Dialog
     v-model:visible="visible"
+    position="bottom"
     header="Детали поставки"
     :style="{ width: '90vw', maxWidth: '800px' }"
     :modal="true"
@@ -12,7 +13,9 @@
         class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
       >
         <div class="flex items-start gap-3">
-          <i class="pi pi-exclamation-circle text-blue-500 dark:text-blue-400 mt-0.5" />
+          <i
+            class="pi pi-exclamation-circle text-blue-500 dark:text-blue-400 mt-0.5"
+          />
           <div class="text-sm space-y-2 flex-1">
             <p class="text-blue-800 dark:text-blue-200">
               <strong>Эта поставка была удалена</strong> из системы WB и больше

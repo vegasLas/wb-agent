@@ -6,47 +6,55 @@
       :options="countries"
       option-value="code"
       :disabled="disabled"
-      class="w-auto"
+      class="w-auto min-w-fit"
       :pt="{
         root: { class: 'rounded-l-lg rounded-r-none border-r-0' },
         trigger: { class: 'w-6' },
-        list: { class: 'w-48' }
+        list: { class: 'w-56' },
       }"
     >
       <template #value>
         <div class="flex items-center gap-1">
           <span class="text-lg">{{ selectedCountry.flag }}</span>
-          <span class="text-gray-900 dark:text-white text-sm font-medium">{{ selectedCountry.dialCode }}</span>
+          <span class="text-gray-900 dark:text-white text-sm font-medium">{{
+            selectedCountry.dialCode
+          }}</span>
         </div>
       </template>
       <template #option="{ option }">
         <div class="flex items-center gap-2 w-full">
           <span class="text-lg">{{ option.flag }}</span>
           <span class="text-gray-900 dark:text-white">{{ option.name }}</span>
-          <span class="text-gray-500 dark:text-gray-400 text-sm ml-auto">{{ option.dialCode }}</span>
+          <span class="text-gray-500 dark:text-gray-400 text-sm ml-auto">{{
+            option.dialCode
+          }}</span>
         </div>
       </template>
     </Select>
 
     <!-- Phone Input -->
-    <InputMask
+    <InputText
       v-model="phoneNumber"
-      :mask="phoneMask"
-      :placeholder="phoneMask"
+      v-maska="phoneMaskOptions"
+      :placeholder="phoneMaskDisplay"
       :disabled="disabled"
       :pt="{
         root: { class: 'flex-1' },
-        input: { class: 'w-full rounded-r-lg rounded-l-none border-l-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3 border' }
+        input: {
+          class:
+            'w-full rounded-r-lg rounded-l-none border-l-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3 border',
+        },
       }"
-      @update:model-value="handlePhoneInput"
+      @input="handlePhoneInput"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import InputMask from 'primevue/inputmask';
+import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
+// v-maska directive is registered globally in main.ts
 
 interface Country {
   code: string;
@@ -81,7 +89,6 @@ const emit = defineEmits<Emits>();
 // Local phone number state
 const phoneNumber = ref('');
 const selectedCountryCode = ref('RU');
-const phoneInput = ref<HTMLInputElement | null>(null);
 
 // Country data with hybrid prefix approach
 const countries: Country[] = [
@@ -187,12 +194,17 @@ const countries: Country[] = [
 // Computed for selected country object
 const selectedCountry = computed(
   () =>
-    countries.find((c) => c.code === selectedCountryCode.value) ||
-    countries[0],
+    countries.find((c) => c.code === selectedCountryCode.value) || countries[0],
 );
 
-// Get phone mask for input
-const phoneMask = computed(() => selectedCountry.value.mask);
+// Get phone mask for input - convert maska format to maska pattern
+const phoneMaskOptions = computed(() => ({
+  mask: selectedCountry.value.mask,
+  eager: true,
+}));
+
+// Display mask as placeholder (keep # as is)
+const phoneMaskDisplay = computed(() => selectedCountry.value.mask);
 
 // Get full phone number including country code
 const fullPhoneNumber = computed(() => {
