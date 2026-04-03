@@ -1,9 +1,17 @@
 <template>
-  <header class="lg:sticky lg:top-0 lg:h-screen bg-white dark:bg-[#171819] border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
-    <div class="container mx-auto px-2 py-4 lg:mx-0 lg:max-w-none lg:px-4 lg:py-6 lg:h-full">
-      <div class="flex items-center justify-between lg:flex-col lg:items-stretch lg:justify-between lg:h-full lg:gap-6">
+  <header
+    class="lg:sticky lg:top-0 lg:h-screen bg-white dark:bg-[#171819] lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700"
+  >
+    <div
+      class="container mx-auto px-2 py-4 lg:mx-0 lg:max-w-none lg:px-4 lg:py-6 lg:h-full"
+    >
+      <div
+        class="flex items-center justify-between lg:flex-col lg:items-stretch lg:justify-between lg:h-full lg:gap-6"
+      >
         <!-- Top: Navigation -->
-        <div class="flex items-center gap-1 lg:flex-col lg:items-stretch lg:gap-3">
+        <div
+          class="flex items-center gap-1 lg:flex-col lg:items-stretch lg:gap-3"
+        >
           <div class="lg:hidden flex items-center gap-1">
             <Button
               ref="navMenuButton"
@@ -28,7 +36,11 @@
             <Button
               v-for="item in navConfig"
               :key="item.id"
-              :severity="route.name?.toString().startsWith(item.id) ? 'primary' : 'secondary'"
+              :severity="
+                route.name?.toString().startsWith(item.id)
+                  ? 'primary'
+                  : 'secondary'
+              "
               class="lg:justify-start"
               @click="router.push({ name: item.route })"
             >
@@ -49,7 +61,9 @@
         </div>
 
         <!-- Bottom: Actions -->
-        <div class="flex items-center gap-1 lg:flex-col lg:items-stretch lg:gap-3">
+        <div
+          class="flex items-center gap-1 lg:flex-col lg:items-stretch lg:gap-3"
+        >
           <!-- Store Button -->
           <Button
             :severity="isStoreRoute ? 'primary' : 'secondary'"

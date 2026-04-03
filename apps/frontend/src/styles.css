@@ -70,3 +70,8 @@ pre {
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
 }
+
+/* Skeleton Card - Matches PrimeVue Card styling (no border/shadow as Card component provides these) */
+.skeleton-card {
+  @apply p-4 bg-white dark:bg-[rgb(31,31,32)];
+}
