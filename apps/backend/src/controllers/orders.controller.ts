@@ -6,15 +6,15 @@
 
 import { wbAccountRequest } from '../utils/wb-request';
 import { ProxyConfig } from '../utils/wb-request';
+import { logger } from '../utils/logger';
 
 interface NewOrderResponse {
   data: {
-    reportId: string;
+    id: string;
+    createdAt?: string;
+    dateFrom?: string;
+    dateTo?: string;
   };
-}
-
-interface XlsxReportResponse {
-  data: Buffer;
 }
 
 interface OrdersListResponse {
@@ -23,7 +23,15 @@ interface OrdersListResponse {
     dateFrom: string;
     dateTo: string;
     status: string;
+    createdAt: string;
   }>;
+}
+
+interface XlsxReportResponse {
+  data: string;
+  error: boolean;
+  errorText: string;
+  additionalErrors: any;
 }
 
 /**
@@ -63,6 +71,8 @@ export const createSalesOrder = async ({
 
 /**
  * Fetch XLSX report by report ID
+ * Returns JSON with base64 encoded data
+ * EXACT implementation from deprecated project
  */
 export const fetchReportXlsx = async ({
   accountId,
@@ -76,7 +86,7 @@ export const fetchReportXlsx = async ({
   userAgent: string;
   proxy?: ProxyConfig;
   reportId: string;
-}): Promise<XlsxReportResponse> => {
+}): Promise<{ data: string }> => {
   try {
     const url = `https://seller-weekly-report.wildberries.ru/ns/reportsviewer/analytics-back/api/report/supplier-goods/xlsx/${reportId}`;
 
@@ -89,8 +99,13 @@ export const fetchReportXlsx = async ({
       method: 'GET',
     });
 
-    return response;
+    if (response.error) {
+      throw new Error(response.errorText || 'Failed to fetch XLSX');
+    }
+
+    return { data: response.data };
   } catch (error: unknown) {
+    logger.error('Error fetching XLSX report:', error);
     const err = error as { message?: string };
     throw new Error(err.message || 'Failed to fetch report XLSX');
   }
