@@ -6,7 +6,6 @@ import { env } from './config/env';
 import { logger } from './utils/logger';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import routes from './routes';
-import { initializeMonitoringCleanupJobs } from './cron/monitoring-cleanup';
 
 /**
  * Create and configure the Express application
