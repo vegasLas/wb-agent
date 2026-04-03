@@ -1,6 +1,7 @@
 <template>
   <Dialog
     v-model:visible="visible"
+    position="bottom"
     header="Товары в поставке"
     :style="{ width: '90vw', maxWidth: '800px' }"
     :modal="true"

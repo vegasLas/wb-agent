@@ -1,6 +1,7 @@
 <template>
   <Dialog
     v-model:visible="isOpen"
+    position="bottom"
     header="Руководство по навигации"
     :style="{ maxWidth: '800px' }"
     :modal="true"
@@ -143,7 +144,9 @@
       <!-- Store Section -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <i class="pi pi-shopping-bag text-blue-600 dark:text-blue-400 text-lg" />
+          <i
+            class="pi pi-shopping-bag text-blue-600 dark:text-blue-400 text-lg"
+          />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
             Магазин
           </h4>

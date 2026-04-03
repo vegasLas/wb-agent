@@ -1,6 +1,7 @@
 <template>
   <Dialog
     v-model:visible="visible"
+    position="bottom"
     header="Инструкция по перепланированию"
     :style="{ width: '90vw', maxWidth: '600px' }"
     :modal="true"

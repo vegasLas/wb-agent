@@ -2,6 +2,7 @@
   <!-- Main Account & Supplier Selection Modal -->
   <Dialog
     v-model:visible="isOpen"
+    position="bottom"
     header="Управление аккаунтами"
     :modal="true"
     :closable="true"
