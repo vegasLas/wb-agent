@@ -5,14 +5,16 @@
       - Shown during: router guard initialization (Telegram + user data)
       - Hidden when: view component signals ready via useViewReady()
     -->
-    <LoadingLayout v-if="showSkeleton">
+    <!--
+      Full-screen skeleton only during initial app initialization.
+      After that, MainLayout handles content-area skeleton so the header remains visible.
+    -->
+    <LoadingLayout v-if="isRouterInitializing">
       <component :is="currentRouteSkeleton" />
     </LoadingLayout>
 
-    <!-- Main Router View - mounted but hidden while skeleton is shown -->
-    <div v-show="!showSkeleton">
-      <RouterView />
-    </div>
+    <!-- Main Router View - always mounted -->
+    <RouterView />
 
     <!-- Global Components -->
     <Toast position="top-right" />
@@ -21,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, watch, provide } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Toast from 'primevue/toast';
@@ -59,6 +61,7 @@ const route = useRoute();
 // Use skeleton composable for loading state management
 const {
   showSkeleton,
+  isRouterInitializing,
   markRouterReady,
   onNavigationStart,
   onNavigationEnd,
@@ -93,6 +96,9 @@ const currentRouteSkeleton = computed(() => {
   const routeName = getEffectiveRouteName(route.name as string);
   return routeSkeletonMap[routeName] || routeSkeletonMap.default;
 });
+
+// Provide the skeleton component so MainLayout can render it in the content area
+provide('currentRouteSkeleton', currentRouteSkeleton);
 
 // Setup router hooks to handle navigation loading state
 router.beforeEach(() => {
