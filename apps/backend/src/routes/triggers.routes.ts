@@ -71,11 +71,6 @@ router.post(
         throw ApiError.badRequest('Неверный интервал проверки');
       }
 
-      // Validate subscription
-      if (!req.user!.subscriptionExpiresAt || new Date(req.user!.subscriptionExpiresAt) <= new Date()) {
-        throw ApiError.badRequest('Подписка не активна');
-      }
-
       // Validate warehouse count
       if (warehouseIds.length > 3) {
         throw ApiError.badRequest('Нельзя выбрать более трех складов');

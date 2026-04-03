@@ -61,6 +61,7 @@ export const authenticate = async (
               id: user.id,
               telegramId: initData.user.id.toString(),
               selectedAccountId: user.selectedAccountId,
+              subscriptionExpiresAt: user.subscriptionExpiresAt,
             };
           }
           return next();
@@ -97,25 +98,15 @@ export const authenticate = async (
       throw ApiError.unauthorized('Не авторизован');
     }
 
-    // Check subscription for auth endpoints that require active subscription
-    const authEndpointsRequiringSubscription = [
-      '/v1/auth/verify-phone',
-      '/v1/auth/verify-sms',
-      '/v1/auth/verify-two-factor',
-    ];
-
+    // Check subscription for all protected routes
     if (
-      authEndpointsRequiringSubscription.some((endpoint) => path === endpoint)
+      !user.subscriptionExpiresAt ||
+      new Date(user.subscriptionExpiresAt) <= new Date()
     ) {
-      if (
-        !user.subscriptionExpiresAt ||
-        new Date(user.subscriptionExpiresAt) <= new Date()
-      ) {
-        throw ApiError.forbidden(
-          'Требуется активная подписка. Для добавления новых аккаунтов необходима активная подписка.',
-          'SUBSCRIPTION_REQUIRED',
-        );
-      }
+      throw ApiError.forbidden(
+        'Требуется активная подписка.',
+        'SUBSCRIPTION_REQUIRED',
+      );
     }
 
     // Attach user to request
@@ -123,6 +114,7 @@ export const authenticate = async (
       id: user.id,
       telegramId: initData.user.id.toString(),
       selectedAccountId: user.selectedAccountId,
+      subscriptionExpiresAt: user.subscriptionExpiresAt,
     };
     next();
   } catch (error) {

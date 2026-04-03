@@ -135,15 +135,6 @@ export class AutobookingService {
       throw new AutobookingUpdateError('User not found', 'USER_NOT_FOUND', 404);
     }
 
-    // Check subscription
-    if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
-      throw new AutobookingUpdateError(
-        'Для создания автобронирования требуется активная подписка',
-        'NO_SUBSCRIPTION',
-        403
-      );
-    }
-
     // Validate account
     const account = await prisma.account.findFirst({
       where: { id: data.accountId, userId },

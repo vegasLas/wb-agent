@@ -219,7 +219,7 @@
               variant="text"
               size="small"
               :loading="triggerStore.deletingId === trigger.id"
-              @click="triggerStore.deleteTrigger(trigger.id)"
+              @click="confirmDeleteTrigger(trigger.id)"
             >
               <i class="pi pi-trash text-xs" />
             </Button>
@@ -262,6 +262,17 @@ const { viewReady } = useViewReady();
 
 function navigateToCreate() {
   router.push({ name: 'TriggerCreate' });
+}
+
+async function confirmDeleteTrigger(id: string) {
+  const confirmed = confirm('Вы уверены, что хотите удалить этот таймслот?');
+  if (!confirmed) return;
+
+  try {
+    await triggerStore.deleteTrigger(id);
+  } catch (error) {
+    console.error('Failed to delete trigger:', error);
+  }
 }
 
 function getSupplyTypeLabel(type: string): string {
