@@ -129,15 +129,6 @@ export class RescheduleService {
       throw new AutobookingUpdateError('User not found', 'USER_NOT_FOUND', 404);
     }
 
-    // Check subscription
-    if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
-      throw new AutobookingUpdateError(
-        'Для создания переноса автобронирования требуется активная подписка',
-        'NO_SUBSCRIPTION',
-        403
-      );
-    }
-
     // Get user's selected account
     if (!selectedAccountId) {
       throw new AutobookingUpdateError(
