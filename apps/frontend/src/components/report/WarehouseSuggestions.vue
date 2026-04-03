@@ -188,13 +188,13 @@ const getRecommendationText = (item: WarehouseSuggestionItem): string => {
     item.suggestedUnloadQty > 0 &&
     item.isReplenishment
   ) {
-    return `Пополнить: ${item.suggestedUnloadQty * 2} шт.`;
+    return `Пополнить: ${item.suggestedUnloadQty.toLocaleString('ru-RU')} шт.`;
   } else if (
     item.suggestedUnloadQty !== undefined &&
     item.suggestedUnloadQty > 0
   ) {
-    return `Разгрузить: ${item.suggestedUnloadQty} шт.`;
+    return `Разгрузить: ${item.suggestedUnloadQty.toLocaleString('ru-RU')} шт.`;
   }
-  return 'Нет';
+  return 'Мониторинг';
 };
 </script>

@@ -1,3 +1,9 @@
+/**
+ * Warehouse Suggestions Composable
+ * Advanced algorithm with dynamic thresholds
+ * Migrated from deprecated project composables/useWarehouseSuggestions.ts
+ */
+
 import { computed } from 'vue';
 import { useReportStore } from '../stores/report';
 import type {
@@ -6,214 +12,288 @@ import type {
   WarehouseSuggestionItem,
 } from '../types';
 
-// Thresholds for classification
-const LOW_STOCK_DAYS_THRESHOLD = 14; // Days of stock considered low
-const HIGH_STOCK_DAYS_THRESHOLD = 60; // Days of stock considered high
-const MIN_SALES_FOR_REPLENISH = 5; // Minimum sales to consider replenishment
+// Default thresholds (will be dynamically adjusted based on data)
+const DEFAULT_MIN_SALES_FOR_VOLUME_ALERT = 10;
+const DEFAULT_MIN_SALES_VELOCITY_FOR_TURNOVER_ALERT = 0.2;
+const DEFAULT_HIGH_TURNOVER_STOCK_DAYS_THRESHOLD = 7;
 
-// Days of sales history (from report date range)
-const SALES_HISTORY_DAYS = 30;
-
-interface GroupedItem {
-  vendorCode: string;
-  productName: string;
-  stockQty: number;
-  purchasedQty: number;
-  calculatedDaysOfStock: number;
-}
+// Recommendation parameters
+const HIGH_TURNOVER_RECOMMENDATION_DAYS = 30; // Target days of stock for high turnover items
+const MIN_SALES_FOR_RECOMMENDATION = 1; // Minimum sales required to recommend additional stock
 
 export function useWarehouseSuggestions() {
   const reportStore = useReportStore();
 
   const suggestions = computed((): WarehouseSuggestion[] => {
-    if (!reportStore.itemsByWarehouse || reportStore.itemsByWarehouse.length === 0) {
+    if (
+      !reportStore.data?.items ||
+      reportStore.data.items.length === 0 ||
+      !reportStore.itemsByWarehouse ||
+      reportStore.itemsByWarehouse.length === 0
+    ) {
       return [];
     }
 
-    const allSuggestions: WarehouseSuggestion[] = [];
+    const { items } = reportStore.data;
+    const { itemsByWarehouse } = reportStore;
+    const newSuggestions: WarehouseSuggestion[] = [];
 
-    reportStore.itemsByWarehouse.forEach(({ warehouse, items }) => {
-      // Group items by vendorCode (merge sizes)
-      const groupedItems = groupItemsByVendorCode(items);
+    // --- Dynamic Threshold Calculations ---
+    let actualMinSalesForVolume = DEFAULT_MIN_SALES_FOR_VOLUME_ALERT;
+    let actualMinSalesVelocity = DEFAULT_MIN_SALES_VELOCITY_FOR_TURNOVER_ALERT;
+    let actualHighTurnoverStockDays = DEFAULT_HIGH_TURNOVER_STOCK_DAYS_THRESHOLD;
 
-      // Calculate metrics and filter items needing attention
-      const relevantItems = groupedItems
-        .map((item) => analyzeItem(item))
-        .filter((item): item is WarehouseSuggestionItem => item !== null);
+    // Calculate dynamicMinSalesForVolumeAlert based on average warehouse sales
+    const warehouseSalesVolumes = itemsByWarehouse
+      .map(
+        (warehouseData: {
+          warehouse: string;
+          items: ReportItem[];
+          totalSold: number;
+        }) => warehouseData.totalSold,
+      )
+      .filter((sales: number) => sales > 0);
 
-      if (relevantItems.length === 0) return;
+    if (warehouseSalesVolumes.length > 0) {
+      const averageWarehouseSales =
+        warehouseSalesVolumes.reduce(
+          (sum: number, sales: number) => sum + sales,
+          0,
+        ) / warehouseSalesVolumes.length;
+      actualMinSalesForVolume = Math.max(1, averageWarehouseSales * 0.5);
+    }
 
-      // Determine priority based on items
-      const priority = determinePriority(relevantItems);
+    // Calculate dynamicMinSalesVelocityForTurnoverAlert based on average item velocity
+    const itemDailySalesVelocities = items
+      .filter((item) => item.purchasedQty > 0)
+      .map((item) => item.purchasedQty / 30);
 
-      // Build reason text
-      const reason = buildReasonText(relevantItems, priority);
+    if (itemDailySalesVelocities.length > 0) {
+      const averageItemDailySales =
+        itemDailySalesVelocities.reduce((sum, velocity) => sum + velocity, 0) /
+        itemDailySalesVelocities.length;
+      actualMinSalesVelocity = Math.max(0.01, averageItemDailySales * 0.25);
+    }
 
-      allSuggestions.push({
-        warehouseName: warehouse,
-        priority,
-        reason,
-        relevantItems: relevantItems.slice(0, 10), // Limit to top 10 items
+    // Calculate dynamicHighTurnoverStockDaysThreshold based on 25th percentile
+    const daysOfStockValues = items
+      .filter((item) => item.purchasedQty > 0 && item.stockQty > 0)
+      .map((item) => {
+        const dailySales = item.purchasedQty / 30;
+        return item.stockQty / dailySales;
+      })
+      .filter((dos) => Number.isFinite(dos) && dos >= 0)
+      .sort((a, b) => a - b);
+
+    if (daysOfStockValues.length >= 4) {
+      actualHighTurnoverStockDays = Math.max(
+        1,
+        daysOfStockValues[Math.floor(daysOfStockValues.length * 0.25)],
+      );
+    }
+    // --- End Dynamic Threshold Calculations ---
+
+    for (const warehouseData of itemsByWarehouse) {
+      const { warehouse: warehouseName, items: warehouseItems } = warehouseData;
+
+      const reasonsForThisWarehouse: string[] = [];
+      const collectedRelevantItems: WarehouseSuggestionItem[] = [];
+      let highestPriorityForThisWarehouse:
+        | 'high'
+        | 'medium'
+        | 'low'
+        | undefined = undefined;
+
+      const updatePriority = (newPriority: 'high' | 'medium' | 'low') => {
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        if (
+          highestPriorityForThisWarehouse === undefined ||
+          priorityOrder[newPriority] <
+            priorityOrder[highestPriorityForThisWarehouse]
+        ) {
+          highestPriorityForThisWarehouse = newPriority;
+        }
+      };
+
+      let totalSalesLast30Days = 0;
+      const highTurnoverItemsForWarehouse: WarehouseSuggestionItem[] = [];
+      const itemsToSuggestUnloading: WarehouseSuggestionItem[] = [];
+
+      // First pass: analyze items and identify high turnover items
+      warehouseItems.forEach((item: ReportItem) => {
+        totalSalesLast30Days += item.purchasedQty;
+        const dailySales = item.purchasedQty / 30;
+        const currentDaysOfStock =
+          dailySales > 0 ? item.stockQty / dailySales : Infinity;
+
+        // Check for High Turnover (needs replenishment)
+        if (
+          item.stockQty > 0 &&
+          dailySales > actualMinSalesVelocity &&
+          currentDaysOfStock < actualHighTurnoverStockDays
+        ) {
+          // Calculate recommended additional units for high turnover items
+          let recommendedAdditionalUnits = 0;
+          if (dailySales > MIN_SALES_FOR_RECOMMENDATION) {
+            const targetStock = Math.ceil(
+              dailySales * HIGH_TURNOVER_RECOMMENDATION_DAYS,
+            );
+            recommendedAdditionalUnits = Math.max(
+              0,
+              targetStock - item.stockQty,
+            );
+          }
+
+          highTurnoverItemsForWarehouse.push({
+            vendorCode: item.vendorCode,
+            productName: item.productName,
+            stockQty: item.stockQty,
+            purchasedQty: item.purchasedQty,
+            calculatedDaysOfStock: currentDaysOfStock,
+            suggestedUnloadQty:
+              recommendedAdditionalUnits > 0
+                ? recommendedAdditionalUnits * 2
+                : undefined,
+            isReplenishment: recommendedAdditionalUnits > 0,
+          });
+        }
       });
-    });
+
+      // Rule 1: Sales Volume by Warehouse
+      if (totalSalesLast30Days > actualMinSalesForVolume) {
+        let currentReason = `Склад '${warehouseName}' показывает значительный объем продаж (${totalSalesLast30Days.toLocaleString('ru-RU')} шт. за последние 30 дней). Это ключевой склад для ваших товаров. Обеспечьте достаточное наличие товаров для поддержания спроса. (Динамический порог объема: ${actualMinSalesForVolume.toFixed(1)})`;
+        updatePriority('high');
+
+        // Enrich top selling items with unload info if present
+        const topSalesEnriched: WarehouseSuggestionItem[] = [...warehouseItems]
+          .filter((item) => item.purchasedQty > 0)
+          .sort((a, b) => b.purchasedQty - a.purchasedQty)
+          .map((item) => {
+            const matchingTurnoverItem = highTurnoverItemsForWarehouse.find(
+              (ht) => ht.vendorCode === item.vendorCode,
+            );
+
+            if (
+              matchingTurnoverItem &&
+              matchingTurnoverItem.suggestedUnloadQty &&
+              matchingTurnoverItem.suggestedUnloadQty > 0
+            ) {
+              // This is a high turnover item that needs more stock
+              return matchingTurnoverItem;
+            } else {
+              // This item is a top seller but not in high turnover list
+              const dailySales = item.purchasedQty / 30;
+              const calculatedDaysOfStock =
+                dailySales > 0 ? item.stockQty / dailySales : Infinity;
+
+              // Calculate if we need to recommend additional stock
+              let recommendedAdditionalUnits = 0;
+              let isReplenishment = false;
+              if (
+                dailySales > MIN_SALES_FOR_RECOMMENDATION &&
+                calculatedDaysOfStock < HIGH_TURNOVER_RECOMMENDATION_DAYS
+              ) {
+                const targetStock = Math.ceil(
+                  dailySales * HIGH_TURNOVER_RECOMMENDATION_DAYS,
+                );
+                recommendedAdditionalUnits = Math.max(
+                  0,
+                  targetStock - item.stockQty,
+                );
+                isReplenishment = recommendedAdditionalUnits > 0;
+              }
+
+              return {
+                vendorCode: item.vendorCode,
+                productName: item.productName,
+                stockQty: item.stockQty,
+                purchasedQty: item.purchasedQty,
+                calculatedDaysOfStock: calculatedDaysOfStock,
+                suggestedUnloadQty:
+                  recommendedAdditionalUnits > 0
+                    ? recommendedAdditionalUnits
+                    : undefined,
+                isReplenishment: recommendedAdditionalUnits > 0 ? isReplenishment : undefined,
+              };
+            }
+          });
+
+        collectedRelevantItems.push(...topSalesEnriched);
+
+        // If there are items to unload in this high-volume warehouse, augment reason
+        if (itemsToSuggestUnloading.length > 0) {
+          const unloadReasonPart = `Дополнительно, на этом складе выявлены товары (${itemsToSuggestUnloading.length} SKU), рекомендуемые к выгрузке для оптимизации запасов.`;
+          currentReason += ` \n\n---\n\n ${unloadReasonPart}`;
+
+          // Add unloadable items that are NOT ALREADY IN topSalesEnriched by vendorCode
+          const topSalesVendorCodes = new Set(
+            topSalesEnriched.map((i) => i.vendorCode),
+          );
+          const additionalUnloadItems = itemsToSuggestUnloading
+            .filter((ulItem) => !topSalesVendorCodes.has(ulItem.vendorCode))
+            .sort(
+              (a, b) =>
+                (b.suggestedUnloadQty ?? 0) - (a.suggestedUnloadQty ?? 0),
+            );
+
+          collectedRelevantItems.push(...additionalUnloadItems);
+        }
+        reasonsForThisWarehouse.push(currentReason);
+      }
+
+      // Rule 2: Stock Turnover Rate
+      if (highTurnoverItemsForWarehouse.length > 0) {
+        const reason = `На складе '${warehouseName}' товары (${highTurnoverItemsForWarehouse.length} SKU) быстро распродаются (запас менее чем на ${actualHighTurnoverStockDays.toFixed(0)} дней). Это указывает на высокий спрос и эффективное управление запасами. Рассмотрите своевременное пополнение для этих позиций. (Динамический порог оборачиваемости: <${actualHighTurnoverStockDays.toFixed(0)} дн., мин. скорость продаж: ${actualMinSalesVelocity.toFixed(2)}/дн.)`;
+        reasonsForThisWarehouse.push(reason);
+        updatePriority('medium');
+
+        const sortedTurnoverItems = highTurnoverItemsForWarehouse.sort(
+          (a, b) =>
+            (a.calculatedDaysOfStock ?? Infinity) -
+            (b.calculatedDaysOfStock ?? Infinity),
+        );
+        collectedRelevantItems.push(...sortedTurnoverItems);
+      }
+
+      if (
+        reasonsForThisWarehouse.length > 0 &&
+        highestPriorityForThisWarehouse
+      ) {
+        // Deduplicate items by vendorCode
+        const uniqueItemSKUs = new Set<string>();
+        const deduplicatedRelevantItems = collectedRelevantItems.filter(
+          (item) => {
+            const key = String(item.vendorCode);
+            if (key === 'undefined' || key === 'null' || key === '') {
+              return true; // Keep items without a valid SKU, treat as unique
+            }
+            if (!uniqueItemSKUs.has(key)) {
+              uniqueItemSKUs.add(key);
+              return true;
+            }
+            return false;
+          },
+        );
+
+        newSuggestions.push({
+          warehouseName,
+          reason: reasonsForThisWarehouse.join(' \n\n---\n\n '),
+          priority: highestPriorityForThisWarehouse,
+          relevantItems: deduplicatedRelevantItems.slice(0, 20), // Limit to top 20 items
+        });
+      }
+    }
 
     // Sort suggestions by priority (high -> medium -> low)
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
-    allSuggestions.sort(
-      (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority],
-    );
+    newSuggestions.sort((a, b) => {
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
 
-    return allSuggestions;
+    return newSuggestions;
   });
 
   return {
     suggestions,
   };
-}
-
-function groupItemsByVendorCode(items: ReportItem[]): GroupedItem[] {
-  const grouped = items.reduce(
-    (acc: Record<string, GroupedItem>, item) => {
-      const key = item.vendorCode;
-
-      if (!acc[key]) {
-        acc[key] = {
-          vendorCode: item.vendorCode,
-          productName: item.productName,
-          stockQty: 0,
-          purchasedQty: 0,
-          calculatedDaysOfStock: 0,
-        };
-      }
-
-      acc[key].stockQty += item.stockQty || 0;
-      acc[key].purchasedQty += item.purchasedQty || 0;
-
-      return acc;
-    },
-    {} as Record<string, GroupedItem>,
-  );
-
-  return Object.values(grouped);
-}
-
-function analyzeItem(item: GroupedItem): WarehouseSuggestionItem | null {
-  // Calculate daily sales rate
-  const dailySalesRate = item.purchasedQty / SALES_HISTORY_DAYS;
-
-  // Calculate days of stock
-  const calculatedDaysOfStock =
-    dailySalesRate > 0 ? item.stockQty / dailySalesRate : Infinity;
-
-  // Determine if item needs attention
-  const needsReplenishment =
-    calculatedDaysOfStock < LOW_STOCK_DAYS_THRESHOLD &&
-    item.purchasedQty >= MIN_SALES_FOR_REPLENISH;
-
-  const needsUnloading =
-    calculatedDaysOfStock > HIGH_STOCK_DAYS_THRESHOLD && item.stockQty > 0;
-
-  if (!needsReplenishment && !needsUnloading) {
-    return null;
-  }
-
-  // Calculate suggested quantities
-  let suggestedUnloadQty = 0;
-  let isReplenishment = false;
-
-  if (needsReplenishment) {
-    isReplenishment = true;
-    // Suggest replenishing to 30 days of stock (double the current)
-    const targetStock = dailySalesRate * 30;
-    suggestedUnloadQty = Math.ceil(targetStock - item.stockQty);
-    if (suggestedUnloadQty < 0) suggestedUnloadQty = 0;
-  } else if (needsUnloading) {
-    isReplenishment = false;
-    // Suggest unloading excess stock down to 45 days
-    const targetStock = dailySalesRate * 45;
-    suggestedUnloadQty = Math.ceil(item.stockQty - targetStock);
-    if (suggestedUnloadQty < 0) suggestedUnloadQty = 0;
-  }
-
-  return {
-    vendorCode: item.vendorCode,
-    productName: item.productName,
-    stockQty: item.stockQty,
-    purchasedQty: item.purchasedQty,
-    calculatedDaysOfStock: isFinite(calculatedDaysOfStock)
-      ? calculatedDaysOfStock
-      : 999,
-    suggestedUnloadQty: suggestedUnloadQty > 0 ? suggestedUnloadQty : undefined,
-    isReplenishment,
-  };
-}
-
-function determinePriority(
-  items: WarehouseSuggestionItem[],
-): 'high' | 'medium' | 'low' {
-  const replenishmentCount = items.filter((i) => i.isReplenishment).length;
-  const unloadCount = items.filter((i) => !i.isReplenishment).length;
-
-  // High priority: many items need replenishment (risk of stockout)
-  if (replenishmentCount >= 3 || (replenishmentCount > 0 && unloadCount > 5)) {
-    return 'high';
-  }
-
-  // Medium priority: some items need replenishment or many need unloading
-  if (replenishmentCount > 0 || unloadCount >= 5) {
-    return 'medium';
-  }
-
-  // Low priority: only a few items need unloading
-  return 'low';
-}
-
-function buildReasonText(
-  items: WarehouseSuggestionItem[],
-  priority: 'high' | 'medium' | 'low',
-): string {
-  const replenishmentCount = items.filter((i) => i.isReplenishment).length;
-  const unloadCount = items.filter((i) => !i.isReplenishment).length;
-
-  const parts: string[] = [];
-
-  if (replenishmentCount > 0) {
-    parts.push(
-      `${replenishmentCount} ${pluralize(replenishmentCount, 'товар', 'товара', 'товаров')} требуют пополнения запасов`,
-    );
-  }
-
-  if (unloadCount > 0) {
-    parts.push(
-      `${unloadCount} ${pluralize(unloadCount, 'товар', 'товара', 'товаров')} имеют избыточный запас`,
-    );
-  }
-
-  if (priority === 'high') {
-    parts.push('требуется срочное внимание для предотвращения дефицита');
-  } else if (priority === 'medium') {
-    parts.push('рекомендуется оптимизация запасов');
-  } else {
-    parts.push('можно оптимизировать при наличии возможности');
-  }
-
-  return parts.join(', ') + '.';
-}
-
-function pluralize(
-  count: number,
-  one: string,
-  few: string,
-  many: string,
-): string {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-
-  if (mod10 === 1 && mod100 !== 11) {
-    return one;
-  }
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
-    return few;
-  }
-  return many;
 }
