@@ -42,13 +42,10 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Номер телефона <span class="text-red-500 dark:text-red-400">*</span>
           </label>
-          <InputText
+          <PhoneInput
             v-model="phoneNumber"
-            type="tel"
-            placeholder="+7 (999) 999-99-99"
             :disabled="authStore.loading"
-            class="w-full"
-            @keyup.enter="handleVerifyPhone"
+            @submit="handleVerifyPhone"
           />
         </div>
 
@@ -104,14 +101,13 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             SMS код <span class="text-red-500 dark:text-red-400">*</span>
           </label>
-          <InputText
+          <InputOtp
             v-model="smsCode"
-            type="text"
-            placeholder="123456"
-            maxlength="6"
+            :length="6"
             :disabled="authStore.loading"
-            class="w-full"
-            @keyup.enter="handleVerifySMS"
+            integer-only
+            class="w-full justify-center"
+            @keydown.enter="handleVerifySMS"
           />
         </div>
 
@@ -167,14 +163,13 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Код из email <span class="text-red-500 dark:text-red-400">*</span>
           </label>
-          <InputText
+          <InputOtp
             v-model="twoFactorCode"
-            type="text"
-            placeholder="123456"
-            maxlength="6"
+            :length="6"
             :disabled="authStore.loading"
-            class="w-full"
-            @keyup.enter="handleVerifyTwoFactor"
+            integer-only
+            class="w-full justify-center"
+            @keydown.enter="handleVerifyTwoFactor"
           />
         </div>
 
@@ -260,8 +255,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import Button from 'primevue/button';
+import InputOtp from 'primevue/inputotp';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
+import { PhoneInput } from '../ui';
 import { useAuthStore } from '../../stores/auth';
 
 interface Emits {
@@ -279,8 +276,9 @@ const twoFactorCode = ref('');
 
 // Computed property for button disabled state
 const isSubmitDisabled = computed(() => {
+  // Phone number should include country code (+7...) and be at least 11 chars (+7 + 10 digits)
   return (
-    !phoneNumber.value || phoneNumber.value.length < 10 || authStore.loading
+    !phoneNumber.value || phoneNumber.value.length < 12 || authStore.loading
   );
 });
 
