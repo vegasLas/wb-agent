@@ -6,9 +6,7 @@ const app = createApp();
 describe('App', () => {
   describe('Health Check', () => {
     it('should return healthy status', async () => {
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
+      const response = await request(app).get('/health').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.status).toBe('healthy');
@@ -19,9 +17,7 @@ describe('App', () => {
 
   describe('API Routes', () => {
     it('should return API info on root', async () => {
-      const response = await request(app)
-        .get('/api/v1')
-        .expect(200);
+      const response = await request(app).get('/api/v1').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe('WB API v1');

@@ -34,7 +34,7 @@ router.get(
         next(error);
       }
     }
-  }
+  },
 );
 
 export default router;

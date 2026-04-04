@@ -29,7 +29,11 @@ const ALLOWED_IPV6_RANGES = ['2a02:5180::/32'];
  * Convert IP address to numeric representation
  */
 function ipToLong(ip: string): number {
-  return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+  return (
+    ip
+      .split('.')
+      .reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0
+  );
 }
 
 /**
@@ -59,15 +63,21 @@ router.post('/yookassa', async (req, res) => {
   try {
     // Get client IP
     const forwarded = req.headers['x-forwarded-for'];
-    const clientIp = forwarded ? (forwarded as string).split(',')[0].trim() : req.socket.remoteAddress || '';
+    const clientIp = forwarded
+      ? (forwarded as string).split(',')[0].trim()
+      : req.socket.remoteAddress || '';
 
     // Validate IP address
     let isAllowedIP = false;
 
     if (isIPv4(clientIp)) {
-      isAllowedIP = ALLOWED_IPV4_RANGES.some((range) => isIPInRange(clientIp, range));
+      isAllowedIP = ALLOWED_IPV4_RANGES.some((range) =>
+        isIPInRange(clientIp, range),
+      );
     } else if (isIPv6(clientIp)) {
-      isAllowedIP = ALLOWED_IPV6_RANGES.some((range) => isIPv6InRange(clientIp, range));
+      isAllowedIP = ALLOWED_IPV6_RANGES.some((range) =>
+        isIPv6InRange(clientIp, range),
+      );
     }
 
     if (!isAllowedIP) {
@@ -121,14 +131,14 @@ router.post('/yookassa', async (req, res) => {
               value: dbPayment.amount,
               currency: 'RUB',
             },
-            dbPayment.idempotencyKey
+            dbPayment.idempotencyKey,
           );
 
           if (capture.status === 'succeeded') {
             await yookassaService.processSuccessfulPayment(
               dbPayment.paymentId,
               dbPayment.userId,
-              dbPayment.tariffId
+              dbPayment.tariffId,
             );
           }
         } catch (error) {
@@ -140,7 +150,7 @@ router.post('/yookassa', async (req, res) => {
         await yookassaService.processSuccessfulPayment(
           dbPayment.paymentId,
           dbPayment.userId,
-          dbPayment.tariffId
+          dbPayment.tariffId,
         );
         break;
 

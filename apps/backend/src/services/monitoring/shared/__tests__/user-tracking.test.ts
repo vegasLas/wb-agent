@@ -1,7 +1,7 @@
 /**
  * User Tracking Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/userTrackingService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
@@ -9,7 +9,10 @@
  * - Added missing test cases from deprecated
  */
 
-import { SharedUserTrackingService, sharedUserTrackingService } from '../user-tracking.service';
+import {
+  SharedUserTrackingService,
+  sharedUserTrackingService,
+} from '../user-tracking.service';
 
 // Mock logger
 jest.mock('../../../../utils/logger', () => ({
@@ -27,7 +30,9 @@ describe('SharedUserTrackingService', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { /* intentionally empty */ });
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {
+      /* intentionally empty */
+    });
     service = new SharedUserTrackingService();
   });
 
@@ -577,7 +582,9 @@ describe('SharedUserTrackingService', () => {
 
       test('should return "Not blacklisted" for non-blacklisted user', () => {
         // Act & Assert
-        expect(service.getRemainingBlacklistTimeFormatted(999)).toBe('Not blacklisted');
+        expect(service.getRemainingBlacklistTimeFormatted(999)).toBe(
+          'Not blacklisted',
+        );
       });
 
       test('should return formatted time for blacklisted user', () => {
@@ -713,7 +720,9 @@ describe('SharedUserTrackingService', () => {
 
   describe('singleton instance', () => {
     test('should export a singleton instance', () => {
-      expect(sharedUserTrackingService).toBeInstanceOf(SharedUserTrackingService);
+      expect(sharedUserTrackingService).toBeInstanceOf(
+        SharedUserTrackingService,
+      );
     });
 
     test('should maintain state across accesses', () => {

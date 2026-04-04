@@ -8,7 +8,11 @@ import axios from 'axios';
 import { prisma } from '../config/database';
 import { ICreatePayment, ICreatePaymentResponse } from '../types/payments';
 import { TBOT } from '../utils/TBOT';
-import { PAYMENT_TARIFFS, SubscriptionTariff, BookingTariff } from '../constants/payments';
+import {
+  PAYMENT_TARIFFS,
+  SubscriptionTariff,
+  BookingTariff,
+} from '../constants/payments';
 
 type Tariff = SubscriptionTariff | BookingTariff;
 import { logger } from '../utils/logger';
@@ -24,8 +28,13 @@ export class YookassaService {
     this.secretKey = process.env.YOOKASSA_SECRET_KEY!;
   }
 
-  async createPayment(data: ICreatePayment, idempotencyKey: string): Promise<ICreatePaymentResponse> {
-    const auth = Buffer.from(`${this.shopId}:${this.secretKey}`).toString('base64');
+  async createPayment(
+    data: ICreatePayment,
+    idempotencyKey: string,
+  ): Promise<ICreatePaymentResponse> {
+    const auth = Buffer.from(`${this.shopId}:${this.secretKey}`).toString(
+      'base64',
+    );
 
     const response = await axios.post<ICreatePaymentResponse>(
       `${YOOKASSA_API_URL}/payments`,
@@ -36,14 +45,16 @@ export class YookassaService {
           'Idempotence-Key': idempotencyKey,
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
 
     return response.data;
   }
 
   async getPayment(paymentId: string): Promise<ICreatePaymentResponse> {
-    const auth = Buffer.from(`${this.shopId}:${this.secretKey}`).toString('base64');
+    const auth = Buffer.from(`${this.shopId}:${this.secretKey}`).toString(
+      'base64',
+    );
 
     const response = await axios.get<ICreatePaymentResponse>(
       `${YOOKASSA_API_URL}/payments/${paymentId}`,
@@ -52,7 +63,7 @@ export class YookassaService {
           Authorization: `Basic ${auth}`,
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
 
     return response.data;
@@ -61,9 +72,11 @@ export class YookassaService {
   async capturePayment(
     paymentId: string,
     amount: { value: number; currency: string },
-    idempotencyKey: string
+    idempotencyKey: string,
   ): Promise<ICreatePaymentResponse> {
-    const auth = Buffer.from(`${this.shopId}:${this.secretKey}`).toString('base64');
+    const auth = Buffer.from(`${this.shopId}:${this.secretKey}`).toString(
+      'base64',
+    );
 
     const response = await axios.post<ICreatePaymentResponse>(
       `${YOOKASSA_API_URL}/payments/${paymentId}/capture`,
@@ -74,13 +87,17 @@ export class YookassaService {
           'Idempotence-Key': idempotencyKey,
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
 
     return response.data;
   }
 
-  async processSuccessfulPayment(paymentId: string, userId: number, tariffId: string): Promise<void> {
+  async processSuccessfulPayment(
+    paymentId: string,
+    userId: number,
+    tariffId: string,
+  ): Promise<void> {
     // Update payment status
     await prisma.payment.update({
       where: { paymentId },
@@ -105,9 +122,10 @@ export class YookassaService {
     // Handle subscription tariff (has 'days' property)
     if ('days' in tariff) {
       const currentExpiry = user?.subscriptionExpiresAt;
-      const baseDate = currentExpiry && new Date(currentExpiry) > new Date()
-        ? new Date(currentExpiry)
-        : new Date();
+      const baseDate =
+        currentExpiry && new Date(currentExpiry) > new Date()
+          ? new Date(currentExpiry)
+          : new Date();
 
       const newExpiry = new Date(baseDate);
       newExpiry.setDate(newExpiry.getDate() + tariff.days);
@@ -143,7 +161,7 @@ export class YookassaService {
   private async sendSuccessNotification(
     chatId: string,
     tariff: Tariff,
-    type: 'subscription' | 'booking'
+    type: 'subscription' | 'booking',
   ): Promise<void> {
     const URL = process.env.FRONTEND_URL || process.env.URL || '';
 

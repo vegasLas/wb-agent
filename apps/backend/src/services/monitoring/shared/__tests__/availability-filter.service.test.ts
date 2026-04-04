@@ -22,7 +22,9 @@ jest.mock('../ban.service', () => ({
 // Import after mock
 import { sharedBanService } from '../ban.service';
 
-const mockedIsBanned = sharedBanService.isBanned as jest.MockedFunction<typeof sharedBanService.isBanned>;
+const mockedIsBanned = sharedBanService.isBanned as jest.MockedFunction<
+  typeof sharedBanService.isBanned
+>;
 
 describe('SharedAvailabilityFilterService', () => {
   let service: SharedAvailabilityFilterService;
@@ -57,7 +59,7 @@ describe('SharedAvailabilityFilterService', () => {
   ];
 
   const createTestBooking = (
-    overrides: Partial<SchedulableItem> = {}
+    overrides: Partial<SchedulableItem> = {},
   ): SchedulableItem => ({
     id: 'booking-1',
     userId: 1,
@@ -98,7 +100,9 @@ describe('SharedAvailabilityFilterService', () => {
 
   describe('singleton instance', () => {
     it('should export a singleton instance', () => {
-      expect(sharedAvailabilityFilterService).toBeInstanceOf(SharedAvailabilityFilterService);
+      expect(sharedAvailabilityFilterService).toBeInstanceOf(
+        SharedAvailabilityFilterService,
+      );
     });
 
     it('should maintain consistent behavior across accesses', () => {
@@ -122,7 +126,10 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 3.0,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].availability.warehouseId).toBe(2);
@@ -136,7 +143,10 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 4.0,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].availability.boxTypeID).toBe(5);
@@ -150,12 +160,17 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 2.0,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
 
-      const dates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const dates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(dates).toContain('Mon Jan 15 2024');
       expect(dates).toContain('Tue Jan 16 2024');
     });
@@ -167,7 +182,10 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 1.7,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
@@ -181,11 +199,16 @@ describe('SharedAvailabilityFilterService', () => {
         completedDates: [new Date('2024-01-15')],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
-      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe('Tue Jan 16 2024');
+      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe(
+        'Tue Jan 16 2024',
+      );
     });
 
     it('should exclude banned dates', () => {
@@ -198,11 +221,16 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [new Date('2024-01-15'), new Date('2024-01-16')],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
-      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe('Tue Jan 16 2024');
+      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe(
+        'Tue Jan 16 2024',
+      );
     });
 
     it('should handle WEEK date type', () => {
@@ -214,12 +242,17 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates.length).toBeGreaterThan(0);
 
-      const matchingDates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const matchingDates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(matchingDates).toContain('Mon Jan 15 2024');
       expect(matchingDates).toContain('Tue Jan 16 2024');
       expect(matchingDates).toContain('Wed Jan 17 2024');
@@ -234,7 +267,10 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates.length).toBeGreaterThan(0);
@@ -248,7 +284,10 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates.length).toBe(3);
@@ -261,12 +300,17 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 2.0,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
 
-      const dates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const dates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(dates).toContain('Mon Jan 15 2024');
       expect(dates).toContain('Tue Jan 16 2024');
     });
@@ -281,7 +325,10 @@ describe('SharedAvailabilityFilterService', () => {
       const availabilities = createTestAvailabilities();
 
       const genericItem = service.convertToSchedulableItem(autobooking as any);
-      const result = service.filterMatchingAvailabilities(genericItem, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        genericItem,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
@@ -299,12 +346,19 @@ describe('SharedAvailabilityFilterService', () => {
     it('should filter reschedules using generic method with maxCoefficient validation', () => {
       const reschedule = createTestBooking({
         maxCoefficient: 0.6,
-        customDates: [new Date('2024-01-15'), new Date('2024-01-16'), new Date('2024-01-17')],
+        customDates: [
+          new Date('2024-01-15'),
+          new Date('2024-01-16'),
+          new Date('2024-01-17'),
+        ],
       });
       const availabilities = createTestAvailabilities();
 
       const genericItem = service.convertToSchedulableItem(reschedule as any);
-      const result = service.filterMatchingAvailabilities(genericItem, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        genericItem,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
@@ -353,7 +407,10 @@ describe('SharedAvailabilityFilterService', () => {
       };
       const result = service.convertToSchedulableItem(booking as any);
 
-      expect(result.effectiveDates).toEqual([new Date('2024-01-20'), new Date('2024-01-21')]);
+      expect(result.effectiveDates).toEqual([
+        new Date('2024-01-20'),
+        new Date('2024-01-21'),
+      ]);
     });
 
     it('should preserve currentDate when present', () => {
@@ -378,7 +435,10 @@ describe('SharedAvailabilityFilterService', () => {
           availableDates: [{ date: '2024-01-15', coefficient: 1.0 }],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toHaveLength(1);
     });
 
@@ -392,7 +452,10 @@ describe('SharedAvailabilityFilterService', () => {
           availableDates: [{ date: '2024-01-15', coefficient: 1.0 }],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toHaveLength(1);
     });
 
@@ -406,7 +469,10 @@ describe('SharedAvailabilityFilterService', () => {
           availableDates: [{ date: '2024-01-15', coefficient: 1.0 }],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toHaveLength(1);
     });
 
@@ -420,7 +486,10 @@ describe('SharedAvailabilityFilterService', () => {
           availableDates: [{ date: '2024-01-15', coefficient: 1.0 }],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toHaveLength(1);
     });
   });
@@ -445,7 +514,10 @@ describe('SharedAvailabilityFilterService', () => {
           ],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result[0].matchingDates).toHaveLength(4);
     });
 
@@ -467,7 +539,10 @@ describe('SharedAvailabilityFilterService', () => {
           ],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result[0].matchingDates).toHaveLength(2);
     });
 
@@ -492,7 +567,10 @@ describe('SharedAvailabilityFilterService', () => {
           ],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result[0].matchingDates).toHaveLength(3);
     });
 
@@ -513,9 +591,14 @@ describe('SharedAvailabilityFilterService', () => {
           ],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result[0].matchingDates).toHaveLength(1);
-      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe('Thu Jan 11 2024');
+      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe(
+        'Thu Jan 11 2024',
+      );
     });
   });
 
@@ -554,11 +637,16 @@ describe('SharedAvailabilityFilterService', () => {
       });
       const availabilities = createTestAvailabilities();
 
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
-      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe('Mon Jan 15 2024');
+      expect(result[0].matchingDates[0].effectiveDate.toDateString()).toBe(
+        'Mon Jan 15 2024',
+      );
     });
   });
 
@@ -570,7 +658,10 @@ describe('SharedAvailabilityFilterService', () => {
         completedDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toEqual([]);
     });
 
@@ -581,7 +672,10 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toEqual([]);
     });
 
@@ -592,7 +686,10 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toEqual([]);
     });
 
@@ -604,7 +701,10 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toEqual([]);
     });
 
@@ -614,7 +714,10 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toEqual([]);
     });
 
@@ -624,7 +727,10 @@ describe('SharedAvailabilityFilterService', () => {
         customDates: [new Date('2024-01-17')],
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toEqual([]);
     });
 
@@ -638,7 +744,10 @@ describe('SharedAvailabilityFilterService', () => {
           availableDates: [],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
       expect(result).toEqual([]);
     });
   });
@@ -647,17 +756,26 @@ describe('SharedAvailabilityFilterService', () => {
     it('should exclude currentDate from CUSTOM_DATES_SINGLE processing', () => {
       const booking = createTestBooking({
         dateType: 'CUSTOM_DATES_SINGLE',
-        customDates: [new Date('2024-01-15'), new Date('2024-01-16'), new Date('2024-01-17')],
+        customDates: [
+          new Date('2024-01-15'),
+          new Date('2024-01-16'),
+          new Date('2024-01-17'),
+        ],
         currentDate: new Date('2024-01-16'),
         maxCoefficient: 10,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
 
-      const effectiveDates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const effectiveDates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(effectiveDates).not.toContain('Tue Jan 16 2024');
     });
 
@@ -682,12 +800,17 @@ describe('SharedAvailabilityFilterService', () => {
           ],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
 
-      const effectiveDates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const effectiveDates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(effectiveDates).not.toContain('Tue Jan 16 2024');
     });
 
@@ -714,12 +837,17 @@ describe('SharedAvailabilityFilterService', () => {
         },
       ];
 
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
 
-      const effectiveDates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const effectiveDates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(effectiveDates).not.toContain('Sat Jan 20 2024');
       expect(effectiveDates).toContain('Mon Jan 15 2024');
     });
@@ -727,17 +855,26 @@ describe('SharedAvailabilityFilterService', () => {
     it('should exclude currentDate from CUSTOM_DATES processing', () => {
       const booking = createTestBooking({
         dateType: 'CUSTOM_DATES',
-        customDates: [new Date('2024-01-15'), new Date('2024-01-16'), new Date('2024-01-17')],
+        customDates: [
+          new Date('2024-01-15'),
+          new Date('2024-01-16'),
+          new Date('2024-01-17'),
+        ],
         currentDate: new Date('2024-01-16'),
         maxCoefficient: 10,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
 
-      const effectiveDates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const effectiveDates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(effectiveDates).toContain('Mon Jan 15 2024');
       expect(effectiveDates).toContain('Wed Jan 17 2024');
       expect(effectiveDates).not.toContain('Tue Jan 16 2024');
@@ -765,30 +902,44 @@ describe('SharedAvailabilityFilterService', () => {
           ],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(3);
 
-      const effectiveDates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const effectiveDates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(effectiveDates).not.toContain('Wed Jan 17 2024');
     });
 
     it('should handle currentDate exclusion with completed dates', () => {
       const booking = createTestBooking({
         dateType: 'CUSTOM_DATES',
-        customDates: [new Date('2024-01-15'), new Date('2024-01-16'), new Date('2024-01-17')],
+        customDates: [
+          new Date('2024-01-15'),
+          new Date('2024-01-16'),
+          new Date('2024-01-17'),
+        ],
         completedDates: [new Date('2024-01-15')],
         currentDate: new Date('2024-01-16'),
         maxCoefficient: 10,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(1);
 
-      const effectiveDates = result[0].matchingDates.map((m) => m.effectiveDate.toDateString());
+      const effectiveDates = result[0].matchingDates.map((m) =>
+        m.effectiveDate.toDateString(),
+      );
       expect(effectiveDates).toContain('Wed Jan 17 2024');
       expect(effectiveDates).not.toContain('Mon Jan 15 2024');
       expect(effectiveDates).not.toContain('Tue Jan 16 2024');
@@ -802,7 +953,10 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 10,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
@@ -816,7 +970,10 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 10,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toEqual([]);
     });
@@ -828,7 +985,10 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 10,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
@@ -842,7 +1002,10 @@ describe('SharedAvailabilityFilterService', () => {
         maxCoefficient: 10,
       });
       const availabilities = createTestAvailabilities();
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].matchingDates).toHaveLength(2);
@@ -875,7 +1038,10 @@ describe('SharedAvailabilityFilterService', () => {
           availableDates: [{ date: '2024-01-15', coefficient: 1.0 }],
         },
       ];
-      const result = service.filterMatchingAvailabilities(booking, availabilities);
+      const result = service.filterMatchingAvailabilities(
+        booking,
+        availabilities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].availability.warehouseId).toBe(1);

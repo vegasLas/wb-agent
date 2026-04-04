@@ -165,7 +165,8 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
         const { booking, account, user } = params;
 
         // Simulate cache check and supply creation flow
-        const isValid = autobookingSupplyIdCacheService.isSupplyIdValid(booking);
+        const isValid =
+          autobookingSupplyIdCacheService.isSupplyIdValid(booking);
 
         if (!isValid) {
           // Create new supply (calls real supplyService mock)
@@ -255,7 +256,9 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Should call createBookingTask
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
 
       // Should NOT create new supply since cache is valid
       expect(mockSupplyService.createSupply).not.toHaveBeenCalled();
@@ -306,7 +309,9 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Should call createBookingTask
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
 
       // Should create new supply since cache is expired
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(1);
@@ -353,7 +358,9 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: Should call createBookingTask
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
 
       // Should create new supply since no cache exists
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(1);
@@ -524,7 +531,9 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
       await service.processAvailabilities(monitoringUsers, availabilities);
 
       // Assert: All users should be processed
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(3);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        3,
+      );
 
       // Should create supply only for User 2 and User 3 (User 1 has valid cache)
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(2);

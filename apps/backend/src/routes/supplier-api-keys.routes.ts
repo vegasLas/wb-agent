@@ -45,7 +45,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { apiKey } = req.body;
@@ -59,22 +61,27 @@ router.post(
               Authorization: apiKey,
             },
             timeout: 10000,
-          }
+          },
         );
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          if (error.response?.status === 401 || error.response?.status === 403) {
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 403
+          ) {
             throw ApiError.badRequest(
-              'Invalid API key. Please check your API key and try again.'
+              'Invalid API key. Please check your API key and try again.',
             );
           }
         }
         throw ApiError.badRequest(
-          'Failed to validate API key. Please check your API key and try again.'
+          'Failed to validate API key. Please check your API key and try again.',
         );
       }
 
-      const result = await supplierApiKeyService.upsert(req.user!.id, { apiKey });
+      const result = await supplierApiKeyService.upsert(req.user!.id, {
+        apiKey,
+      });
 
       res.json({
         success: true,
@@ -87,7 +94,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // DELETE /api/v1/supplier-api-keys - Delete API key

@@ -51,9 +51,9 @@ interface UserData {
   accounts: AccountData[];
 }
 
-type UserWithBookings = UserData
+type UserWithBookings = UserData;
 
-type UserWithTriggers = UserData
+type UserWithTriggers = UserData;
 
 type BoxTypeId = 2 | 5 | 6;
 

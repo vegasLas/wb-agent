@@ -118,8 +118,12 @@ const createAvailability = (
 
 describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
   let service: AutobookingRescheduleMonitoringService;
-  let mockExecutorService: jest.Mocked<typeof autobookingRescheduleExecutorService>;
-  let mockNotificationService: jest.Mocked<typeof autobookingRescheduleNotificationService>;
+  let mockExecutorService: jest.Mocked<
+    typeof autobookingRescheduleExecutorService
+  >;
+  let mockNotificationService: jest.Mocked<
+    typeof autobookingRescheduleNotificationService
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -129,14 +133,19 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
     mockExecutorService = autobookingRescheduleExecutorService as jest.Mocked<
       typeof autobookingRescheduleExecutorService
     >;
-    mockNotificationService = autobookingRescheduleNotificationService as jest.Mocked<
-      typeof autobookingRescheduleNotificationService
-    >;
+    mockNotificationService =
+      autobookingRescheduleNotificationService as jest.Mocked<
+        typeof autobookingRescheduleNotificationService
+      >;
 
     // Setup default mocks for executor
     mockExecutorService.createRescheduleTask.mockResolvedValue(undefined);
-    mockExecutorService.addSuccessfulReschedule.mockImplementation(() => { /* intentionally empty */ });
-    mockExecutorService.logSuccessfulReschedule.mockImplementation(() => { /* intentionally empty */ });
+    mockExecutorService.addSuccessfulReschedule.mockImplementation(() => {
+      /* intentionally empty */
+    });
+    mockExecutorService.logSuccessfulReschedule.mockImplementation(() => {
+      /* intentionally empty */
+    });
     mockExecutorService.handleRescheduleProcessingError.mockResolvedValue(
       undefined,
     );
@@ -149,29 +158,38 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
 
     // Setup default mocks for shared services
     jest
-      .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+      .spyOn(
+        sharedTaskOrganizerService,
+        'organizeReschedulesByWarehouseDateTyped',
+      )
       .mockReturnValue(new Map());
     jest
       .spyOn(sharedProcessingStateService, 'isRescheduleProcessed')
       .mockReturnValue(false);
     jest
       .spyOn(sharedProcessingStateService, 'markRescheduleAsProcessed')
-      .mockImplementation(() => { /* intentionally empty */ });
+      .mockImplementation(() => {
+        /* intentionally empty */
+      });
     jest
       .spyOn(sharedProcessingStateService, 'resetRescheduleState')
-      .mockImplementation(() => { /* intentionally empty */ });
+      .mockImplementation(() => {
+        /* intentionally empty */
+      });
     jest
       .spyOn(sharedUserTrackingService, 'isUserRunning')
       .mockReturnValue(false);
     jest
       .spyOn(sharedUserTrackingService, 'trackUsersAsRunning')
-      .mockImplementation(() => { /* intentionally empty */ });
+      .mockImplementation(() => {
+        /* intentionally empty */
+      });
     jest
       .spyOn(sharedUserTrackingService, 'removeUsersFromRunning')
-      .mockImplementation(() => { /* intentionally empty */ });
-    jest
-      .spyOn(sharedBanService, 'isUserBlacklisted')
-      .mockReturnValue(false);
+      .mockImplementation(() => {
+        /* intentionally empty */
+      });
+    jest.spyOn(sharedBanService, 'isUserBlacklisted').mockReturnValue(false);
     jest.spyOn(sharedBanService, 'isBanned').mockReturnValue(false);
     jest.spyOn(sharedLatencyService, 'generateLatency').mockReturnValue(1000);
   });
@@ -193,7 +211,9 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       );
 
       // Assert
-      expect(sharedProcessingStateService.resetRescheduleState).toHaveBeenCalled();
+      expect(
+        sharedProcessingStateService.resetRescheduleState,
+      ).toHaveBeenCalled();
       expect(
         sharedTaskOrganizerService.organizeReschedulesByWarehouseDateTyped,
       ).toHaveBeenCalledWith(monitoringUsers, availabilities);
@@ -218,14 +238,19 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Act
       await service.processRescheduleAvailabilities([user], [availability]);
 
       // Assert
-      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([1]);
+      expect(
+        sharedUserTrackingService.trackUsersAsRunning,
+      ).toHaveBeenCalledWith([1]);
       expect(
         sharedProcessingStateService.markRescheduleAsProcessed,
       ).toHaveBeenCalledWith(reschedule.id);
@@ -236,7 +261,9 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
         user,
         latency: 1000,
       });
-      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalledWith([1]);
+      expect(
+        sharedUserTrackingService.removeUsersFromRunning,
+      ).toHaveBeenCalledWith([1]);
     });
 
     test('should process multiple reschedules in sequence', async () => {
@@ -278,7 +305,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Act
@@ -288,11 +318,13 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       );
 
       // Assert
-      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([1, 2]);
+      expect(
+        sharedUserTrackingService.trackUsersAsRunning,
+      ).toHaveBeenCalledWith([1, 2]);
       expect(mockExecutorService.createRescheduleTask).toHaveBeenCalled();
-      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalledWith([
-        1, 2,
-      ]);
+      expect(
+        sharedUserTrackingService.removeUsersFromRunning,
+      ).toHaveBeenCalledWith([1, 2]);
     });
   });
 
@@ -316,7 +348,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
       jest
         .spyOn(sharedProcessingStateService, 'isRescheduleProcessed')
@@ -327,7 +362,9 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
 
       // Assert
       expect(mockExecutorService.createRescheduleTask).not.toHaveBeenCalled();
-      expect(sharedUserTrackingService.trackUsersAsRunning).not.toHaveBeenCalled();
+      expect(
+        sharedUserTrackingService.trackUsersAsRunning,
+      ).not.toHaveBeenCalled();
     });
 
     test('should skip blacklisted users', async () => {
@@ -349,7 +386,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
       jest.spyOn(sharedBanService, 'isUserBlacklisted').mockReturnValue(true); // User is blacklisted
 
@@ -358,7 +398,9 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
 
       // Assert
       expect(mockExecutorService.createRescheduleTask).not.toHaveBeenCalled();
-      expect(sharedUserTrackingService.trackUsersAsRunning).not.toHaveBeenCalled();
+      expect(
+        sharedUserTrackingService.trackUsersAsRunning,
+      ).not.toHaveBeenCalled();
     });
 
     test('should skip running users', async () => {
@@ -380,16 +422,23 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
-      jest.spyOn(sharedUserTrackingService, 'isUserRunning').mockReturnValue(true); // User is already running
+      jest
+        .spyOn(sharedUserTrackingService, 'isUserRunning')
+        .mockReturnValue(true); // User is already running
 
       // Act
       await service.processRescheduleAvailabilities([user], [availability]);
 
       // Assert
       expect(mockExecutorService.createRescheduleTask).not.toHaveBeenCalled();
-      expect(sharedUserTrackingService.trackUsersAsRunning).not.toHaveBeenCalled();
+      expect(
+        sharedUserTrackingService.trackUsersAsRunning,
+      ).not.toHaveBeenCalled();
     });
 
     test('should skip banned warehouse-date combinations', async () => {
@@ -411,7 +460,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
       jest.spyOn(sharedBanService, 'isBanned').mockReturnValue(true); // Warehouse-date is banned
 
@@ -450,7 +502,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Act
@@ -490,14 +545,19 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Act - should not throw, error is handled internally
       await service.processRescheduleAvailabilities([user], [availability]);
 
       // Assert - should attempt to remove user from running even on error
-      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalled();
+      expect(
+        sharedUserTrackingService.removeUsersFromRunning,
+      ).toHaveBeenCalled();
     });
   });
 
@@ -524,7 +584,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Mock successful reschedule - simulate adding to successfulReschedules
@@ -576,7 +639,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Act
@@ -628,7 +694,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Act
@@ -640,8 +709,12 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       // Assert
       expect(mockExecutorService.createRescheduleTask).toHaveBeenCalledTimes(2);
       // Should process groups and track users
-      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([1]);
-      expect(sharedUserTrackingService.trackUsersAsRunning).toHaveBeenCalledWith([2]);
+      expect(
+        sharedUserTrackingService.trackUsersAsRunning,
+      ).toHaveBeenCalledWith([1]);
+      expect(
+        sharedUserTrackingService.trackUsersAsRunning,
+      ).toHaveBeenCalledWith([2]);
     });
 
     test('should continue processing when non-DATE_UNAVAILABLE error occurs', async () => {
@@ -683,7 +756,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // First group throws a non-date-unavailable error, second should still process
@@ -704,7 +780,9 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
 
       // Assert
       expect(mockExecutorService.createRescheduleTask).toHaveBeenCalledTimes(2); // Both groups processed
-      expect(sharedUserTrackingService.removeUsersFromRunning).toHaveBeenCalledTimes(2); // Cleanup called for both groups
+      expect(
+        sharedUserTrackingService.removeUsersFromRunning,
+      ).toHaveBeenCalledTimes(2); // Cleanup called for both groups
     });
   });
 
@@ -775,7 +853,10 @@ describe('AutobookingRescheduleMonitoringService - Core Functionality', () => {
       ]);
 
       jest
-        .spyOn(sharedTaskOrganizerService, 'organizeReschedulesByWarehouseDateTyped')
+        .spyOn(
+          sharedTaskOrganizerService,
+          'organizeReschedulesByWarehouseDateTyped',
+        )
         .mockReturnValue(warehouseDateMap as any);
 
       // Act

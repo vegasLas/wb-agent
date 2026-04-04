@@ -27,7 +27,7 @@ export function initializeMonitoringCleanupJobs(): void {
 
   if (!isCleanupEnabled) {
     logger.info(
-      '[MonitoringCleanup] RUN_MONITORING_CLEANUP is false, skipping cleanup jobs'
+      '[MonitoringCleanup] RUN_MONITORING_CLEANUP is false, skipping cleanup jobs',
     );
     return;
   }
@@ -38,12 +38,16 @@ export function initializeMonitoringCleanupJobs(): void {
   // This archives expired autobookings
   scheduleJob('00 21 * * *', async () => {
     if (isCleaning) {
-      logger.warn('[MonitoringCleanup] Cleanup already in progress, skipping...');
+      logger.warn(
+        '[MonitoringCleanup] Cleanup already in progress, skipping...',
+      );
       return;
     }
 
     isCleaning = true;
-    logger.info('[MonitoringCleanup] Running midnight (Moscow time) autobooking cleanup...');
+    logger.info(
+      '[MonitoringCleanup] Running midnight (Moscow time) autobooking cleanup...',
+    );
 
     try {
       await autobookingDateManagerService.cleanAllAutobookings();
@@ -59,12 +63,16 @@ export function initializeMonitoringCleanupJobs(): void {
   // This expires triggers that are no longer valid
   scheduleJob('18 21 * * *', async () => {
     if (isCleaning) {
-      logger.warn('[MonitoringCleanup] Cleanup already in progress, skipping...');
+      logger.warn(
+        '[MonitoringCleanup] Cleanup already in progress, skipping...',
+      );
       return;
     }
 
     isCleaning = true;
-    logger.info('[MonitoringCleanup] Running midnight (Moscow time) trigger cleanup...');
+    logger.info(
+      '[MonitoringCleanup] Running midnight (Moscow time) trigger cleanup...',
+    );
 
     try {
       await triggerDateManagerService.cleanAllTriggers();
@@ -77,7 +85,7 @@ export function initializeMonitoringCleanupJobs(): void {
   });
 
   logger.info(
-    '[MonitoringCleanup] Scheduled jobs: Autobooking cleanup at 00:00 MSK, Trigger cleanup at 00:18 MSK'
+    '[MonitoringCleanup] Scheduled jobs: Autobooking cleanup at 00:00 MSK, Trigger cleanup at 00:18 MSK',
   );
 
   // Also run once at startup to clean any items that might have expired while the server was down

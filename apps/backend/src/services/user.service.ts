@@ -136,10 +136,13 @@ export class UserService {
     return {
       totalSupplies: stats?.supplyTriggers?.length || 0,
       successfulBookings:
-        stats?.autobookings?.filter((b: { status: string }) => b.status === 'COMPLETED')?.length ||
-        0,
+        stats?.autobookings?.filter(
+          (b: { status: string }) => b.status === 'COMPLETED',
+        )?.length || 0,
       activeRequests:
-        stats?.autobookings?.filter((b: { status: string }) => b.status === 'ACTIVE')?.length || 0,
+        stats?.autobookings?.filter(
+          (b: { status: string }) => b.status === 'ACTIVE',
+        )?.length || 0,
     };
   }
 

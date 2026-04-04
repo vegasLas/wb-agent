@@ -107,14 +107,14 @@ export class SharedUserTrackingService implements ISharedUserTrackingService {
    */
   addUserToBlacklist(
     userId: number,
-    duration: number = DEFAULT_BLACKLIST_DURATION_MS
+    duration: number = DEFAULT_BLACKLIST_DURATION_MS,
   ): void {
     const expiration = Date.now() + duration;
     this.blacklistedUsers.set(userId, expiration);
 
     const durationMinutes = duration / 60000;
     console.log(
-      `🚫 BLACKLISTED USER: ${userId} - Duration: ${durationMinutes} minutes`
+      `🚫 BLACKLISTED USER: ${userId} - Duration: ${durationMinutes} minutes`,
     );
   }
 
@@ -199,10 +199,10 @@ export class SharedUserTrackingService implements ISharedUserTrackingService {
    */
   logCurrentState(): void {
     console.log(
-      `👥 Running users: ${this.getRunningUserCount()} [${Array.from(this.runningUserIds).join(', ')}]`
+      `👥 Running users: ${this.getRunningUserCount()} [${Array.from(this.runningUserIds).join(', ')}]`,
     );
     console.log(
-      `🚫 Blacklisted users: ${this.getBlacklistedUserCount()} [${Array.from(this.getBlacklistedUserIds()).join(', ')}]`
+      `🚫 Blacklisted users: ${this.getBlacklistedUserCount()} [${Array.from(this.getBlacklistedUserIds()).join(', ')}]`,
     );
   }
 

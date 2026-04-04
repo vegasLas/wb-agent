@@ -116,14 +116,19 @@ export class AutobookingDateManagerService {
         await this.cleanAutobooking(autobooking);
       }
     } catch (error) {
-      logger.error('[AutobookingDateManager] Error cleaning autobookings:', error);
+      logger.error(
+        '[AutobookingDateManager] Error cleaning autobookings:',
+        error,
+      );
     }
   }
 
   /**
    * Update autobooking status to ARCHIVED
    */
-  private async updateAutobookingStatus(autobooking: Autobooking): Promise<void> {
+  private async updateAutobookingStatus(
+    autobooking: Autobooking,
+  ): Promise<void> {
     try {
       await prisma.autobooking.update({
         where: { id: autobooking.id },
@@ -134,7 +139,7 @@ export class AutobookingDateManagerService {
     } catch (error) {
       logger.error(
         `[AutobookingDateManager] Error updating autobooking status for ${autobooking.id}:`,
-        error
+        error,
       );
     }
   }
@@ -143,7 +148,7 @@ export class AutobookingDateManagerService {
    * Notify user about archived autobooking via Telegram
    */
   private async notifyUserAboutArchivedAutobooking(
-    autobooking: Autobooking
+    autobooking: Autobooking,
   ): Promise<void> {
     try {
       if (!autobooking.userId) return;
@@ -175,11 +180,10 @@ export class AutobookingDateManagerService {
         },
         disable_notification: true, // Send without sound
       });
-
     } catch (error) {
       logger.error(
         '[AutobookingDateManager] Error sending archived autobooking notification:',
-        error
+        error,
       );
     }
   }
@@ -222,4 +226,5 @@ export class AutobookingDateManagerService {
   }
 }
 
-export const autobookingDateManagerService = new AutobookingDateManagerService();
+export const autobookingDateManagerService =
+  new AutobookingDateManagerService();

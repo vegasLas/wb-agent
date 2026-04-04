@@ -6,7 +6,10 @@
 import { Router, RequestHandler, Response, NextFunction } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { v4 as uuidv4 } from 'uuid';
-import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
+import {
+  authenticate,
+  AuthenticatedRequest,
+} from '../middleware/auth.middleware';
 import { yookassaService } from '../services/yookassa.service';
 import { prisma } from '../config/database';
 import { TBOT } from '../utils/TBOT';
@@ -23,7 +26,7 @@ const getPaymentTemplate = (
     tariff?: { name?: string; days?: number; bookingCount?: number };
     amount?: number;
     errorMessage?: string;
-  }
+  },
 ): string => {
   const templates: Record<string, string> = {
     success: `
@@ -202,7 +205,8 @@ router.post(
       }
 
       const idempotencyKey = uuidv4();
-      const origin = req.headers.origin || `${req.protocol}://${req.headers.host}`;
+      const origin =
+        req.headers.origin || `${req.protocol}://${req.headers.host}`;
       const returnUrl = `${origin}/api/v1/payments/check?key=${idempotencyKey}`;
 
       const payment = await yookassaService.createPayment(
@@ -240,7 +244,7 @@ router.post(
             ],
           },
         },
-        idempotencyKey
+        idempotencyKey,
       );
 
       // Save payment to database
@@ -292,100 +296,133 @@ router.post(
                 ],
               ],
             },
-          }
+          },
         );
       }
 
       res.json(payment);
     } catch (error) {
       logger.error('Payment creation failed:', error);
-      next(error instanceof ApiError ? error : new ApiError(500, 'Failed to create payment'));
+      next(
+        error instanceof ApiError
+          ? error
+          : new ApiError(500, 'Failed to create payment'),
+      );
     }
-  }) as RequestHandler
+  }) as RequestHandler,
 );
 
 // GET /api/v1/payments/check - Check payment status (returns HTML page)
-router.get(
-  '/check',
-  query('key').notEmpty(),
-  async (req, res) => {
-    try {
-      const key = req.query?.key as string;
+router.get('/check', query('key').notEmpty(), async (req, res) => {
+  try {
+    const key = req.query?.key as string;
 
-      if (!key) {
-        return res.status(400).send(getPaymentTemplate('error', { errorMessage: 'Ключ платежа не найден' }));
-      }
-
-      // Find payment by idempotencyKey
-      const dbPayment = await prisma.payment.findUnique({
-        where: { idempotencyKey: key },
-        include: { user: true },
-      });
-
-      if (!dbPayment) {
-        return res.status(404).send(getPaymentTemplate('error', { errorMessage: 'Платеж не найден в базе данных' }));
-      }
-
-      // Check if payment is already processed successfully
-      if (dbPayment.status === 'succeeded' && dbPayment.paidAt) {
-        const tariff = PAYMENT_TARIFFS.find((t) => t.id === dbPayment.tariffId);
-        return res.send(getPaymentTemplate('success', { tariff, amount: dbPayment.amount }));
-      }
-
-      // Find the tariff
-      const tariff = PAYMENT_TARIFFS.find((t) => t.id === dbPayment.tariffId);
-      if (!tariff) {
-        return res.status(404).send(getPaymentTemplate('error', { errorMessage: 'Тариф не найден' }));
-      }
-
-      // Get payment status from YooKassa
-      const payment = await yookassaService.getPayment(dbPayment.paymentId);
-
-      // Update payment status in database
-      await prisma.payment.update({
-        where: { id: dbPayment.id },
-        data: {
-          status: payment.status,
-          paidAt: payment.status === 'succeeded' ? new Date() : null,
-        },
-      });
-
-      // Process different statuses
-      if (payment.status === 'pending') {
-        return res.send(getPaymentTemplate('pending', { tariff, amount: dbPayment.amount }));
-      }
-
-      if (payment.status === 'waiting_for_capture') {
-        return res.send(getPaymentTemplate('waiting_for_capture', { tariff, amount: dbPayment.amount }));
-      }
-
-      if (payment.status === 'canceled') {
-        return res.send(getPaymentTemplate('canceled'));
-      }
-
-      // Process successful payment
-      if (payment.status === 'succeeded') {
-        await yookassaService.processSuccessfulPayment(
-          dbPayment.paymentId,
-          dbPayment.userId,
-          dbPayment.tariffId
+    if (!key) {
+      return res
+        .status(400)
+        .send(
+          getPaymentTemplate('error', {
+            errorMessage: 'Ключ платежа не найден',
+          }),
         );
-      }
+    }
 
-      return res.send(getPaymentTemplate('success', { tariff, amount: dbPayment.amount }));
-    } catch (error: unknown) {
-      const err = error as { message?: string };
-      logger.error('Payment creation failed:', err);
-      logger.error('Payment verification failed:', err);
-      return res.status((err as { statusCode?: number }).statusCode || 400).send(
-        getPaymentTemplate('error', { errorMessage: err.message || '❌ Ошибка при проверке платежа' })
+    // Find payment by idempotencyKey
+    const dbPayment = await prisma.payment.findUnique({
+      where: { idempotencyKey: key },
+      include: { user: true },
+    });
+
+    if (!dbPayment) {
+      return res
+        .status(404)
+        .send(
+          getPaymentTemplate('error', {
+            errorMessage: 'Платеж не найден в базе данных',
+          }),
+        );
+    }
+
+    // Check if payment is already processed successfully
+    if (dbPayment.status === 'succeeded' && dbPayment.paidAt) {
+      const tariff = PAYMENT_TARIFFS.find((t) => t.id === dbPayment.tariffId);
+      return res.send(
+        getPaymentTemplate('success', { tariff, amount: dbPayment.amount }),
       );
     }
+
+    // Find the tariff
+    const tariff = PAYMENT_TARIFFS.find((t) => t.id === dbPayment.tariffId);
+    if (!tariff) {
+      return res
+        .status(404)
+        .send(getPaymentTemplate('error', { errorMessage: 'Тариф не найден' }));
+    }
+
+    // Get payment status from YooKassa
+    const payment = await yookassaService.getPayment(dbPayment.paymentId);
+
+    // Update payment status in database
+    await prisma.payment.update({
+      where: { id: dbPayment.id },
+      data: {
+        status: payment.status,
+        paidAt: payment.status === 'succeeded' ? new Date() : null,
+      },
+    });
+
+    // Process different statuses
+    if (payment.status === 'pending') {
+      return res.send(
+        getPaymentTemplate('pending', { tariff, amount: dbPayment.amount }),
+      );
+    }
+
+    if (payment.status === 'waiting_for_capture') {
+      return res.send(
+        getPaymentTemplate('waiting_for_capture', {
+          tariff,
+          amount: dbPayment.amount,
+        }),
+      );
+    }
+
+    if (payment.status === 'canceled') {
+      return res.send(getPaymentTemplate('canceled'));
+    }
+
+    // Process successful payment
+    if (payment.status === 'succeeded') {
+      await yookassaService.processSuccessfulPayment(
+        dbPayment.paymentId,
+        dbPayment.userId,
+        dbPayment.tariffId,
+      );
+    }
+
+    return res.send(
+      getPaymentTemplate('success', { tariff, amount: dbPayment.amount }),
+    );
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    logger.error('Payment creation failed:', err);
+    logger.error('Payment verification failed:', err);
+    return res
+      .status((err as { statusCode?: number }).statusCode || 400)
+      .send(
+        getPaymentTemplate('error', {
+          errorMessage: err.message || '❌ Ошибка при проверке платежа',
+        }),
+      );
   }
-);
+});
 
 // GET /api/v1/payments/history - Get user's payment history
-router.get('/history', authenticate, (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get('/history', authenticate, (async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const payments = await prisma.payment.findMany({
       where: { userId: req.user!.id },

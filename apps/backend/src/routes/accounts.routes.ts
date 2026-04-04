@@ -18,17 +18,28 @@ router.get('/', authenticate, async (req, res, next) => {
 
     res.json({
       success: true,
-      accounts: accounts.map((account: { id: string; phoneWb: string | null; selectedSupplierId: string | null; suppliers?: { supplierId: string; supplierName: string }[]; createdAt: Date; updatedAt: Date }) => ({
-        id: account.id,
-        phoneWb: account.phoneWb || undefined,
-        selectedSupplierId: account.selectedSupplierId || undefined,
-        suppliers: account.suppliers?.map((s: { supplierId: string; supplierName: string }) => ({
-          supplierId: s.supplierId,
-          supplierName: s.supplierName,
-        })),
-        createdAt: account.createdAt.toISOString(),
-        updatedAt: account.updatedAt.toISOString(),
-      })),
+      accounts: accounts.map(
+        (account: {
+          id: string;
+          phoneWb: string | null;
+          selectedSupplierId: string | null;
+          suppliers?: { supplierId: string; supplierName: string }[];
+          createdAt: Date;
+          updatedAt: Date;
+        }) => ({
+          id: account.id,
+          phoneWb: account.phoneWb || undefined,
+          selectedSupplierId: account.selectedSupplierId || undefined,
+          suppliers: account.suppliers?.map(
+            (s: { supplierId: string; supplierName: string }) => ({
+              supplierId: s.supplierId,
+              supplierName: s.supplierName,
+            }),
+          ),
+          createdAt: account.createdAt.toISOString(),
+          updatedAt: account.updatedAt.toISOString(),
+        }),
+      ),
     });
   } catch (error) {
     next(error);
@@ -44,7 +55,9 @@ router.get(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const id = req.params.id as string;
@@ -60,10 +73,12 @@ router.get(
           id: account.id,
           phoneWb: account.phoneWb || undefined,
           selectedSupplierId: account.selectedSupplierId || undefined,
-          suppliers: account.suppliers?.map((s: { supplierId: string; supplierName: string }) => ({
-            supplierId: s.supplierId,
-            supplierName: s.supplierName,
-          })),
+          suppliers: account.suppliers?.map(
+            (s: { supplierId: string; supplierName: string }) => ({
+              supplierId: s.supplierId,
+              supplierName: s.supplierName,
+            }),
+          ),
           createdAt: account.createdAt.toISOString(),
           updatedAt: account.updatedAt.toISOString(),
         },
@@ -71,7 +86,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // DELETE /api/v1/accounts/:id - Delete an account
@@ -83,7 +98,9 @@ router.delete(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const id = req.params.id as string;
@@ -101,7 +118,7 @@ router.delete(
       }
       next(error);
     }
-  }
+  },
 );
 
 // PATCH /api/v1/accounts/supplier - Update selected supplier for an account
@@ -114,7 +131,9 @@ router.patch(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { accountId, supplierId } = req.body;
@@ -122,7 +141,7 @@ router.patch(
       await accountService.updateSelectedSupplier(
         accountId,
         supplierId,
-        req.user!.id
+        req.user!.id,
       );
 
       res.json({
@@ -132,12 +151,16 @@ router.patch(
       });
     } catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
-        next(ApiError.notFound('Account not found or does not contain the specified supplier'));
+        next(
+          ApiError.notFound(
+            'Account not found or does not contain the specified supplier',
+          ),
+        );
         return;
       }
       next(error);
     }
-  }
+  },
 );
 
 // GET /api/v1/accounts/:accountId/suppliers - Sync and get suppliers for an account
@@ -149,7 +172,9 @@ router.get(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const accountId = req.params.accountId as string;
@@ -186,7 +211,7 @@ router.get(
       await accountService.syncAccountSuppliers(
         account.id,
         envInfo.userAgent,
-        envInfo.proxy
+        envInfo.proxy,
       );
 
       // Get updated account with suppliers
@@ -203,7 +228,7 @@ router.get(
       logger.error('Error syncing account suppliers:', error);
       next(error);
     }
-  }
+  },
 );
 
 // POST /api/v1/accounts/:accountId/suppliers/sync - Explicitly sync suppliers
@@ -215,7 +240,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const accountId = req.params.accountId as string;
@@ -252,7 +279,7 @@ router.post(
       await accountService.syncAccountSuppliers(
         account.id,
         envInfo.userAgent,
-        envInfo.proxy
+        envInfo.proxy,
       );
 
       // Get updated account with suppliers
@@ -270,7 +297,7 @@ router.post(
       logger.error('Error syncing account suppliers:', error);
       next(error);
     }
-  }
+  },
 );
 
 // ==========================================
@@ -315,7 +342,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { apiKey } = req.body;
@@ -329,22 +358,27 @@ router.post(
               Authorization: apiKey,
             },
             timeout: 10000,
-          }
+          },
         );
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          if (error.response?.status === 401 || error.response?.status === 403) {
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 403
+          ) {
             throw ApiError.badRequest(
-              'Invalid API key. Please check your API key and try again.'
+              'Invalid API key. Please check your API key and try again.',
             );
           }
         }
         throw ApiError.badRequest(
-          'Failed to validate API key. Please check your API key and try again.'
+          'Failed to validate API key. Please check your API key and try again.',
         );
       }
 
-      const result = await supplierApiKeyService.upsert(req.user!.id, { apiKey });
+      const result = await supplierApiKeyService.upsert(req.user!.id, {
+        apiKey,
+      });
 
       res.json({
         success: true,
@@ -359,7 +393,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // PATCH /api/v1/accounts/api-key - Update API key status
@@ -371,12 +405,16 @@ router.patch(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { isActive } = req.body;
 
-      const result = await supplierApiKeyService.update(req.user!.id, { isActive });
+      const result = await supplierApiKeyService.update(req.user!.id, {
+        isActive,
+      });
 
       res.json({
         success: true,
@@ -386,7 +424,7 @@ router.patch(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // DELETE /api/v1/accounts/api-key - Delete API key

@@ -1,7 +1,7 @@
 /**
  * Telegram Notification Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/telegramNotificationService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
@@ -9,7 +9,10 @@
  * - Added missing test cases from deprecated
  */
 
-import { SharedTelegramNotificationService, sharedTelegramNotificationService } from '../telegram-notification.service';
+import {
+  SharedTelegramNotificationService,
+  sharedTelegramNotificationService,
+} from '../telegram-notification.service';
 import { TBOT } from '../../../../utils/TBOT';
 import { prisma } from '../../../../config/database';
 import { logger } from '../../../../utils/logger';
@@ -92,7 +95,7 @@ describe('SharedTelegramNotificationService', () => {
       expect(mockTBOT.sendMessage).toHaveBeenCalledWith(
         '123456',
         'Test message',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -102,7 +105,7 @@ describe('SharedTelegramNotificationService', () => {
 
       // Act - should not throw
       await expect(
-        service.sendSuccessNotification('123456', 'Test message')
+        service.sendSuccessNotification('123456', 'Test message'),
       ).resolves.not.toThrow();
     });
 
@@ -119,7 +122,7 @@ describe('SharedTelegramNotificationService', () => {
         expect.any(String),
         expect.objectContaining({
           reply_markup: expect.any(Object),
-        })
+        }),
       );
     });
 
@@ -468,7 +471,7 @@ describe('SharedTelegramNotificationService', () => {
         new Date('2024-01-15'),
         2.5,
         undefined,
-        false
+        false,
       );
 
       // Assert
@@ -483,7 +486,7 @@ describe('SharedTelegramNotificationService', () => {
         new Date('2024-01-15'),
         2.5,
         'Transit Point',
-        false
+        false,
       );
 
       // Assert
@@ -498,7 +501,7 @@ describe('SharedTelegramNotificationService', () => {
         new Date('2024-01-15'),
         2.5,
         undefined,
-        true
+        true,
       );
 
       // Assert
@@ -512,7 +515,7 @@ describe('SharedTelegramNotificationService', () => {
         new Date('2024-03-21'),
         2.5,
         undefined,
-        false
+        false,
       );
 
       // Assert

@@ -3,7 +3,10 @@ import { body, validationResult } from 'express-validator';
 import { authenticate } from '../middleware/auth.middleware';
 import { triggerService } from '../services/trigger.service';
 import { ApiError } from '../utils/errors';
-import { TRIGGER_INTERVALS, MAX_WAREHOUSES_PER_TRIGGER } from '../constants/triggers';
+import {
+  TRIGGER_INTERVALS,
+  MAX_WAREHOUSES_PER_TRIGGER,
+} from '../constants/triggers';
 
 const router = Router();
 
@@ -11,14 +14,18 @@ const router = Router();
  * GET /api/v1/triggers
  * Get all triggers for the authenticated user
  */
-router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const triggers = await triggerService.getUserTriggers(req.user!.id);
-    res.json(triggers);
-  } catch (error) {
-    next(error);
-  }
-});
+router.get(
+  '/',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const triggers = await triggerService.getUserTriggers(req.user!.id);
+      res.json(triggers);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 /**
  * POST /api/v1/triggers
@@ -31,14 +38,20 @@ router.post(
     body('warehouseIds')
       .isArray({ min: 1, max: MAX_WAREHOUSES_PER_TRIGGER })
       .withMessage(`Выберите от 1 до ${MAX_WAREHOUSES_PER_TRIGGER} складов`),
-    body('supplyTypes').isArray({ min: 1 }).withMessage('Выберите хотя бы один тип поставки'),
-    body('maxCoefficient').isFloat({ min: 0, max: 20 }).withMessage('Коэффициент должен быть от 0 до 20'),
+    body('supplyTypes')
+      .isArray({ min: 1 })
+      .withMessage('Выберите хотя бы один тип поставки'),
+    body('maxCoefficient')
+      .isFloat({ min: 0, max: 20 })
+      .withMessage('Коэффициент должен быть от 0 до 20'),
   ],
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const {
@@ -65,7 +78,7 @@ router.post(
 
       // Validate check interval
       const isIntervalValid = TRIGGER_INTERVALS.find(
-        (interval) => interval.value === checkInterval
+        (interval) => interval.value === checkInterval,
       );
       if (!isIntervalValid) {
         throw ApiError.badRequest('Неверный интервал проверки');
@@ -77,7 +90,9 @@ router.post(
       }
 
       // Validate active triggers limit
-      const activeTriggersCount = await triggerService.getActiveTriggersCount(req.user!.id);
+      const activeTriggersCount = await triggerService.getActiveTriggersCount(
+        req.user!.id,
+      );
       if (activeTriggersCount >= 30) {
         throw ApiError.badRequest('Достигнут лимит активных таймслотов (30)');
       }
@@ -97,7 +112,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 /**
@@ -109,14 +124,18 @@ router.put(
   authenticate,
   [
     body('triggerId').isUUID().withMessage('Неверный ID триггера'),
-    body('warehouseIds').optional().isArray({ max: MAX_WAREHOUSES_PER_TRIGGER }),
+    body('warehouseIds')
+      .optional()
+      .isArray({ max: MAX_WAREHOUSES_PER_TRIGGER }),
     body('supplyTypes').optional().isArray(),
   ],
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { triggerId, warehouseIds, supplyTypes, isActive } = req.body;
@@ -132,7 +151,7 @@ router.put(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 /**
@@ -147,7 +166,9 @@ router.patch(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { triggerId } = req.body;
@@ -157,18 +178,23 @@ router.patch(
 
       // Only check limit when activating
       if (!trigger.isActive) {
-        const activeTriggersCount = await triggerService.getActiveTriggersCount(req.user!.id);
+        const activeTriggersCount = await triggerService.getActiveTriggersCount(
+          req.user!.id,
+        );
         if (activeTriggersCount >= 30) {
           throw ApiError.badRequest('Достигнут лимит активных таймслотов (30)');
         }
       }
 
-      const updated = await triggerService.toggleTrigger(req.user!.id, triggerId);
+      const updated = await triggerService.toggleTrigger(
+        req.user!.id,
+        triggerId,
+      );
       res.json(updated);
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 /**
@@ -183,7 +209,9 @@ router.delete(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { triggerId } = req.body;
@@ -193,7 +221,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;

@@ -98,7 +98,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
   let mockPrisma: jest.Mocked<typeof prisma>;
   let mockSupplyService: jest.Mocked<typeof supplyService>;
   let mockAutobookingExecutor: jest.Mocked<typeof autobookingExecutorService>;
-  let mockNotificationService: jest.Mocked<typeof autobookingNotificationService>;
+  let mockNotificationService: jest.Mocked<
+    typeof autobookingNotificationService
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -139,10 +141,14 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
     // Mock notification service methods
     jest
       .spyOn(autobookingNotificationService, 'updateAutobookingStatus')
-      .mockImplementation(async () => { /* intentionally empty */ });
+      .mockImplementation(async () => {
+        /* intentionally empty */
+      });
     jest
       .spyOn(autobookingNotificationService, 'sendSuccessNotification')
-      .mockImplementation(async () => { /* intentionally empty */ });
+      .mockImplementation(async () => {
+        /* intentionally empty */
+      });
 
     // Mock bookingErrorService
     mockBookingErrorService.isCriticalBookingError.mockReturnValue(false);
@@ -182,16 +188,13 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
         });
 
         // Simulate successful booking tracking
-        autobookingExecutorService.addSuccessfulBooking(
-          expect.any(Array),
-          {
-            user,
-            warehouseName: 'Test Warehouse',
-            effectiveDate,
-            coefficient: 100,
-            booking,
-          },
-        );
+        autobookingExecutorService.addSuccessfulBooking(expect.any(Array), {
+          user,
+          warehouseName: 'Test Warehouse',
+          effectiveDate,
+          coefficient: 100,
+          booking,
+        });
       },
     );
 
@@ -275,7 +278,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
       // User 1 and User 2 are in group 1 (different proxies)
       // User 3 is in group 2 (same proxy as User 1, so separate group)
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(3);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(3);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        3,
+      );
     });
 
     test('should create separate groups for different proxies', async () => {
@@ -329,7 +334,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
 
       // Assert: All bookings should be processed (all in same group since they have different proxies)
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(3);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(3);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        3,
+      );
     });
   });
 
@@ -401,7 +408,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
       // Warehouse 124: booking-102 (proxy 1.1) - but user 1 already processed in warehouse 123
       // Note: User 1's second booking (booking-102) won't be processed because user 1 is already running
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(3);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(3);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        3,
+      );
     });
 
     test('should handle same proxy across different warehouse-dates', async () => {
@@ -461,7 +470,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
       // Assert: Only 1 booking should be processed
       // User 1 is tracked as running after the first booking and subsequent bookings are skipped
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(1);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
     });
   });
 
@@ -518,7 +529,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
 
       // Assert: All bookings in the same group should be processed
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(3);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(3);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        3,
+      );
     });
 
     test('should handle errors in one proxy group without affecting others', async () => {
@@ -600,7 +613,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
       // - booking-201 succeeds
       // - booking-301 succeeds
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(2); // 2 successful after first failure
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(3);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        3,
+      );
     });
   });
 
@@ -634,7 +649,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
 
       // Assert
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(1);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
     });
 
     test('should handle empty availability list', async () => {
@@ -702,7 +719,9 @@ describe('AutobookingMonitoringService - Proxy Grouping', () => {
 
       // Assert: Both bookings should be processed (different proxy groups due to different ports)
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(2);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
     });
   });
 });

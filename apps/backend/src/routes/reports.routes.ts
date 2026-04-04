@@ -4,7 +4,10 @@
  */
 
 import { Router } from 'express';
-import { fetchSalesReport, fetchReport } from '../controllers/reports.controller';
+import {
+  fetchSalesReport,
+  fetchReport,
+} from '../controllers/reports.controller';
 
 const router = Router();
 

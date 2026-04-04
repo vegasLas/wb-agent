@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { authenticate } from '../middleware/auth.middleware';
-import { autobookingService, AutobookingUpdateError } from '../services/autobooking.service';
+import {
+  autobookingService,
+  AutobookingUpdateError,
+} from '../services/autobooking.service';
 import { ApiError } from '../utils/errors';
 
 const router = Router();
@@ -29,7 +32,9 @@ function parseDateField(value: string | Date | null | undefined): Date | null {
     if (isNaN(value.getTime())) {
       return null;
     }
-    return new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+    return new Date(
+      Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()),
+    );
   }
 
   if (typeof value === 'string') {
@@ -37,7 +42,9 @@ function parseDateField(value: string | Date | null | undefined): Date | null {
     if (isNaN(parsed.getTime())) {
       return null;
     }
-    return new Date(Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()));
+    return new Date(
+      Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()),
+    );
   }
 
   return null;
@@ -59,16 +66,21 @@ router.get(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const page = parseInt(req.query.page as string) || 1;
-      const result = await autobookingService.getUserAutobookings(req.user!.id, page);
+      const result = await autobookingService.getUserAutobookings(
+        req.user!.id,
+        page,
+      );
       res.json(result);
     } catch (error) {
       return next(error);
     }
-  }
+  },
 );
 
 // POST /api/v1/autobooking - Create new autobooking
@@ -77,17 +89,31 @@ router.post(
   authenticate,
   body('accountId').isUUID().withMessage('Valid account ID is required'),
   body('draftId').notEmpty().withMessage('Draft ID is required'),
-  body('warehouseId').isInt({ min: 1 }).withMessage('Valid warehouse ID is required'),
-  body('supplyType').isIn(['BOX', 'MONOPALLETE', 'SUPERSAFE']).withMessage('Invalid supply type'),
+  body('warehouseId')
+    .isInt({ min: 1 })
+    .withMessage('Valid warehouse ID is required'),
+  body('supplyType')
+    .isIn(['BOX', 'MONOPALLETE', 'SUPERSAFE'])
+    .withMessage('Invalid supply type'),
   body('dateType')
-    .isIn(['WEEK', 'MONTH', 'CUSTOM_PERIOD', 'CUSTOM_DATES', 'CUSTOM_DATES_SINGLE'])
+    .isIn([
+      'WEEK',
+      'MONTH',
+      'CUSTOM_PERIOD',
+      'CUSTOM_DATES',
+      'CUSTOM_DATES_SINGLE',
+    ])
     .withMessage('Invalid date type'),
-  body('maxCoefficient').isFloat({ min: 0, max: 20 }).withMessage('Max coefficient must be between 0 and 20'),
+  body('maxCoefficient')
+    .isFloat({ min: 0, max: 20 })
+    .withMessage('Max coefficient must be between 0 and 20'),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const {
@@ -113,20 +139,23 @@ router.post(
             : transitWarehouseId
           : null;
 
-      const autobooking = await autobookingService.createAutobooking(req.user!.id, {
-        accountId,
-        draftId,
-        warehouseId,
-        transitWarehouseId: parsedTransitWarehouseId,
-        transitWarehouseName,
-        supplyType,
-        dateType,
-        startDate: parseDateField(startDate),
-        endDate: parseDateField(endDate),
-        customDates: parseDateArray(customDates),
-        maxCoefficient,
-        monopalletCount,
-      });
+      const autobooking = await autobookingService.createAutobooking(
+        req.user!.id,
+        {
+          accountId,
+          draftId,
+          warehouseId,
+          transitWarehouseId: parsedTransitWarehouseId,
+          transitWarehouseName,
+          supplyType,
+          dateType,
+          startDate: parseDateField(startDate),
+          endDate: parseDateField(endDate),
+          customDates: parseDateArray(customDates),
+          maxCoefficient,
+          monopalletCount,
+        },
+      );
 
       res.json(autobooking);
     } catch (error) {
@@ -139,7 +168,7 @@ router.post(
       }
       return next(error);
     }
-  }
+  },
 );
 
 // PUT /api/v1/autobooking - Update autobooking
@@ -149,7 +178,7 @@ router.put(
   body('id').isUUID().withMessage('Valid autobooking ID is required'),
   async (req, res, next) => {
     const userId = req.user!.id;
-    
+
     // Check queue - prevent concurrent operations
     if (userQueue.has(userId)) {
       return res.status(429).json({
@@ -164,7 +193,9 @@ router.put(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const {
@@ -201,11 +232,14 @@ router.put(
         transitWarehouseName,
         supplyType,
         dateType,
-        startDate: startDate !== undefined ? parseDateField(startDate) : undefined,
+        startDate:
+          startDate !== undefined ? parseDateField(startDate) : undefined,
         endDate: endDate !== undefined ? parseDateField(endDate) : undefined,
         customDates: customDates ? parseDateArray(customDates) : undefined,
-        maxCoefficient: maxCoefficient !== undefined ? Number(maxCoefficient) : undefined,
-        monopalletCount: monopalletCount !== undefined ? Number(monopalletCount) : undefined,
+        maxCoefficient:
+          maxCoefficient !== undefined ? Number(maxCoefficient) : undefined,
+        monopalletCount:
+          monopalletCount !== undefined ? Number(monopalletCount) : undefined,
         status,
       });
 
@@ -222,7 +256,7 @@ router.put(
     } finally {
       userQueue.delete(userId);
     }
-  }
+  },
 );
 
 // DELETE /api/v1/autobooking - Delete autobooking
@@ -232,7 +266,7 @@ router.delete(
   body('id').isUUID().withMessage('Valid autobooking ID is required'),
   async (req, res, next) => {
     const userId = req.user!.id;
-    
+
     // Check queue - prevent concurrent operations
     if (userQueue.has(userId)) {
       return res.status(429).json({
@@ -247,7 +281,9 @@ router.delete(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { id } = req.body;
@@ -271,7 +307,7 @@ router.delete(
     } finally {
       userQueue.delete(userId);
     }
-  }
+  },
 );
 
 export default router;

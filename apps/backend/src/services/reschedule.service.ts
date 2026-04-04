@@ -53,7 +53,7 @@ export class RescheduleService {
   async getUserReschedules(
     userId: number,
     page = 1,
-    limit = 20
+    limit = 20,
   ): Promise<{
     success: boolean;
     counts: Record<string, number>;
@@ -81,11 +81,14 @@ export class RescheduleService {
 
     // Convert counts to proper format
     const statusCounts = counts.reduce(
-      (acc: Record<string, number>, curr: { status: string; _count: { status: number } }) => {
+      (
+        acc: Record<string, number>,
+        curr: { status: string; _count: { status: number } },
+      ) => {
         acc[curr.status] = curr._count.status;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     // Ensure all statuses are represented
@@ -118,7 +121,7 @@ export class RescheduleService {
   async createReschedule(
     userId: number,
     selectedAccountId: string | null,
-    data: CreateRescheduleDto
+    data: CreateRescheduleDto,
   ): Promise<AutobookingReschedule> {
     // Get user for subscription and credit check
     const user = await prisma.user.findUnique({
@@ -134,7 +137,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'User must select an account first',
         'NO_ACCOUNT_SELECTED',
-        400
+        400,
       );
     }
 
@@ -149,7 +152,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'Selected account not found',
         'ACCOUNT_NOT_FOUND',
-        404
+        404,
       );
     }
 
@@ -157,7 +160,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'Selected account does not have a supplier configured',
         'NO_SUPPLIER',
-        400
+        400,
       );
     }
 
@@ -167,7 +170,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'Valid supplyType is required (BOX, MONOPALLETE, or SUPERSAFE)',
         'INVALID_SUPPLY_TYPE',
-        400
+        400,
       );
     }
 
@@ -179,7 +182,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         `У вас недостаточно кредитов. Требуется: ${requiredCount}, доступно: ${user.autobookingCount}`,
         'INSUFFICIENT_CREDITS',
-        403
+        403,
       );
     }
 
@@ -191,13 +194,13 @@ export class RescheduleService {
       ? new Date(new Date(data.endDate).setUTCHours(0, 0, 0, 0))
       : null;
     const normalizedCurrentDate = new Date(
-      new Date(data.currentDate).setUTCHours(0, 0, 0, 0)
+      new Date(data.currentDate).setUTCHours(0, 0, 0, 0),
     );
     const normalizedCustomDates = Array.isArray(data.customDates)
       ? data.customDates.map((date: string | Date) =>
           typeof date === 'string'
             ? new Date(new Date(date).setUTCHours(0, 0, 0, 0))
-            : new Date(new Date(date).setUTCHours(0, 0, 0, 0))
+            : new Date(new Date(date).setUTCHours(0, 0, 0, 0)),
         )
       : [];
 
@@ -237,7 +240,7 @@ export class RescheduleService {
    */
   async updateReschedule(
     userId: number,
-    data: UpdateRescheduleDto
+    data: UpdateRescheduleDto,
   ): Promise<AutobookingReschedule> {
     // Find the existing reschedule record
     const existingReschedule = await prisma.autobookingReschedule.findFirst({
@@ -251,7 +254,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'Autobooking reschedule not found',
         'RESCHEDULE_NOT_FOUND',
-        404
+        404,
       );
     }
 
@@ -260,16 +263,18 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'Завершенные перепланирования нельзя изменять',
         'COMPLETED_RESCHEDULE_IMMUTABLE',
-        400
+        400,
       );
     }
 
     // Prepare update data
     const updateData: Partial<AutobookingReschedule> = {};
 
-    if (data.warehouseId !== undefined) updateData.warehouseId = data.warehouseId;
+    if (data.warehouseId !== undefined)
+      updateData.warehouseId = data.warehouseId;
     if (data.dateType !== undefined) updateData.dateType = data.dateType;
-    if (data.maxCoefficient !== undefined) updateData.maxCoefficient = data.maxCoefficient;
+    if (data.maxCoefficient !== undefined)
+      updateData.maxCoefficient = data.maxCoefficient;
     if (data.supplyId !== undefined) updateData.supplyId = data.supplyId;
     if (data.status !== undefined) updateData.status = data.status;
 
@@ -280,7 +285,7 @@ export class RescheduleService {
         throw new AutobookingUpdateError(
           'Valid supplyType is required (BOX, MONOPALLETE, or SUPERSAFE)',
           'INVALID_SUPPLY_TYPE',
-          400
+          400,
         );
       }
       updateData.supplyType = data.supplyType;
@@ -302,7 +307,7 @@ export class RescheduleService {
     // Handle custom dates array
     if (data.customDates !== undefined) {
       updateData.customDates = data.customDates.map(
-        (date) => new Date(new Date(date).setUTCHours(0, 0, 0, 0))
+        (date) => new Date(new Date(date).setUTCHours(0, 0, 0, 0)),
       );
     }
 
@@ -325,7 +330,7 @@ export class RescheduleService {
    */
   async deleteReschedule(
     userId: number,
-    rescheduleId: string
+    rescheduleId: string,
   ): Promise<{ message: string; returnedCredits: number }> {
     const reschedule = await prisma.autobookingReschedule.findFirst({
       where: {
@@ -338,7 +343,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'Autobooking reschedule not found',
         'RESCHEDULE_NOT_FOUND',
-        404
+        404,
       );
     }
 
@@ -347,7 +352,7 @@ export class RescheduleService {
       throw new AutobookingUpdateError(
         'Нельзя удалить перенос автобронирования со статусом COMPLETED',
         'COMPLETED_RESCHEDULE_CANNOT_DELETE',
-        403
+        403,
       );
     }
 
@@ -367,7 +372,8 @@ export class RescheduleService {
     ]);
 
     return {
-      message: 'Перенос автобронирования успешно удален. Вам возвращено 1 кредит',
+      message:
+        'Перенос автобронирования успешно удален. Вам возвращено 1 кредит',
       returnedCredits: 1,
     };
   }
@@ -377,7 +383,7 @@ export class RescheduleService {
    */
   private validateDateTypeFields(
     updateData: Partial<AutobookingReschedule>,
-    existingReschedule: AutobookingReschedule
+    existingReschedule: AutobookingReschedule,
   ): void {
     const dateType = updateData.dateType || existingReschedule.dateType;
 
@@ -394,7 +400,7 @@ export class RescheduleService {
           throw new AutobookingUpdateError(
             `startDate is required for dateType ${dateType}`,
             'START_DATE_REQUIRED',
-            400
+            400,
           );
         }
         break;
@@ -413,14 +419,14 @@ export class RescheduleService {
           throw new AutobookingUpdateError(
             'startDate is required for CUSTOM_PERIOD dateType',
             'START_DATE_REQUIRED',
-            400
+            400,
           );
         }
         if (!periodEndDate) {
           throw new AutobookingUpdateError(
             'endDate is required for CUSTOM_PERIOD dateType',
             'END_DATE_REQUIRED',
-            400
+            400,
           );
         }
         break;
@@ -431,11 +437,15 @@ export class RescheduleService {
           updateData.customDates !== undefined
             ? updateData.customDates
             : existingReschedule.customDates;
-        if (!customDates || !Array.isArray(customDates) || customDates.length === 0) {
+        if (
+          !customDates ||
+          !Array.isArray(customDates) ||
+          customDates.length === 0
+        ) {
           throw new AutobookingUpdateError(
             'customDates is required and cannot be empty for dateType CUSTOM_DATES_SINGLE',
             'CUSTOM_DATES_REQUIRED',
-            400
+            400,
           );
         }
         break;
@@ -448,7 +458,7 @@ export class RescheduleService {
    */
   private async validateRescheduleDates(
     updateData: Partial<AutobookingReschedule>,
-    existingReschedule: AutobookingReschedule
+    existingReschedule: AutobookingReschedule,
   ): Promise<void> {
     // Get the supply date (created date of the reschedule represents when the supply was created)
     const supplyDate = new Date(existingReschedule.createdAt);
@@ -468,7 +478,7 @@ export class RescheduleService {
           throw new AutobookingUpdateError(
             'Дата начала перепланирования должна быть позже даты создания поставки',
             'INVALID_START_DATE',
-            400
+            400,
           );
         }
 
@@ -481,7 +491,7 @@ export class RescheduleService {
             throw new AutobookingUpdateError(
               'Дата окончания перепланирования должна быть позже даты создания поставки',
               'INVALID_END_DATE',
-              400
+              400,
             );
           }
         }
@@ -500,7 +510,7 @@ export class RescheduleService {
               throw new AutobookingUpdateError(
                 'Все даты перепланирования должны быть позже даты создания поставки',
                 'INVALID_CUSTOM_DATE',
-                400
+                400,
               );
             }
           }

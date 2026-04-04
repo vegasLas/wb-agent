@@ -1,14 +1,17 @@
 /**
  * Processing State Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/processingStateService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
  * - Same test logic preserved
  */
 
-import { SharedProcessingStateService, sharedProcessingStateService } from '../processing-state.service';
+import {
+  SharedProcessingStateService,
+  sharedProcessingStateService,
+} from '../processing-state.service';
 
 // Mock logger
 jest.mock('../../../../utils/logger', () => ({
@@ -55,7 +58,9 @@ describe('SharedProcessingStateService', () => {
     describe('isAutobookingProcessed', () => {
       test('should return false for unprocessed booking', () => {
         // Act & Assert
-        expect(service.isAutobookingProcessed('unprocessed-booking')).toBe(false);
+        expect(service.isAutobookingProcessed('unprocessed-booking')).toBe(
+          false,
+        );
       });
 
       test('should return true for processed booking', () => {
@@ -133,7 +138,9 @@ describe('SharedProcessingStateService', () => {
     describe('isRescheduleProcessed', () => {
       test('should return false for unprocessed reschedule', () => {
         // Act & Assert
-        expect(service.isRescheduleProcessed('unprocessed-reschedule')).toBe(false);
+        expect(service.isRescheduleProcessed('unprocessed-reschedule')).toBe(
+          false,
+        );
       });
 
       test('should return true for processed reschedule', () => {
@@ -278,7 +285,9 @@ describe('SharedProcessingStateService', () => {
 
   describe('singleton instance', () => {
     test('should export a singleton instance', () => {
-      expect(sharedProcessingStateService).toBeInstanceOf(SharedProcessingStateService);
+      expect(sharedProcessingStateService).toBeInstanceOf(
+        SharedProcessingStateService,
+      );
     });
   });
 });

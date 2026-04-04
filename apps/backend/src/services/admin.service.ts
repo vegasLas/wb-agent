@@ -78,7 +78,7 @@ export class AdminService {
     }
 
     logger.info(
-      `Broadcast completed: ${successful} successful, ${failed} failed`
+      `Broadcast completed: ${successful} successful, ${failed} failed`,
     );
 
     return {

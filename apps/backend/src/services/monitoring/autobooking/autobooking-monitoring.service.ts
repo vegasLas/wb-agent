@@ -26,17 +26,19 @@ import type {
   BookingError,
 } from '../shared/interfaces/sharedInterfaces';
 
-export class AutobookingMonitoringService implements IAutobookingMonitoringService {
+export class AutobookingMonitoringService
+  implements IAutobookingMonitoringService
+{
   /**
    * Main entry point for processing warehouse availabilities and matching with autobookings
    */
   async processAvailabilities(
     monitoringUsers: MonitoringUser[],
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void> {
     logger.info(
       `[AutobookingMonitoring] Processing availabilities for ${monitoringUsers.length} users, ` +
-        `${availabilities.length} warehouse availabilities`
+        `${availabilities.length} warehouse availabilities`,
     );
 
     const successfulBookings: SuccessfulBooking[] = [];
@@ -46,22 +48,24 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
     const warehouseDateBookingsMap =
       sharedTaskOrganizerService.organizeAutobookingsByWarehouseDate(
         monitoringUsers,
-        availabilities
+        availabilities,
       );
 
     if (warehouseDateBookingsMap.size === 0) {
-      logger.info('[AutobookingMonitoring] No warehouse-date combinations to process');
+      logger.info(
+        '[AutobookingMonitoring] No warehouse-date combinations to process',
+      );
       return;
     }
 
     logger.info(
-      `[AutobookingMonitoring] Organized into ${warehouseDateBookingsMap.size} warehouse-date combinations`
+      `[AutobookingMonitoring] Organized into ${warehouseDateBookingsMap.size} warehouse-date combinations`,
     );
 
     // Step 2: Process all warehouse-date combinations
     await this.processWarehouseDateBookings(
       warehouseDateBookingsMap,
-      successfulBookings
+      successfulBookings,
     );
 
     this.logProcessingResults(warehouseDateBookingsMap);
@@ -70,7 +74,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
     await this.handleSuccessfulBookings(successfulBookings);
 
     logger.info(
-      `[AutobookingMonitoring] Completed processing. Successful bookings: ${successfulBookings.length}`
+      `[AutobookingMonitoring] Completed processing. Successful bookings: ${successfulBookings.length}`,
     );
   }
 
@@ -86,11 +90,13 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
    */
   private async processWarehouseDateBookings(
     warehouseDateBookingsMap: Map<string, BookingTask[][]>,
-    successfulBookings: SuccessfulBooking[]
+    successfulBookings: SuccessfulBooking[],
   ): Promise<void> {
-    const sortedKeys = this.getSortedWarehouseDateKeys(warehouseDateBookingsMap);
+    const sortedKeys = this.getSortedWarehouseDateKeys(
+      warehouseDateBookingsMap,
+    );
     logger.info(
-      `[AutobookingMonitoring] Processing ${sortedKeys.length} warehouse-date combinations`
+      `[AutobookingMonitoring] Processing ${sortedKeys.length} warehouse-date combinations`,
     );
 
     await Promise.all(
@@ -101,7 +107,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
 
         logger.info(
           `[AutobookingMonitoring] Processing ${warehouseDateKey}: ` +
-            `${bookingTaskGroups.length} proxy groups`
+            `${bookingTaskGroups.length} proxy groups`,
         );
 
         // Process each proxy group sequentially to handle date unavailable errors properly
@@ -112,14 +118,14 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
         ) {
           const bookingTasks = bookingTaskGroups[groupIndex];
           const groupProxies = bookingTasks.map((task) =>
-            sharedTaskOrganizerService.getProxyString(task)
+            sharedTaskOrganizerService.getProxyString(task),
           );
           const groupUserIds = bookingTasks.map((task) => task.user.userId);
 
           logger.info(
             `[AutobookingMonitoring] Group ${groupIndex + 1}/${bookingTaskGroups.length}: ` +
               `${bookingTasks.length} tasks, Users: [${groupUserIds.join(', ')}], ` +
-              `Proxies: [${groupProxies.join(', ')}]`
+              `Proxies: [${groupProxies.join(', ')}]`,
           );
 
           try {
@@ -127,24 +133,24 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
               warehouseDateKey,
               effectiveDate,
               bookingTasks,
-              successfulBookings
+              successfulBookings,
             );
             logger.info(
-              `[AutobookingMonitoring] Group ${groupIndex + 1} completed successfully`
+              `[AutobookingMonitoring] Group ${groupIndex + 1} completed successfully`,
             );
           } catch (error) {
             const errorMessage = (error as Error).message;
             if (errorMessage.startsWith('DATE_UNAVAILABLE:')) {
               logger.warn(
                 `[AutobookingMonitoring] Group ${groupIndex + 1} failed with DATE_UNAVAILABLE ` +
-                  `- stopping remaining groups for ${warehouseDateKey}`
+                  `- stopping remaining groups for ${warehouseDateKey}`,
               );
               // Date unavailable error stops processing remaining groups for this warehouse-date
               break;
             }
             logger.error(
               `[AutobookingMonitoring] Group ${groupIndex + 1} failed with error:`,
-              errorMessage
+              errorMessage,
             );
             // Re-throw other errors
             throw error;
@@ -152,7 +158,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
         }
 
         logger.info(`[AutobookingMonitoring] Completed ${warehouseDateKey}`);
-      })
+      }),
     );
   }
 
@@ -160,7 +166,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
    * Sorts warehouse-date keys by date for consistent processing order
    */
   private getSortedWarehouseDateKeys(
-    warehouseDateBookingsMap: Map<string, BookingTask[][]>
+    warehouseDateBookingsMap: Map<string, BookingTask[][]>,
   ): string[] {
     return Array.from(warehouseDateBookingsMap.keys()).sort((a, b) => {
       const dateA = this.extractDateFromKey(a);
@@ -184,10 +190,11 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
    * Logs processing results for debugging
    */
   private logProcessingResults(
-    warehouseDateBookingsMap: Map<string, BookingTask[][]>
+    warehouseDateBookingsMap: Map<string, BookingTask[][]>,
   ): void {
-    const userIds = Array.from(warehouseDateBookingsMap.values()).map((groups) =>
-      groups.flatMap((tasks) => tasks.map((task) => task.user.userId))
+    const userIds = Array.from(warehouseDateBookingsMap.values()).map(
+      (groups) =>
+        groups.flatMap((tasks) => tasks.map((task) => task.user.userId)),
     );
 
     logger.info(
@@ -195,12 +202,12 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
       warehouseDateBookingsMap.size,
       Array.from(warehouseDateBookingsMap.keys()),
       'Users:',
-      userIds.flat()
+      userIds.flat(),
     );
 
     logger.info(
       `[AutobookingMonitoring] Processed booking IDs:`,
-      Array.from(sharedProcessingStateService.getProcessedAutobookingIds())
+      Array.from(sharedProcessingStateService.getProcessedAutobookingIds()),
     );
   }
 
@@ -208,10 +215,10 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
    * Processes all successful bookings - sends notifications and updates status
    */
   private async handleSuccessfulBookings(
-    successfulBookings: SuccessfulBooking[]
+    successfulBookings: SuccessfulBooking[],
   ): Promise<void> {
     logger.info(
-      `[AutobookingMonitoring] Handling ${successfulBookings.length} successful bookings`
+      `[AutobookingMonitoring] Handling ${successfulBookings.length} successful bookings`,
     );
 
     for (const booking of successfulBookings) {
@@ -219,7 +226,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
         // Update autobooking status in database
         await autobookingNotificationService.updateAutobookingStatus(
           booking.booking,
-          booking.effectiveDate
+          booking.effectiveDate,
         );
 
         // Send success notification to user
@@ -228,16 +235,16 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
           booking.warehouseName,
           booking.effectiveDate,
           booking.coefficient,
-          booking.transitWarehouseName
+          booking.transitWarehouseName,
         );
 
         logger.info(
-          `[AutobookingMonitoring] Successfully handled booking completion for ${booking.booking.id}`
+          `[AutobookingMonitoring] Successfully handled booking completion for ${booking.booking.id}`,
         );
       } catch (error) {
         logger.error(
           `[AutobookingMonitoring] Failed to handle successful booking ${booking.booking.id}:`,
-          error
+          error,
         );
       }
     }
@@ -251,7 +258,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
     warehouseDateKey: string,
     effectiveDate: Date,
     bookingTasks: BookingTask[],
-    successfulBookings: SuccessfulBooking[]
+    successfulBookings: SuccessfulBooking[],
   ): Promise<void> {
     // Filter out tasks that should be skipped or are banned
     const validTasks: BookingTask[] = [];
@@ -264,7 +271,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
         this.isWarehouseDateBanned(
           task.booking,
           effectiveDate,
-          task.coefficient
+          task.coefficient,
         )
       ) {
         continue;
@@ -273,12 +280,14 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
     }
 
     if (validTasks.length === 0) {
-      logger.info(`[AutobookingMonitoring] No valid tasks for ${warehouseDateKey}`);
+      logger.info(
+        `[AutobookingMonitoring] No valid tasks for ${warehouseDateKey}`,
+      );
       return;
     }
 
     logger.info(
-      `[AutobookingMonitoring] Processing ${validTasks.length} valid tasks for ${warehouseDateKey}`
+      `[AutobookingMonitoring] Processing ${validTasks.length} valid tasks for ${warehouseDateKey}`,
     );
 
     // Track users as running and bookings as processing
@@ -294,11 +303,14 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
             await this.processBookingTaskWithExecutor(
               task,
               effectiveDate,
-              successfulBookings
+              successfulBookings,
             );
           } catch (error) {
             const bookingError = error as BookingError;
-            const shouldBreak = this.handleBookingError(bookingError, warehouseDateKey);
+            const shouldBreak = this.handleBookingError(
+              bookingError,
+              warehouseDateKey,
+            );
 
             // If it's a date unavailable error, throw it to stop other groups for this warehouse-date
             if (shouldBreak) {
@@ -306,7 +318,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
             }
             // For other errors, don't stop other bookings in the same group
           }
-        })
+        }),
       );
     } finally {
       // Always remove users from running tracking when done
@@ -324,14 +336,16 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
       sharedUserTrackingService.isUserRunning(task.user.userId);
 
     if (shouldSkip) {
-      const reason = sharedProcessingStateService.isAutobookingProcessed(task.booking.id)
+      const reason = sharedProcessingStateService.isAutobookingProcessed(
+        task.booking.id,
+      )
         ? 'already processed'
         : sharedBanService.isUserBlacklisted(task.user.userId)
           ? 'user blacklisted'
           : 'user already running';
 
       logger.debug(
-        `[AutobookingMonitoring] Skipping booking ${task.booking.id}: ${reason}`
+        `[AutobookingMonitoring] Skipping booking ${task.booking.id}: ${reason}`,
       );
     }
 
@@ -344,7 +358,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
   private isWarehouseDateBanned(
     booking: { warehouseId: number; supplyType: string },
     effectiveDate: Date,
-    coefficient: number
+    coefficient: number,
   ): boolean {
     return sharedBanService.isBanned({
       warehouseId: booking.warehouseId,
@@ -367,7 +381,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
    */
   private handleBookingError(
     error: BookingError,
-    warehouseDateKey: string
+    warehouseDateKey: string,
   ): boolean {
     const isDateUnavailable =
       sharedErrorHandlingService.isDateUnavailableError(error);
@@ -375,14 +389,14 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
     if (isDateUnavailable) {
       logger.warn(
         `[AutobookingMonitoring] Date unavailable error caught - ` +
-          `breaking processing cycle for ${warehouseDateKey}`
+          `breaking processing cycle for ${warehouseDateKey}`,
       );
       return true; // Break the loop
     }
 
     logger.info(
       `[AutobookingMonitoring] Non-date-unavailable error caught for ${warehouseDateKey} - ` +
-        `continuing with remaining bookings`
+        `continuing with remaining bookings`,
     );
     return false; // Continue processing
   }
@@ -393,7 +407,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
   private async processBookingTaskWithExecutor(
     task: BookingTask,
     effectiveDate: Date,
-    successfulBookings: SuccessfulBooking[]
+    successfulBookings: SuccessfulBooking[],
   ): Promise<boolean> {
     const { booking, user, warehouseName, coefficient } = task;
 
@@ -405,10 +419,10 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
     if (!account?.id) {
       logger.error(
         `[AutobookingMonitoring] No account found for user ${user.userId} ` +
-          `with supplier ${booking.supplierId}`
+          `with supplier ${booking.supplierId}`,
       );
       throw new Error(
-        `No account found for user ${user.userId} with supplier ${booking.supplierId}`
+        `No account found for user ${user.userId} with supplier ${booking.supplierId}`,
       );
     }
 
@@ -435,7 +449,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
       autobookingExecutorService.logSuccessfulBooking(
         booking,
         effectiveDate,
-        user.userId
+        user.userId,
       );
 
       return true;
@@ -461,7 +475,7 @@ export class AutobookingMonitoringService implements IAutobookingMonitoringServi
    */
   private findAccountForBooking(
     user: MonitoringUser,
-    booking: { supplierId: string }
+    booking: { supplierId: string },
   ): { id: string } | null {
     // Find the account ID that contains the supplier ID for this booking
     for (const [accountId, supplierIds] of Object.entries(user.accounts)) {

@@ -71,7 +71,7 @@ export class FakeDataDetectionService {
         const boxType =
           warehouse.boxTypeName || `BoxType-${warehouse.boxTypeID}`;
         logger.info(
-          `  ${index + 1}. ID: ${warehouse.warehouseID} | Name: ${warehouse.warehouseName} | Date: ${date} | Coefficient: ${warehouse.coefficient} | BoxType: ${boxType}`
+          `  ${index + 1}. ID: ${warehouse.warehouseID} | Name: ${warehouse.warehouseName} | Date: ${date} | Coefficient: ${warehouse.coefficient} | BoxType: ${boxType}`,
         );
       });
     }
@@ -146,7 +146,7 @@ export class FakeDataDetectionService {
    */
   private checkBoxCountThreshold(
     warehouseCounts: WarehouseCount[],
-    originalWarehouses?: Supply[]
+    originalWarehouses?: Supply[],
   ): {
     shouldSkip: boolean;
     reason?: string;
@@ -160,7 +160,7 @@ export class FakeDataDetectionService {
 
     // Filter for problematic BOX type (boxTypeId = 2) warehouses with count >= 8
     const highBoxCountWarehouses = warehouseCounts.filter(
-      (wc) => wc.boxTypeId === BOX_TYPE_ID && wc.count >= BOX_COUNT_THRESHOLD
+      (wc) => wc.boxTypeId === BOX_TYPE_ID && wc.count >= BOX_COUNT_THRESHOLD,
     );
 
     // If warehouse 206236 has BOX count >= 8, skip processing

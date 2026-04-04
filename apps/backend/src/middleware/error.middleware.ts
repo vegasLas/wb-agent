@@ -12,7 +12,7 @@ export const errorHandler: ErrorRequestHandler = (
   err: Error | ApiError,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   // Log the error
   if (err instanceof ApiError) {
@@ -66,7 +66,7 @@ export const errorHandler: ErrorRequestHandler = (
   if (err.name === 'PrismaClientKnownRequestError') {
     // @ts-expect-error - Prisma error has code property
     const prismaErrorCode = err.code;
-    
+
     // Unique constraint violation
     if (prismaErrorCode === 'P2002') {
       res.status(409).json({
@@ -101,7 +101,8 @@ export const errorHandler: ErrorRequestHandler = (
   // Default: Internal server error
   res.status(500).json({
     success: false,
-    error: env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    error:
+      env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
     code: 'INTERNAL_ERROR',
     ...(env.NODE_ENV === 'development' && { stack: err.stack }),
   });
@@ -111,7 +112,11 @@ export const errorHandler: ErrorRequestHandler = (
  * 404 Not Found middleware
  * Handles requests to routes that don't exist
  */
-export const notFoundHandler = (req: Request, res: Response, next: NextFunction): void => {
+export const notFoundHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   res.status(404).json({
     success: false,
     error: `Route ${req.method} ${req.path} not found`,
@@ -123,11 +128,19 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
  * Validation middleware for express-validator
  * Handles validation errors from request body/query/params
  */
-export const validationMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+export const validationMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
-    const errorMessages = errors.array().map(err => `${err.type === 'field' ? err.path : err.type}: ${err.msg}`);
+    const errorMessages = errors
+      .array()
+      .map(
+        (err) => `${err.type === 'field' ? err.path : err.type}: ${err.msg}`,
+      );
     res.status(422).json({
       success: false,
       error: 'Validation failed',
@@ -136,6 +149,6 @@ export const validationMiddleware = (req: Request, res: Response, next: NextFunc
     });
     return;
   }
-  
+
   next();
 };

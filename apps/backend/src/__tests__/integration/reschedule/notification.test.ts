@@ -1,7 +1,7 @@
 /**
  * Autobooking Reschedule Notification Service Tests
  * Migrated from: tests/autobookingRescheduleNotification.service.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths to use new project structure
@@ -16,12 +16,15 @@ import { prisma } from '../../../config/database';
 import type { AutobookingReschedule } from '@prisma/client';
 
 // Mock dependencies
-jest.mock('../../../services/monitoring/shared/telegram-notification.service', () => ({
-  sharedTelegramNotificationService: {
-    buildBookingSuccessMessage: jest.fn(),
-    sendSuccessNotification: jest.fn(),
-  },
-}));
+jest.mock(
+  '../../../services/monitoring/shared/telegram-notification.service',
+  () => ({
+    sharedTelegramNotificationService: {
+      buildBookingSuccessMessage: jest.fn(),
+      sendSuccessNotification: jest.fn(),
+    },
+  }),
+);
 
 jest.mock('../../../services/monitoring/shared/status-update.service', () => ({
   sharedStatusUpdateService: {
@@ -52,12 +55,14 @@ jest.mock('../../../utils/logger', () => ({
 describe('AutobookingRescheduleNotificationService', () => {
   let service: AutobookingRescheduleNotificationService;
   let mockPrisma: jest.Mocked<typeof prisma>;
-  let mockTelegramService: jest.Mocked<typeof sharedTelegramNotificationService>;
+  let mockTelegramService: jest.Mocked<
+    typeof sharedTelegramNotificationService
+  >;
   let mockStatusUpdateService: jest.Mocked<typeof sharedStatusUpdateService>;
 
   // Helper to create reschedule
   const createReschedule = (
-    overrides: Partial<AutobookingReschedule> = {}
+    overrides: Partial<AutobookingReschedule> = {},
   ): AutobookingReschedule => ({
     id: 'reschedule-1',
     userId: 1,
@@ -79,11 +84,17 @@ describe('AutobookingRescheduleNotificationService', () => {
     jest.clearAllMocks();
     service = new AutobookingRescheduleNotificationService();
     mockPrisma = prisma as jest.Mocked<typeof prisma>;
-    mockTelegramService = sharedTelegramNotificationService as jest.Mocked<typeof sharedTelegramNotificationService>;
-    mockStatusUpdateService = sharedStatusUpdateService as jest.Mocked<typeof sharedStatusUpdateService>;
+    mockTelegramService = sharedTelegramNotificationService as jest.Mocked<
+      typeof sharedTelegramNotificationService
+    >;
+    mockStatusUpdateService = sharedStatusUpdateService as jest.Mocked<
+      typeof sharedStatusUpdateService
+    >;
 
     // Mock default implementations
-    mockTelegramService.buildBookingSuccessMessage.mockReturnValue('Test success message');
+    mockTelegramService.buildBookingSuccessMessage.mockReturnValue(
+      'Test success message',
+    );
     mockTelegramService.sendSuccessNotification.mockResolvedValue(undefined);
     mockStatusUpdateService.updateRescheduleStatus.mockResolvedValue(undefined);
   });
@@ -98,11 +109,9 @@ describe('AutobookingRescheduleNotificationService', () => {
       await service.updateRescheduleStatus(reschedule, bookedDate);
 
       // Assert
-      expect(mockStatusUpdateService.updateRescheduleStatus).toHaveBeenCalledWith(
-        reschedule.id,
-        bookedDate,
-        'CUSTOM_DATES'
-      );
+      expect(
+        mockStatusUpdateService.updateRescheduleStatus,
+      ).toHaveBeenCalledWith(reschedule.id, bookedDate, 'CUSTOM_DATES');
     });
 
     test('should handle different date types', async () => {
@@ -127,23 +136,30 @@ describe('AutobookingRescheduleNotificationService', () => {
       const coefficient = 2.5;
 
       mockTelegramService.buildBookingSuccessMessage.mockReturnValue(
-        'Your booking at Test Warehouse on 2024-01-15 with coefficient 2.5'
+        'Your booking at Test Warehouse on 2024-01-15 with coefficient 2.5',
       );
 
       // Act
-      await service.sendSuccessNotification(chatId, warehouseName, date, coefficient);
+      await service.sendSuccessNotification(
+        chatId,
+        warehouseName,
+        date,
+        coefficient,
+      );
 
       // Assert
-      expect(mockTelegramService.buildBookingSuccessMessage).toHaveBeenCalledWith(
+      expect(
+        mockTelegramService.buildBookingSuccessMessage,
+      ).toHaveBeenCalledWith(
         warehouseName,
         date,
         coefficient,
         undefined,
-        true // isReschedule = true
+        true, // isReschedule = true
       );
       expect(mockTelegramService.sendSuccessNotification).toHaveBeenCalledWith(
         chatId,
-        expect.any(String)
+        expect.any(String),
       );
     });
 
@@ -161,16 +177,18 @@ describe('AutobookingRescheduleNotificationService', () => {
         warehouseName,
         date,
         coefficient,
-        transitWarehouseName
+        transitWarehouseName,
       );
 
       // Assert
-      expect(mockTelegramService.buildBookingSuccessMessage).toHaveBeenCalledWith(
+      expect(
+        mockTelegramService.buildBookingSuccessMessage,
+      ).toHaveBeenCalledWith(
         warehouseName,
         date,
         coefficient,
         transitWarehouseName,
-        true // isReschedule = true
+        true, // isReschedule = true
       );
     });
   });
@@ -181,11 +199,15 @@ describe('AutobookingRescheduleNotificationService', () => {
       const warehouseId = 123;
       const date = new Date('2024-01-15');
 
-      (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockResolvedValue({
+      (
+        mockPrisma.warehouseCoefficient.findFirst as jest.Mock
+      ).mockResolvedValue({
         warehouseName: 'Test Warehouse',
       });
 
-      (mockPrisma.autobookingReschedule.findMany as jest.Mock).mockResolvedValue([]);
+      (
+        mockPrisma.autobookingReschedule.findMany as jest.Mock
+      ).mockResolvedValue([]);
 
       // Act
       await service.sendBannedDateNotification(warehouseId, date);
@@ -199,11 +221,15 @@ describe('AutobookingRescheduleNotificationService', () => {
       const warehouseId = 123;
       const date = new Date('2024-01-15');
 
-      (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockResolvedValue({
+      (
+        mockPrisma.warehouseCoefficient.findFirst as jest.Mock
+      ).mockResolvedValue({
         warehouseName: 'Test Warehouse',
       });
 
-      (mockPrisma.autobookingReschedule.findMany as jest.Mock).mockResolvedValue([
+      (
+        mockPrisma.autobookingReschedule.findMany as jest.Mock
+      ).mockResolvedValue([
         {
           id: 'reschedule-1',
           userId: 1,
@@ -223,12 +249,16 @@ describe('AutobookingRescheduleNotificationService', () => {
       const warehouseId = 123;
       const date = new Date('2024-01-15');
 
-      (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockResolvedValue({
+      (
+        mockPrisma.warehouseCoefficient.findFirst as jest.Mock
+      ).mockResolvedValue({
         warehouseName: 'Test Warehouse',
       });
 
       // Multiple reschedules with same user (same chatId)
-      (mockPrisma.autobookingReschedule.findMany as jest.Mock).mockResolvedValue([
+      (
+        mockPrisma.autobookingReschedule.findMany as jest.Mock
+      ).mockResolvedValue([
         { id: 'reschedule-1', userId: 1, status: 'ACTIVE' },
         { id: 'reschedule-2', userId: 1, status: 'ACTIVE' },
       ]);
@@ -245,11 +275,15 @@ describe('AutobookingRescheduleNotificationService', () => {
       const warehouseId = 123;
       const date = new Date('2024-01-15');
 
-      (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockResolvedValue({
+      (
+        mockPrisma.warehouseCoefficient.findFirst as jest.Mock
+      ).mockResolvedValue({
         warehouseName: 'Test Warehouse',
       });
 
-      (mockPrisma.autobookingReschedule.findMany as jest.Mock).mockResolvedValue([
+      (
+        mockPrisma.autobookingReschedule.findMany as jest.Mock
+      ).mockResolvedValue([
         { id: 'reschedule-1', userId: 1, status: 'ACTIVE' },
       ]);
 
@@ -265,13 +299,13 @@ describe('AutobookingRescheduleNotificationService', () => {
       const warehouseId = 123;
       const date = new Date('2024-01-15');
 
-      (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockRejectedValue(
-        new Error('Database error')
-      );
+      (
+        mockPrisma.warehouseCoefficient.findFirst as jest.Mock
+      ).mockRejectedValue(new Error('Database error'));
 
       // Act & Assert - should not throw
       await expect(
-        service.sendBannedDateNotification(warehouseId, date)
+        service.sendBannedDateNotification(warehouseId, date),
       ).resolves.not.toThrow();
     });
 
@@ -280,13 +314,17 @@ describe('AutobookingRescheduleNotificationService', () => {
       const warehouseId = 123;
       const date = new Date('2024-01-15');
 
-      (mockPrisma.warehouseCoefficient.findFirst as jest.Mock).mockResolvedValue(null);
+      (
+        mockPrisma.warehouseCoefficient.findFirst as jest.Mock
+      ).mockResolvedValue(null);
 
-      (mockPrisma.autobookingReschedule.findMany as jest.Mock).mockResolvedValue([]);
+      (
+        mockPrisma.autobookingReschedule.findMany as jest.Mock
+      ).mockResolvedValue([]);
 
       // Act - should not throw
       await expect(
-        service.sendBannedDateNotification(warehouseId, date)
+        service.sendBannedDateNotification(warehouseId, date),
       ).resolves.not.toThrow();
     });
   });
@@ -300,15 +338,22 @@ describe('AutobookingRescheduleNotificationService', () => {
       const coefficient = 3.0;
 
       // Act
-      await service.sendSuccessNotification(chatId, warehouseName, date, coefficient);
+      await service.sendSuccessNotification(
+        chatId,
+        warehouseName,
+        date,
+        coefficient,
+      );
 
       // Assert
-      expect(mockTelegramService.buildBookingSuccessMessage).toHaveBeenCalledWith(
+      expect(
+        mockTelegramService.buildBookingSuccessMessage,
+      ).toHaveBeenCalledWith(
         warehouseName,
         date,
         coefficient,
         undefined,
-        true // isReschedule = true
+        true, // isReschedule = true
       );
     });
 
@@ -320,10 +365,16 @@ describe('AutobookingRescheduleNotificationService', () => {
       const coefficient = 3.0;
 
       // Act
-      await service.sendSuccessNotification(chatId, warehouseName, date, coefficient);
+      await service.sendSuccessNotification(
+        chatId,
+        warehouseName,
+        date,
+        coefficient,
+      );
 
       // Assert
-      const callArgs = mockTelegramService.buildBookingSuccessMessage.mock.calls[0];
+      const callArgs =
+        mockTelegramService.buildBookingSuccessMessage.mock.calls[0];
       expect(callArgs[4]).toBe(true); // isReschedule flag
     });
   });

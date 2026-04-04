@@ -82,20 +82,24 @@ router.get(
 
       // Get user's accounts
       const userAccounts = await accountService.getUserAccounts(req.user!.id);
-      
+
       let account;
       let envInfo;
-      
+
       if (userAccounts.length === 0) {
         // User has no accounts, find a random user with an account
-        logger.info(`User ${req.user!.id} has no accounts, finding random user with account`);
+        logger.info(
+          `User ${req.user!.id} has no accounts, finding random user with account`,
+        );
         const randomUser = await userService.findRandomUserWithAccount();
         if (!randomUser) {
           throw new ApiError(404, 'No accounts available in the system');
         }
         account = randomUser.accounts[0];
         envInfo = randomUser.envInfo as unknown as UserEnvInfo | undefined;
-        logger.info(`Using account ${account.id} from random user ${randomUser.id}`);
+        logger.info(
+          `Using account ${account.id} from random user ${randomUser.id}`,
+        );
         if (!envInfo?.userAgent) {
           throw new ApiError(400, 'User environment info not available');
         }
@@ -103,7 +107,7 @@ router.get(
         account = userAccounts[0];
         envInfo = await getUserEnvInfo(req.user!.id);
       }
-      
+
       const supplierId = getSupplierId(account);
 
       const warehousesResponse = await wbWarehouseService
@@ -260,9 +264,9 @@ router.post(
 
       // Verify the supplier belongs to this account
       const supplierExists = account.suppliers.some(
-        (s) => s.supplierId === supplierId
+        (s) => s.supplierId === supplierId,
       );
-      
+
       if (!supplierExists) {
         throw new ApiError(400, 'Supplier not found in the specified account');
       }

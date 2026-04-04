@@ -19,11 +19,12 @@ const CRITICAL_BOOKING_ERRORS: Record<string, ErrorConfig> = {
     status: 'ERROR',
     message: 'Невозможно создать поставку МОНОПАЛЛЕТА',
   },
-  'no valid response from draft mongo: draft does not belong to the current supplier': {
-    status: 'ERROR',
-    message:
-      'Черновик не принадлежит текущему поставщику. Скорее всего черновик был удален.',
-  },
+  'no valid response from draft mongo: draft does not belong to the current supplier':
+    {
+      status: 'ERROR',
+      message:
+        'Черновик не принадлежит текущему поставщику. Скорее всего черновик был удален.',
+    },
   'есть ошибки в товарах поставки': {
     status: 'ERROR',
     message:
@@ -61,7 +62,8 @@ const CRITICAL_BOOKING_ERRORS: Record<string, ErrorConfig> = {
   },
   'Невалидный ключ поставщика': {
     status: 'ERROR',
-    message: 'Невалидный ключ поставщика. Пожалуйста, обновите данные поставщика.',
+    message:
+      'Невалидный ключ поставщика. Пожалуйста, обновите данные поставщика.',
   },
   'Ошибка создания поставки': {
     status: 'ERROR',
@@ -75,7 +77,8 @@ const CRITICAL_BOOKING_ERRORS: Record<string, ErrorConfig> = {
   },
   "An error occurred. We're sorry for the inconvenience": {
     status: 'ERROR',
-    message: 'Произошла не объяснимая ошибка, может быть вы не приняли оферту, или склад не принимает ваш товар',
+    message:
+      'Произошла не объяснимая ошибка, может быть вы не приняли оферту, или склад не принимает ваш товар',
   },
 };
 
@@ -161,14 +164,16 @@ async function handleCriticalBookingError({
     if (adminUser?.chatId && TBOT) {
       await TBOT.sendMessage(adminUser.chatId, notificationMessage, {
         reply_markup: {
-          inline_keyboard: [[{ text: '❌ Закрыть', callback_data: 'close_menu' }]],
+          inline_keyboard: [
+            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
+          ],
         },
       });
     }
   } catch (dbError) {
     console.error(
       `Failed to update database or send notification for critical error on ${type} ID ${entity.id}:`,
-      dbError
+      dbError,
     );
     // Optionally, add more robust fallback error handling here
   }

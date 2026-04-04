@@ -1,7 +1,7 @@
 /**
  * Latency Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/latencyService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
@@ -97,7 +97,7 @@ describe('SharedLatencyService', () => {
 
       // Act & Assert
       expect(() => service.generateCustomLatency(minMs, maxMs)).toThrow(
-        'minMs must be less than maxMs'
+        'minMs must be less than maxMs',
       );
     });
 
@@ -108,7 +108,7 @@ describe('SharedLatencyService', () => {
 
       // Act & Assert
       expect(() => service.generateCustomLatency(minMs, maxMs)).toThrow(
-        'minMs must be less than maxMs'
+        'minMs must be less than maxMs',
       );
     });
   });
@@ -155,7 +155,7 @@ describe('SharedLatencyService', () => {
     test('should throw error for invalid bounds', async () => {
       // Act & Assert
       await expect(service.sleepWithCustomLatency(200, 100)).rejects.toThrow(
-        'minMs must be less than maxMs'
+        'minMs must be less than maxMs',
       );
     });
   });

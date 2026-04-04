@@ -12,7 +12,10 @@ import { logger } from '../utils/logger';
  * Get sales report for the authenticated user
  * Query params: dateFrom, dateTo (format: DD.MM.YY or YYYY-MM-DD)
  */
-export const fetchSalesReport = async (req: Request, res: Response): Promise<void> => {
+export const fetchSalesReport = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.id;
 
@@ -25,9 +28,14 @@ export const fetchSalesReport = async (req: Request, res: Response): Promise<voi
     }
 
     // Get date range from query params
-    const { dateFrom, dateTo } = req.query as { dateFrom?: string; dateTo?: string };
+    const { dateFrom, dateTo } = req.query as {
+      dateFrom?: string;
+      dateTo?: string;
+    };
 
-    logger.info(`Fetching sales report for user ${userId}, date range: ${dateFrom || 'default'} - ${dateTo || 'default'}`);
+    logger.info(
+      `Fetching sales report for user ${userId}, date range: ${dateFrom || 'default'} - ${dateTo || 'default'}`,
+    );
 
     const result = await getSalesReport({
       userId,
@@ -83,7 +91,10 @@ export const fetchSalesReport = async (req: Request, res: Response): Promise<voi
  * Get user's legacy report data (booking stats)
  * This is kept for backward compatibility
  */
-export const fetchReport = async (req: Request, res: Response): Promise<void> => {
+export const fetchReport = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.id;
 

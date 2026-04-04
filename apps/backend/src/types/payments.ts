@@ -67,7 +67,11 @@ export interface ICreatePaymentResponse {
 
 export interface YooKassaWebhookPayload {
   type: 'notification';
-  event: 'payment.succeeded' | 'payment.canceled' | 'payment.waiting_for_capture' | 'refund.succeeded';
+  event:
+    | 'payment.succeeded'
+    | 'payment.canceled'
+    | 'payment.waiting_for_capture'
+    | 'refund.succeeded';
   object: {
     id: string;
     status: string;

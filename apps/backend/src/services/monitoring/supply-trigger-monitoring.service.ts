@@ -3,12 +3,15 @@ import { triggerService } from '../trigger.service';
 import { TBOT } from '../../utils/TBOT';
 import { logger } from '../../utils/logger';
 import { SUPPLY_TYPES, BOX_TYPE_IDS } from '../../constants/triggers';
-import type { WarehouseAvailability, MonitoringUser } from './interfaces/trigger-monitoring.interfaces';
+import type {
+  WarehouseAvailability,
+  MonitoringUser,
+} from './interfaces/trigger-monitoring.interfaces';
 
 /**
  * Service for monitoring supply triggers and notifying users
  * when matching slots become available
- * 
+ *
  * Architecture: Receives pre-fetched availabilities from warehouse monitoring
  * (does not fetch data itself)
  */
@@ -19,13 +22,13 @@ export class SupplyTriggerMonitoringService {
    */
   async processAvailabilities(
     monitoringUsers: MonitoringUser[],
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void> {
     await Promise.all(
       monitoringUsers.map(async (user) => {
         if (!user.chatId || !user.supplyTriggers.length) return;
         await this.processUserTriggers(user, availabilities);
-      })
+      }),
     );
   }
 
@@ -34,7 +37,7 @@ export class SupplyTriggerMonitoringService {
    */
   private async processUserTriggers(
     user: MonitoringUser,
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void> {
     for (const trigger of user.supplyTriggers) {
       // Skip if trigger is not relevant
@@ -45,7 +48,7 @@ export class SupplyTriggerMonitoringService {
 
       const matchingAvailabilities = this.filterMatchingAvailabilities(
         trigger,
-        availabilities
+        availabilities,
       );
 
       if (matchingAvailabilities.length > 0) {
@@ -55,7 +58,10 @@ export class SupplyTriggerMonitoringService {
         } else {
           await triggerService.updateLastNotificationTime(trigger.id);
         }
-        await this.sendNotification(user.chatId as string, matchingAvailabilities);
+        await this.sendNotification(
+          user.chatId as string,
+          matchingAvailabilities,
+        );
       }
     }
   }
@@ -64,8 +70,8 @@ export class SupplyTriggerMonitoringService {
    * Check if trigger should notify based on checkInterval
    * Implements rate limiting to prevent notification spam
    */
-  private shouldNotifyTrigger(trigger: { 
-    lastNotificationAt: Date | null; 
+  private shouldNotifyTrigger(trigger: {
+    lastNotificationAt: Date | null;
     checkInterval: number;
   }): boolean {
     return (
@@ -79,9 +85,9 @@ export class SupplyTriggerMonitoringService {
    * Filter availabilities based on trigger criteria
    */
   private filterMatchingAvailabilities(
-    trigger: { 
-      warehouseIds: number[]; 
-      supplyTypes: string[]; 
+    trigger: {
+      warehouseIds: number[];
+      supplyTypes: string[];
       maxCoefficient: number;
       searchMode: string;
       selectedDates?: Date[];
@@ -89,7 +95,7 @@ export class SupplyTriggerMonitoringService {
       endDate?: Date | null;
       createdAt?: Date;
     },
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): WarehouseAvailability[] {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -97,15 +103,19 @@ export class SupplyTriggerMonitoringService {
     return availabilities
       .filter((availability) => {
         // Check if warehouse is in trigger's warehouse list
-        if (!trigger.warehouseIds.includes(availability.warehouseId)) return false;
+        if (!trigger.warehouseIds.includes(availability.warehouseId))
+          return false;
 
         // Check if box type matches
         if (
           !trigger.supplyTypes.some(
             (type) =>
-              (type === SUPPLY_TYPES.BOX && availability.boxTypeID === BOX_TYPE_IDS.BOX) ||
-              (type === SUPPLY_TYPES.MONOPALLETE && availability.boxTypeID === BOX_TYPE_IDS.MONOPALLETE) ||
-              (type === SUPPLY_TYPES.SUPERSAFE && availability.boxTypeID === BOX_TYPE_IDS.SUPERSAFE)
+              (type === SUPPLY_TYPES.BOX &&
+                availability.boxTypeID === BOX_TYPE_IDS.BOX) ||
+              (type === SUPPLY_TYPES.MONOPALLETE &&
+                availability.boxTypeID === BOX_TYPE_IDS.MONOPALLETE) ||
+              (type === SUPPLY_TYPES.SUPERSAFE &&
+                availability.boxTypeID === BOX_TYPE_IDS.SUPERSAFE),
           )
         )
           return false;
@@ -167,7 +177,7 @@ export class SupplyTriggerMonitoringService {
               default:
                 return false;
             }
-          }
+          },
         );
 
         // Don't modify original availability, create a copy
@@ -188,7 +198,7 @@ export class SupplyTriggerMonitoringService {
    * Create notification message with grid layout
    */
   private createNotificationMessage(
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): string {
     return (
       `🔔 Доступные слоты:\n\n` +
@@ -209,7 +219,7 @@ export class SupplyTriggerMonitoringService {
               acc[key].push(`📅 ${day} ${month} `);
               return acc;
             },
-            {} as Record<string, string[]>
+            {} as Record<string, string[]>,
           );
 
           // Format each coefficient group with grid layout (3 items per row)
@@ -230,7 +240,7 @@ export class SupplyTriggerMonitoringService {
           const formattedGroups = [];
           if (groupedDates['free']) {
             formattedGroups.push(
-              `🎉 Бесплатно \n\n${formatDatesGrid(groupedDates['free'])}`
+              `🎉 Бесплатно \n\n${formatDatesGrid(groupedDates['free'])}`,
             );
           }
 
@@ -238,7 +248,7 @@ export class SupplyTriggerMonitoringService {
             .filter(([key]) => key !== 'free')
             .forEach(([coeff, dates]) => {
               formattedGroups.push(
-                `Коэффициент: ${coeff} 💰\n\n${formatDatesGrid(dates)}`
+                `Коэффициент: ${coeff} 💰\n\n${formatDatesGrid(dates)}`,
               );
             });
 
@@ -246,8 +256,8 @@ export class SupplyTriggerMonitoringService {
             availability.boxTypeID === BOX_TYPE_IDS.BOX
               ? '*Короб*'
               : availability.boxTypeID === BOX_TYPE_IDS.MONOPALLETE
-              ? '*Монопаллет*'
-              : '*Суперсейф*';
+                ? '*Монопаллет*'
+                : '*Суперсейф*';
           return `🏢 ${availability.warehouseName} ${boxType}:\n\n${formattedGroups.join('\n\n')}`;
         })
         .join('\n\n')
@@ -259,7 +269,7 @@ export class SupplyTriggerMonitoringService {
    */
   private async sendNotification(
     chatId: string,
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void> {
     if (!TBOT) {
       logger.warn('TBOT not initialized, cannot send notification');
@@ -271,13 +281,18 @@ export class SupplyTriggerMonitoringService {
       await TBOT.sendMessage(chatId, message, {
         parse_mode: 'Markdown',
         reply_markup: {
-          inline_keyboard: [[{ text: '❌ Закрыть', callback_data: 'close_menu' }]],
+          inline_keyboard: [
+            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
+          ],
         },
       });
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      logger.error(`Error sending notification to chat ${chatId}:`, errorMessage);
+      logger.error(
+        `Error sending notification to chat ${chatId}:`,
+        errorMessage,
+      );
 
       // Check if the error indicates the bot was blocked by the user
       if (
@@ -295,7 +310,9 @@ export class SupplyTriggerMonitoringService {
         typeof error.response.body.description === 'string' &&
         error.response.body.description.includes('bot was blocked by the user')
       ) {
-        logger.info(`User with chatId ${chatId} has blocked the bot. Setting chatId to null.`);
+        logger.info(
+          `User with chatId ${chatId} has blocked the bot. Setting chatId to null.`,
+        );
 
         // Update user's chatId to null in the database
         await prisma.user.update({
@@ -307,4 +324,5 @@ export class SupplyTriggerMonitoringService {
   }
 }
 
-export const supplyTriggerMonitoringService = new SupplyTriggerMonitoringService();
+export const supplyTriggerMonitoringService =
+  new SupplyTriggerMonitoringService();

@@ -37,7 +37,7 @@ export class SharedErrorHandlingService implements ISharedErrorHandlingService {
     const errorMessage = error?.message || '';
     return (
       errorMessage.includes(
-        'Заметили, что вы слишком активно создаёте поставки'
+        'Заметили, что вы слишком активно создаёте поставки',
       ) || errorMessage.includes('Request failed with status 429')
     );
   }
@@ -170,7 +170,7 @@ export class SharedErrorHandlingService implements ISharedErrorHandlingService {
     itemType: 'autobooking' | 'reschedule',
     effectiveDate: Date,
     error: BookingError,
-    errorCategory: CategorizedError
+    errorCategory: CategorizedError,
   ): void {
     const errorTypeDisplay = errorCategory.type.replace('_', ' ');
     const itemDisplay =
@@ -178,7 +178,7 @@ export class SharedErrorHandlingService implements ISharedErrorHandlingService {
 
     console.error(
       `❌ Error for ${itemDisplay} ${itemId}, Date ${effectiveDate.toDateString()}: ` +
-        `${errorTypeDisplay} error - ${error.message}`
+        `${errorTypeDisplay} error - ${error.message}`,
     );
   }
 

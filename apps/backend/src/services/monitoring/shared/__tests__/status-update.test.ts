@@ -1,14 +1,17 @@
 /**
  * Status Update Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/statusUpdateService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
  * - Same test logic preserved
  */
 
-import { SharedStatusUpdateService, sharedStatusUpdateService } from '../status-update.service';
+import {
+  SharedStatusUpdateService,
+  sharedStatusUpdateService,
+} from '../status-update.service';
 import { prisma } from '../../../../config/database';
 
 // Mock prisma
@@ -145,7 +148,11 @@ describe('SharedStatusUpdateService', () => {
       });
 
       // Act
-      await service.updateAutobookingStatus('booking-1', new Date('2024-01-15'), 'CUSTOM_DATES');
+      await service.updateAutobookingStatus(
+        'booking-1',
+        new Date('2024-01-15'),
+        'CUSTOM_DATES',
+      );
 
       // Assert
       expect(mockPrisma.autobooking.update).toHaveBeenCalled();
@@ -159,7 +166,11 @@ describe('SharedStatusUpdateService', () => {
       });
 
       // Act
-      await service.updateAutobookingStatus('booking-1', new Date('2024-01-15'), 'WEEK');
+      await service.updateAutobookingStatus(
+        'booking-1',
+        new Date('2024-01-15'),
+        'WEEK',
+      );
 
       // Assert
       expect(mockPrisma.autobooking.update).toHaveBeenCalledWith({
@@ -177,17 +188,27 @@ describe('SharedStatusUpdateService', () => {
 
       // Act - should not throw
       await expect(
-        service.updateAutobookingStatus('missing-id', new Date('2024-01-15'), 'CUSTOM_DATES')
+        service.updateAutobookingStatus(
+          'missing-id',
+          new Date('2024-01-15'),
+          'CUSTOM_DATES',
+        ),
       ).resolves.not.toThrow();
     });
 
     test('should handle database errors', async () => {
       // Arrange
-      (mockPrisma.autobooking.update as jest.Mock).mockRejectedValue(new Error('DB error'));
+      (mockPrisma.autobooking.update as jest.Mock).mockRejectedValue(
+        new Error('DB error'),
+      );
 
       // Act & Assert - should throw error
       await expect(
-        service.updateAutobookingStatus('booking-1', new Date('2024-01-15'), 'WEEK')
+        service.updateAutobookingStatus(
+          'booking-1',
+          new Date('2024-01-15'),
+          'WEEK',
+        ),
       ).rejects.toThrow('DB error');
     });
   });
@@ -195,7 +216,9 @@ describe('SharedStatusUpdateService', () => {
   describe('updateRescheduleStatus', () => {
     test('should update reschedule status for CUSTOM_DATES_SINGLE', async () => {
       // Arrange
-      (mockPrisma.autobookingReschedule.findUnique as jest.Mock).mockResolvedValue({
+      (
+        mockPrisma.autobookingReschedule.findUnique as jest.Mock
+      ).mockResolvedValue({
         id: 'reschedule-1',
         dateType: 'CUSTOM_DATES_SINGLE',
         customDates: [new Date('2024-01-15')],
@@ -207,7 +230,11 @@ describe('SharedStatusUpdateService', () => {
       });
 
       // Act
-      await service.updateRescheduleStatus('reschedule-1', new Date('2024-01-15'), 'CUSTOM_DATES_SINGLE');
+      await service.updateRescheduleStatus(
+        'reschedule-1',
+        new Date('2024-01-15'),
+        'CUSTOM_DATES_SINGLE',
+      );
 
       // Assert
       expect(mockPrisma.autobookingReschedule.update).toHaveBeenCalled();
@@ -221,7 +248,11 @@ describe('SharedStatusUpdateService', () => {
       });
 
       // Act
-      await service.updateRescheduleStatus('reschedule-1', new Date('2024-01-15'), 'WEEK');
+      await service.updateRescheduleStatus(
+        'reschedule-1',
+        new Date('2024-01-15'),
+        'WEEK',
+      );
 
       // Assert
       expect(mockPrisma.autobookingReschedule.update).toHaveBeenCalledWith({
@@ -243,7 +274,12 @@ describe('SharedStatusUpdateService', () => {
       });
 
       // Act
-      await service.updateGenericItemStatus('autobooking', 'booking-1', new Date('2024-01-15'), 'WEEK');
+      await service.updateGenericItemStatus(
+        'autobooking',
+        'booking-1',
+        new Date('2024-01-15'),
+        'WEEK',
+      );
 
       // Assert
       expect(mockPrisma.autobooking.update).toHaveBeenCalled();
@@ -257,7 +293,12 @@ describe('SharedStatusUpdateService', () => {
       });
 
       // Act
-      await service.updateGenericItemStatus('autobookingReschedule', 'reschedule-1', new Date('2024-01-15'), 'WEEK');
+      await service.updateGenericItemStatus(
+        'autobookingReschedule',
+        'reschedule-1',
+        new Date('2024-01-15'),
+        'WEEK',
+      );
 
       // Assert
       expect(mockPrisma.autobookingReschedule.update).toHaveBeenCalled();
@@ -267,7 +308,11 @@ describe('SharedStatusUpdateService', () => {
   describe('shouldMarkAsCompleted', () => {
     test('should return true for CUSTOM_DATES_SINGLE', () => {
       // Act
-      const result = service.shouldMarkAsCompleted('CUSTOM_DATES_SINGLE', [], new Date());
+      const result = service.shouldMarkAsCompleted(
+        'CUSTOM_DATES_SINGLE',
+        [],
+        new Date(),
+      );
 
       // Assert
       expect(result).toBe(true);
@@ -279,7 +324,11 @@ describe('SharedStatusUpdateService', () => {
       const completedDate = new Date('2024-01-15');
 
       // Act
-      const result = service.shouldMarkAsCompleted('CUSTOM_DATES', customDates, completedDate);
+      const result = service.shouldMarkAsCompleted(
+        'CUSTOM_DATES',
+        customDates,
+        completedDate,
+      );
 
       // Assert
       expect(result).toBe(true);
@@ -291,7 +340,11 @@ describe('SharedStatusUpdateService', () => {
       const completedDate = new Date('2024-01-15');
 
       // Act
-      const result = service.shouldMarkAsCompleted('CUSTOM_DATES', customDates, completedDate);
+      const result = service.shouldMarkAsCompleted(
+        'CUSTOM_DATES',
+        customDates,
+        completedDate,
+      );
 
       // Assert - should return false because there's still 2024-01-16 remaining
       expect(result).toBe(false);
@@ -322,7 +375,10 @@ describe('SharedStatusUpdateService', () => {
       const pastDate = new Date(today.getTime() - 24 * 60 * 60 * 1000); // Yesterday
 
       // Act
-      const result = service.getEffectiveDates('CUSTOM_DATES', null, null, [futureDate, pastDate]);
+      const result = service.getEffectiveDates('CUSTOM_DATES', null, null, [
+        futureDate,
+        pastDate,
+      ]);
 
       // Assert
       expect(result).toContainEqual(expect.any(Date));
@@ -361,7 +417,12 @@ describe('SharedStatusUpdateService', () => {
       const endDate = new Date(startDate.getTime() + 5 * 24 * 60 * 60 * 1000);
 
       // Act
-      const result = service.getEffectiveDates('CUSTOM_PERIOD', startDate, endDate, []);
+      const result = service.getEffectiveDates(
+        'CUSTOM_PERIOD',
+        startDate,
+        endDate,
+        [],
+      );
 
       // Assert
       expect(result.length).toBeGreaterThan(0);
@@ -386,7 +447,9 @@ describe('SharedStatusUpdateService', () => {
 
   describe('singleton instance', () => {
     test('should export a singleton instance', () => {
-      expect(sharedStatusUpdateService).toBeInstanceOf(SharedStatusUpdateService);
+      expect(sharedStatusUpdateService).toBeInstanceOf(
+        SharedStatusUpdateService,
+      );
     });
   });
 });

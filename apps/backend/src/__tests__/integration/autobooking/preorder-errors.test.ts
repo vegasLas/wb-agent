@@ -53,22 +53,28 @@ jest.mock('../../../config/database', () => ({
 }));
 
 // Mock autobooking executor service
-jest.mock('../../../services/monitoring/autobooking/autobooking-executor.service', () => ({
-  autobookingExecutorService: {
-    createBookingTask: jest.fn(),
-    addSuccessfulBooking: jest.fn(),
-    logSuccessfulBooking: jest.fn(),
-    handleBookingProcessingError: jest.fn(),
-  },
-}));
+jest.mock(
+  '../../../services/monitoring/autobooking/autobooking-executor.service',
+  () => ({
+    autobookingExecutorService: {
+      createBookingTask: jest.fn(),
+      addSuccessfulBooking: jest.fn(),
+      logSuccessfulBooking: jest.fn(),
+      handleBookingProcessingError: jest.fn(),
+    },
+  }),
+);
 
 // Mock autobooking notification service
-jest.mock('../../../services/monitoring/autobooking/autobooking-notification.service', () => ({
-  autobookingNotificationService: {
-    sendSuccessNotification: jest.fn(),
-    updateAutobookingStatus: jest.fn(),
-  },
-}));
+jest.mock(
+  '../../../services/monitoring/autobooking/autobooking-notification.service',
+  () => ({
+    autobookingNotificationService: {
+      sendSuccessNotification: jest.fn(),
+      updateAutobookingStatus: jest.fn(),
+    },
+  }),
+);
 
 // Mock logger
 jest.mock('../../../utils/logger', () => ({
@@ -95,29 +101,44 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
   beforeEach(() => {
     jest.clearAllMocks();
     service = new AutobookingMonitoringService();
-    mockBookingErrorService = bookingErrorService as jest.Mocked<typeof bookingErrorService>;
+    mockBookingErrorService = bookingErrorService as jest.Mocked<
+      typeof bookingErrorService
+    >;
     mockPrisma = prisma as jest.Mocked<typeof prisma>;
-    mockAutobookingExecutor = autobookingExecutorService as jest.Mocked<typeof autobookingExecutorService>;
+    mockAutobookingExecutor = autobookingExecutorService as jest.Mocked<
+      typeof autobookingExecutorService
+    >;
     mockSupplyService = supplyService as jest.Mocked<typeof supplyService>;
 
     // Setup spies on cache service methods
-    cacheSupplyIdSpy = jest.spyOn(autobookingSupplyIdCacheService, 'cacheSupplyId').mockResolvedValue(undefined);
-    clearSupplyIdFromCacheSpy = jest.spyOn(autobookingSupplyIdCacheService, 'clearSupplyIdFromCache').mockResolvedValue(undefined);
-    isSupplyIdValidSpy = jest.spyOn(autobookingSupplyIdCacheService, 'isSupplyIdValid');
+    cacheSupplyIdSpy = jest
+      .spyOn(autobookingSupplyIdCacheService, 'cacheSupplyId')
+      .mockResolvedValue(undefined);
+    clearSupplyIdFromCacheSpy = jest
+      .spyOn(autobookingSupplyIdCacheService, 'clearSupplyIdFromCache')
+      .mockResolvedValue(undefined);
+    isSupplyIdValidSpy = jest.spyOn(
+      autobookingSupplyIdCacheService,
+      'isSupplyIdValid',
+    );
 
     // Mock account lookup to return a valid account with cookies
-    (mockPrisma.account.findUnique as jest.Mock).mockImplementation((args: { where: { id: string } }) => {
-      const accountId = args?.where?.id;
-      return Promise.resolve({
-        id: accountId || 'account-123',
-        userId: 1,
-        wbCookies: 'test-cookies',
-      });
-    });
+    (mockPrisma.account.findUnique as jest.Mock).mockImplementation(
+      (args: { where: { id: string } }) => {
+        const accountId = args?.where?.id;
+        return Promise.resolve({
+          id: accountId || 'account-123',
+          userId: 1,
+          wbCookies: 'test-cookies',
+        });
+      },
+    );
 
     // Mock bookingErrorService
     mockBookingErrorService.isCriticalBookingError.mockReturnValue(false);
-    mockBookingErrorService.handleCriticalBookingError.mockResolvedValue(undefined);
+    mockBookingErrorService.handleCriticalBookingError.mockResolvedValue(
+      undefined,
+    );
 
     // Mock supply service methods
     mockSupplyService.createSupply.mockResolvedValue({
@@ -178,46 +199,51 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       });
 
       // Mock createBookingTask to simulate internal cache behavior
-      mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-        const { booking, account, user } = params;
+      mockAutobookingExecutor.createBookingTask.mockImplementation(
+        async (params) => {
+          const { booking, account, user } = params;
 
-        // Simulate supply ID cache logic
-        if (!autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
-          // Supply ID is expired - delete it
-          if (booking.supplyId) {
-            await supplyService.deletePreorder({
+          // Simulate supply ID cache logic
+          if (!autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
+            // Supply ID is expired - delete it
+            if (booking.supplyId) {
+              await supplyService.deletePreorder({
+                accountId: account.id,
+                supplierId: booking.supplierId,
+                preorderId: parseInt(booking.supplyId),
+                userAgent: user.userAgent,
+                proxy: user.proxy,
+              });
+            }
+
+            // Create new supply
+            const newSupply = await supplyService.createSupply({
               accountId: account.id,
               supplierId: booking.supplierId,
-              preorderId: parseInt(booking.supplyId),
-              userAgent: user.userAgent,
+              userId: user.userId,
               proxy: user.proxy,
+              latency: params.latency,
+              deliveryDate: params.effectiveDate.toISOString(),
+              rpc_order: Math.floor(Math.random() * 1000000),
+              params: {
+                boxTypeID: 2,
+                isBoxOnPallet: false,
+                draftID: booking.draftId,
+                warehouseId: booking.warehouseId,
+              },
+              userAgent: user.userAgent,
             });
-          }
 
-          // Create new supply
-          const newSupply = await supplyService.createSupply({
-            accountId: account.id,
-            supplierId: booking.supplierId,
-            userId: user.userId,
-            proxy: user.proxy,
-            latency: params.latency,
-            deliveryDate: params.effectiveDate.toISOString(),
-            rpc_order: Math.floor(Math.random() * 1000000),
-            params: {
-              boxTypeID: 2,
-              isBoxOnPallet: false,
-              draftID: booking.draftId,
-              warehouseId: booking.warehouseId,
-            },
-            userAgent: user.userAgent,
-          });
-
-          const newPreorderId = newSupply.result?.ids[0]?.Id;
-          if (newPreorderId) {
-            await autobookingSupplyIdCacheService.cacheSupplyId(booking.id, newPreorderId.toString());
+            const newPreorderId = newSupply.result?.ids[0]?.Id;
+            if (newPreorderId) {
+              await autobookingSupplyIdCacheService.cacheSupplyId(
+                booking.id,
+                newPreorderId.toString(),
+              );
+            }
           }
-        }
-      });
+        },
+      );
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -261,16 +287,18 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       ];
 
       // Mock createBookingTask to simulate error with valid cache
-      mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-        const { booking } = params;
+      mockAutobookingExecutor.createBookingTask.mockImplementation(
+        async (params) => {
+          const { booking } = params;
 
-        // Check if supply ID is valid
-        if (autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
-          // Valid cache - should NOT delete or create new supply
-          // But simulate a browser error
-          throw new Error('Some network error');
-        }
-      });
+          // Check if supply ID is valid
+          if (autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
+            // Valid cache - should NOT delete or create new supply
+            // But simulate a browser error
+            throw new Error('Some network error');
+          }
+        },
+      );
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -319,49 +347,59 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       });
 
       // Mock createBookingTask to simulate internal cache behavior with delete error
-      mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-        const { booking, account, user } = params;
+      mockAutobookingExecutor.createBookingTask.mockImplementation(
+        async (params) => {
+          const { booking, account, user } = params;
 
-        if (!autobookingSupplyIdCacheService.isSupplyIdValid(booking) && booking.supplyId) {
-          try {
-            await supplyService.deletePreorder({
+          if (
+            !autobookingSupplyIdCacheService.isSupplyIdValid(booking) &&
+            booking.supplyId
+          ) {
+            try {
+              await supplyService.deletePreorder({
+                accountId: account.id,
+                supplierId: booking.supplierId,
+                preorderId: parseInt(booking.supplyId),
+                userAgent: user.userAgent,
+                proxy: user.proxy,
+              });
+            } catch (deleteError: any) {
+              // Handle "preorder doesn't exist" error
+              if (deleteError.message?.includes('Предзаказ не существует')) {
+                await autobookingSupplyIdCacheService.clearSupplyIdFromCache(
+                  booking.id,
+                );
+              }
+            }
+
+            // Create new supply
+            const newSupply = await supplyService.createSupply({
               accountId: account.id,
               supplierId: booking.supplierId,
-              preorderId: parseInt(booking.supplyId),
-              userAgent: user.userAgent,
+              userId: user.userId,
               proxy: user.proxy,
+              latency: params.latency,
+              deliveryDate: params.effectiveDate.toISOString(),
+              rpc_order: Math.floor(Math.random() * 1000000),
+              params: {
+                boxTypeID: 2,
+                isBoxOnPallet: false,
+                draftID: booking.draftId,
+                warehouseId: booking.warehouseId,
+              },
+              userAgent: user.userAgent,
             });
-          } catch (deleteError: any) {
-            // Handle "preorder doesn't exist" error
-            if (deleteError.message?.includes('Предзаказ не существует')) {
-              await autobookingSupplyIdCacheService.clearSupplyIdFromCache(booking.id);
+
+            const newPreorderId = newSupply.result?.ids[0]?.Id;
+            if (newPreorderId) {
+              await autobookingSupplyIdCacheService.cacheSupplyId(
+                booking.id,
+                newPreorderId.toString(),
+              );
             }
           }
-
-          // Create new supply
-          const newSupply = await supplyService.createSupply({
-            accountId: account.id,
-            supplierId: booking.supplierId,
-            userId: user.userId,
-            proxy: user.proxy,
-            latency: params.latency,
-            deliveryDate: params.effectiveDate.toISOString(),
-            rpc_order: Math.floor(Math.random() * 1000000),
-            params: {
-              boxTypeID: 2,
-              isBoxOnPallet: false,
-              draftID: booking.draftId,
-              warehouseId: booking.warehouseId,
-            },
-            userAgent: user.userAgent,
-          });
-
-          const newPreorderId = newSupply.result?.ids[0]?.Id;
-          if (newPreorderId) {
-            await autobookingSupplyIdCacheService.cacheSupplyId(booking.id, newPreorderId.toString());
-          }
-        }
-      });
+        },
+      );
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -405,14 +443,16 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       ];
 
       // Mock createBookingTask to fail with generic error
-      mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-        const { booking } = params;
+      mockAutobookingExecutor.createBookingTask.mockImplementation(
+        async (params) => {
+          const { booking } = params;
 
-        if (autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
-          // Valid cache - throw generic error
-          throw new Error('Some network error');
-        }
-      });
+          if (autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
+            // Valid cache - throw generic error
+            throw new Error('Some network error');
+          }
+        },
+      );
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -451,16 +491,20 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       ];
 
       // Mock createBookingTask to throw "Заказ не существует" error and clear cache
-      mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-        const { booking } = params;
+      mockAutobookingExecutor.createBookingTask.mockImplementation(
+        async (params) => {
+          const { booking } = params;
 
-        if (autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
-          // Simulate "order not exist" error during browser navigation
-          // In real implementation, this would trigger cache clearing
-          await autobookingSupplyIdCacheService.clearSupplyIdFromCache(booking.id);
-          throw new Error('Заказ не существует');
-        }
-      });
+          if (autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
+            // Simulate "order not exist" error during browser navigation
+            // In real implementation, this would trigger cache clearing
+            await autobookingSupplyIdCacheService.clearSupplyIdFromCache(
+              booking.id,
+            );
+            throw new Error('Заказ не существует');
+          }
+        },
+      );
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -482,13 +526,17 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       const clearSupplyIdCalls: string[] = [];
 
       // Override spies to track calls
-      cacheSupplyIdSpy.mockImplementation(async (bookingId: string, supplyId: string) => {
-        cacheSupplyIdCalls.push([bookingId, supplyId]);
-      });
+      cacheSupplyIdSpy.mockImplementation(
+        async (bookingId: string, supplyId: string) => {
+          cacheSupplyIdCalls.push([bookingId, supplyId]);
+        },
+      );
 
-      clearSupplyIdFromCacheSpy.mockImplementation(async (bookingId: string) => {
-        clearSupplyIdCalls.push(bookingId);
-      });
+      clearSupplyIdFromCacheSpy.mockImplementation(
+        async (bookingId: string) => {
+          clearSupplyIdCalls.push(bookingId);
+        },
+      );
 
       // Setup - multiple users with different cache states
       const monitoringUsers: MonitoringUser[] = [
@@ -536,58 +584,65 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       });
 
       // Mock createBookingTask with conditional behavior based on booking
-      mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-        const { booking, account, user } = params;
+      mockAutobookingExecutor.createBookingTask.mockImplementation(
+        async (params) => {
+          const { booking, account, user } = params;
 
-        if (!autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
-          // Expired cache - delete and create new
-          if (booking.supplyId) {
-            deletePreorderCalls.push(parseInt(booking.supplyId));
-            await supplyService.deletePreorder({
+          if (!autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
+            // Expired cache - delete and create new
+            if (booking.supplyId) {
+              deletePreorderCalls.push(parseInt(booking.supplyId));
+              await supplyService.deletePreorder({
+                accountId: account.id,
+                supplierId: booking.supplierId,
+                preorderId: parseInt(booking.supplyId),
+                userAgent: user.userAgent,
+                proxy: user.proxy,
+              });
+            }
+
+            const newSupply = await supplyService.createSupply({
               accountId: account.id,
               supplierId: booking.supplierId,
-              preorderId: parseInt(booking.supplyId),
-              userAgent: user.userAgent,
+              userId: user.userId,
               proxy: user.proxy,
+              latency: params.latency,
+              deliveryDate: params.effectiveDate.toISOString(),
+              rpc_order: Math.floor(Math.random() * 1000000),
+              params: {
+                boxTypeID: 2,
+                isBoxOnPallet: false,
+                draftID: booking.draftId,
+                warehouseId: booking.warehouseId,
+              },
+              userAgent: user.userAgent,
             });
-          }
 
-          const newSupply = await supplyService.createSupply({
-            accountId: account.id,
-            supplierId: booking.supplierId,
-            userId: user.userId,
-            proxy: user.proxy,
-            latency: params.latency,
-            deliveryDate: params.effectiveDate.toISOString(),
-            rpc_order: Math.floor(Math.random() * 1000000),
-            params: {
-              boxTypeID: 2,
-              isBoxOnPallet: false,
-              draftID: booking.draftId,
-              warehouseId: booking.warehouseId,
-            },
-            userAgent: user.userAgent,
-          });
+            createSupplyCalls.push(booking.id);
+            const newPreorderId = newSupply.result?.ids[0]?.Id;
+            if (newPreorderId) {
+              await autobookingSupplyIdCacheService.cacheSupplyId(
+                booking.id,
+                newPreorderId.toString(),
+              );
+            }
 
-          createSupplyCalls.push(booking.id);
-          const newPreorderId = newSupply.result?.ids[0]?.Id;
-          if (newPreorderId) {
-            await autobookingSupplyIdCacheService.cacheSupplyId(booking.id, newPreorderId.toString());
+            // Simulate "order not exist" error for user1's new supply
+            if (booking.id === 'booking-101') {
+              await autobookingSupplyIdCacheService.clearSupplyIdFromCache(
+                booking.id,
+              );
+              throw new Error('Заказ не существует');
+            }
+          } else {
+            // Valid cache - success for user2
+            if (booking.id === 'booking-201') {
+              // Success - do nothing, just return
+              return;
+            }
           }
-
-          // Simulate "order not exist" error for user1's new supply
-          if (booking.id === 'booking-101') {
-            await autobookingSupplyIdCacheService.clearSupplyIdFromCache(booking.id);
-            throw new Error('Заказ не существует');
-          }
-        } else {
-          // Valid cache - success for user2
-          if (booking.id === 'booking-201') {
-            // Success - do nothing, just return
-            return;
-          }
-        }
-      });
+        },
+      );
 
       // Act
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -618,13 +673,23 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
 
   describe('isSupplyIdValid method', () => {
     test('should return false when supplyId is null', () => {
-      const booking = { supplyId: null as string | null, supplyIdUpdatedAt: new Date() };
-      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(false);
+      const booking = {
+        supplyId: null as string | null,
+        supplyIdUpdatedAt: new Date(),
+      };
+      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(
+        false,
+      );
     });
 
     test('should return false when supplyIdUpdatedAt is null', () => {
-      const booking = { supplyId: '12345' as string | null, supplyIdUpdatedAt: null as Date | null };
-      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(false);
+      const booking = {
+        supplyId: '12345' as string | null,
+        supplyIdUpdatedAt: null as Date | null,
+      };
+      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(
+        false,
+      );
     });
 
     test('should return false when supply ID is older than 24 hours', () => {
@@ -632,7 +697,9 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
         supplyId: '12345',
         supplyIdUpdatedAt: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25 hours ago
       };
-      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(false);
+      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(
+        false,
+      );
     });
 
     test('should return true when supply ID is less than 24 hours old', () => {
@@ -640,7 +707,9 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
         supplyId: '12345',
         supplyIdUpdatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
       };
-      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(true);
+      expect(autobookingSupplyIdCacheService.isSupplyIdValid(booking)).toBe(
+        true,
+      );
     });
   });
 
@@ -651,7 +720,10 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       (mockPrisma.autobooking.update as jest.Mock).mockResolvedValue({});
 
       // Act
-      await autobookingSupplyIdCacheService.cacheSupplyId('booking-101', '67890');
+      await autobookingSupplyIdCacheService.cacheSupplyId(
+        'booking-101',
+        '67890',
+      );
 
       // Assert
       expect(mockPrisma.autobooking.update).toHaveBeenCalledWith({
@@ -671,7 +743,9 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
       (mockPrisma.autobooking.update as jest.Mock).mockResolvedValue({});
 
       // Act
-      await autobookingSupplyIdCacheService.clearSupplyIdFromCache('booking-101');
+      await autobookingSupplyIdCacheService.clearSupplyIdFromCache(
+        'booking-101',
+      );
 
       // Assert
       expect(mockPrisma.autobooking.update).toHaveBeenCalledWith({

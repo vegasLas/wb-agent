@@ -74,7 +74,10 @@ export class AccountRepository extends BaseRepository<
     });
   }
 
-  async findBySupplierId(userId: number, supplierId: string): Promise<Account | null> {
+  async findBySupplierId(
+    userId: number,
+    supplierId: string,
+  ): Promise<Account | null> {
     return this.prisma.account.findFirst({
       where: {
         userId,

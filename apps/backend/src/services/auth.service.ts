@@ -94,14 +94,19 @@ export class AuthService {
     const digits = smsCode.split('');
     for (let i = 0; i < digits.length; i++) {
       // This function runs in browser context via Playwright
-      await page.evaluate(({ digit, index }: { digit: string; index: number }) => {
-        const inputs = Array.from(document.querySelectorAll('input[data-testid="sms-code-input"]'));
-        const input = inputs[index] as HTMLInputElement | undefined;
-        if (input) {
-          input.value = digit;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      }, { digit: digits[i], index: i });
+      await page.evaluate(
+        ({ digit, index }: { digit: string; index: number }) => {
+          const inputs = Array.from(
+            document.querySelectorAll('input[data-testid="sms-code-input"]'),
+          );
+          const input = inputs[index] as HTMLInputElement | undefined;
+          if (input) {
+            input.value = digit;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        },
+        { digit: digits[i], index: i },
+      );
       await page.waitForTimeout(100);
     }
 
@@ -129,10 +134,10 @@ export class AuthService {
       try {
         await page.waitForSelector(
           '[class*="desktop-profile-select_DesktopProfileSelect__"]',
-          { timeout: 45000 }
+          { timeout: 45000 },
         );
         const selectorExists = await page.$(
-          '[class*="desktop-profile-select_DesktopProfileSelect__"]'
+          '[class*="desktop-profile-select_DesktopProfileSelect__"]',
         );
         if (selectorExists) {
           console.log('Login redirect completed - selector found');
@@ -148,11 +153,14 @@ export class AuthService {
         }
       } catch (error: unknown) {
         attempt++;
-        console.log(`Login redirect attempt ${attempt} failed:`, (error as Error).message);
+        console.log(
+          `Login redirect attempt ${attempt} failed:`,
+          (error as Error).message,
+        );
 
         if (attempt >= maxAttempts) {
           throw new Error(
-            `Login redirect failed after ${maxAttempts} attempts: ${(error as Error).message}`
+            `Login redirect failed after ${maxAttempts} attempts: ${(error as Error).message}`,
           );
         }
 
@@ -165,7 +173,7 @@ export class AuthService {
     try {
       const twoFactorInput = await page.waitForSelector(
         '.Portal-modal input[class*="SimpleInput-"]',
-        { timeout: 1000 }
+        { timeout: 1000 },
       );
       return !!twoFactorInput;
     } catch {
@@ -217,7 +225,7 @@ export class AuthService {
       await page.click('button[data-testid="country-code-select"]');
       await page.waitForSelector(
         `button[data-testid="country-select-${countryCode}"]`,
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
       const countrySelector = `button[data-testid="country-select-${countryCode}"]`;
       await page.click(countrySelector);
@@ -288,12 +296,15 @@ export class AuthService {
       const page = await context.newPage();
       await page.goto(LOGIN_URL, { waitUntil: 'networkidle' });
 
-      const timeoutId = setTimeout(() => {
-        console.log(
-          `Session ${sessionId} timed out after 5 minutes, cleaning up...`
-        );
-        this.cleanupSession(sessionId);
-      }, 5 * 60 * 1000);
+      const timeoutId = setTimeout(
+        () => {
+          console.log(
+            `Session ${sessionId} timed out after 5 minutes, cleaning up...`,
+          );
+          this.cleanupSession(sessionId);
+        },
+        5 * 60 * 1000,
+      );
 
       authSessions.set(sessionId, {
         userId,
@@ -342,7 +353,7 @@ export class AuthService {
       }
 
       const { countryCode, formattedNumber } = this.getCountryCodeFromPhone(
-        request.phoneNumber
+        request.phoneNumber,
       );
 
       if (countryCode !== 'ru') {
@@ -351,7 +362,7 @@ export class AuthService {
 
       await session.page.fill(
         'input[data-testid="phone-input"]',
-        formattedNumber
+        formattedNumber,
       );
       await session.page.click('button[data-testid="submit-phone-button"]');
 
@@ -370,9 +381,12 @@ export class AuthService {
         }
       }
 
-      await session.page.waitForSelector('input[data-testid="sms-code-input"]', {
-        timeout: 120000,
-      });
+      await session.page.waitForSelector(
+        'input[data-testid="sms-code-input"]',
+        {
+          timeout: 120000,
+        },
+      );
 
       session.step = 'sms';
       session.phoneNumber = request.phoneNumber;
@@ -502,7 +516,7 @@ export class AuthService {
 
       await session.page.fill(
         '.Portal-modal input[class*="SimpleInput-"]',
-        request.twoFactorCode
+        request.twoFactorCode,
       );
 
       return await this.completeLogin(request.sessionId);
@@ -558,7 +572,7 @@ export class AuthService {
       try {
         const supplierNameElement = await session.page.waitForSelector(
           '[class*="desktop-profile-select_DesktopProfileSelect__"]',
-          { timeout: 5000 }
+          { timeout: 5000 },
         );
         if (supplierNameElement) {
           supplierName = (
@@ -576,11 +590,14 @@ export class AuthService {
       }
 
       const cookieNames = cookies.map((c: Cookie) => c.name);
-      console.log('[AuthService] All cookies retrieved:', cookieNames.join(', '));
+      console.log(
+        '[AuthService] All cookies retrieved:',
+        cookieNames.join(', '),
+      );
       console.log('[AuthService] Total cookies count:', cookies.length);
 
       const hasWBTokenV3 = cookies.some(
-        (cookie: Cookie) => cookie.name === 'WBTokenV3'
+        (cookie: Cookie) => cookie.name === 'WBTokenV3',
       );
 
       if (!hasWBTokenV3) {
@@ -589,23 +606,23 @@ export class AuthService {
           cookies = await session.context.cookies();
 
           const hasWBTokenV3AfterNav = cookies.some(
-            (cookie: Cookie) => cookie.name === 'WBTokenV3'
+            (cookie: Cookie) => cookie.name === 'WBTokenV3',
           );
           if (!hasWBTokenV3AfterNav) {
             const accessTokens = await session.page.evaluate(() => {
               const tokens: { [key: string]: string } = {};
-            interface LocalStorageMock {
-              length: number;
-              key(index: number): string | null;
-              getItem(key: string): string | null;
-            }
-            const ls = localStorage as unknown as LocalStorageMock;
-            for (let i = 0; i < ls.length; i++) {
-              const key = ls.key(i);
-              if (key && key.includes('access-token')) {
-                tokens[key] = ls.getItem(key) || '';
+              interface LocalStorageMock {
+                length: number;
+                key(index: number): string | null;
+                getItem(key: string): string | null;
               }
-            }
+              const ls = localStorage as unknown as LocalStorageMock;
+              for (let i = 0; i < ls.length; i++) {
+                const key = ls.key(i);
+                if (key && key.includes('access-token')) {
+                  tokens[key] = ls.getItem(key) || '';
+                }
+              }
               return tokens;
             });
 
@@ -628,19 +645,19 @@ export class AuthService {
         } catch (navigationError) {
           console.error(
             'Navigation to supplies-management failed:',
-            navigationError
+            navigationError,
           );
         }
       }
 
       const supplierId = cookies.find(
-        (cookie: Cookie) => cookie.name === 'x-supplier-id'
+        (cookie: Cookie) => cookie.name === 'x-supplier-id',
       );
       if (supplierId) {
         const { checkIfShouldAddBonus } = await import('../utils/userBonus');
         const shouldAddBonus = await checkIfShouldAddBonus(
           session.userId,
-          supplierId.value
+          supplierId.value,
         );
         if (shouldAddBonus) {
           await prisma.user.update({
@@ -675,9 +692,12 @@ export class AuthService {
       });
 
       const localStorageKeys = Object.keys(localStorage);
-      console.log('[AuthService] All localStorage keys:', localStorageKeys.join(', '));
       console.log(
-        `[AuthService] Total localStorage items collected: ${localStorageKeys.length}`
+        '[AuthService] All localStorage keys:',
+        localStorageKeys.join(', '),
+      );
+      console.log(
+        `[AuthService] Total localStorage items collected: ${localStorageKeys.length}`,
       );
 
       const cookiesString = encodeCookies(cookies);

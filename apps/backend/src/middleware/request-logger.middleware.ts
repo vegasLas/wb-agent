@@ -5,14 +5,22 @@ import { logger } from '../utils/logger';
  * Request logging middleware
  * Logs all incoming requests with their duration
  */
-export const requestLogger = (req: Request, res: Response, next: NextFunction): void => {
+export const requestLogger = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   const start = Date.now();
-  
+
   // Store original end function
   const originalEnd = res.end.bind(res);
-  
+
   // Override end function to log when response is sent
-  res.end = function(chunk?: unknown, encoding?: unknown, cb?: unknown): Response {
+  res.end = function (
+    chunk?: unknown,
+    encoding?: unknown,
+    cb?: unknown,
+  ): Response {
     const duration = Date.now() - start;
     const logData = {
       method: req.method,

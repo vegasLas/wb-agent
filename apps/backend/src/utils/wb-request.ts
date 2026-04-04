@@ -61,22 +61,34 @@ export interface WBError {
  */
 function buildCookieStringFromCookies(cookies: Cookie[]): string {
   const cookieMap = new Map<string, string>();
-  
+
   for (const cookie of cookies) {
     cookieMap.set(cookie.name, cookie.value);
   }
 
   return [
     cookieMap.get('WBTokenV3') ? `WBTokenV3=${cookieMap.get('WBTokenV3')}` : '',
-    cookieMap.get('__zzatw-wb') ? `__zzatw-wb=${cookieMap.get('__zzatw-wb')}` : '',
+    cookieMap.get('__zzatw-wb')
+      ? `__zzatw-wb=${cookieMap.get('__zzatw-wb')}`
+      : '',
     cookieMap.get('_wbauid') ? `_wbauid=${cookieMap.get('_wbauid')}` : '',
     cookieMap.get('cfidsw-wb') ? `cfidsw-wb=${cookieMap.get('cfidsw-wb')}` : '',
-    cookieMap.get('current_feature_version') ? `current_feature_version=${cookieMap.get('current_feature_version')}` : '',
-    cookieMap.get('external-locale') ? `external-locale=${cookieMap.get('external-locale')}` : '',
+    cookieMap.get('current_feature_version')
+      ? `current_feature_version=${cookieMap.get('current_feature_version')}`
+      : '',
+    cookieMap.get('external-locale')
+      ? `external-locale=${cookieMap.get('external-locale')}`
+      : '',
     cookieMap.get('locale') ? `locale=${cookieMap.get('locale')}` : '',
-    cookieMap.get('wbx-validation-key') ? `wbx-validation-key=${cookieMap.get('wbx-validation-key')}` : '',
-    cookieMap.get('x-supplier-id') ? `x-supplier-id=${cookieMap.get('x-supplier-id')}` : '',
-    cookieMap.get('x-supplier-id-external') ? `x-supplier-id-external=${cookieMap.get('x-supplier-id-external')}` : '',
+    cookieMap.get('wbx-validation-key')
+      ? `wbx-validation-key=${cookieMap.get('wbx-validation-key')}`
+      : '',
+    cookieMap.get('x-supplier-id')
+      ? `x-supplier-id=${cookieMap.get('x-supplier-id')}`
+      : '',
+    cookieMap.get('x-supplier-id-external')
+      ? `x-supplier-id-external=${cookieMap.get('x-supplier-id-external')}`
+      : '',
   ]
     .filter(Boolean)
     .join('; ');
@@ -94,7 +106,7 @@ function generateRandomOrder(): number {
  */
 function buildJsonRpcBody(
   body: JsonRpcBody | JsonRpcBody[],
-  order?: number
+  order?: number,
 ): unknown {
   const baseOrder = order ?? generateRandomOrder();
 
@@ -133,22 +145,22 @@ async function makeHttpRequest(
   headers: Record<string, string>,
   body: string | undefined,
   proxy?: ProxyConfig,
-  parseResponse = true
+  parseResponse = true,
 ): Promise<unknown> {
   let response: Response;
 
   if (proxy) {
     const proxyUrl = formatProxyUrl(proxy);
     // Use dynamic import for node-fetch
-    const nodeFetch = await import('node-fetch').then(m => m.default);
+    const nodeFetch = await import('node-fetch').then((m) => m.default);
     const proxyAgent = new HttpsProxyAgent(proxyUrl);
 
-    response = await nodeFetch(url, {
+    response = (await nodeFetch(url, {
       method,
       headers,
       body,
       agent: proxyAgent as unknown as import('node-fetch').RequestInit['agent'],
-    }) as unknown as Response;
+    })) as unknown as Response;
   } else {
     response = await fetch(url, {
       method,
@@ -207,11 +219,13 @@ export async function wbRequest<T>({
       headers,
       requestBody,
       proxy,
-      options.parseResponse !== false
+      options.parseResponse !== false,
     );
 
     // Check for JSON-RPC error in response
-    const response = responseData as { error?: { message: string; code: number } };
+    const response = responseData as {
+      error?: { message: string; code: number };
+    };
     if (response.error) {
       const error: WBError = {
         message: response.error.message || 'JSON-RPC error occurred',
@@ -263,15 +277,17 @@ export async function wbAccountRequest<T>({
 
     // Get cookies from account
     const cookies = await getCookiesFromAccount(accountId);
-    
+
     // Build cookie string, optionally overriding supplier ID
     let cookieString = buildCookieStringFromCookies(cookies);
-    
+
     // If supplierId is provided, override it in the cookie string
     if (supplierId) {
       const cookieEntries = cookieString.split('; ').filter(Boolean);
       const filteredEntries = cookieEntries.filter(
-        entry => !entry.startsWith('x-supplier-id') && !entry.startsWith('x-supplier-id-external')
+        (entry) =>
+          !entry.startsWith('x-supplier-id') &&
+          !entry.startsWith('x-supplier-id-external'),
       );
       filteredEntries.push(`x-supplier-id=${supplierId}`);
       filteredEntries.push(`x-supplier-id-external=${supplierId}`);
@@ -279,7 +295,7 @@ export async function wbAccountRequest<T>({
     }
 
     // Get WBTokenV3 for authorizev3 header
-    const wbTokenV3 = cookies.find(c => c.name === 'WBTokenV3')?.value || '';
+    const wbTokenV3 = cookies.find((c) => c.name === 'WBTokenV3')?.value || '';
 
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -297,7 +313,9 @@ export async function wbAccountRequest<T>({
     let requestBody: string | undefined = undefined;
     if (body) {
       if (isJsonRpc) {
-        requestBody = JSON.stringify(buildJsonRpcBody(body as JsonRpcBody | JsonRpcBody[], order));
+        requestBody = JSON.stringify(
+          buildJsonRpcBody(body as JsonRpcBody | JsonRpcBody[], order),
+        );
       } else {
         requestBody = JSON.stringify(body);
       }
@@ -309,11 +327,13 @@ export async function wbAccountRequest<T>({
       requestHeaders,
       requestBody,
       proxy,
-      parseResponse
+      parseResponse,
     );
 
     // Check for JSON-RPC error in response
-    const response = responseData as { error?: { message: string; code: number } };
+    const response = responseData as {
+      error?: { message: string; code: number };
+    };
     if (response.error) {
       const error: WBError = {
         message: response.error.message || 'JSON-RPC error occurred',
