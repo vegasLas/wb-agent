@@ -183,6 +183,13 @@ function parseDateString(dateStr: string): Date {
   return new Date(year, month - 1, day);
 }
 
+function formatDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function onPrimeDateRangeChange(
   dates: Date | Date[] | (Date | null)[] | null | undefined,
 ) {
@@ -192,15 +199,15 @@ function onPrimeDateRangeChange(
     return;
   }
   const [start, end] = dates;
-  emit('update:startDate', start.toISOString().split('T')[0]);
-  emit('update:endDate', end.toISOString().split('T')[0]);
+  emit('update:startDate', formatDateToYYYYMMDD(start));
+  emit('update:endDate', formatDateToYYYYMMDD(end));
 }
 
 function onSingleDateChange(
   value: Date | Date[] | (Date | null)[] | null | undefined,
 ) {
   if (value instanceof Date) {
-    emit('update:startDate', value.toISOString().split('T')[0]);
+    emit('update:startDate', formatDateToYYYYMMDD(value));
   } else {
     emit('update:startDate', '');
   }
