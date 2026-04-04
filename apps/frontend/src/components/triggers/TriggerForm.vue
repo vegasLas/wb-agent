@@ -292,7 +292,6 @@ function goBack() {
 
 function onSearchModeChange(mode: SearchMode) {
   // Reset dates when mode changes
-  dateRange.value = null;
   triggerFormStore.form.startDate = null;
   triggerFormStore.form.endDate = null;
   triggerFormStore.form.selectedDates = [];
@@ -320,7 +319,6 @@ function handleTodayMode() {
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
-  dateRange.value = [today, endOfDay];
   triggerFormStore.form.startDate = today.toISOString();
   triggerFormStore.form.endDate = endOfDay.toISOString();
   triggerFormStore.form.selectedDates = [today.toISOString()];
@@ -333,7 +331,6 @@ function handleTomorrowMode() {
   const endOfTomorrow = new Date(tomorrow);
   endOfTomorrow.setHours(23, 59, 59, 999);
 
-  dateRange.value = [tomorrow, endOfTomorrow];
   triggerFormStore.form.startDate = tomorrow.toISOString();
   triggerFormStore.form.endDate = endOfTomorrow.toISOString();
   triggerFormStore.form.selectedDates = [tomorrow.toISOString()];
@@ -346,7 +343,6 @@ function handleWeekMode() {
   endOfWeek.setDate(today.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
-  dateRange.value = [today, endOfWeek];
   triggerFormStore.form.startDate = today.toISOString();
   triggerFormStore.form.endDate = endOfWeek.toISOString();
 
