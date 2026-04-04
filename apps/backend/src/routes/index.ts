@@ -13,6 +13,7 @@ import paymentRoutes from './payments.routes';
 import webhookRoutes from './webhooks.routes';
 import coefficientsRoutes from './coefficients.routes';
 import reportsRoutes from './reports.routes';
+import promotionsRoutes from './promotions.routes';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -37,6 +38,7 @@ router.get('/', (req, res) => {
       webhooks: '/api/v1/webhooks',
       coefficients: '/api/v1/coefficients',
       reports: '/api/v1/reports',
+      promotions: '/api/v1/promotions',
     },
   });
 });
@@ -79,6 +81,9 @@ router.use('/coefficients', authenticate, coefficientsRoutes);
 
 // Reports routes (protected)
 router.use('/reports', authenticate, reportsRoutes);
+
+// Promotions routes (protected)
+router.use('/promotions', authenticate, promotionsRoutes);
 
 // Webhook routes (public - called by YooKassa)
 router.use('/webhooks', webhookRoutes);

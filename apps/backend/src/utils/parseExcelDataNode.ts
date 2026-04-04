@@ -10,6 +10,7 @@ import { logger } from './logger';
 export interface ParseOptions {
   header?: boolean;
   sheet?: string | null;
+  columnMapping?: Record<string, string>;
 }
 
 export interface RawExcelData {
@@ -106,7 +107,7 @@ export const parseExcelDataNode = (
       allSheets: workbook.SheetNames,
     };
 
-    return transformToFriendlyFormat(result);
+    return transformToFriendlyFormat(result, options.columnMapping);
   } catch (error) {
     logger.error('Error parsing Excel data:', error);
     throw new Error(`Failed to parse Excel data: ${(error as Error).message}`);
@@ -120,6 +121,7 @@ export const parseExcelDataNode = (
  */
 const transformToFriendlyFormat = (
   rawData: RawExcelData,
+  customColumnMapping?: Record<string, string>,
 ): FriendlyExcelData => {
   try {
     if (!rawData?.data?.length) {
@@ -149,13 +151,15 @@ const transformToFriendlyFormat = (
 
     // Row 0: Metadata (report title in first cell)
     const metadataRow = rawData.data[0] as any[];
-    const reportTitle = Array.isArray(metadataRow) ? metadataRow[0] : Object.values(metadataRow)[0];
+    const reportTitle = Array.isArray(metadataRow)
+      ? metadataRow[0]
+      : Object.values(metadataRow)[0];
 
     // Row 1: Headers (column names)
     const headerRow = rawData.data[1] as any[];
 
     // Create column mapping from header row
-    const columnMap = createColumnMapping(headerRow);
+    const columnMap = createColumnMapping(headerRow, customColumnMapping);
 
     // Data rows: skip first 2 rows (metadata + headers)
     const dataRows = rawData.data.slice(2);
@@ -211,12 +215,14 @@ const transformToFriendlyFormat = (
  */
 const createColumnMapping = (
   headerRow: any[],
+  customMapping?: Record<string, string>,
 ): Record<string | number, string> => {
   if (!headerRow || !Array.isArray(headerRow)) {
     return {};
   }
 
   const mapping: Record<string, string> = {
+    ...(customMapping || {}),
     // English headers
     Brand: 'brand',
     Subject: 'category',
@@ -266,6 +272,26 @@ const createColumnMapping = (
   });
 
   return columnMap;
+};
+
+export const promotionColumnMapping: Record<string, string> = {
+  'Товар уже участвует в акции': 'alreadyParticipating',
+  Бренд: 'brand',
+  Предмет: 'subject',
+  Наименование: 'name',
+  'Артикул поставщика': 'vendorCode',
+  'Артикул WB': 'wbArticle',
+  'Последний баркод': 'lastBarcode',
+  'Количество дней на сайте': 'daysOnSite',
+  Оборачиваемость: 'turnover',
+  'Остаток товара на складах Wb (шт.)': 'stockWbWh',
+  'Остаток товара на складе продавца Wb (шт.)': 'stockSellerWh',
+  'Плановая цена для акции': 'plannedPromoPrice',
+  'Текущая розничная цена': 'currentRetailPrice',
+  Валюта: 'currency',
+  'Текущая скидка на сайте, %': 'currentDiscount',
+  'Загружаемая скидка для участия в акции': 'uploadedDiscount',
+  Статус: 'status',
 };
 
 /**
