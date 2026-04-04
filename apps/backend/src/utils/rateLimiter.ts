@@ -17,7 +17,7 @@ export class RateLimiter {
   constructor(
     windowMs: number,
     maxRequests: number,
-    type: 'message' | 'command' | 'callback'
+    type: 'message' | 'command' | 'callback',
   ) {
     this.rules = { windowMs, maxRequests, type };
   }
@@ -56,7 +56,7 @@ export class RateLimiter {
 
     // Filter out old timestamps
     const validTimestamps = rateLimit.timestamps.filter(
-      (timestamp: Date) => timestamp.getTime() > windowStart.getTime()
+      (timestamp: Date) => timestamp.getTime() > windowStart.getTime(),
     );
 
     if (validTimestamps.length >= this.rules.maxRequests) {
@@ -94,9 +94,9 @@ export class RateLimiter {
     const oldestValidTimestamp = Math.min(
       ...rateLimit.timestamps
         .filter(
-          (timestamp: Date) => now - timestamp.getTime() < this.rules.windowMs
+          (timestamp: Date) => now - timestamp.getTime() < this.rules.windowMs,
         )
-        .map((timestamp: Date) => timestamp.getTime())
+        .map((timestamp: Date) => timestamp.getTime()),
     );
 
     const timeUntilExpiry = oldestValidTimestamp + this.rules.windowMs - now;

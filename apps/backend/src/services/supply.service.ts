@@ -102,16 +102,14 @@ export class SupplyService {
   /**
    * Create a new supply using account-based authentication
    */
-  async createSupply(options: CreateSupplyOptions): Promise<CreateSupplyResponse> {
-    const {
-      accountId,
-      supplierId,
-      params,
-      userAgent,
-      proxy,
-    } = options;
+  async createSupply(
+    options: CreateSupplyOptions,
+  ): Promise<CreateSupplyResponse> {
+    const { accountId, supplierId, params, userAgent, proxy } = options;
 
-    logger.info(`[SupplyService] Creating supply for account ${accountId}, warehouse ${params.warehouseId}`);
+    logger.info(
+      `[SupplyService] Creating supply for account ${accountId}, warehouse ${params.warehouseId}`,
+    );
 
     const response = await wbAccountRequest<CreateSupplyResponse>({
       url: 'https://seller-supply.wildberries.ru/ns/sm-supply/supply-manager/api/v1/supply/create',
@@ -131,7 +129,9 @@ export class SupplyService {
       },
     });
 
-    logger.info(`[SupplyService] Supply created successfully, preorder ID: ${response.result?.ids?.[0]?.Id}`);
+    logger.info(
+      `[SupplyService] Supply created successfully, preorder ID: ${response.result?.ids?.[0]?.Id}`,
+    );
 
     return response;
   }
@@ -139,16 +139,14 @@ export class SupplyService {
   /**
    * Delete a preorder using account-based authentication
    */
-  async deletePreorder(options: DeletePreorderOptions): Promise<DeletePreorderResponse> {
-    const {
-      accountId,
-      supplierId,
-      preorderId,
-      userAgent,
-      proxy,
-    } = options;
+  async deletePreorder(
+    options: DeletePreorderOptions,
+  ): Promise<DeletePreorderResponse> {
+    const { accountId, supplierId, preorderId, userAgent, proxy } = options;
 
-    logger.info(`[SupplyService] Deleting preorder ${preorderId} for account ${accountId}`);
+    logger.info(
+      `[SupplyService] Deleting preorder ${preorderId} for account ${accountId}`,
+    );
 
     const response = await wbAccountRequest<DeletePreorderResponse>({
       url: 'https://seller-supply.wildberries.ru/ns/sm-preorder/supply-manager/api/v1/preorder/delete',
@@ -163,9 +161,13 @@ export class SupplyService {
     });
 
     if (response.error) {
-      logger.warn(`[SupplyService] Preorder deletion returned error: ${response.error.message}`);
+      logger.warn(
+        `[SupplyService] Preorder deletion returned error: ${response.error.message}`,
+      );
     } else {
-      logger.info(`[SupplyService] Preorder ${preorderId} deleted successfully`);
+      logger.info(
+        `[SupplyService] Preorder ${preorderId} deleted successfully`,
+      );
     }
 
     return response;
@@ -194,16 +196,14 @@ export class SupplyService {
    * Update supply plan (delivery date) for an existing supply
    * Used by reschedule monitoring to change delivery dates
    */
-  async updateSupplyPlan(options: UpdateSupplyPlanOptions): Promise<UpdateSupplyPlanResponse> {
-    const {
-      accountId,
-      supplierId,
-      params,
-      userAgent,
-      proxy,
-    } = options;
+  async updateSupplyPlan(
+    options: UpdateSupplyPlanOptions,
+  ): Promise<UpdateSupplyPlanResponse> {
+    const { accountId, supplierId, params, userAgent, proxy } = options;
 
-    logger.info(`[SupplyService] Updating supply plan for supply ${params.supplyId}, date ${params.deliveryDate}`);
+    logger.info(
+      `[SupplyService] Updating supply plan for supply ${params.supplyId}, date ${params.deliveryDate}`,
+    );
 
     const response = await wbAccountRequest<UpdateSupplyPlanResponse>({
       url: 'https://seller-supply.wildberries.ru/ns/sm-plan/supply-manager/api/v1/plan/update',
@@ -221,11 +221,15 @@ export class SupplyService {
     });
 
     if (response.error) {
-      logger.warn(`[SupplyService] Supply plan update returned error: ${response.error.message}`);
+      logger.warn(
+        `[SupplyService] Supply plan update returned error: ${response.error.message}`,
+      );
       throw new Error(response.error.message);
     }
 
-    logger.info(`[SupplyService] Supply plan updated successfully for supply ${params.supplyId}`);
+    logger.info(
+      `[SupplyService] Supply plan updated successfully for supply ${params.supplyId}`,
+    );
     return response;
   }
 }

@@ -72,11 +72,17 @@ export const warehousesAPI = {
    * POST /api/v1/warehouses/transits
    * Get transit offices for a warehouse
    */
-  async fetchTransits(accountId: string, warehouseId: number): Promise<TransitItem[]> {
-    const response = await apiClient.post<TransitsResponse>('/warehouses/transits', {
-      accountId,
-      warehouseId,
-    });
+  async fetchTransits(
+    accountId: string,
+    warehouseId: number,
+  ): Promise<TransitItem[]> {
+    const response = await apiClient.post<TransitsResponse>(
+      '/warehouses/transits',
+      {
+        accountId,
+        warehouseId,
+      },
+    );
     return response.data.data;
   },
 
@@ -84,8 +90,13 @@ export const warehousesAPI = {
    * POST /api/v1/warehouses/validate
    * Validate warehouse goods for a draft
    */
-  async validateWarehouse(data: ValidationRequest): Promise<ValidationResponse> {
-    const response = await apiClient.post<ValidationResponse>('/warehouses/validate', data);
+  async validateWarehouse(
+    data: ValidationRequest,
+  ): Promise<ValidationResponse> {
+    const response = await apiClient.post<ValidationResponse>(
+      '/warehouses/validate',
+      data,
+    );
     return response.data;
   },
 
@@ -94,7 +105,9 @@ export const warehousesAPI = {
    * Get warehouse cache status (admin/debug endpoint)
    */
   async getCacheStatus(): Promise<CacheStatusResponse> {
-    const response = await apiClient.get<CacheStatusResponse>('/warehouses/cache/status');
+    const response = await apiClient.get<CacheStatusResponse>(
+      '/warehouses/cache/status',
+    );
     return response.data;
   },
 
@@ -103,7 +116,10 @@ export const warehousesAPI = {
    * Clear warehouse cache (admin/debug endpoint)
    */
   async clearCache(): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post<{ success: boolean; message: string }>('/warehouses/cache/clear');
+    const response = await apiClient.post<{
+      success: boolean;
+      message: string;
+    }>('/warehouses/cache/clear');
     return response.data;
   },
 };

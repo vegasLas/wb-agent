@@ -10,26 +10,19 @@
 
     <div class="space-y-4">
       <!-- Phone Number Step -->
-      <div
-        v-if="authStore.needsPhone"
-        class="space-y-4"
-      >
+      <div v-if="authStore.needsPhone" class="space-y-4">
         <div class="text-center">
-          <i class="pi pi-mobile text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block" />
-          <h4 class="text-lg font-medium mb-2">
-            Введите номер телефона
-          </h4>
+          <i
+            class="pi pi-mobile text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block"
+          />
+          <h4 class="text-lg font-medium mb-2">Введите номер телефона</h4>
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Введите номер телефона, привязанный к вашему аккаунту WB
           </p>
         </div>
 
         <!-- Error Message -->
-        <Message
-          v-if="authStore.error"
-          severity="error"
-          :closable="false"
-        >
+        <Message v-if="authStore.error" severity="error" :closable="false">
           <div class="font-medium">
             {{ getErrorTitle(authStore.error) }}
           </div>
@@ -39,7 +32,9 @@
         </Message>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Номер телефона <span class="text-red-500 dark:text-red-400">*</span>
           </label>
           <PhoneInput
@@ -50,12 +45,7 @@
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <Button
-            variant="text"
-            @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
           <Button
             :loading="authStore.loading"
             :disabled="isSubmitDisabled"
@@ -69,26 +59,19 @@
       </div>
 
       <!-- SMS Code Step -->
-      <div
-        v-else-if="authStore.needsSMS"
-        class="space-y-4"
-      >
+      <div v-else-if="authStore.needsSMS" class="space-y-4">
         <div class="text-center">
-          <i class="pi pi-comments text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block" />
-          <h4 class="text-lg font-medium mb-2">
-            Введите SMS код
-          </h4>
+          <i
+            class="pi pi-comments text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block"
+          />
+          <h4 class="text-lg font-medium mb-2">Введите SMS код</h4>
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Мы отправили 6-значный код на ваш телефон
           </p>
         </div>
 
         <!-- Error Message -->
-        <Message
-          v-if="authStore.error"
-          severity="error"
-          :closable="false"
-        >
+        <Message v-if="authStore.error" severity="error" :closable="false">
           <div class="font-medium">
             {{ getErrorTitle(authStore.error) }}
           </div>
@@ -98,7 +81,9 @@
         </Message>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             SMS код <span class="text-red-500 dark:text-red-400">*</span>
           </label>
           <InputOtp
@@ -112,12 +97,7 @@
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <Button
-            variant="text"
-            @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
           <Button
             :loading="authStore.loading"
             :disabled="smsCode.length !== 6"
@@ -131,26 +111,19 @@
       </div>
 
       <!-- Two Factor Step -->
-      <div
-        v-else-if="authStore.needsTwoFactor"
-        class="space-y-4"
-      >
+      <div v-else-if="authStore.needsTwoFactor" class="space-y-4">
         <div class="text-center">
-          <i class="pi pi-shield text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block" />
-          <h4 class="text-lg font-medium mb-2">
-            Двухфакторная аутентификация
-          </h4>
+          <i
+            class="pi pi-shield text-5xl mx-auto mb-4 text-blue-500 dark:text-blue-400 block"
+          />
+          <h4 class="text-lg font-medium mb-2">Двухфакторная аутентификация</h4>
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Введите код из email для завершения авторизации
           </p>
         </div>
 
         <!-- Error Message -->
-        <Message
-          v-if="authStore.error"
-          severity="error"
-          :closable="false"
-        >
+        <Message v-if="authStore.error" severity="error" :closable="false">
           <div class="font-medium">
             {{ getErrorTitle(authStore.error) }}
           </div>
@@ -160,7 +133,9 @@
         </Message>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Код из email <span class="text-red-500 dark:text-red-400">*</span>
           </label>
           <InputOtp
@@ -174,12 +149,7 @@
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <Button
-            variant="text"
-            @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
           <Button
             :loading="authStore.loading"
             :disabled="twoFactorCode.length !== 6"
@@ -193,12 +163,11 @@
       </div>
 
       <!-- Error Step -->
-      <div
-        v-else-if="authStore.hasError"
-        class="space-y-4"
-      >
+      <div v-else-if="authStore.hasError" class="space-y-4">
         <div class="text-center">
-          <i class="pi pi-exclamation-triangle text-5xl mx-auto mb-4 text-red-500 dark:text-red-400 block" />
+          <i
+            class="pi pi-exclamation-triangle text-5xl mx-auto mb-4 text-red-500 dark:text-red-400 block"
+          />
           <h4 class="text-lg font-medium mb-2 text-red-600 dark:text-red-400">
             Ошибка авторизации
           </h4>
@@ -208,12 +177,7 @@
         </div>
 
         <div class="flex justify-between items-center gap-4">
-          <Button
-            variant="text"
-            @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          <Button variant="text" @click="handleCancel"> Отмена </Button>
           <Button
             severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
@@ -225,12 +189,11 @@
       </div>
 
       <!-- Success Step -->
-      <div
-        v-else-if="authStore.isCompleted"
-        class="space-y-4"
-      >
+      <div v-else-if="authStore.isCompleted" class="space-y-4">
         <div class="text-center">
-          <i class="pi pi-check-circle text-5xl mx-auto mb-4 text-green-500 dark:text-green-400 block" />
+          <i
+            class="pi pi-check-circle text-5xl mx-auto mb-4 text-green-500 dark:text-green-400 block"
+          />
           <h4
             class="text-lg font-medium mb-2 text-green-600 dark:text-green-400"
           >

@@ -58,8 +58,8 @@
           <Tag
             :value="
               booking.monopalletCount +
-                ' ' +
-                (booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет')
+              ' ' +
+              (booking.monopalletCount === 1 ? 'монопаллета' : 'монопаллет')
             "
             severity="info"
           />
@@ -124,7 +124,7 @@
               size="small"
               :loading="
                 autobookingStore.loading &&
-                  autobookingStore.updatingId === booking.id
+                autobookingStore.updatingId === booking.id
               "
               @click="updateCoefficient"
             >
@@ -172,7 +172,7 @@
             icon="pi pi-folder"
             :loading="
               autobookingStore.loading &&
-                autobookingStore.togglingId === booking.id
+              autobookingStore.togglingId === booking.id
             "
             @click="archiveAutobooking"
           />
@@ -186,7 +186,7 @@
               size="small"
               :loading="
                 autobookingStore.loading &&
-                  autobookingStore.togglingId === booking.id
+                autobookingStore.togglingId === booking.id
               "
               @click="activateAutobooking"
             >
@@ -212,8 +212,8 @@
           <Button
             v-if="
               booking.status === 'ACTIVE' ||
-                booking.status === 'ARCHIVED' ||
-                booking.status === 'ERROR'
+              booking.status === 'ARCHIVED' ||
+              booking.status === 'ERROR'
             "
             severity="danger"
             variant="outlined"

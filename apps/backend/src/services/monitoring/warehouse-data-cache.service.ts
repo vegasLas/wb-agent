@@ -33,7 +33,7 @@ export class WarehouseDataCacheService {
   private generateCacheKey(
     warehouseId: number,
     date: string,
-    boxTypeId: number
+    boxTypeId: number,
   ): string {
     return `${warehouseId}-${date}-${boxTypeId}`;
   }
@@ -49,7 +49,7 @@ export class WarehouseDataCacheService {
   }
 
   private isBlacklistValid(
-    blacklistedWarehouse: BlacklistedWarehouse
+    blacklistedWarehouse: BlacklistedWarehouse,
   ): boolean {
     const now = new Date();
     const age =
@@ -104,7 +104,7 @@ export class WarehouseDataCacheService {
   getCachedData(
     warehouseId: number,
     date: string,
-    boxTypeId: number | undefined
+    boxTypeId: number | undefined,
   ): CachedWarehouseData | null {
     if (!boxTypeId) return null;
 
@@ -119,7 +119,7 @@ export class WarehouseDataCacheService {
   }
 
   updateCache(
-    closeApiData: AcceptanceCoefficientsResponse['result']['report']
+    closeApiData: AcceptanceCoefficientsResponse['result']['report'],
   ): void {
     const now = new Date();
 
@@ -135,7 +135,7 @@ export class WarehouseDataCacheService {
         const key = this.generateCacheKey(
           warehouse.warehouseID,
           warehouse.date,
-          boxTypeId
+          boxTypeId,
         );
         this.closeApiCache.set(key, {
           ...warehouse,
@@ -165,8 +165,8 @@ export class WarehouseDataCacheService {
         warehouse.boxTypeID &&
         !this.isWarehouseBlacklisted(
           warehouse.warehouseID,
-          warehouse.boxTypeID
-        )
+          warehouse.boxTypeID,
+        ),
     );
 
     // If all warehouses are blacklisted, no need to check
@@ -178,7 +178,7 @@ export class WarehouseDataCacheService {
       const cachedData = this.getCachedData(
         warehouse.warehouseID,
         warehouse.date,
-        warehouse.boxTypeID
+        warehouse.boxTypeID,
       );
       return !cachedData;
     });
@@ -186,7 +186,7 @@ export class WarehouseDataCacheService {
 
   validateWarehouse(
     freeWarehouse: Supply,
-    closeApiData: CachedWarehouseData | null
+    closeApiData: CachedWarehouseData | null,
   ): boolean {
     if (!closeApiData || !freeWarehouse.boxTypeID) return false;
 
@@ -194,7 +194,7 @@ export class WarehouseDataCacheService {
     if (
       this.isWarehouseBlacklisted(
         freeWarehouse.warehouseID,
-        freeWarehouse.boxTypeID
+        freeWarehouse.boxTypeID,
       )
     ) {
       return false;
@@ -231,11 +231,11 @@ export class WarehouseDataCacheService {
       logger.info(
         'blacklisting warehouse',
         freeWarehouse.warehouseID,
-        freeWarehouse.boxTypeID
+        freeWarehouse.boxTypeID,
       );
       this.blacklistWarehouse(
         freeWarehouse.warehouseID,
-        freeWarehouse.boxTypeID
+        freeWarehouse.boxTypeID,
       );
     }
 

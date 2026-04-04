@@ -1,6 +1,6 @@
-import { prisma } from "./../config/database";
-import * as schedule from "node-schedule";
-import { TBOT } from "../utils/TBOT";
+import { prisma } from './../config/database';
+import * as schedule from 'node-schedule';
+import { TBOT } from '../utils/TBOT';
 
 interface SubscriptionNotification {
   userId: number;
@@ -25,9 +25,9 @@ export class SubscriptionNotificationService {
    */
   init(): void {
     // Schedule daily check at 09:00 Moscow time
-    schedule.scheduleJob("0 9 * * *", () => {
+    schedule.scheduleJob('0 9 * * *', () => {
       this.checkSubscriptionExpirations().catch((error) => {
-        console.error("Error in subscription expiration check:", error);
+        console.error('Error in subscription expiration check:', error);
       });
     });
   }
@@ -89,16 +89,16 @@ export class SubscriptionNotificationService {
           this.notificationsSent.add(notificationKey);
         }
       }
-      console.log("this.notificationsSent.size: ", this.notificationsSent.size);
+      console.log('this.notificationsSent.size: ', this.notificationsSent.size);
       // Clean up old notification records (keep only last 10 days)
       this.notificationsSent.forEach((key) => {
-        const [, daysLeft] = key.split("-");
+        const [, daysLeft] = key.split('-');
         if (parseInt(daysLeft) < 0) {
           this.notificationsSent.delete(key);
         }
       });
     } catch (error) {
-      console.error("Error checking subscription expirations:", error);
+      console.error('Error checking subscription expirations:', error);
     }
   }
 
@@ -112,13 +112,13 @@ export class SubscriptionNotificationService {
       const { chatId, daysLeft, subscriptionExpiresAt } = notification;
       const URL = process.env.URL;
 
-      const expirationDate = subscriptionExpiresAt.toLocaleDateString("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
+      const expirationDate = subscriptionExpiresAt.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
       });
 
-      let message = "";
+      let message = '';
 
       if (daysLeft === 7) {
         message =
@@ -152,25 +152,27 @@ export class SubscriptionNotificationService {
       }
 
       await TBOT.sendMessage(chatId, message, {
-        parse_mode: "HTML",
+        parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: "📝 Подписка и оплата",
+                text: '📝 Подписка и оплата',
                 web_app: { url: `${URL}?view=store` },
               },
             ],
-            [{ text: "❌ Закрыть", callback_data: "close_menu" }],
+            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
           ],
         },
       });
     } catch (error: unknown) {
       // Check if the error is due to user blocking the bot
-      const err = error as { response?: { body?: { error_code?: number; description?: string } } };
+      const err = error as {
+        response?: { body?: { error_code?: number; description?: string } };
+      };
       if (
         err?.response?.body?.error_code === 403 &&
-        ["deactivated", "blocked by the user"].some((word) =>
+        ['deactivated', 'blocked by the user'].some((word) =>
           err?.response?.body?.description?.includes(word),
         )
       ) {
@@ -183,7 +185,7 @@ export class SubscriptionNotificationService {
       // Check for other bot-related errors
       if (
         err?.response?.body?.error_code === 400 &&
-        err?.response?.body?.description?.includes("chat not found")
+        err?.response?.body?.description?.includes('chat not found')
       ) {
         console.log(
           `Chat not found for user ${notification.userId} - user may have deleted the chat`,

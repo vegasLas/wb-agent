@@ -528,7 +528,11 @@ export interface Supply {
   /** Warehouse name */
   warehouseName: string;
   /** Box type name (in Russian) */
-  boxTypeName: 'Короба' | 'Суперсейф' | 'Монопаллеты' | 'QR-поставка с коробами';
+  boxTypeName:
+    | 'Короба'
+    | 'Суперсейф'
+    | 'Монопаллеты'
+    | 'QR-поставка с коробами';
   /** Box type ID */
   boxTypeID?: 2 | 5 | 6;
   /** Whether unloading is allowed */

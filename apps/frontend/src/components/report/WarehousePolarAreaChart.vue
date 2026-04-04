@@ -14,12 +14,7 @@
             :data="chartData"
             :options="chartOptions"
           />
-          <p
-            v-else
-            class="text-gray-500 text-center py-8"
-          >
-            Нет данных
-          </p>
+          <p v-else class="text-gray-500 text-center py-8">Нет данных</p>
         </div>
 
         <!-- Table -->
@@ -32,29 +27,17 @@
                 scroll-height="flex"
                 class="p-datatable-sm"
               >
-                <Column
-                  field="vendorCode"
-                  header="Артикул"
-                  sortable
-                >
+                <Column field="vendorCode" header="Артикул" sortable>
                   <template #body="{ data }">
                     <span class="font-medium">{{ data.vendorCode }}</span>
                   </template>
                 </Column>
-                <Column
-                  field="orderedQty"
-                  header="Заказано"
-                  sortable
-                >
+                <Column field="orderedQty" header="Заказано" sortable>
                   <template #body="{ data }">
                     {{ data.orderedQty.toLocaleString('ru-RU') }}
                   </template>
                 </Column>
-                <Column
-                  field="stockQty"
-                  header="Остаток"
-                  sortable
-                >
+                <Column field="stockQty" header="Остаток" sortable>
                   <template #body="{ data }">
                     {{ data.stockQty.toLocaleString('ru-RU') }}
                   </template>
@@ -114,7 +97,7 @@ const sortedItems = computed(() => {
   sorted.sort((a, b) => {
     let aVal: number | string;
     let bVal: number | string;
-    
+
     if (sortColumn.value === 'vendorCode') {
       aVal = a.vendorCode;
       bVal = b.vendorCode;
@@ -142,7 +125,9 @@ const isDark = computed(() => {
 });
 
 const chartData = computed(() => {
-  const labels: string[] = props.items.map((item: ReportItem) => item.vendorCode);
+  const labels: string[] = props.items.map(
+    (item: ReportItem) => item.vendorCode,
+  );
   const data: number[] = props.items.map((item: ReportItem) => item.orderedQty);
 
   // Generate random colors for each segment
@@ -207,7 +192,9 @@ const chartOptions = computed(() => {
         },
       },
       tooltip: {
-        backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: isDarkMode
+          ? 'rgba(0, 0, 0, 0.8)'
+          : 'rgba(0, 0, 0, 0.8)',
         padding: 12,
         cornerRadius: 8,
         callbacks: {
@@ -218,7 +205,8 @@ const chartOptions = computed(() => {
               (a: number, b: number) => a + b,
               0,
             );
-            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            const percentage =
+              total > 0 ? Math.round((value / total) * 100) : 0;
             return `${label}: ${value} (${percentage}%)`;
           },
         },

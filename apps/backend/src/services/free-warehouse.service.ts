@@ -33,7 +33,8 @@ export class FreeWarehouseService {
   } | null> {
     try {
       // Check if we should wait before making the next request
-      const waitInfo = await apiKeyRateLimiterService.shouldWaitBeforeNextRequest();
+      const waitInfo =
+        await apiKeyRateLimiterService.shouldWaitBeforeNextRequest();
       if (waitInfo.shouldWait) {
         // Return wait info instead of proceeding
         return { shouldWait: true, waitTime: waitInfo.waitTime };
@@ -49,17 +50,19 @@ export class FreeWarehouseService {
             (warehouse) =>
               warehouse?.boxTypeID &&
               warehouse.allowUnload === true &&
-              warehouse.coefficient >= 0
+              warehouse.coefficient >= 0,
           );
           this.updateCache(validWarehouses);
         })
         .catch((error) => {
           const errorMessage = error?.message || '';
           logger.error('Error fetching free API warehouses:', errorMessage);
-          
+
           // Handle database recovery errors silently - they're expected during maintenance
           if (this.isDatabaseRecoveryError(errorMessage)) {
-            logger.info('Free API temporarily unavailable due to database recovery');
+            logger.info(
+              'Free API temporarily unavailable due to database recovery',
+            );
             return;
           }
         });
@@ -90,7 +93,7 @@ export class FreeWarehouseService {
 
     // Filter warehouses by requested IDs
     return this.cachedWarehouses.filter((warehouse) =>
-      warehouseIds.includes(warehouse.warehouseID)
+      warehouseIds.includes(warehouse.warehouseID),
     );
   }
 

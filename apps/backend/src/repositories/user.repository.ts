@@ -44,7 +44,10 @@ export class UserRepository {
     });
   }
 
-  async updateSelectedAccount(userId: number, accountId: string | null): Promise<User> {
+  async updateSelectedAccount(
+    userId: number,
+    accountId: string | null,
+  ): Promise<User> {
     return this.prismaClient.user.update({
       where: { id: userId },
       data: { selectedAccountId: accountId },

@@ -22,7 +22,7 @@ export class ChannelSubscriptionService {
     try {
       const chatMember = await TBOT.getChatMember(
         `@${this.CHANNEL_USERNAME}`,
-        userId
+        userId,
       );
       const allowedStatuses = ['member', 'administrator', 'creator'];
       return allowedStatuses.includes(chatMember.status);
@@ -39,7 +39,7 @@ export class ChannelSubscriptionService {
    */
   async sendSubscriptionRequest(
     chatId: number | string,
-    isNotNewUser = false
+    isNotNewUser = false,
   ): Promise<void> {
     if (!TBOT) {
       logger.warn('TBOT not initialized, cannot send subscription request');
@@ -69,7 +69,7 @@ export class ChannelSubscriptionService {
               ],
             ],
           },
-        }
+        },
       );
     } catch (error) {
       logger.error('Error sending subscription request:', error);

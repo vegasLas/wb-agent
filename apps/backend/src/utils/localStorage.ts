@@ -63,7 +63,7 @@ export function decodeLocalStorage(encodedStorage: string): LocalStorageData {
  */
 export async function saveLocalStorageToAccount(
   storage: LocalStorageData,
-  accountId: string
+  accountId: string,
 ): Promise<void> {
   const encodedStorage = encodeLocalStorage(storage);
 
@@ -82,7 +82,7 @@ export async function saveLocalStorageToAccount(
  * @returns LocalStorage data object or empty object
  */
 export async function getLocalStorageFromAccount(
-  accountId: string
+  accountId: string,
 ): Promise<LocalStorageData> {
   const account = await prisma.account.findUnique({
     where: { id: accountId },
@@ -102,7 +102,7 @@ export async function getLocalStorageFromAccount(
  */
 export async function mergeLocalStorageToAccount(
   newStorage: LocalStorageData,
-  accountId: string
+  accountId: string,
 ): Promise<void> {
   const relevantStorage = extractRelevantStorage(newStorage);
 

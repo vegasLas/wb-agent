@@ -1,7 +1,7 @@
 /**
  * Autobooking Monitoring - CUSTOM_DATES_SINGLE Mode Tests
  * Migrated from: tests/autobookingMonitoring.customDatesSingle.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths to use new project structure
@@ -52,22 +52,28 @@ jest.mock('../../../config/database', () => ({
 }));
 
 // Mock autobooking executor service - use behavioral mock
-jest.mock('../../../services/monitoring/autobooking/autobooking-executor.service', () => ({
-  autobookingExecutorService: {
-    createBookingTask: jest.fn(),
-    addSuccessfulBooking: jest.fn(),
-    logSuccessfulBooking: jest.fn(),
-    handleBookingProcessingError: jest.fn(),
-  },
-}));
+jest.mock(
+  '../../../services/monitoring/autobooking/autobooking-executor.service',
+  () => ({
+    autobookingExecutorService: {
+      createBookingTask: jest.fn(),
+      addSuccessfulBooking: jest.fn(),
+      logSuccessfulBooking: jest.fn(),
+      handleBookingProcessingError: jest.fn(),
+    },
+  }),
+);
 
 // Mock autobooking notification service
-jest.mock('../../../services/monitoring/autobooking/autobooking-notification.service', () => ({
-  autobookingNotificationService: {
-    sendSuccessNotification: jest.fn(),
-    updateAutobookingStatus: jest.fn(),
-  },
-}));
+jest.mock(
+  '../../../services/monitoring/autobooking/autobooking-notification.service',
+  () => ({
+    autobookingNotificationService: {
+      sendSuccessNotification: jest.fn(),
+      updateAutobookingStatus: jest.fn(),
+    },
+  }),
+);
 
 // Mock logger
 jest.mock('../../../utils/logger', () => ({
@@ -85,25 +91,35 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
   let mockPrisma: jest.Mocked<typeof prisma>;
   let mockSupplyService: jest.Mocked<typeof supplyService>;
   let mockAutobookingExecutor: jest.Mocked<typeof autobookingExecutorService>;
-  let mockNotificationService: jest.Mocked<typeof autobookingNotificationService>;
+  let mockNotificationService: jest.Mocked<
+    typeof autobookingNotificationService
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();
     service = new AutobookingMonitoringService();
-    mockBookingErrorService = bookingErrorService as jest.Mocked<typeof bookingErrorService>;
+    mockBookingErrorService = bookingErrorService as jest.Mocked<
+      typeof bookingErrorService
+    >;
     mockPrisma = prisma as jest.Mocked<typeof prisma>;
     mockSupplyService = supplyService as jest.Mocked<typeof supplyService>;
-    mockAutobookingExecutor = autobookingExecutorService as jest.Mocked<typeof autobookingExecutorService>;
-    mockNotificationService = autobookingNotificationService as jest.Mocked<typeof autobookingNotificationService>;
+    mockAutobookingExecutor = autobookingExecutorService as jest.Mocked<
+      typeof autobookingExecutorService
+    >;
+    mockNotificationService = autobookingNotificationService as jest.Mocked<
+      typeof autobookingNotificationService
+    >;
 
     // Mock account lookup
-    (mockPrisma.account.findUnique as jest.Mock).mockImplementation((args: { where: { id: string } }) => {
-      return Promise.resolve({
-        id: args?.where?.id || 'account-123',
-        userId: 1,
-        wbCookies: 'test-cookies',
-      });
-    });
+    (mockPrisma.account.findUnique as jest.Mock).mockImplementation(
+      (args: { where: { id: string } }) => {
+        return Promise.resolve({
+          id: args?.where?.id || 'account-123',
+          userId: 1,
+          wbCookies: 'test-cookies',
+        });
+      },
+    );
 
     // Mock autobooking update for status updates
     (mockPrisma.autobooking.update as jest.Mock).mockResolvedValue({});
@@ -116,12 +132,22 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
     (mockPrisma.user.findFirst as jest.Mock).mockResolvedValue(null);
 
     // Mock notification service methods
-    jest.spyOn(autobookingNotificationService, 'updateAutobookingStatus').mockImplementation(async () => { /* intentionally empty */ });
-    jest.spyOn(autobookingNotificationService, 'sendSuccessNotification').mockImplementation(async () => { /* intentionally empty */ });
+    jest
+      .spyOn(autobookingNotificationService, 'updateAutobookingStatus')
+      .mockImplementation(async () => {
+        /* intentionally empty */
+      });
+    jest
+      .spyOn(autobookingNotificationService, 'sendSuccessNotification')
+      .mockImplementation(async () => {
+        /* intentionally empty */
+      });
 
     // Mock bookingErrorService
     mockBookingErrorService.isCriticalBookingError.mockReturnValue(false);
-    mockBookingErrorService.handleCriticalBookingError.mockResolvedValue(undefined);
+    mockBookingErrorService.handleCriticalBookingError.mockResolvedValue(
+      undefined,
+    );
 
     // Mock supply service
     mockSupplyService.createSupply.mockResolvedValue({
@@ -131,49 +157,48 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
 
     // Setup behavioral mock for createBookingTask
     // This simulates the orchestration flow including supply creation and notifications
-    mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-      const { booking, account, user, effectiveDate } = params;
+    mockAutobookingExecutor.createBookingTask.mockImplementation(
+      async (params) => {
+        const { booking, account, user, effectiveDate } = params;
 
-      // Simulate supply creation (this is what the real service does)
-      const result = await supplyService.createSupply({
-        accountId: account.id,
-        supplierId: booking.supplierId,
-        userId: user.userId,
-        proxy: user.proxy,
-        latency: 100,
-        deliveryDate: effectiveDate.toISOString(),
-        rpc_order: 12345,
-        params: {
-          boxTypeID: 2,
-          isBoxOnPallet: false,
-          draftID: booking.draftId,
-          warehouseId: booking.warehouseId,
-          transitWarehouseId: booking.transitWarehouseId || null,
-        },
-        userAgent: user.userAgent,
-      });
+        // Simulate supply creation (this is what the real service does)
+        const result = await supplyService.createSupply({
+          accountId: account.id,
+          supplierId: booking.supplierId,
+          userId: user.userId,
+          proxy: user.proxy,
+          latency: 100,
+          deliveryDate: effectiveDate.toISOString(),
+          rpc_order: 12345,
+          params: {
+            boxTypeID: 2,
+            isBoxOnPallet: false,
+            draftID: booking.draftId,
+            warehouseId: booking.warehouseId,
+            transitWarehouseId: booking.transitWarehouseId || null,
+          },
+          userAgent: user.userAgent,
+        });
 
-      // Simulate successful booking tracking
-      autobookingExecutorService.addSuccessfulBooking(
-        expect.any(Array),
-        {
+        // Simulate successful booking tracking
+        autobookingExecutorService.addSuccessfulBooking(expect.any(Array), {
           user,
           warehouseName: 'Test Warehouse',
           effectiveDate,
           coefficient: 100,
           booking,
-        },
-      );
+        });
 
-      // Simulate status update notification (matches deprecated test expectations)
-      await autobookingNotificationService.updateAutobookingStatus(
-        booking.id,
-        effectiveDate,
-        booking.dateType,
-      );
+        // Simulate status update notification (matches deprecated test expectations)
+        await autobookingNotificationService.updateAutobookingStatus(
+          booking.id,
+          effectiveDate,
+          booking.dateType,
+        );
 
-      return result;
-    });
+        return result;
+      },
+    );
 
     // Clear shared service states
     sharedBanService.clearAllBlacklistedUsers();
@@ -230,8 +255,12 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
 
       // Assert: Should execute booking only once (for one date)
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(1);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
-      expect(mockNotificationService.updateAutobookingStatus).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(
+        mockNotificationService.updateAutobookingStatus,
+      ).toHaveBeenCalledTimes(1);
     });
 
     test('should book the first available date in CUSTOM_DATES_SINGLE mode', async () => {
@@ -270,8 +299,12 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
 
       // Assert: Should execute booking once
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(1);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
-      expect(mockNotificationService.updateAutobookingStatus).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(
+        mockNotificationService.updateAutobookingStatus,
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -327,11 +360,15 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
       // Assert: CUSTOM_DATES should book all available dates, CUSTOM_DATES_SINGLE should book one
       // Note: Due to user tracking, once a user is marked as running, subsequent bookings are skipped
       // User 1 (CUSTOM_DATES): 1 booking (marked running after first)
-      // User 2 (CUSTOM_DATES_SINGLE): 1 booking 
+      // User 2 (CUSTOM_DATES_SINGLE): 1 booking
       // Total: 2 bookings
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(2);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(2);
-      expect(mockNotificationService.updateAutobookingStatus).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
+      expect(
+        mockNotificationService.updateAutobookingStatus,
+      ).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -369,13 +406,15 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
 
       // Mock the behavioral mock to throw on first call
       // This simulates a failure in createBookingTask that prevents fallback
-      mockAutobookingExecutor.createBookingTask.mockImplementation(async (params) => {
-        const { booking } = params;
-        // Simulate failure on first booking
-        if (booking.id === 'booking-101') {
-          throw new Error('Date unavailable');
-        }
-      });
+      mockAutobookingExecutor.createBookingTask.mockImplementation(
+        async (params) => {
+          const { booking } = params;
+          // Simulate failure on first booking
+          if (booking.id === 'booking-101') {
+            throw new Error('Date unavailable');
+          }
+        },
+      );
 
       // Act - should not throw
       await service.processAvailabilities(monitoringUsers, availabilities);
@@ -383,7 +422,9 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
       // Assert: Should have attempted booking once (failure stops processing for this user)
       // Note: The behavioral mock throws, so createSupply is never called
       // The error handling in the service catches the error gracefully
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
     });
 
     test('should stop after booking one date in CUSTOM_DATES_SINGLE mode', async () => {
@@ -424,8 +465,12 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
 
       // Assert: Should only execute booking once (for one date only)
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(1);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(1);
-      expect(mockNotificationService.updateAutobookingStatus).toHaveBeenCalledTimes(1);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(
+        mockNotificationService.updateAutobookingStatus,
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -476,8 +521,12 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
 
       // Assert: Each user should be processed once
       expect(mockSupplyService.createSupply).toHaveBeenCalledTimes(2);
-      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(2);
-      expect(mockNotificationService.updateAutobookingStatus).toHaveBeenCalledTimes(2);
+      expect(mockAutobookingExecutor.createBookingTask).toHaveBeenCalledTimes(
+        2,
+      );
+      expect(
+        mockNotificationService.updateAutobookingStatus,
+      ).toHaveBeenCalledTimes(2);
     });
   });
 });

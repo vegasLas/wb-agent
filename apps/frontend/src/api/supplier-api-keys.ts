@@ -40,7 +40,10 @@ export const supplierApiKeysAPI = {
    * Create or update API key
    */
   async createOrUpdateApiKey(apiKey: string): Promise<CreateApiKeyResponse> {
-    const response = await apiClient.post<CreateApiKeyResponse>('/supplier-api-keys', { apiKey });
+    const response = await apiClient.post<CreateApiKeyResponse>(
+      '/supplier-api-keys',
+      { apiKey },
+    );
     return response.data;
   },
 
@@ -49,7 +52,10 @@ export const supplierApiKeysAPI = {
    * Delete API key
    */
   async deleteApiKey(): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete<{ success: boolean; message: string }>('/supplier-api-keys');
+    const response = await apiClient.delete<{
+      success: boolean;
+      message: string;
+    }>('/supplier-api-keys');
     return response.data;
   },
 };

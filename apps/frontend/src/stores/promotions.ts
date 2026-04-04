@@ -31,7 +31,11 @@ export const usePromotionsStore = defineStore('promotions', () => {
   const excelMeta = computed(() => null); // Meta removed, keeping for backward compatibility
 
   // Actions
-  async function fetchTimeline(startDate?: string, endDate?: string, filter = 'PARTICIPATING') {
+  async function fetchTimeline(
+    startDate?: string,
+    endDate?: string,
+    filter = 'PARTICIPATING',
+  ) {
     if (!userStore.user?.selectedAccountId) {
       error.value = 'Необходимо выбрать аккаунт';
       return;
@@ -49,10 +53,17 @@ export const usePromotionsStore = defineStore('promotions', () => {
     error.value = null;
 
     try {
-      const response = await promotionsAPI.fetchTimeline({ startDate, endDate, filter });
+      const response = await promotionsAPI.fetchTimeline({
+        startDate,
+        endDate,
+        filter,
+      });
       promotions.value = response.data?.promotions || [];
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch promotions timeline';
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Failed to fetch promotions timeline';
       error.value = errorMsg;
       promotions.value = [];
     } finally {
@@ -84,7 +95,8 @@ export const usePromotionsStore = defineStore('promotions', () => {
       const found = promotions.value.find((p) => p.promoID === promoID) || null;
       selectedPromotion.value = found;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch promotion detail';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch promotion detail';
       detailError.value = errorMsg;
       promotionDetail.value = null;
     } finally {
@@ -134,7 +146,8 @@ export const usePromotionsStore = defineStore('promotions', () => {
       reportPending.value = false;
       estimatedWaitTime.value = null;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch promotion Excel';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch promotion Excel';
       excelError.value = errorMsg;
       _excelItems.value = [];
       reportPending.value = false;

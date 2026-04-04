@@ -1,28 +1,10 @@
 <template>
   <div class="min-h-screen bg-white dark:bg-[#171819]">
-    <!-- Header with Filter Tabs -->
-    <div class="sticky top-0 z-20 bg-white dark:bg-[#171819] border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+    <!-- Header with Date Navigation -->
+    <div
+      class="sticky top-0 z-30 bg-white dark:bg-[#171819] border-b border-gray-200 dark:border-gray-700 px-4 py-3"
+    >
       <div class="flex items-center justify-between">
-        <!-- Filter Tabs -->
-        <div class="flex items-center gap-2">
-          <Button
-            v-for="tab in p.filterTabs"
-            :key="tab.value"
-            :severity="p.currentFilter.value === tab.value ? 'primary' : 'secondary'"
-            size="small"
-            class="text-xs"
-            @click="p.setFilter(tab.value)"
-          >
-            {{ tab.label }}
-            <span
-              v-if="p.participationCounts.value[tab.value] > 0"
-              class="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20"
-            >
-              {{ p.participationCounts.value[tab.value] }}
-            </span>
-          </Button>
-        </div>
-
         <!-- Date Navigation -->
         <div class="hidden sm:flex items-center gap-2">
           <Button
@@ -32,7 +14,9 @@
             size="small"
             @click="p.navigateMonth(-1)"
           />
-          <span class="text-sm text-gray-700 dark:text-gray-300 min-w-[140px] text-center">
+          <span
+            class="text-sm text-gray-700 dark:text-gray-300 min-w-[140px] text-center"
+          >
             {{ p.currentMonthLabel.value }}
           </span>
           <Button
@@ -50,7 +34,9 @@
     </div>
 
     <!-- Mobile Date Navigation -->
-    <div class="sm:hidden flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+    <div
+      class="sm:hidden flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700"
+    >
       <Button
         icon="pi pi-chevron-left"
         severity="secondary"
@@ -78,26 +64,19 @@
         class="flex flex-col items-center justify-center py-20"
       >
         <i class="pi pi-refresh animate-spin text-5xl text-orange-500 mb-4" />
-        <p class="text-gray-600 dark:text-gray-400">
-          Загрузка акций...
-        </p>
+        <p class="text-gray-600 dark:text-gray-400">Загрузка акций...</p>
       </div>
 
       <!-- Error State -->
-      <div
-        v-else-if="p.error.value"
-        class="text-center py-16 px-4"
-      >
-        <div class="p-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 max-w-md mx-auto">
+      <div v-else-if="p.error.value" class="text-center py-16 px-4">
+        <div
+          class="p-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 max-w-md mx-auto"
+        >
           <i class="pi pi-exclamation-circle text-red-500 text-4xl mb-3" />
           <p class="text-red-600 dark:text-red-400">
             {{ p.error.value }}
           </p>
-          <Button
-            class="mt-4"
-            severity="primary"
-            @click="p.refreshData"
-          >
+          <Button class="mt-4" severity="primary" @click="p.refreshData">
             <i class="pi pi-refresh mr-2" />
             Повторить
           </Button>
@@ -105,133 +84,225 @@
       </div>
 
       <!-- Promotions Timeline -->
-      <div v-else>
-        <!-- Month Headers -->
-        <div class="flex gap-8 mb-6">
-          <div
-            v-for="month in p.visibleMonths.value"
-            :key="month.key"
-            class="flex-1 text-center"
-          >
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 capitalize">
-              {{ month.label }}
-            </h2>
-          </div>
-        </div>
-
-        <!-- Calendar Grid -->
-        <div class="relative">
-          <!-- Days Header -->
-          <div class="flex mb-2">
-            <div
-              v-for="day in p.weekDays"
-              :key="day"
-              class="flex-1 text-center text-xs text-gray-500 dark:text-gray-400 py-1"
-            >
-              {{ day }}
+      <div v-else class="promotions-timeline -mx-4">
+        <!-- Horizontal Scrollable Container -->
+        <div class="overflow-x-auto pb-4">
+          <div class="min-w-[1200px] px-4">
+            <!-- Two Month Headers -->
+            <div class="flex mb-2">
+              <div class="flex-1 text-center">
+                <h2
+                  class="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize"
+                >
+                  {{ timeline.visibleMonthsInfo.value[0]?.label }}
+                </h2>
+              </div>
+              <div class="flex-1 text-center">
+                <h2
+                  class="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize"
+                >
+                  {{ timeline.visibleMonthsInfo.value[1]?.label }}
+                </h2>
+              </div>
             </div>
-            <div
-              v-for="day in p.weekDays"
-              :key="`next-${day}`"
-              class="flex-1 text-center text-xs text-gray-500 dark:text-gray-400 py-1"
-            >
-              {{ day }}
-            </div>
-          </div>
 
-          <!-- Calendar Body with Promotions -->
-          <div class="flex gap-4">
-            <!-- Current Month Column -->
-            <div class="flex-1">
-              <div class="grid grid-cols-7 gap-1">
-                <!-- Empty cells for offset -->
+            <!-- Dates Row -->
+            <div
+              class="flex mb-1 border-b border-gray-200 dark:border-gray-700"
+            >
+              <!-- Current Month Dates -->
+              <div
+                v-for="day in timeline.currentMonthDaysList.value"
+                :key="`date-c-${day}`"
+                class="w-10 flex-shrink-0 text-center py-2 border-r border-gray-100 dark:border-gray-800"
+                :class="{
+                  'bg-orange-50/50 dark:bg-orange-900/10': timeline.isToday(
+                    timeline.currentMonthInfo.value.date,
+                    day,
+                  ),
+                }"
+              >
+                <span
+                  class="text-xs"
+                  :class="
+                    timeline.isToday(timeline.currentMonthInfo.value.date, day)
+                      ? 'text-orange-600 dark:text-orange-400 font-semibold'
+                      : 'text-gray-600 dark:text-gray-400'
+                  "
+                >
+                  {{ day }}
+                </span>
+              </div>
+              <!-- Next Month Dates -->
+              <div
+                v-for="day in timeline.nextMonthDaysList.value"
+                :key="`date-n-${day}`"
+                class="w-10 flex-shrink-0 text-center py-2 border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+                :class="{
+                  'bg-orange-50/50 dark:bg-orange-900/10': timeline.isToday(
+                    timeline.nextMonthInfo.value.date,
+                    day,
+                  ),
+                }"
+              >
+                <span
+                  class="text-xs"
+                  :class="
+                    timeline.isToday(timeline.nextMonthInfo.value.date, day)
+                      ? 'text-orange-600 dark:text-orange-400 font-semibold'
+                      : 'text-gray-600 dark:text-gray-400'
+                  "
+                >
+                  {{ day }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Timeline Grid with Promotions -->
+            <div class="relative">
+              <!-- Grid Columns Background -->
+              <div class="flex absolute inset-0 pointer-events-none">
+                <!-- Current Month Columns -->
                 <div
-                  v-for="n in p.currentMonthOffset.value"
-                  :key="`offset-${n}`"
-                  class="h-24"
-                />
-                
-                <!-- Day cells -->
-                <div
-                  v-for="day in p.currentMonthDays.value"
-                  :key="`day-${day}`"
-                  class="h-24 border border-gray-100 dark:border-gray-800 rounded-lg p-1 relative"
-                  :class="{ 
-                    'bg-orange-50/30 dark:bg-orange-900/10': p.isToday(p.currentDate.value, day),
-                    'border-orange-300 dark:border-orange-700': p.isToday(p.currentDate.value, day)
+                  v-for="day in timeline.currentMonthDaysList.value"
+                  :key="`col-c-${day}`"
+                  class="w-10 flex-shrink-0 border-r border-gray-100 dark:border-gray-800"
+                  :class="{
+                    'bg-orange-50/20 dark:bg-orange-900/5': timeline.isToday(
+                      timeline.currentMonthInfo.value.date,
+                      day,
+                    ),
                   }"
+                />
+                <!-- Next Month Columns -->
+                <div
+                  v-for="day in timeline.nextMonthDaysList.value"
+                  :key="`col-n-${day}`"
+                  class="w-10 flex-shrink-0 border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+                  :class="{
+                    'bg-orange-50/20 dark:bg-orange-900/5': timeline.isToday(
+                      timeline.nextMonthInfo.value.date,
+                      day,
+                    ),
+                  }"
+                />
+              </div>
+
+              <!-- Promotions Rows -->
+              <div class="relative py-4 space-y-3 min-h-[300px]">
+                <div
+                  v-for="(row, rowIndex) in promotionRows"
+                  :key="`row-${rowIndex}`"
+                  class="relative h-[90px]"
                 >
-                  <span
-                    class="text-xs font-medium"
-                    :class="p.isToday(p.currentDate.value, day) ? 'text-orange-600 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'"
+                  <!-- Promotion Cards in this row -->
+                  <div
+                    v-for="promotion in row"
+                    :key="promotion.promoID"
+                    class="absolute h-[85px] promotion-card-wrapper"
+                    :style="timeline.getPromotionStyle(promotion)"
                   >
-                    {{ day }}
-                  </span>
+                    <div
+                      class="h-full mx-1 rounded-lg border border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50/90 to-white dark:from-orange-900/30 dark:to-gray-800/50 px-3 py-2 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 hover:z-10 relative overflow-hidden flex items-center gap-3"
+                      @click="p.handleShowDetails(promotion.promoID)"
+                    >
+                      <!-- Content Section -->
+                      <div class="flex-1 min-w-0">
+                        <!-- Title -->
+                        <div
+                          class="text-xs font-medium text-gray-900 dark:text-gray-100 truncate mb-1 pr-10"
+                        >
+                          <span class="text-orange-600 dark:text-orange-400">
+                            {{ getPromotionDisplay(promotion).typeLabel.value }}
+                          </span>
+                          {{ getPromotionDisplay(promotion).name.value }}
+                        </div>
+
+                        <!-- Status & Stats Row -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <Tag
+                            :value="
+                              getPromotionDisplay(promotion)
+                                .participationStatusLabel.value
+                            "
+                            :severity="
+                              getPromotionDisplay(promotion)
+                                .participationStatusSeverity.value
+                            "
+                            class="text-xs"
+                          />
+
+                          <span
+                            class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5"
+                          >
+                            <i class="pi pi-arrow-up-right text-[10px]" />
+                            {{
+                              getPromotionDisplay(promotion).participationText
+                                .value
+                            }}
+                          </span>
+
+                          <span
+                            v-if="getPromotionDisplay(promotion).hasBoost.value"
+                            class="text-xs text-orange-600 dark:text-orange-400 font-medium"
+                          >
+                            {{ getPromotionDisplay(promotion).boostText.value }}
+                          </span>
+                        </div>
+
+                        <!-- Date Range & Product Count -->
+                        <div
+                          class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2"
+                        >
+                          <span class="truncate">{{
+                            getShortDateRange(promotion)
+                          }}</span>
+                          <span class="truncate"
+                            >·
+                            {{
+                              getPromotionDisplay(promotion).productCountText
+                                .value
+                            }}</span
+                          >
+                        </div>
+                      </div>
+
+                      <!-- View Button (Right Side) -->
+                      <Button
+                        icon="pi pi-eye"
+                        size="small"
+                        severity="primary"
+                        class="flex-shrink-0 w-8 h-8"
+                        :loading="
+                          p.excelLoading.value &&
+                          p.selectedPromotionId.value === promotion.promoID
+                        "
+                        @click.stop="
+                          p.handleShowParticipants(promotion.promoID)
+                        "
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Promotions for current month -->
-              <div class="mt-4 space-y-3">
-                <PromotionCard
-                  v-for="promotion in p.currentMonthPromotions.value"
-                  :key="promotion.promoID"
-                  :promotion="promotion"
-                  :detail-loading="p.detailLoading.value && p.selectedPromotionId.value === promotion.promoID"
-                  :excel-loading="p.excelLoading.value && p.selectedPromotionId.value === promotion.promoID"
-                  @show-details="p.handleShowDetails"
-                  @show-participants="p.handleShowParticipants"
-                />
-              </div>
-            </div>
-
-            <!-- Next Month Column -->
-            <div class="flex-1 hidden md:block">
-              <div class="grid grid-cols-7 gap-1">
-                <!-- Empty cells for offset -->
+                <!-- Empty state for no promotions -->
                 <div
-                  v-for="n in p.nextMonthOffset.value"
-                  :key="`next-offset-${n}`"
-                  class="h-24"
-                />
-                
-                <!-- Day cells -->
-                <div
-                  v-for="day in p.nextMonthDays.value"
-                  :key="`next-day-${day}`"
-                  class="h-24 border border-gray-100 dark:border-gray-800 rounded-lg p-1"
+                  v-if="allPromotions.length === 0"
+                  class="flex items-center justify-center h-[200px]"
                 >
-                  <span class="text-xs text-gray-700 dark:text-gray-300">{{ day }}</span>
+                  <div class="text-center">
+                    <i
+                      :class="
+                        p.emptyState.value.icon +
+                        ' text-5xl text-gray-300 dark:text-gray-600 mb-3'
+                      "
+                    />
+                    <p class="text-gray-500 dark:text-gray-400">
+                      {{ p.emptyState.value.message }}
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              <!-- Promotions for next month -->
-              <div class="mt-4 space-y-3">
-                <PromotionCard
-                  v-for="promotion in p.nextMonthPromotions.value"
-                  :key="promotion.promoID"
-                  :promotion="promotion"
-                  :detail-loading="p.detailLoading.value && p.selectedPromotionId.value === promotion.promoID"
-                  :excel-loading="p.excelLoading.value && p.selectedPromotionId.value === promotion.promoID"
-                  @show-details="p.handleShowDetails"
-                  @show-participants="p.handleShowParticipants"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- No Promotions State -->
-          <div
-            v-if="p.groupedPromotions.value.currentMonth.length === 0 && p.groupedPromotions.value.nextMonth.length === 0"
-            class="text-center py-20"
-          >
-            <div class="p-8 rounded-lg bg-gray-50 dark:bg-gray-800/50 max-w-md mx-auto">
-              <i :class="p.emptyState.value.icon + ' text-5xl text-gray-400 mb-4'" />
-              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                Нет акций
-              </h3>
-              <p class="text-gray-500 dark:text-gray-400">
-                {{ p.emptyState.value.message }}
-              </p>
             </div>
           </div>
         </div>
@@ -261,12 +332,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import Button from 'primevue/button';
-import { usePromotionsUnified, useViewReady } from '../../composables';
-import PromotionCard from './PromotionCard.vue';
+import Tag from 'primevue/tag';
+import {
+  usePromotionsUnified,
+  useViewReady,
+  usePromotionItem,
+  usePromotionsTimeline,
+} from '../../composables';
 import PromotionDetailDialog from './PromotionDetailDialog.vue';
 import PromotionParticipantsDialog from './PromotionParticipantsDialog.vue';
+import type { PromotionItem } from '../../types';
 
 const { viewReady } = useViewReady();
 
@@ -275,6 +352,41 @@ const p = usePromotionsUnified({
   immediate: false,
 });
 
+// Use the timeline composable
+const timeline = usePromotionsTimeline(p.currentDate);
+
+// All promotions from API
+const allPromotions = computed(() => [...p.promotions.value]);
+
+// Group promotions into rows using the composable
+const promotionRows = computed(() =>
+  timeline.groupPromotionsIntoRows(allPromotions.value),
+);
+
+// Get promotion display helpers
+function getPromotionDisplay(promotion: PromotionItem) {
+  return usePromotionItem(() => promotion);
+}
+
+// Get short date range
+function getShortDateRange(promotion: PromotionItem): string {
+  const display = getPromotionDisplay(promotion);
+  const start = display.startDate.value;
+  const end = display.endDate.value;
+  if (!start || !end) return '';
+
+  const formatShort = (date: Date) => {
+    return date
+      .toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'short',
+      })
+      .replace('.', '');
+  };
+
+  return `${formatShort(start)} - ${formatShort(end)}`;
+}
+
 onMounted(async () => {
   await p.refreshData();
   viewReady();
@@ -282,10 +394,42 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.promotion-card-wrapper {
+  transition: all 0.2s ease;
+}
+
+.promotion-card-wrapper:hover {
+  z-index: 20;
+}
+
+/* Ensure text truncates properly */
+.truncate {
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Smooth horizontal scroll */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 8px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.8);
 }
 </style>

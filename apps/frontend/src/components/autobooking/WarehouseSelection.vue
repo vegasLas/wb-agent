@@ -26,13 +26,12 @@
         (value) => $emit('update:useTransit', value as boolean)
       "
     />
-    <label class="text-sm text-gray-700 dark:text-gray-300">Использовать транзитный склад</label>
+    <label class="text-sm text-gray-700 dark:text-gray-300"
+      >Использовать транзитный склад</label
+    >
   </div>
 
-  <div
-    v-if="useTransit"
-    class="space-y-2"
-  >
+  <div v-if="useTransit" class="space-y-2">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
       Транзитный склад <span class="text-red-500 dark:text-red-400">*</span>
     </label>
@@ -57,10 +56,7 @@
   </div>
 
   <!-- Warehouse Balances Button -->
-  <div
-    v-if="modelValue"
-    class="flex justify-end"
-  >
+  <div v-if="modelValue" class="flex justify-end">
     <Button
       severity="info"
       variant="outlined"
@@ -150,21 +146,21 @@ function onWarehouseChange(value: string | number) {
   // When typing in editable Select, value is the typed string
   // We should only emit if it's a valid number from the options
   const numValue = Number(value);
-  
+
   // Check if value is a valid number and exists in warehouse options
   if (isNaN(numValue) || numValue === 0) {
     // Typed text is not a valid warehouse ID - ignore it
     // The Select component will show the typed text but we won't update the model
     return;
   }
-  
+
   // Verify the value exists in options (extra safety)
   const validOption = props.warehouseOptions.find((w) => w.value === numValue);
   if (!validOption) {
     // Value not found in options - ignore it
     return;
   }
-  
+
   console.log(numValue);
   emit('update:modelValue', numValue);
   emit('warehouse-change', numValue);

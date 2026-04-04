@@ -94,11 +94,17 @@ export const paymentsAPI = {
    * POST /api/v1/payments/create
    * Create a new payment
    */
-  async createPayment(tariffId: string, email: string): Promise<CreatePaymentResponse> {
-    const response = await apiClient.post<CreatePaymentResponse>('/payments/create', {
-      tariffId,
-      email,
-    });
+  async createPayment(
+    tariffId: string,
+    email: string,
+  ): Promise<CreatePaymentResponse> {
+    const response = await apiClient.post<CreatePaymentResponse>(
+      '/payments/create',
+      {
+        tariffId,
+        email,
+      },
+    );
     return response.data;
   },
 
@@ -116,7 +122,7 @@ export const paymentsAPI = {
    * Check payment status (returns HTML page)
    */
   async checkPaymentStatus(key: string): Promise<string> {
-    const response = await apiClient.get('/payments/check', { 
+    const response = await apiClient.get('/payments/check', {
       params: { key },
       responseType: 'text',
     });

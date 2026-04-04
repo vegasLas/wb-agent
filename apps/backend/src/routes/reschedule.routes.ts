@@ -30,7 +30,9 @@ function parseDateField(value: string | Date | null | undefined): Date | null {
     if (isNaN(value.getTime())) {
       return null;
     }
-    return new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+    return new Date(
+      Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()),
+    );
   }
 
   if (typeof value === 'string') {
@@ -38,7 +40,9 @@ function parseDateField(value: string | Date | null | undefined): Date | null {
     if (isNaN(parsed.getTime())) {
       return null;
     }
-    return new Date(Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()));
+    return new Date(
+      Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()),
+    );
   }
 
   return null;
@@ -60,23 +64,30 @@ router.get(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const page = parseInt(req.query.page as string) || 1;
-      const result = await rescheduleService.getUserReschedules(req.user!.id, page);
+      const result = await rescheduleService.getUserReschedules(
+        req.user!.id,
+        page,
+      );
       res.json(result);
     } catch (error) {
       return next(error);
     }
-  }
+  },
 );
 
 // POST /api/v1/reschedule - Create new reschedule
 router.post(
   '/',
   authenticate,
-  body('warehouseId').isInt({ min: 1 }).withMessage('Valid warehouse ID is required'),
+  body('warehouseId')
+    .isInt({ min: 1 })
+    .withMessage('Valid warehouse ID is required'),
   body('dateType')
     .isIn(['WEEK', 'MONTH', 'CUSTOM_PERIOD', 'CUSTOM_DATES_SINGLE'])
     .withMessage('Invalid date type'),
@@ -89,7 +100,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const {
@@ -106,7 +119,7 @@ router.post(
 
       // Use user's selected account from the user object (matching deprecated behavior)
       const selectedAccountId = req.user!.selectedAccountId;
-      
+
       if (!selectedAccountId) {
         throw new ApiError(400, 'No account selected');
       }
@@ -124,7 +137,7 @@ router.post(
           supplyType,
           supplyId,
           maxCoefficient: maxCoefficient || 0,
-        }
+        },
       );
 
       res.json(reschedule);
@@ -138,7 +151,7 @@ router.post(
       }
       return next(error);
     }
-  }
+  },
 );
 
 // PUT /api/v1/reschedule - Update reschedule
@@ -163,7 +176,9 @@ router.put(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const {
@@ -183,10 +198,12 @@ router.put(
         id,
         warehouseId,
         dateType,
-        startDate: startDate !== undefined ? parseDateField(startDate) : undefined,
+        startDate:
+          startDate !== undefined ? parseDateField(startDate) : undefined,
         endDate: endDate !== undefined ? parseDateField(endDate) : undefined,
         customDates: customDates ? parseDateArray(customDates) : undefined,
-        maxCoefficient: maxCoefficient !== undefined ? Number(maxCoefficient) : undefined,
+        maxCoefficient:
+          maxCoefficient !== undefined ? Number(maxCoefficient) : undefined,
         supplyType,
         supplyId,
         status,
@@ -205,7 +222,7 @@ router.put(
     } finally {
       userQueue.delete(userId);
     }
-  }
+  },
 );
 
 // DELETE /api/v1/reschedule - Delete reschedule
@@ -230,7 +247,9 @@ router.delete(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { id } = req.body;
@@ -254,7 +273,7 @@ router.delete(
     } finally {
       userQueue.delete(userId);
     }
-  }
+  },
 );
 
 export default router;

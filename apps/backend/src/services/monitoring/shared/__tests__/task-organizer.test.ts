@@ -1,7 +1,7 @@
 /**
  * Task Organizer Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/taskOrganizerService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
@@ -9,14 +9,20 @@
  * - Same test logic preserved
  */
 
-import { SharedTaskOrganizerService, sharedTaskOrganizerService } from '../task-organizer.service';
+import {
+  SharedTaskOrganizerService,
+  sharedTaskOrganizerService,
+} from '../task-organizer.service';
 import { sharedAvailabilityFilterService } from '../availability-filter.service';
 import {
   createAutobooking,
   createMonitoringUser,
   getFutureDate,
 } from '../../../../__tests__/helpers/autobooking-helpers';
-import type { BookingTask, WarehouseAvailability } from '../interfaces/sharedInterfaces';
+import type {
+  BookingTask,
+  WarehouseAvailability,
+} from '../interfaces/sharedInterfaces';
 
 // Mock logger
 jest.mock('../../../../utils/logger', () => ({
@@ -47,8 +53,14 @@ describe('SharedTaskOrganizerService', () => {
   describe('organizeAutobookingsByWarehouseDate', () => {
     test('should organize autobookings by warehouse-date', () => {
       // Arrange
-      const mockConvertFn = jest.spyOn(sharedAvailabilityFilterService, 'convertToSchedulableItem');
-      const mockFilterFn = jest.spyOn(sharedAvailabilityFilterService, 'filterMatchingAvailabilities');
+      const mockConvertFn = jest.spyOn(
+        sharedAvailabilityFilterService,
+        'convertToSchedulableItem',
+      );
+      const mockFilterFn = jest.spyOn(
+        sharedAvailabilityFilterService,
+        'filterMatchingAvailabilities',
+      );
 
       const futureDate = getFutureDate(7);
       const monitoringUsers = [
@@ -70,7 +82,9 @@ describe('SharedTaskOrganizerService', () => {
           warehouseId: 123,
           warehouseName: 'Test WH',
           boxTypeID: 2,
-          availableDates: [{ date: futureDate.toISOString().split('T')[0], coefficient: 1.5 }],
+          availableDates: [
+            { date: futureDate.toISOString().split('T')[0], coefficient: 1.5 },
+          ],
         },
       ];
 
@@ -81,7 +95,10 @@ describe('SharedTaskOrganizerService', () => {
           matchingDates: [
             {
               effectiveDate: futureDate,
-              availableDate: { date: futureDate.toISOString().split('T')[0], coefficient: 1.5 },
+              availableDate: {
+                date: futureDate.toISOString().split('T')[0],
+                coefficient: 1.5,
+              },
             },
           ],
         },
@@ -90,7 +107,7 @@ describe('SharedTaskOrganizerService', () => {
       // Act
       const result = service.organizeAutobookingsByWarehouseDate(
         monitoringUsers,
-        availabilities
+        availabilities,
       );
 
       // Assert
@@ -100,15 +117,19 @@ describe('SharedTaskOrganizerService', () => {
 
     test('should return empty map when no matching availabilities', () => {
       // Arrange
-      const mockConvertFn = jest.spyOn(sharedAvailabilityFilterService, 'convertToSchedulableItem');
-      const mockFilterFn = jest.spyOn(sharedAvailabilityFilterService, 'filterMatchingAvailabilities');
+      const mockConvertFn = jest.spyOn(
+        sharedAvailabilityFilterService,
+        'convertToSchedulableItem',
+      );
+      const mockFilterFn = jest.spyOn(
+        sharedAvailabilityFilterService,
+        'filterMatchingAvailabilities',
+      );
 
       const monitoringUsers = [
         createMonitoringUser({
           userId: 1,
-          autobookings: [
-            createAutobooking({ id: 'booking-1', userId: 1 }),
-          ],
+          autobookings: [createAutobooking({ id: 'booking-1', userId: 1 })],
         }),
       ];
 
@@ -120,7 +141,7 @@ describe('SharedTaskOrganizerService', () => {
       // Act
       const result = service.organizeAutobookingsByWarehouseDate(
         monitoringUsers,
-        availabilities
+        availabilities,
       );
 
       // Assert
@@ -132,8 +153,14 @@ describe('SharedTaskOrganizerService', () => {
   describe('organizeReschedulesByWarehouseDate', () => {
     test('should organize reschedules by warehouse-date', () => {
       // Arrange
-      const mockConvertFn = jest.spyOn(sharedAvailabilityFilterService, 'convertToSchedulableItem');
-      const mockFilterFn = jest.spyOn(sharedAvailabilityFilterService, 'filterMatchingAvailabilities');
+      const mockConvertFn = jest.spyOn(
+        sharedAvailabilityFilterService,
+        'convertToSchedulableItem',
+      );
+      const mockFilterFn = jest.spyOn(
+        sharedAvailabilityFilterService,
+        'filterMatchingAvailabilities',
+      );
 
       const futureDate = getFutureDate(7);
       const monitoringUsers = [
@@ -163,7 +190,9 @@ describe('SharedTaskOrganizerService', () => {
           warehouseId: 123,
           warehouseName: 'Test WH',
           boxTypeID: 2,
-          availableDates: [{ date: futureDate.toISOString().split('T')[0], coefficient: 1.5 }],
+          availableDates: [
+            { date: futureDate.toISOString().split('T')[0], coefficient: 1.5 },
+          ],
         },
       ];
 
@@ -174,7 +203,10 @@ describe('SharedTaskOrganizerService', () => {
           matchingDates: [
             {
               effectiveDate: futureDate,
-              availableDate: { date: futureDate.toISOString().split('T')[0], coefficient: 1.5 },
+              availableDate: {
+                date: futureDate.toISOString().split('T')[0],
+                coefficient: 1.5,
+              },
             },
           ],
         },
@@ -183,7 +215,7 @@ describe('SharedTaskOrganizerService', () => {
       // Act
       const result = service.organizeReschedulesByWarehouseDate(
         monitoringUsers,
-        availabilities
+        availabilities,
       );
 
       // Assert
@@ -194,8 +226,18 @@ describe('SharedTaskOrganizerService', () => {
   describe('groupTasksByProxy', () => {
     test('should group tasks with different proxies separately', () => {
       // Arrange
-      const proxy1 = { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' };
-      const proxy2 = { ip: '2.2.2.2', port: '8080', username: 'user2', password: 'pass2' };
+      const proxy1 = {
+        ip: '1.1.1.1',
+        port: '8080',
+        username: 'user1',
+        password: 'pass1',
+      };
+      const proxy2 = {
+        ip: '2.2.2.2',
+        port: '8080',
+        username: 'user2',
+        password: 'pass2',
+      };
 
       const user1 = createMonitoringUser({ userId: 1, proxy: proxy1 });
       const user2 = createMonitoringUser({ userId: 2, proxy: proxy2 });
@@ -282,7 +324,12 @@ describe('SharedTaskOrganizerService', () => {
   describe('getProxyString', () => {
     test('should return proxy string representation', () => {
       // Arrange
-      const proxy = { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' };
+      const proxy = {
+        ip: '1.1.1.1',
+        port: '8080',
+        username: 'user1',
+        password: 'pass1',
+      };
       const user = createMonitoringUser({ userId: 1, proxy });
       const task: BookingTask = {
         user,
@@ -353,7 +400,10 @@ describe('SharedTaskOrganizerService', () => {
 
     test('should handle proxy as string', () => {
       // Arrange
-      const user = createMonitoringUser({ userId: 1, proxy: '192.168.1.2:3128' as any });
+      const user = createMonitoringUser({
+        userId: 1,
+        proxy: '192.168.1.2:3128' as any,
+      });
       const task = {
         user,
         booking: createAutobooking({ id: 'booking-1', userId: 1 }),
@@ -376,7 +426,10 @@ describe('SharedTaskOrganizerService', () => {
 
     test('should return "no-proxy" for invalid proxy objects', () => {
       // Arrange
-      const user = createMonitoringUser({ userId: 1, proxy: { invalid: 'object' } as any });
+      const user = createMonitoringUser({
+        userId: 1,
+        proxy: { invalid: 'object' } as any,
+      });
       const task = {
         user,
         booking: createAutobooking({ id: 'booking-1', userId: 1 }),
@@ -485,7 +538,9 @@ describe('SharedTaskOrganizerService', () => {
 
   describe('singleton instance', () => {
     test('should export a singleton instance', () => {
-      expect(sharedTaskOrganizerService).toBeInstanceOf(SharedTaskOrganizerService);
+      expect(sharedTaskOrganizerService).toBeInstanceOf(
+        SharedTaskOrganizerService,
+      );
     });
   });
 });

@@ -8,7 +8,7 @@ import { prisma } from '../config/database';
  */
 export async function checkIfShouldAddBonus(
   userId: number,
-  supplierId: string
+  supplierId: string,
 ): Promise<boolean> {
   // Check if user already has a welcome bonus (one-time per user)
   const existingBonus = await prisma.bonus.findFirst({

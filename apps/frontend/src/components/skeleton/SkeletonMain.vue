@@ -4,37 +4,17 @@
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-2">
         <!-- Navigation Dropdown Skeleton -->
-        <Skeleton
-          width="8rem"
-          height="2.25rem"
-          border-radius="0.25rem"
-        />
+        <Skeleton width="8rem" height="2.25rem" border-radius="0.25rem" />
         <!-- Help Button Skeleton -->
-        <Skeleton
-          width="2.25rem"
-          height="2.25rem"
-          border-radius="0.25rem"
-        />
+        <Skeleton width="2.25rem" height="2.25rem" border-radius="0.25rem" />
       </div>
       <div class="flex items-center gap-2">
         <!-- Store Button Skeleton -->
-        <Skeleton
-          width="2.25rem"
-          height="2.25rem"
-          border-radius="0.25rem"
-        />
+        <Skeleton width="2.25rem" height="2.25rem" border-radius="0.25rem" />
         <!-- Account Management Button Skeleton -->
-        <Skeleton
-          width="2.25rem"
-          height="2.25rem"
-          border-radius="0.25rem"
-        />
+        <Skeleton width="2.25rem" height="2.25rem" border-radius="0.25rem" />
         <!-- User Profile Button Skeleton -->
-        <Skeleton
-          width="6rem"
-          height="2.25rem"
-          border-radius="0.25rem"
-        />
+        <Skeleton width="6rem" height="2.25rem" border-radius="0.25rem" />
       </div>
     </div>
 

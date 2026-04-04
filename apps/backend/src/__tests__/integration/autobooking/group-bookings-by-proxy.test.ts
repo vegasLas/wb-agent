@@ -1,7 +1,7 @@
 /**
  * Autobooking Monitoring - Group Bookings By Proxy Tests
  * Migrated from: tests/autobookingMonitoring.groupBookingsByProxy.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths to use new project structure
@@ -15,7 +15,10 @@ import {
   createAutobooking,
   createMonitoringUser,
 } from '../../helpers/autobooking-helpers';
-import type { BookingTask, MonitoringUser } from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
+import type {
+  BookingTask,
+  MonitoringUser,
+} from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock minimal dependencies
 jest.mock('../../../utils/logger', () => ({
@@ -37,15 +40,30 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
       // Arrange: Create booking tasks with different proxies
       const user1 = createMonitoringUser({
         userId: 1,
-        proxy: { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' },
+        proxy: {
+          ip: '1.1.1.1',
+          port: '8080',
+          username: 'user1',
+          password: 'pass1',
+        },
       });
       const user2 = createMonitoringUser({
         userId: 2,
-        proxy: { ip: '2.2.2.2', port: '8080', username: 'user2', password: 'pass2' },
+        proxy: {
+          ip: '2.2.2.2',
+          port: '8080',
+          username: 'user2',
+          password: 'pass2',
+        },
       });
       const user3 = createMonitoringUser({
         userId: 3,
-        proxy: { ip: '3.3.3.3', port: '8080', username: 'user3', password: 'pass3' },
+        proxy: {
+          ip: '3.3.3.3',
+          port: '8080',
+          username: 'user3',
+          password: 'pass3',
+        },
       });
 
       const bookingTasks = [
@@ -62,7 +80,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-2', userId: 2, supplierId: 'supplier-2', draftId: 'draft2' }),
+          booking: createAutobooking({
+            id: 'booking-2',
+            userId: 2,
+            supplierId: 'supplier-2',
+            draftId: 'draft2',
+          }),
           user: user2,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -74,7 +97,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-3', userId: 3, supplierId: 'supplier-3', draftId: 'draft3' }),
+          booking: createAutobooking({
+            id: 'booking-3',
+            userId: 3,
+            supplierId: 'supplier-3',
+            draftId: 'draft3',
+          }),
           user: user3,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -104,15 +132,30 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
       expect(proxyGroups).toHaveLength(1); // All different proxies can go in one group
       expect(proxyGroups[0]).toHaveLength(3); // All three bookings in one group
 
-      const bookingIds = proxyGroups[0].map((task: BookingTask) => task.booking.id);
+      const bookingIds = proxyGroups[0].map(
+        (task: BookingTask) => task.booking.id,
+      );
       expect(bookingIds).toEqual(['booking-1', 'booking-2', 'booking-3']);
     });
 
     test('should create separate groups when bookings have same proxies', () => {
       // Arrange: Some bookings share the same proxy
-      const sameProxy = { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' };
+      const sameProxy = {
+        ip: '1.1.1.1',
+        port: '8080',
+        username: 'user1',
+        password: 'pass1',
+      };
       const user1 = createMonitoringUser({ userId: 1, proxy: sameProxy });
-      const user2 = createMonitoringUser({ userId: 2, proxy: { ip: '2.2.2.2', port: '8080', username: 'user2', password: 'pass2' } });
+      const user2 = createMonitoringUser({
+        userId: 2,
+        proxy: {
+          ip: '2.2.2.2',
+          port: '8080',
+          username: 'user2',
+          password: 'pass2',
+        },
+      });
       const user3 = createMonitoringUser({ userId: 3, proxy: sameProxy }); // Same as user1
 
       const bookingTasks = [
@@ -129,7 +172,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-2', userId: 2, supplierId: 'supplier-2', draftId: 'draft2' }),
+          booking: createAutobooking({
+            id: 'booking-2',
+            userId: 2,
+            supplierId: 'supplier-2',
+            draftId: 'draft2',
+          }),
           user: user2,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -141,7 +189,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-3', userId: 3, supplierId: 'supplier-3', draftId: 'draft3' }),
+          booking: createAutobooking({
+            id: 'booking-3',
+            userId: 3,
+            supplierId: 'supplier-3',
+            draftId: 'draft3',
+          }),
           user: user3,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -172,8 +225,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
       expect(proxyGroups[0]).toHaveLength(2);
       expect(proxyGroups[1]).toHaveLength(1);
 
-      const group1BookingIds = proxyGroups[0].map((task: BookingTask) => task.booking.id);
-      const group2BookingIds = proxyGroups[1].map((task: BookingTask) => task.booking.id);
+      const group1BookingIds = proxyGroups[0].map(
+        (task: BookingTask) => task.booking.id,
+      );
+      const group2BookingIds = proxyGroups[1].map(
+        (task: BookingTask) => task.booking.id,
+      );
 
       expect(group1BookingIds).toContain('booking-1');
       expect(group1BookingIds).toContain('booking-2');
@@ -234,10 +291,30 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
   describe('Complex Scenarios', () => {
     test('should optimize grouping with mixed proxy patterns', () => {
       // Arrange: 6 bookings with 3 different proxies, some repeated
-      const proxy1 = { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' };
-      const proxy2 = { ip: '2.2.2.2', port: '8080', username: 'user2', password: 'pass2' };
-      const proxy3 = { ip: '3.3.3.3', port: '8080', username: 'user3', password: 'pass3' };
-      const proxy4 = { ip: '4.4.4.4', port: '8080', username: 'user4', password: 'pass4' };
+      const proxy1 = {
+        ip: '1.1.1.1',
+        port: '8080',
+        username: 'user1',
+        password: 'pass1',
+      };
+      const proxy2 = {
+        ip: '2.2.2.2',
+        port: '8080',
+        username: 'user2',
+        password: 'pass2',
+      };
+      const proxy3 = {
+        ip: '3.3.3.3',
+        port: '8080',
+        username: 'user3',
+        password: 'pass3',
+      };
+      const proxy4 = {
+        ip: '4.4.4.4',
+        port: '8080',
+        username: 'user4',
+        password: 'pass4',
+      };
 
       const user1 = createMonitoringUser({ userId: 1, proxy: proxy1 });
       const user2 = createMonitoringUser({ userId: 2, proxy: proxy2 });
@@ -260,7 +337,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-2', userId: 2, supplierId: 'supplier-2', draftId: 'draft2' }),
+          booking: createAutobooking({
+            id: 'booking-2',
+            userId: 2,
+            supplierId: 'supplier-2',
+            draftId: 'draft2',
+          }),
           user: user2,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -272,7 +354,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-3', userId: 3, supplierId: 'supplier-3', draftId: 'draft3' }),
+          booking: createAutobooking({
+            id: 'booking-3',
+            userId: 3,
+            supplierId: 'supplier-3',
+            draftId: 'draft3',
+          }),
           user: user3,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -284,7 +371,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-4', userId: 4, supplierId: 'supplier-4', draftId: 'draft4' }),
+          booking: createAutobooking({
+            id: 'booking-4',
+            userId: 4,
+            supplierId: 'supplier-4',
+            draftId: 'draft4',
+          }),
           user: user4,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -296,7 +388,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-5', userId: 5, supplierId: 'supplier-5', draftId: 'draft5' }),
+          booking: createAutobooking({
+            id: 'booking-5',
+            userId: 5,
+            supplierId: 'supplier-5',
+            draftId: 'draft5',
+          }),
           user: user5,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -308,7 +405,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-6', userId: 6, supplierId: 'supplier-6', draftId: 'draft6' }),
+          booking: createAutobooking({
+            id: 'booking-6',
+            userId: 6,
+            supplierId: 'supplier-6',
+            draftId: 'draft6',
+          }),
           user: user6,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -340,7 +442,9 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
 
       // Verify all bookings are accounted for
       const allBookingIds = proxyGroups
-        .flatMap((group: BookingTask[]) => group.map((task: BookingTask) => task.booking.id))
+        .flatMap((group: BookingTask[]) =>
+          group.map((task: BookingTask) => task.booking.id),
+        )
         .sort();
       expect(allBookingIds).toEqual([
         'booking-1',
@@ -358,7 +462,8 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
       // Verify no group has duplicate proxies
       for (const group of proxyGroups) {
         const proxies = group.map(
-          (task: BookingTask) => `${task.user.proxy?.ip}:${task.user.proxy?.port}`,
+          (task: BookingTask) =>
+            `${task.user.proxy?.ip}:${task.user.proxy?.port}`,
         );
         const uniqueProxies = new Set(proxies);
         expect(proxies.length).toBe(uniqueProxies.size); // No duplicates
@@ -367,7 +472,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
 
     test('should handle all bookings with same proxy', () => {
       // Arrange: All bookings have identical proxy
-      const sameProxy = { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' };
+      const sameProxy = {
+        ip: '1.1.1.1',
+        port: '8080',
+        username: 'user1',
+        password: 'pass1',
+      };
       const user1 = createMonitoringUser({ userId: 1, proxy: sameProxy });
       const user2 = createMonitoringUser({ userId: 2, proxy: sameProxy });
       const user3 = createMonitoringUser({ userId: 3, proxy: sameProxy });
@@ -386,7 +496,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-2', userId: 2, supplierId: 'supplier-2', draftId: 'draft2' }),
+          booking: createAutobooking({
+            id: 'booking-2',
+            userId: 2,
+            supplierId: 'supplier-2',
+            draftId: 'draft2',
+          }),
           user: user2,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -398,7 +513,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-3', userId: 3, supplierId: 'supplier-3', draftId: 'draft3' }),
+          booking: createAutobooking({
+            id: 'booking-3',
+            userId: 3,
+            supplierId: 'supplier-3',
+            draftId: 'draft3',
+          }),
           user: user3,
           warehouseName: 'Warehouse 1',
           coefficient: 100,
@@ -430,7 +550,9 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
       expect(proxyGroups[2]).toHaveLength(1);
 
       const allBookingIds = proxyGroups
-        .flatMap((group: BookingTask[]) => group.map((task: BookingTask) => task.booking.id))
+        .flatMap((group: BookingTask[]) =>
+          group.map((task: BookingTask) => task.booking.id),
+        )
         .sort();
       expect(allBookingIds).toEqual(['booking-1', 'booking-2', 'booking-3']);
     });
@@ -441,11 +563,21 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
       // Arrange: Different warehouse-date combinations
       const user1 = createMonitoringUser({
         userId: 1,
-        proxy: { ip: '1.1.1.1', port: '8080', username: 'user1', password: 'pass1' },
+        proxy: {
+          ip: '1.1.1.1',
+          port: '8080',
+          username: 'user1',
+          password: 'pass1',
+        },
       });
       const user2 = createMonitoringUser({
         userId: 2,
-        proxy: { ip: '2.2.2.2', port: '8080', username: 'user2', password: 'pass2' },
+        proxy: {
+          ip: '2.2.2.2',
+          port: '8080',
+          username: 'user2',
+          password: 'pass2',
+        },
       });
 
       const bookingTasks1 = [
@@ -465,7 +597,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
 
       const bookingTasks2 = [
         {
-          booking: createAutobooking({ id: 'booking-2', userId: 1, supplierId: 'supplier-2', draftId: 'draft2' }),
+          booking: createAutobooking({
+            id: 'booking-2',
+            userId: 1,
+            supplierId: 'supplier-2',
+            draftId: 'draft2',
+          }),
           user: user1, // Same user, different warehouse-date
           warehouseName: 'Warehouse 2',
           coefficient: 200,
@@ -477,7 +614,12 @@ describe('TaskOrganizerService - Group Bookings By Proxy', () => {
           },
         },
         {
-          booking: createAutobooking({ id: 'booking-3', userId: 2, supplierId: 'supplier-3', draftId: 'draft3' }),
+          booking: createAutobooking({
+            id: 'booking-3',
+            userId: 2,
+            supplierId: 'supplier-3',
+            draftId: 'draft3',
+          }),
           user: user2,
           warehouseName: 'Warehouse 2',
           coefficient: 200,

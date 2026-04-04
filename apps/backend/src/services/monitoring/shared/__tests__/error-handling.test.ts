@@ -1,7 +1,7 @@
 /**
  * Error Handling Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/errorHandlingService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
@@ -94,7 +94,9 @@ describe('SharedErrorHandlingService', () => {
       });
 
       it('should handle undefined error gracefully', () => {
-        expect(service.isDateUnavailableError(undefined as unknown as BookingError)).toBe(false);
+        expect(
+          service.isDateUnavailableError(undefined as unknown as BookingError),
+        ).toBe(false);
       });
 
       it('should handle error without message', () => {
@@ -125,7 +127,9 @@ describe('SharedErrorHandlingService', () => {
       });
 
       it('should handle undefined error gracefully', () => {
-        expect(service.isTooActiveError(undefined as unknown as BookingError)).toBe(false);
+        expect(
+          service.isTooActiveError(undefined as unknown as BookingError),
+        ).toBe(false);
       });
     });
 
@@ -171,7 +175,9 @@ describe('SharedErrorHandlingService', () => {
       });
 
       it('should handle undefined error gracefully', () => {
-        expect(service.isOrderNotExistError(undefined as unknown as BookingError)).toBe(false);
+        expect(
+          service.isOrderNotExistError(undefined as unknown as BookingError),
+        ).toBe(false);
       });
     });
 
@@ -348,7 +354,9 @@ describe('SharedErrorHandlingService', () => {
       });
 
       it('should ban warehouse-date for unknown error types', () => {
-        expect(service.shouldBanWarehouseDate('unknown' as any, 'WEEK')).toBe(true);
+        expect(service.shouldBanWarehouseDate('unknown' as any, 'WEEK')).toBe(
+          true,
+        );
       });
     });
 
@@ -422,9 +430,9 @@ describe('SharedErrorHandlingService', () => {
       });
 
       it('should handle undefined error', () => {
-        expect(service.getErrorDisplayMessage(undefined as unknown as BookingError)).toBe(
-          "An error occurred. We're sorry for the inconvenience",
-        );
+        expect(
+          service.getErrorDisplayMessage(undefined as unknown as BookingError),
+        ).toBe("An error occurred. We're sorry for the inconvenience");
       });
     });
 
@@ -486,10 +494,18 @@ describe('SharedErrorHandlingService', () => {
 
   describe('edge cases', () => {
     it('should handle null/undefined inputs gracefully', () => {
-      expect(() => service.categorizeError(null as unknown as BookingError)).not.toThrow();
-      expect(() => service.categorizeError(undefined as unknown as BookingError)).not.toThrow();
-      expect(() => service.getErrorDisplayMessage(null as unknown as BookingError)).not.toThrow();
-      expect(() => service.shouldNotifyAdmin(null as unknown as BookingError)).not.toThrow();
+      expect(() =>
+        service.categorizeError(null as unknown as BookingError),
+      ).not.toThrow();
+      expect(() =>
+        service.categorizeError(undefined as unknown as BookingError),
+      ).not.toThrow();
+      expect(() =>
+        service.getErrorDisplayMessage(null as unknown as BookingError),
+      ).not.toThrow();
+      expect(() =>
+        service.shouldNotifyAdmin(null as unknown as BookingError),
+      ).not.toThrow();
     });
 
     it('should handle empty error object', () => {

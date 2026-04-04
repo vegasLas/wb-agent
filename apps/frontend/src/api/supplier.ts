@@ -18,11 +18,16 @@ export const supplierAPI = {
    * GET /api/v1/suppliers/balances
    * Get warehouse balances for the selected account
    */
-  async fetchWarehouseBalances(accountId?: string): Promise<WarehouseBalance[]> {
+  async fetchWarehouseBalances(
+    accountId?: string,
+  ): Promise<WarehouseBalance[]> {
     const params: Record<string, string> = {};
     if (accountId) params.accountId = accountId;
-    
-    const response = await apiClient.get<WarehouseBalance[]>('/suppliers/balances', { params });
+
+    const response = await apiClient.get<WarehouseBalance[]>(
+      '/suppliers/balances',
+      { params },
+    );
     return response.data || [];
   },
 };

@@ -15,7 +15,10 @@ import { logger } from '../utils/logger';
  * GET /api/v1/promotions/timeline
  * Get promotions timeline for the authenticated user
  */
-export const fetchPromotionsTimeline = async (req: Request, res: Response): Promise<void> => {
+export const fetchPromotionsTimeline = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.id;
 
@@ -59,7 +62,10 @@ export const fetchPromotionsTimeline = async (req: Request, res: Response): Prom
  * GET /api/v1/promotions/detail
  * Get promotion detail for the authenticated user
  */
-export const fetchPromotionDetail = async (req: Request, res: Response): Promise<void> => {
+export const fetchPromotionDetail = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.id;
 
@@ -81,7 +87,9 @@ export const fetchPromotionDetail = async (req: Request, res: Response): Promise
       return;
     }
 
-    logger.info(`Fetching promotion detail for user ${userId}, promoID: ${promoID}`);
+    logger.info(
+      `Fetching promotion detail for user ${userId}, promoID: ${promoID}`,
+    );
 
     const data = await getPromotionDetail({
       userId,
@@ -105,7 +113,10 @@ export const fetchPromotionDetail = async (req: Request, res: Response): Promise
  * POST /api/v1/promotions/excel
  * Create and fetch promotion Excel report for the authenticated user
  */
-export const fetchPromotionExcel = async (req: Request, res: Response): Promise<void> => {
+export const fetchPromotionExcel = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.id;
 
@@ -127,7 +138,9 @@ export const fetchPromotionExcel = async (req: Request, res: Response): Promise<
       return;
     }
 
-    logger.info(`Fetching promotion Excel for user ${userId}, periodID: ${periodID}`);
+    logger.info(
+      `Fetching promotion Excel for user ${userId}, periodID: ${periodID}`,
+    );
 
     const result = await getPromotionExcel({
       userId,

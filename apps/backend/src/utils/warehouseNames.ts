@@ -336,7 +336,7 @@ export function hasWarehouseMapping(englishName: string): boolean {
   return (
     Object.prototype.hasOwnProperty.call(warehouseNameMap, trimmedName) ||
     Object.keys(warehouseNameMap).some(
-      (key) => key.toLowerCase() === trimmedName.toLowerCase()
+      (key) => key.toLowerCase() === trimmedName.toLowerCase(),
     )
   );
 }

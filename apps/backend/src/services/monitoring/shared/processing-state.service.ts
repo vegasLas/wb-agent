@@ -1,7 +1,7 @@
 /**
  * Processing State Service
  * Phase 1: Foundation - Tracks processed items per monitoring cycle
- * 
+ *
  * Purpose: Prevents duplicate processing of autobookings and reschedules
  * within a single monitoring cycle. Tracks console log counts for debugging.
  */
@@ -17,7 +17,9 @@ interface ProcessingState {
  * Service for tracking processing state across monitoring cycles
  * Ensures items are not processed multiple times in the same cycle
  */
-export class SharedProcessingStateService implements ISharedProcessingStateService {
+export class SharedProcessingStateService
+  implements ISharedProcessingStateService
+{
   // Processing state for autobooking
   private readonly autobookingState: ProcessingState = {
     processedIds: new Set<string>(),
@@ -107,9 +109,10 @@ export class SharedProcessingStateService implements ISharedProcessingStateServi
    */
   incrementConsoleLogCount(
     key: string,
-    type: 'autobooking' | 'reschedule'
+    type: 'autobooking' | 'reschedule',
   ): number {
-    const state = type === 'autobooking' ? this.autobookingState : this.rescheduleState;
+    const state =
+      type === 'autobooking' ? this.autobookingState : this.rescheduleState;
     const currentCount = state.consoleLogCount.get(key) || 0;
     const newCount = currentCount + 1;
     state.consoleLogCount.set(key, newCount);
@@ -123,7 +126,8 @@ export class SharedProcessingStateService implements ISharedProcessingStateServi
    * @returns Current count
    */
   getConsoleLogCount(key: string, type: 'autobooking' | 'reschedule'): number {
-    const state = type === 'autobooking' ? this.autobookingState : this.rescheduleState;
+    const state =
+      type === 'autobooking' ? this.autobookingState : this.rescheduleState;
     return state.consoleLogCount.get(key) || 0;
   }
 
@@ -133,7 +137,8 @@ export class SharedProcessingStateService implements ISharedProcessingStateServi
    * @param type - Either 'autobooking' or 'reschedule'
    */
   clearConsoleLogCount(key: string, type: 'autobooking' | 'reschedule'): void {
-    const state = type === 'autobooking' ? this.autobookingState : this.rescheduleState;
+    const state =
+      type === 'autobooking' ? this.autobookingState : this.rescheduleState;
     state.consoleLogCount.delete(key);
   }
 

@@ -3,7 +3,12 @@ import { defineStore } from 'pinia';
 import { reschedulesAPI } from '../../api';
 import { useUserStore } from '../user';
 import { doAction } from '../../utils/doAction';
-import type { AutobookingReschedule, CreateAutobookingRescheduleRequest, UpdateAutobookingRescheduleRequest, Supply } from '../../types';
+import type {
+  AutobookingReschedule,
+  CreateAutobookingRescheduleRequest,
+  UpdateAutobookingRescheduleRequest,
+  Supply,
+} from '../../types';
 
 export * from './types';
 
@@ -63,7 +68,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         error.value = 'API returned unsuccessful response';
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch reschedules';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to fetch reschedules';
       error.value = errorMessage;
 
       console.error(
@@ -84,12 +90,15 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         await fetchReschedules(currentPage.value); // Refresh list
         // Decrease user's autobooking count as 1 credit was consumed
         userStore.decreaseAutobookingCount();
-        console.log('Перепланирование создано: Автоматическое перепланирование успешно настроено');
+        console.log(
+          'Перепланирование создано: Автоматическое перепланирование успешно настроено',
+        );
         return response;
       }
       throw new Error('Failed to create reschedule');
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create reschedule';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to create reschedule';
       error.value = errorMsg;
       console.error('Failed to create reschedule:', err);
       console.error(errorMsg || 'Не удалось создать перепланирование');
@@ -140,7 +149,10 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         await fetchReschedules(currentPage.value); // Refresh list
         // Increase user's autobooking count as 1 credit was returned
         userStore.increaseAutobookingCount();
-        console.log('Успешно удалено:', response.message || 'Перепланирование успешно удалено');
+        console.log(
+          'Успешно удалено:',
+          response.message || 'Перепланирование успешно удалено',
+        );
         return true;
       }
       throw new Error('Failed to delete reschedule');
@@ -176,7 +188,9 @@ export const useRescheduleStore = defineStore('reschedule', () => {
       });
       if (response.success) {
         await fetchReschedules(currentPage.value); // Refresh list
-        console.log('Успешно архивировано: Перепланирование перемещено в архив');
+        console.log(
+          'Успешно архивировано: Перепланирование перемещено в архив',
+        );
         return response.data;
       }
       throw new Error('Failed to archive reschedule');
@@ -212,7 +226,9 @@ export const useRescheduleStore = defineStore('reschedule', () => {
       });
       if (response.success) {
         await fetchReschedules(currentPage.value); // Refresh list
-        console.log('Успешно активировано: Перепланирование активировано и будет выполнено');
+        console.log(
+          'Успешно активировано: Перепланирование активировано и будет выполнено',
+        );
         return response.data;
       }
       throw new Error('Failed to activate reschedule');
@@ -246,7 +262,9 @@ export const useRescheduleStore = defineStore('reschedule', () => {
 
     try {
       // Using suppliers API endpoint to fetch supplies
-      const response = await apiClient.get('/suppliers/supplies', { params: { supplierId } });
+      const response = await apiClient.get('/suppliers/supplies', {
+        params: { supplierId },
+      });
 
       if (response.data.success) {
         supplies.value = (response.data.data as Supply[]) || [];

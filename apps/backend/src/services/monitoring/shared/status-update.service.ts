@@ -1,10 +1,10 @@
 /**
  * Status Update Service
  * Phase 1: Foundation - Updates booking statuses in database
- * 
+ *
  * Purpose: Handles all database status updates for autobookings and reschedules
  * including completed dates tracking and status transitions
- * 
+ *
  * NOTE: Uses regular local dates (NOT Moscow timezone) - same as deprecated project
  */
 
@@ -23,14 +23,14 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
   /**
    * Updates completed dates for both autobooking and reschedule items
    * Handles CUSTOM_DATES, CUSTOM_DATES_SINGLE and other date types
-   * 
+   *
    * @param item - The item with date information
    * @param completedDate - The date that was completed
    * @returns Object with updated dates and new status
    */
   async updateCompletedDates(
     item: ItemWithDates,
-    completedDate: Date
+    completedDate: Date,
   ): Promise<StatusUpdateResult> {
     // Extract data from item
     const dateType = item.dateType;
@@ -43,7 +43,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
     if (dateType === 'CUSTOM_DATES_SINGLE') {
       // Single date completion - mark as COMPLETED immediately after first successful date
       const updatedCustomDates = customDates.filter(
-        date => date.toDateString() !== completedDate.toDateString()
+        (date) => date.toDateString() !== completedDate.toDateString(),
       );
 
       return {
@@ -54,7 +54,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
     } else if (dateType === 'CUSTOM_DATES') {
       // Multiple dates - complete only when all custom dates are done
       const updatedCustomDates = customDates.filter(
-        date => date.toDateString() !== completedDate.toDateString()
+        (date) => date.toDateString() !== completedDate.toDateString(),
       );
 
       // Determine new status based on remaining dates
@@ -85,7 +85,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
   async updateAutobookingStatus(
     bookingId: string,
     completedDate: Date,
-    dateType: string
+    dateType: string,
   ): Promise<void> {
     if (dateType === 'CUSTOM_DATES') {
       // For CUSTOM_DATES, need to fetch current state and update incrementally
@@ -102,7 +102,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
 
       const updateResult = await this.updateCompletedDates(
         autobooking,
-        completedDate
+        completedDate,
       );
 
       await prisma.autobooking.update({
@@ -135,7 +135,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
   async updateRescheduleStatus(
     rescheduleId: string,
     completedDate: Date,
-    dateType: string
+    dateType: string,
   ): Promise<void> {
     if (dateType === 'CUSTOM_DATES_SINGLE') {
       // For CUSTOM_DATES_SINGLE, need to fetch and update
@@ -152,7 +152,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
 
       const updateResult = await this.updateCompletedDates(
         reschedule,
-        completedDate
+        completedDate,
       );
 
       await prisma.autobookingReschedule.update({
@@ -186,7 +186,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
     tableName: 'autobooking' | 'autobookingReschedule',
     itemId: string,
     completedDate: Date,
-    dateType: string
+    dateType: string,
   ): Promise<void> {
     if (tableName === 'autobooking') {
       await this.updateAutobookingStatus(itemId, completedDate, dateType);
@@ -205,7 +205,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
   shouldMarkAsCompleted(
     dateType: string,
     customDates: Date[],
-    completedDate: Date
+    completedDate: Date,
   ): boolean {
     if (dateType === 'CUSTOM_DATES_SINGLE') {
       // For CUSTOM_DATES_SINGLE, always complete after first successful date
@@ -213,7 +213,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
     } else if (dateType === 'CUSTOM_DATES') {
       // For CUSTOM_DATES, complete only when all custom dates are done
       const remainingDates = customDates.filter(
-        date => date.toDateString() !== completedDate.toDateString()
+        (date) => date.toDateString() !== completedDate.toDateString(),
       );
       return remainingDates.length === 0;
     }
@@ -225,7 +225,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
   /**
    * Gets the effective dates for an item based on its date type
    * Uses regular local dates (NOT Moscow timezone)
-   * 
+   *
    * @param dateType - The type of date configuration
    * @param startDate - Start date for WEEK/MONTH/CUSTOM_PERIOD
    * @param endDate - End date for CUSTOM_PERIOD
@@ -236,7 +236,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
     dateType: string,
     startDate: Date | null,
     endDate: Date | null,
-    customDates: Date[]
+    customDates: Date[],
   ): Date[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -244,7 +244,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
     switch (dateType) {
       case 'CUSTOM_DATES':
       case 'CUSTOM_DATES_SINGLE':
-        return customDates.filter(date => {
+        return customDates.filter((date) => {
           const dateObj = new Date(date);
           dateObj.setHours(0, 0, 0, 0);
           return dateObj >= today;
@@ -261,7 +261,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
       case 'CUSTOM_PERIOD': {
         if (!startDate || !endDate) return [];
         const daysDiff = Math.ceil(
-          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
         );
         return this.generateDateRange(startDate, daysDiff + 1, today);
       }
@@ -281,7 +281,7 @@ export class SharedStatusUpdateService implements ISharedStatusUpdateService {
   private generateDateRange(
     startDate: Date,
     days: number,
-    minDate: Date
+    minDate: Date,
   ): Date[] {
     const dates: Date[] = [];
 

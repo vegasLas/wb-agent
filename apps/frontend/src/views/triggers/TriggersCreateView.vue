@@ -4,11 +4,7 @@
       <h3 class="text-xl text-center font-semibold flex-1">
         Создание таймслота
       </h3>
-      <Button
-        variant="outlined"
-        severity="warn"
-        @click="showHintsModal = true"
-      >
+      <Button variant="outlined" severity="warn" @click="showHintsModal = true">
         <i class="pi pi-question-circle" />
       </Button>
     </div>

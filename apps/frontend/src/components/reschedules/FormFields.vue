@@ -2,9 +2,7 @@
   <div class="space-y-4">
     <!-- Supply Selection -->
     <div class="space-y-3">
-      <label
-        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Поставка
       </label>
       <div class="flex gap-2">
@@ -29,10 +27,7 @@
           <i class="pi pi-refresh" />
         </Button>
       </div>
-      <p
-        v-if="suppliesError"
-        class="text-sm text-red-600 dark:text-red-400"
-      >
+      <p v-if="suppliesError" class="text-sm text-red-600 dark:text-red-400">
         {{ suppliesError }}
       </p>
       <p
@@ -44,15 +39,8 @@
     </div>
 
     <!-- Supply Information Toggle -->
-    <div
-      v-if="selectedSupply"
-      class="flex items-center justify-end"
-    >
-      <Button
-        size="small"
-        variant="outlined"
-        @click="openSupplyDetails"
-      >
+    <div v-if="selectedSupply" class="flex items-center justify-end">
+      <Button size="small" variant="outlined" @click="openSupplyDetails">
         <i class="pi pi-info-circle mr-1" />
         детали
       </Button>
@@ -75,9 +63,7 @@
 
     <!-- Max Coefficient -->
     <div class="space-y-2">
-      <label
-        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Максимальный коэффициент
       </label>
       <div class="flex items-center gap-4">
@@ -143,8 +129,8 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   'update:selectedSupplyId': [value: number | undefined];
-  'refreshSupplies': [];
-  'openSupplyDetails': [];
+  refreshSupplies: [];
+  openSupplyDetails: [];
   'update:selectedDateType': [value: string];
   'update:startDateInput': [value: string];
   'update:endDateInput': [value: string];

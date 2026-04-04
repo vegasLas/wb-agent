@@ -9,9 +9,7 @@
           </div>
 
           <!-- Title -->
-          <h2 class="maintenance-title">
-            Ведутся технические работы
-          </h2>
+          <h2 class="maintenance-title">Ведутся технические работы</h2>
 
           <!-- Description -->
           <p class="maintenance-description">

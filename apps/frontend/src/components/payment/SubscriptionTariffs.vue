@@ -22,9 +22,7 @@
         <!-- Price and Button -->
         <div class="space-y-4">
           <div class="flex items-center gap-2">
-            <p class="text-2xl font-bold">
-              {{ tariff.price }} ₽
-            </p>
+            <p class="text-2xl font-bold">{{ tariff.price }} ₽</p>
             <p
               v-if="tariff.discount"
               class="text-sm text-gray-400 line-through"
@@ -34,7 +32,9 @@
           </div>
 
           <Button
-            :severity="selectedTariff?.id === tariff.id ? 'secondary' : 'primary'"
+            :severity="
+              selectedTariff?.id === tariff.id ? 'secondary' : 'primary'
+            "
             class="w-full"
             @click="selectTariff(tariff)"
           >

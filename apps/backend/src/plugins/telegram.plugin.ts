@@ -52,7 +52,7 @@ export function setupTelegramPlugin(): void {
       logger.error('Error in /start command:', error);
       await TBOT?.sendMessage(
         msg.chat.id,
-        '❌ Произошла ошибка. Пожалуйста, попробуйте позже.'
+        '❌ Произошла ошибка. Пожалуйста, попробуйте позже.',
       );
     }
   });
@@ -65,7 +65,7 @@ export function setupTelegramPlugin(): void {
       logger.warn(`Unauthorized /enable attempt by user ID: ${msg.from.id}`);
       await TBOT?.sendMessage(
         msg.chat.id,
-        '⚠️ У вас нет прав для выполнения этой команды.'
+        '⚠️ У вас нет прав для выполнения этой команды.',
       );
       return;
     }
@@ -75,7 +75,7 @@ export function setupTelegramPlugin(): void {
       await TBOT?.sendMessage(
         msg.chat.id,
         '✅ <b>Автобронирование включено</b>\n\nОбработка автобронирований активна.',
-        { parse_mode: 'HTML' }
+        { parse_mode: 'HTML' },
       );
       logger.info(`Autobooking enabled by admin ${msg.from.id}`);
     } catch (error) {
@@ -92,7 +92,7 @@ export function setupTelegramPlugin(): void {
       logger.warn(`Unauthorized /disable attempt by user ID: ${msg.from.id}`);
       await TBOT?.sendMessage(
         msg.chat.id,
-        '⚠️ У вас нет прав для выполнения этой команды.'
+        '⚠️ У вас нет прав для выполнения этой команды.',
       );
       return;
     }
@@ -102,7 +102,7 @@ export function setupTelegramPlugin(): void {
       await TBOT?.sendMessage(
         msg.chat.id,
         '🚫 <b>Автобронирование отключено</b>\n\nОбработка автобронирований остановлена. Триггеры продолжают работать.',
-        { parse_mode: 'HTML' }
+        { parse_mode: 'HTML' },
       );
       logger.info(`Autobooking disabled by admin ${msg.from.id}`);
     } catch (error) {
@@ -124,7 +124,7 @@ export function setupTelegramPlugin(): void {
       await TBOT?.sendMessage(
         msg.chat.id,
         `📊 <b>Статус системы</b>\n\nАвтобронирование: ${isActive ? '✅ Активно' : '🚫 Отключено'}`,
-        { parse_mode: 'HTML' }
+        { parse_mode: 'HTML' },
       );
     } catch (error) {
       logger.error('Error in /status command:', error);
@@ -139,7 +139,7 @@ export function setupTelegramPlugin(): void {
       logger.warn(`Unauthorized /broadcast attempt by user ID: ${msg.from.id}`);
       await TBOT?.sendMessage(
         msg.chat.id,
-        '⚠️ У вас нет прав для выполнения этой команды.'
+        '⚠️ У вас нет прав для выполнения этой команды.',
       );
       return;
     }
@@ -149,7 +149,7 @@ export function setupTelegramPlugin(): void {
     if (!messageText || messageText.trim().length === 0) {
       await TBOT?.sendMessage(
         msg.chat.id,
-        '⚠️ Пожалуйста, укажите текст сообщения после команды /broadcast.'
+        '⚠️ Пожалуйста, укажите текст сообщения после команды /broadcast.',
       );
       return;
     }
@@ -157,7 +157,7 @@ export function setupTelegramPlugin(): void {
     try {
       await TBOT?.sendMessage(
         msg.chat.id,
-        `🚀 Начинаю рассылку сообщения:\n${messageText}\n\nЭто может занять некоторое время...`
+        `🚀 Начинаю рассылку сообщения:\n${messageText}\n\nЭто может занять некоторое время...`,
       );
 
       const result = await adminService.broadcastMessage(messageText.trim());
@@ -165,11 +165,14 @@ export function setupTelegramPlugin(): void {
       await TBOT?.sendMessage(
         msg.chat.id,
         `✅ <b>Рассылка завершена</b>\n\n📨 Всего пользователей: ${result.totalUsers}\n✓ Успешно: ${result.successful}\n✗ Не удалось: ${result.failed}`,
-        { parse_mode: 'HTML' }
+        { parse_mode: 'HTML' },
       );
     } catch (error) {
       logger.error('Error in /broadcast command:', error);
-      await TBOT?.sendMessage(msg.chat.id, '❌ Ошибка при выполнении рассылки.');
+      await TBOT?.sendMessage(
+        msg.chat.id,
+        '❌ Ошибка при выполнении рассылки.',
+      );
     }
   });
 

@@ -50,7 +50,7 @@ export const useRescheduleCreateFormStore = defineStore(
     // Simple validation (replace with yup if needed)
     const validate = computed(() => {
       const errors: string[] = [];
-      
+
       if (!form.value.supplyId) errors.push('Выберите поставку');
       if (!form.value.warehouseId) errors.push('Склад обязателен');
       if (!form.value.supplyType) errors.push('Тип поставки обязателен');
@@ -58,29 +58,35 @@ export const useRescheduleCreateFormStore = defineStore(
       if (form.value.maxCoefficient < 0 || form.value.maxCoefficient > 20) {
         errors.push('Коэффициент должен быть от 0 до 20');
       }
-      
+
       // Date validation based on dateType
-      if (['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(form.value.dateType) && !form.value.startDate) {
+      if (
+        ['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(form.value.dateType) &&
+        !form.value.startDate
+      ) {
         errors.push('Выберите дату начала');
       }
       if (form.value.dateType === 'CUSTOM_PERIOD' && !form.value.endDate) {
         errors.push('Выберите дату окончания');
       }
-      if (form.value.dateType === 'CUSTOM_DATES_SINGLE' && form.value.customDates.length === 0) {
+      if (
+        form.value.dateType === 'CUSTOM_DATES_SINGLE' &&
+        form.value.customDates.length === 0
+      ) {
         errors.push('Выберите хотя бы одну дату');
       }
-      
+
       return errors.length === 0;
     });
 
     const validationErrors = computed(() => {
       const errors: Record<string, string> = {};
-      
+
       if (!form.value.supplyId) errors.supplyId = 'Выберите поставку';
       if (!form.value.warehouseId) errors.warehouseId = 'Склад обязателен';
       if (!form.value.supplyType) errors.supplyType = 'Тип поставки обязателен';
       if (!form.value.dateType) errors.dateType = 'Выберите тип периода';
-      
+
       return errors;
     });
 
@@ -182,7 +188,10 @@ export const useRescheduleCreateFormStore = defineStore(
       if (value && selectedSupply.value) {
         const supply = selectedSupply.value;
         updateField('warehouseId', supply.warehouseId);
-        updateField('supplyType', mapBoxTypeToSupplyType(supply.boxTypeName || ''));
+        updateField(
+          'supplyType',
+          mapBoxTypeToSupplyType(supply.boxTypeName || ''),
+        );
 
         // Auto-populate currentDate from supply date
         if (supply.supplyDate) {

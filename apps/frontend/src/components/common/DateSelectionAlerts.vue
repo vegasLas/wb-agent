@@ -6,13 +6,11 @@
       severity="info"
       icon="pi pi-info-circle"
     >
-      <div class="font-semibold mb-2">
-        📋 Режим "Выбрать даты (одна)":
-      </div>
+      <div class="font-semibold mb-2">📋 Режим "Выбрать даты (одна)":</div>
       <ul class="ml-4 space-y-1 text-sm">
         <li>
-          • <strong>Стоимость:</strong> Использует только 1 кредит независимо
-          от количества выбранных дат
+          • <strong>Стоимость:</strong> Использует только 1 кредит независимо от
+          количества выбранных дат
         </li>
         <li>
           • <strong>Логика работы:</strong> Система попытается забронировать
@@ -23,8 +21,8 @@
           успешного бронирования одной даты
         </li>
         <li>
-          • <strong>Экономия:</strong> Идеально для случаев, когда вам
-          подходит любая из нескольких дат
+          • <strong>Экономия:</strong> Идеально для случаев, когда вам подходит
+          любая из нескольких дат
         </li>
       </ul>
     </Message>
@@ -36,9 +34,7 @@
       icon="pi pi-exclamation-triangle"
     >
       <div class="space-y-2">
-        <div class="font-semibold mb-2">
-          📋 Режим "Выбрать даты":
-        </div>
+        <div class="font-semibold mb-2">📋 Режим "Выбрать даты":</div>
         <ul class="ml-4 space-y-1 text-sm">
           <li>
             • <strong>Стоимость:</strong> Каждая выбранная дата использует 1
@@ -57,20 +53,17 @@
           У вас останется
           <span
             class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-            :class="remainingCount <= 0 ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'"
+            :class="
+              remainingCount <= 0
+                ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+            "
           >
             {{ remainingCount }} кредитов.
           </span>
         </p>
-        <div
-          v-if="availableCount < (customDates?.length || 0)"
-          class="mt-3"
-        >
-          <Button
-            severity="primary"
-            size="small"
-            @click="navigateToStore"
-          >
+        <div v-if="availableCount < (customDates?.length || 0)" class="mt-3">
+          <Button severity="primary" size="small" @click="navigateToStore">
             Купить
           </Button>
         </div>

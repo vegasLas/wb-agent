@@ -1,10 +1,10 @@
 /**
  * Trigger Date Manager Service
  * Phase 8: Date Management - Cleanup service for supply triggers
- * 
+ *
  * Purpose: Manages trigger lifecycle by expiring triggers based on their search mode
  * and notifying users about expired triggers.
- * 
+ *
  * NOTE: Uses Moscow timezone (UTC+3) for date calculations to match WB business hours
  */
 
@@ -145,7 +145,7 @@ export class TriggerDateManagerService {
     } catch (error) {
       logger.error(
         `[TriggerDateManager] Error updating trigger status for ${trigger.id}:`,
-        error
+        error,
       );
     }
   }
@@ -154,7 +154,7 @@ export class TriggerDateManagerService {
    * Notify user about expired trigger via Telegram
    */
   private async notifyUserAboutExpiredTrigger(
-    trigger: SupplyTrigger
+    trigger: SupplyTrigger,
   ): Promise<void> {
     try {
       if (!trigger.userId) return;
@@ -186,11 +186,10 @@ export class TriggerDateManagerService {
         },
         disable_notification: true, // Send without sound
       });
-
     } catch (error) {
       logger.error(
         '[TriggerDateManager] Error sending expired trigger notification:',
-        error
+        error,
       );
     }
   }
@@ -202,7 +201,7 @@ export class TriggerDateManagerService {
     try {
       const warehouses = cacheService.get<Warehouse[]>(
         'warehouses',
-        24 * 60 * 60 * 1000
+        24 * 60 * 60 * 1000,
       );
 
       if (!warehouses) return '';

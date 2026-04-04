@@ -3,7 +3,11 @@
  * Phase 1: Foundation - Core infrastructure types
  */
 
-import type { Autobooking, AutobookingReschedule, SupplyTrigger } from '@prisma/client';
+import type {
+  Autobooking,
+  AutobookingReschedule,
+  SupplyTrigger,
+} from '@prisma/client';
 
 // ============== Common Types ==============
 
@@ -87,17 +91,17 @@ export interface ISharedTelegramNotificationService {
   sendSuccessNotification(
     chatId: string,
     message: string,
-    options?: TelegramNotificationOptions
+    options?: TelegramNotificationOptions,
   ): Promise<void>;
   sendErrorNotification(
     chatId: string,
     message: string,
-    options?: TelegramNotificationOptions
+    options?: TelegramNotificationOptions,
   ): Promise<void>;
   sendBulkNotification(
     chatIds: Set<string>,
     message: string,
-    options?: TelegramNotificationOptions
+    options?: TelegramNotificationOptions,
   ): Promise<void>;
   handleNotificationError(error: TelegramError, chatId: string): Promise<void>;
   buildBookingSuccessMessage(
@@ -105,14 +109,14 @@ export interface ISharedTelegramNotificationService {
     date: Date,
     coefficient: number,
     transitWarehouseName?: string | null,
-    isReschedule?: boolean
+    isReschedule?: boolean,
   ): string;
   buildBannedDateMessage(
     warehouseName: string,
     date: Date | null,
     supplyType: string,
     error?: TelegramError | Error | unknown,
-    isReschedule?: boolean
+    isReschedule?: boolean,
   ): string;
 }
 
@@ -133,41 +137,46 @@ export interface StatusUpdateResult {
 export interface ISharedStatusUpdateService {
   updateCompletedDates(
     item: ItemWithDates,
-    completedDate: Date
+    completedDate: Date,
   ): Promise<StatusUpdateResult>;
   updateAutobookingStatus(
     bookingId: string,
     completedDate: Date,
-    dateType: string
+    dateType: string,
   ): Promise<void>;
   updateRescheduleStatus(
     rescheduleId: string,
     completedDate: Date,
-    dateType: string
+    dateType: string,
   ): Promise<void>;
   updateGenericItemStatus(
     tableName: 'autobooking' | 'autobookingReschedule',
     itemId: string,
     completedDate: Date,
-    dateType: string
+    dateType: string,
   ): Promise<void>;
   shouldMarkAsCompleted(
     dateType: string,
     customDates: Date[],
-    completedDate: Date
+    completedDate: Date,
   ): boolean;
   getEffectiveDates(
     dateType: string,
     startDate: Date | null,
     endDate: Date | null,
-    customDates: Date[]
+    customDates: Date[],
   ): Date[];
 }
 
 // ============== Error Handling ==============
 
 export interface CategorizedError {
-  type: 'date_unavailable' | 'too_active' | 'critical' | 'non_critical' | 'order_not_exist';
+  type:
+    | 'date_unavailable'
+    | 'too_active'
+    | 'critical'
+    | 'non_critical'
+    | 'order_not_exist';
   shouldStop: boolean;
   duration?: number;
   shouldBlacklistUser?: boolean;
@@ -212,7 +221,10 @@ export interface ISharedProcessingStateService {
   markRescheduleAsProcessed(rescheduleId: string): void;
   getProcessedAutobookingIds(): Set<string>;
   getProcessedRescheduleIds(): Set<string>;
-  incrementConsoleLogCount(key: string, type: 'autobooking' | 'reschedule'): number;
+  incrementConsoleLogCount(
+    key: string,
+    type: 'autobooking' | 'reschedule',
+  ): number;
   getConsoleLogCount(key: string, type: 'autobooking' | 'reschedule'): number;
   clearConsoleLogCount(key: string, type: 'autobooking' | 'reschedule'): void;
   getProcessingStats(): {
@@ -275,10 +287,10 @@ export interface FilteredMatch {
 export interface ISharedAvailabilityFilterService {
   filterMatchingAvailabilities<T extends SchedulableItem>(
     item: T & { effectiveDates?: Date[] },
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): FilteredMatch[];
   convertToSchedulableItem(
-    item: SchedulableItem & Record<string, unknown>
+    item: SchedulableItem & Record<string, unknown>,
   ): SchedulableItem & { effectiveDates?: Date[] };
 }
 
@@ -321,40 +333,50 @@ export interface TaskOrganizerAvailability {
 
 export interface ISharedTaskOrganizerService {
   groupTasksByProxy<T extends { user: { proxy?: Proxy | string | null } }>(
-    warehouseDateTasksMap: Map<string, T[]>
+    warehouseDateTasksMap: Map<string, T[]>,
   ): Map<string, T[][]>;
-  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: Proxy | string | null } }>(
-    tasks: T[]
+  optimizeTaskOrder<
+    T extends { coefficient: number; user: { proxy?: Proxy | string | null } },
+  >(
+    tasks: T[],
   ): T[];
-  getProxyString<T extends { user: { proxy?: Proxy | string | null } }>(task: T): string;
+  getProxyString<T extends { user: { proxy?: Proxy | string | null } }>(
+    task: T,
+  ): string;
   organizeBookingsByWarehouseDate<
     TBooking extends TaskOrganizerBookingItem,
-    TUser extends TaskOrganizerUser
+    TUser extends TaskOrganizerUser,
   >(
     monitoringUsers: Array<TUser & { autobookings: TBooking[] }>,
-    availabilities: TaskOrganizerAvailability[]
-  ): Map<string, Array<{
-    booking?: TBooking;
-    reschedule?: TBooking;
-    user: TUser;
-    warehouseName: string;
-    coefficient: number;
-    availability: TaskOrganizerAvailability;
-  }>[]>;
+    availabilities: TaskOrganizerAvailability[],
+  ): Map<
+    string,
+    Array<{
+      booking?: TBooking;
+      reschedule?: TBooking;
+      user: TUser;
+      warehouseName: string;
+      coefficient: number;
+      availability: TaskOrganizerAvailability;
+    }>[]
+  >;
   organizeReschedulesByWarehouseDate<
     TReschedule extends TaskOrganizerBookingItem & { status: string },
-    TUser extends TaskOrganizerUser
+    TUser extends TaskOrganizerUser,
   >(
     monitoringUsers: Array<TUser & { reschedules?: TReschedule[] }>,
-    availabilities: TaskOrganizerAvailability[]
-  ): Map<string, Array<{
-    booking?: TReschedule;
-    reschedule?: TReschedule;
-    user: TUser;
-    warehouseName: string;
-    coefficient: number;
-    availability: TaskOrganizerAvailability;
-  }>[]>;
+    availabilities: TaskOrganizerAvailability[],
+  ): Map<
+    string,
+    Array<{
+      booking?: TReschedule;
+      reschedule?: TReschedule;
+      user: TUser;
+      warehouseName: string;
+      coefficient: number;
+      availability: TaskOrganizerAvailability;
+    }>[]
+  >;
 }
 
 // ============== Ban Service ==============
@@ -363,8 +385,12 @@ export interface ISharedBanService {
   isBanned(params: Omit<BanParams, 'error'>): boolean;
   banAllDates(params: BanAllDatesParams): void;
   banSingleDate(params: BanSingleDateParams): void;
-  isAllDatesBanned(params: Omit<BanAllDatesParams, 'error' | 'dateType'>): boolean;
-  isSingleDateBanned(params: Omit<BanSingleDateParams, 'error' | 'dateType'>): boolean;
+  isAllDatesBanned(
+    params: Omit<BanAllDatesParams, 'error' | 'dateType'>,
+  ): boolean;
+  isSingleDateBanned(
+    params: Omit<BanSingleDateParams, 'error' | 'dateType'>,
+  ): boolean;
   isUserBlacklisted(userId: number): boolean;
   addUserToBlacklist(userId: number, duration?: number): void;
   removeUserFromBlacklist(userId: number): void;
@@ -433,7 +459,11 @@ export interface Supply {
   coefficient: number;
   warehouseID: number;
   warehouseName: string;
-  boxTypeName: 'Короба' | 'Суперсейф' | 'Монопаллеты' | 'QR-поставка с коробами';
+  boxTypeName:
+    | 'Короба'
+    | 'Суперсейф'
+    | 'Монопаллеты'
+    | 'QR-поставка с коробами';
   boxTypeID?: BoxTypeId;
   allowUnload: boolean;
 }

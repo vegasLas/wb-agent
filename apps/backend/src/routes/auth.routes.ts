@@ -16,13 +16,15 @@ router.post(
   body('phoneNumber')
     .matches(/^\+\d{10,15}$/)
     .withMessage(
-      'Invalid phone number format. Please use international format (+1234567890)'
+      'Invalid phone number format. Please use international format (+1234567890)',
     ),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { phoneNumber } = req.body;
@@ -35,7 +37,7 @@ router.post(
 
       if (!result.success) {
         throw ApiError.badRequest(
-          result.error?.message || 'Phone verification failed'
+          result.error?.message || 'Phone verification failed',
         );
       }
 
@@ -48,7 +50,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // POST /api/v1/auth/verify-sms
@@ -60,7 +62,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { smsCode, sessionId } = req.body;
@@ -72,7 +76,7 @@ router.post(
 
       if (!result.success) {
         throw ApiError.badRequest(
-          result.error?.message || 'SMS verification failed'
+          result.error?.message || 'SMS verification failed',
         );
       }
 
@@ -86,7 +90,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // POST /api/v1/auth/verify-two-factor
@@ -98,7 +102,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Validation error', { errors: errors.array() });
+        throw ApiError.validation('Validation error', {
+          errors: errors.array(),
+        });
       }
 
       const { twoFactorCode, sessionId } = req.body;
@@ -110,7 +116,7 @@ router.post(
 
       if (!result.success) {
         throw ApiError.badRequest(
-          result.error?.message || 'Two-factor verification failed'
+          result.error?.message || 'Two-factor verification failed',
         );
       }
 
@@ -122,7 +128,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // POST /api/v1/auth/cancel
@@ -151,7 +157,7 @@ router.post('/logout', authenticate, async (req, res, next) => {
     } else {
       // Logout all accounts
       await userService.logoutWb(BigInt(req.user!.telegramId));
-      
+
       // Send Telegram notification
       const user = await userService.findByIdWithChatId(req.user!.id);
       if (user?.chatId) {

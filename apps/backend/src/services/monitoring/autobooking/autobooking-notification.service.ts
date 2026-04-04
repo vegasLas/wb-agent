@@ -8,12 +8,12 @@
 import { sharedTelegramNotificationService } from '../shared/telegram-notification.service';
 import { sharedStatusUpdateService } from '../shared/status-update.service';
 import { logger } from '../../../utils/logger';
-import type {
-  IAutobookingNotificationService,
-} from './autobooking.interfaces';
+import type { IAutobookingNotificationService } from './autobooking.interfaces';
 import type { SchedulableItem } from '../shared/interfaces/sharedInterfaces';
 
-export class AutobookingNotificationService implements IAutobookingNotificationService {
+export class AutobookingNotificationService
+  implements IAutobookingNotificationService
+{
   /**
    * Sends a success notification to the user via Telegram
    */
@@ -22,21 +22,25 @@ export class AutobookingNotificationService implements IAutobookingNotificationS
     warehouseName: string,
     date: Date,
     coefficient: number,
-    transitWarehouseName?: string | null
+    transitWarehouseName?: string | null,
   ): Promise<void> {
-    const message = sharedTelegramNotificationService.buildBookingSuccessMessage(
-      warehouseName,
-      date,
-      coefficient,
-      transitWarehouseName,
-      false // isReschedule = false
-    );
+    const message =
+      sharedTelegramNotificationService.buildBookingSuccessMessage(
+        warehouseName,
+        date,
+        coefficient,
+        transitWarehouseName,
+        false, // isReschedule = false
+      );
 
     logger.info(
-      `[AutobookingNotification] Sending success notification to chat ${chatId} for ${warehouseName}`
+      `[AutobookingNotification] Sending success notification to chat ${chatId} for ${warehouseName}`,
     );
 
-    await sharedTelegramNotificationService.sendSuccessNotification(chatId, message);
+    await sharedTelegramNotificationService.sendSuccessNotification(
+      chatId,
+      message,
+    );
   }
 
   /**
@@ -44,19 +48,20 @@ export class AutobookingNotificationService implements IAutobookingNotificationS
    */
   async updateAutobookingStatus(
     booking: SchedulableItem,
-    bookedDate: Date
+    bookedDate: Date,
   ): Promise<void> {
     logger.info(
-      `[AutobookingNotification] Updating status for booking ${booking.id}, date: ${bookedDate.toDateString()}`
+      `[AutobookingNotification] Updating status for booking ${booking.id}, date: ${bookedDate.toDateString()}`,
     );
 
     await sharedStatusUpdateService.updateAutobookingStatus(
       booking.id,
       bookedDate,
-      booking.dateType
+      booking.dateType,
     );
   }
 }
 
 // Export singleton instance
-export const autobookingNotificationService = new AutobookingNotificationService();
+export const autobookingNotificationService =
+  new AutobookingNotificationService();

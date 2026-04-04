@@ -217,9 +217,7 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
       }
 
       const task: GenericTask<TItem, TUser> = {
-        ...(itemType === 'booking'
-          ? { booking: item }
-          : { reschedule: item }),
+        ...(itemType === 'booking' ? { booking: item } : { reschedule: item }),
         user,
         warehouseName: availability.warehouseName,
         coefficient: availableDate.coefficient,
@@ -265,28 +263,8 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
     }>,
   ): Map<
     string,
-    Array<{
-      booking: TBooking;
-      user: TUser;
-      warehouseName: string;
-      coefficient: number;
-      availability: {
-        warehouseId: number;
-        warehouseName: string;
-        boxTypeID: 2 | 5 | 6;
-        availableDates: Array<{ date: string; coefficient: number }>;
-      };
-    }[]>
-  > {
-    const result = this.organizeBookingsByWarehouseDate(
-      monitoringUsers,
-      availabilities,
-    );
-
-    // Convert the generic tasks to booking-specific format
-    const bookingTasksMap = new Map<
-      string,
-      Array<{
+    Array<
+      {
         booking: TBooking;
         user: TUser;
         warehouseName: string;
@@ -297,7 +275,31 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
           boxTypeID: 2 | 5 | 6;
           availableDates: Array<{ date: string; coefficient: number }>;
         };
-      }[]>
+      }[]
+    >
+  > {
+    const result = this.organizeBookingsByWarehouseDate(
+      monitoringUsers,
+      availabilities,
+    );
+
+    // Convert the generic tasks to booking-specific format
+    const bookingTasksMap = new Map<
+      string,
+      Array<
+        {
+          booking: TBooking;
+          user: TUser;
+          warehouseName: string;
+          coefficient: number;
+          availability: {
+            warehouseId: number;
+            warehouseName: string;
+            boxTypeID: 2 | 5 | 6;
+            availableDates: Array<{ date: string; coefficient: number }>;
+          };
+        }[]
+      >
     >();
 
     for (const [key, taskGroups] of result.entries()) {
@@ -339,18 +341,20 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
     // Convert the generic tasks to reschedule-specific format
     const rescheduleTasksMap = new Map<
       string,
-      Array<{
-        reschedule: TReschedule;
-        user: TUser;
-        warehouseName: string;
-        coefficient: number;
-        availability: {
-          warehouseId: number;
+      Array<
+        {
+          reschedule: TReschedule;
+          user: TUser;
           warehouseName: string;
-          boxTypeID: 2 | 5 | 6;
-          availableDates: Array<{ date: string; coefficient: number }>;
-        };
-      }[]>
+          coefficient: number;
+          availability: {
+            warehouseId: number;
+            warehouseName: string;
+            boxTypeID: 2 | 5 | 6;
+            availableDates: Array<{ date: string; coefficient: number }>;
+          };
+        }[]
+      >
     >();
 
     for (const [key, taskGroups] of result.entries()) {
@@ -414,9 +418,9 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
   /**
    * Optimizes task order to ensure proxy and user diversity
    */
-  optimizeTaskOrder<T extends { coefficient: number; user: { proxy?: Proxy | string | null } }>(
-    tasks: T[],
-  ): T[] {
+  optimizeTaskOrder<
+    T extends { coefficient: number; user: { proxy?: Proxy | string | null } },
+  >(tasks: T[]): T[] {
     if (tasks.length <= 1) return tasks;
 
     // Sort by coefficient (ascending - prefer lower coefficients)
@@ -457,7 +461,9 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
   /**
    * Generates proxy string for tracking
    */
-  getProxyString<T extends { user: { proxy?: Proxy | string | null } }>(task: T): string {
+  getProxyString<T extends { user: { proxy?: Proxy | string | null } }>(
+    task: T,
+  ): string {
     if (!task.user.proxy) return 'no-proxy';
 
     // Handle proxy object with ip and port properties

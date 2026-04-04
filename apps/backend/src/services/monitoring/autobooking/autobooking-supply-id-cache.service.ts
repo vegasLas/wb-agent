@@ -10,19 +10,25 @@ import { prisma } from '../../../config/database';
 import { supplyService } from '../../supply.service';
 import { logger } from '../../../utils/logger';
 import { SUPPLY_TYPES } from '../../../constants/triggers';
+import type { IAutobookingSupplyIdCacheService } from './autobooking.interfaces';
 import type {
-  IAutobookingSupplyIdCacheService,
-} from './autobooking.interfaces';
-import type { MonitoringUser, SchedulableItem } from '../shared/interfaces/sharedInterfaces';
+  MonitoringUser,
+  SchedulableItem,
+} from '../shared/interfaces/sharedInterfaces';
 
 // Get constants from interface
 const SUPPLY_ID_CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCacheService {
+export class AutobookingSupplyIdCacheService
+  implements IAutobookingSupplyIdCacheService
+{
   /**
    * Checks if a cached supply ID is still valid (exists and not older than 24 hours)
    */
-  isSupplyIdValid(booking: { supplyId: string | null; supplyIdUpdatedAt: Date | null }): boolean {
+  isSupplyIdValid(booking: {
+    supplyId: string | null;
+    supplyIdUpdatedAt: Date | null;
+  }): boolean {
     if (!booking.supplyId || !booking.supplyIdUpdatedAt) return false;
     const age = Date.now() - new Date(booking.supplyIdUpdatedAt).getTime();
     return age <= SUPPLY_ID_CACHE_DURATION_MS;
@@ -57,7 +63,12 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
 
     // Clear expired supply ID if exists
     if (booking.supplyId) {
-      await this.clearExpiredSupplyId(booking, account, user, parseInt(booking.supplyId));
+      await this.clearExpiredSupplyId(
+        booking,
+        account,
+        user,
+        parseInt(booking.supplyId),
+      );
     }
 
     // Create new supply
@@ -86,7 +97,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
     booking: SchedulableItem,
     account: { id: string },
     user: MonitoringUser,
-    preorderId: number
+    preorderId: number,
   ): Promise<void> {
     await this.deletePreorderSafely(account, booking, user, preorderId);
     await this.clearSupplyIdFromCache(booking.id);
@@ -107,7 +118,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
     } catch (error) {
       logger.error(
         `[SupplyIdCache] Failed to cache supply ID for booking ${bookingId}:`,
-        error
+        error,
       );
     }
   }
@@ -127,7 +138,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
     } catch (error) {
       logger.error(
         `[SupplyIdCache] Failed to clear supply ID cache for booking ${bookingId}:`,
-        error
+        error,
       );
     }
   }
@@ -188,7 +199,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
     account: { id: string },
     booking: SchedulableItem,
     user: MonitoringUser,
-    preorderId: number
+    preorderId: number,
   ): Promise<void> {
     try {
       await supplyService.deletePreorder({
@@ -202,7 +213,7 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
       await this.handlePreorderDeletionError(
         deleteError as Error,
         booking,
-        preorderId
+        preorderId,
       );
     }
   }
@@ -213,15 +224,19 @@ export class AutobookingSupplyIdCacheService implements IAutobookingSupplyIdCach
   private async handlePreorderDeletionError(
     error: { message?: string },
     booking: SchedulableItem,
-    preorderId: number
+    preorderId: number,
   ): Promise<void> {
     if (error.message?.includes('Предзаказ не существует')) {
       await this.clearSupplyIdFromCache(booking.id);
     } else {
-      logger.warn(`[SupplyIdCache] Failed to delete preorder ${preorderId}:`, error.message);
+      logger.warn(
+        `[SupplyIdCache] Failed to delete preorder ${preorderId}:`,
+        error.message,
+      );
     }
   }
 }
 
 // Export singleton instance
-export const autobookingSupplyIdCacheService = new AutobookingSupplyIdCacheService();
+export const autobookingSupplyIdCacheService =
+  new AutobookingSupplyIdCacheService();

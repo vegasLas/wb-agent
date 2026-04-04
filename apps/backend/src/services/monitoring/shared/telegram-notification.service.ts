@@ -1,7 +1,7 @@
 /**
  * Telegram Notification Service
  * Phase 1: Foundation - Sends notifications via Telegram Bot API
- * 
+ *
  * Purpose: Handles all Telegram notifications for the monitoring system
  * including success notifications for bookings and error notifications
  */
@@ -19,7 +19,9 @@ import type {
  * Service for sending Telegram notifications
  * Handles success/error messages and bot blocked detection
  */
-export class SharedTelegramNotificationService implements ISharedTelegramNotificationService {
+export class SharedTelegramNotificationService
+  implements ISharedTelegramNotificationService
+{
   /**
    * Sends a success notification with standard formatting
    * @param chatId - Telegram chat ID
@@ -29,7 +31,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
   async sendSuccessNotification(
     chatId: string,
     message: string,
-    options: TelegramNotificationOptions = {}
+    options: TelegramNotificationOptions = {},
   ): Promise<void> {
     if (!TBOT) {
       logger.warn('TBOT not initialized, cannot send success notification');
@@ -47,7 +49,11 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     };
 
     try {
-      await TBOT.sendMessage(chatId, message, defaultOptions as unknown as Parameters<typeof TBOT.sendMessage>[2]);
+      await TBOT.sendMessage(
+        chatId,
+        message,
+        defaultOptions as unknown as Parameters<typeof TBOT.sendMessage>[2],
+      );
     } catch (error) {
       await this.handleNotificationError(error as TelegramError, chatId);
     }
@@ -62,7 +68,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
   async sendErrorNotification(
     chatId: string,
     message: string,
-    options: TelegramNotificationOptions = {}
+    options: TelegramNotificationOptions = {},
   ): Promise<void> {
     if (!TBOT) {
       logger.warn('TBOT not initialized, cannot send error notification');
@@ -80,7 +86,11 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     };
 
     try {
-      await TBOT.sendMessage(chatId, message, defaultOptions as unknown as Parameters<typeof TBOT.sendMessage>[2]);
+      await TBOT.sendMessage(
+        chatId,
+        message,
+        defaultOptions as unknown as Parameters<typeof TBOT.sendMessage>[2],
+      );
     } catch (error) {
       await this.handleNotificationError(error as TelegramError, chatId);
     }
@@ -95,13 +105,13 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
   async sendBulkNotification(
     chatIds: Set<string>,
     message: string,
-    options: TelegramNotificationOptions = {}
+    options: TelegramNotificationOptions = {},
   ): Promise<void> {
     for (const chatId of chatIds) {
       try {
         await this.sendErrorNotification(chatId, message, options);
         // Rate limiting: 100ms delay between messages
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         logger.error(`Failed to send bulk notification to ${chatId}:`, error);
       }
@@ -116,17 +126,17 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
    */
   async handleNotificationError(
     error: TelegramError,
-    chatId: string
+    chatId: string,
   ): Promise<void> {
     logger.error(
       `Error sending Telegram notification to chat ${chatId}:`,
-      error.message
+      error.message,
     );
 
     // Check if the error indicates the bot was blocked by the user
     if (this.isBotBlockedError(error)) {
       logger.info(
-        `User with chatId ${chatId} has blocked the bot. Setting chatId to null.`
+        `User with chatId ${chatId} has blocked the bot. Setting chatId to null.`,
       );
       await this.updateUserChatId(chatId, null);
     }
@@ -146,7 +156,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     date: Date,
     coefficient: number,
     transitWarehouseName?: string | null,
-    isReschedule = false
+    isReschedule = false,
   ): string {
     const action = isReschedule ? 'перенесена' : 'забронирована';
     const icon = isReschedule ? '🎯' : '✅';
@@ -190,7 +200,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     date: Date | null,
     supplyType: string,
     error?: TelegramError | Error | unknown,
-    isReschedule = false
+    isReschedule = false,
   ): string {
     const action = isReschedule ? 'переноса' : 'бронирования';
 
@@ -207,7 +217,8 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
       SUPERSAFE: 'Суперсейф',
     };
 
-    const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Неизвестная ошибка';
 
     return (
       `⚠️ <b>Дата недоступна для ${action}</b>\n\n` +
@@ -260,15 +271,17 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     error: { message: string };
   }): Promise<void> {
     const message = this.buildBanMessage(params);
-    
+
     // Log the ban
     logger.info(`[BanNotification] ${message}`);
-    
+
     // Send the notification via TBOT (for testing purposes)
     if (TBOT) {
       try {
         // Send to a default/admin chat or just simulate sending
-        await TBOT.sendMessage('admin-chat-id', message, { parse_mode: 'HTML' });
+        await TBOT.sendMessage('admin-chat-id', message, {
+          parse_mode: 'HTML',
+        });
       } catch (error) {
         // Ignore errors in test environment
         logger.debug('Ban notification send simulated');
@@ -285,7 +298,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
     return (
       (error.code === 'ETELEGRAM' &&
         error.response?.body?.description?.includes(
-          'bot was blocked by the user'
+          'bot was blocked by the user',
         )) ||
       false
     );
@@ -298,7 +311,7 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
    */
   private async updateUserChatId(
     oldChatId: string,
-    newChatId: string | null
+    newChatId: string | null,
   ): Promise<void> {
     try {
       await prisma.user.update({
@@ -314,4 +327,5 @@ export class SharedTelegramNotificationService implements ISharedTelegramNotific
 /**
  * Singleton instance of the telegram notification service
  */
-export const sharedTelegramNotificationService = new SharedTelegramNotificationService();
+export const sharedTelegramNotificationService =
+  new SharedTelegramNotificationService();

@@ -29,10 +29,15 @@ export const promotionsAPI = {
    * GET /api/v1/promotions/timeline
    * Get promotions timeline
    */
-  async fetchTimeline(params?: TimelineParams): Promise<PromotionsTimelineResponse> {
-    const response = await apiClient.get<{ data: PromotionsTimelineResponse }>('/promotions/timeline', {
-      params,
-    });
+  async fetchTimeline(
+    params?: TimelineParams,
+  ): Promise<PromotionsTimelineResponse> {
+    const response = await apiClient.get<{ data: PromotionsTimelineResponse }>(
+      '/promotions/timeline',
+      {
+        params,
+      },
+    );
     return response.data.data;
   },
 
@@ -41,9 +46,12 @@ export const promotionsAPI = {
    * Get promotion detail by promoID
    */
   async fetchDetail(params: DetailParams): Promise<PromotionDetailResponse> {
-    const response = await apiClient.get<{ data: PromotionDetailResponse }>('/promotions/detail', {
-      params,
-    });
+    const response = await apiClient.get<{ data: PromotionDetailResponse }>(
+      '/promotions/detail',
+      {
+        params,
+      },
+    );
     return response.data.data;
   },
 
@@ -52,7 +60,10 @@ export const promotionsAPI = {
    * Create and fetch promotion Excel report
    */
   async fetchExcel(params: ExcelParams): Promise<PromotionApiPayload> {
-    const response = await apiClient.post<{ data: PromotionApiPayload }>('/promotions/excel', params);
+    const response = await apiClient.post<{ data: PromotionApiPayload }>(
+      '/promotions/excel',
+      params,
+    );
     return response.data.data;
   },
 };

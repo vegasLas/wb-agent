@@ -22,10 +22,7 @@ export class ApiError extends Error {
     return new ApiError(400, message, code || 'BAD_REQUEST', details);
   }
 
-  static unauthorized(
-    message = 'Unauthorized',
-    code?: string,
-  ): ApiError {
+  static unauthorized(message = 'Unauthorized', code?: string): ApiError {
     return new ApiError(401, message, code || 'UNAUTHORIZED');
   }
 

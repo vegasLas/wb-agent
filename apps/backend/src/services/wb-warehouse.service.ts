@@ -194,7 +194,9 @@ export class WBWarehouseService {
         },
       });
     } catch (error) {
-      logger.error(`Failed to get all warehouses by account: ${(error as Error).message}`);
+      logger.error(
+        `Failed to get all warehouses by account: ${(error as Error).message}`,
+      );
       throw {
         message: `Failed to get all warehouses by account: ${(error as Error).message}`,
         method: 'getAllWarehousesByAccount',

@@ -19,7 +19,4 @@ export {
 } from './reschedules';
 
 // Triggers Views
-export {
-  TriggersListView,
-  TriggersCreateView,
-} from './triggers';
+export { TriggersListView, TriggersCreateView } from './triggers';

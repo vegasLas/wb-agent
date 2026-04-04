@@ -129,7 +129,8 @@ export const useRescheduleUpdateFormStore = defineStore(
       if (current.dateType !== originalData.value.dateType) return true;
       if (current.startDate !== originalData.value.startDate) return true;
       if (current.endDate !== originalData.value.endDate) return true;
-      if (current.maxCoefficient !== originalData.value.maxCoefficient) return true;
+      if (current.maxCoefficient !== originalData.value.maxCoefficient)
+        return true;
 
       // Compare arrays
       const originalSorted = [...originalData.value.customDates].sort();
@@ -145,7 +146,7 @@ export const useRescheduleUpdateFormStore = defineStore(
     const isFormValid = computed(() => {
       // Simple validation
       if (!formData.value.selectedDateType) return false;
-      
+
       const dateType = formData.value.selectedDateType;
       if (['WEEK', 'MONTH', 'CUSTOM_PERIOD'].includes(dateType)) {
         if (!formData.value.startDateInput) return false;
@@ -156,10 +157,10 @@ export const useRescheduleUpdateFormStore = defineStore(
       if (dateType === 'CUSTOM_DATES_SINGLE') {
         if (formData.value.customDates.length === 0) return false;
       }
-      
+
       const coef = formData.value.maxCoefficientInput;
       if (coef < 0 || coef > 20) return false;
-      
+
       return true;
     });
 

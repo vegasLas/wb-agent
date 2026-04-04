@@ -6,7 +6,14 @@
  * Uses Playwright with fingerprint injection to avoid detection.
  */
 
-import { chromium, Browser, Page, BrowserContext, Cookie, type BrowserContextOptions } from 'playwright';
+import {
+  chromium,
+  Browser,
+  Page,
+  BrowserContext,
+  Cookie,
+  type BrowserContextOptions,
+} from 'playwright';
 import type { Proxy } from '../../utils/userEnvInfo';
 import {
   browserFingerprintService,
@@ -159,7 +166,9 @@ export class PlaywrightBrowserService {
 
   private static getPlaywrightOptions(proxy?: Proxy) {
     // Match the simple launch options pattern from openWithCookies.js
-    const options: { proxy?: { server: string; username?: string; password?: string } } = {};
+    const options: {
+      proxy?: { server: string; username?: string; password?: string };
+    } = {};
 
     // Add proxy configuration if provided (matching JS pattern)
     if (proxy) {
@@ -379,7 +388,10 @@ export class PlaywrightBrowserService {
           })(),
         ]);
       } catch (error) {
-        if ((error as BrowserError).code === BrowserErrorCode.PAGE_ERROR_NOTIFICATION) {
+        if (
+          (error as BrowserError).code ===
+          BrowserErrorCode.PAGE_ERROR_NOTIFICATION
+        ) {
           throw error;
         }
         const err = error instanceof Error ? error : new Error(String(error));
@@ -487,7 +499,10 @@ export class PlaywrightBrowserService {
           );
         }
       } catch (error) {
-        if ((error as BrowserError).code === BrowserErrorCode.DATE_ELEMENT_NOT_FOUND) {
+        if (
+          (error as BrowserError).code ===
+          BrowserErrorCode.DATE_ELEMENT_NOT_FOUND
+        ) {
           throw error;
         }
         const err = error instanceof Error ? error : new Error(String(error));
@@ -584,7 +599,10 @@ export class PlaywrightBrowserService {
           })(),
         ]);
       } catch (error) {
-        if ((error as BrowserError).code === BrowserErrorCode.PAGE_ERROR_NOTIFICATION)
+        if (
+          (error as BrowserError).code ===
+          BrowserErrorCode.PAGE_ERROR_NOTIFICATION
+        )
           throw error;
         const err = error instanceof Error ? error : new Error(String(error));
         logger.error(`[Navigator] Packaging view timeout: ${err.message}`);

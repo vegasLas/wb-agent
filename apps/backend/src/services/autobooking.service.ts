@@ -55,7 +55,7 @@ export class AutobookingUpdateError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly statusCode = 400
+    public readonly statusCode = 400,
   ) {
     super(message);
     this.name = 'AutobookingUpdateError';
@@ -73,7 +73,7 @@ export class AutobookingService {
   async getUserAutobookings(
     userId: number,
     page = 1,
-    limit = 20
+    limit = 20,
   ): Promise<{
     success: boolean;
     counts: Record<string, number>;
@@ -103,18 +103,23 @@ export class AutobookingService {
           currentPage: page,
           nextPage: total > page * limit ? page + 1 : null,
         };
-      })
+      }),
     );
 
     return {
       success: true,
-      counts: results.reduce((acc, curr) => {
-        acc[curr.status] = curr.total;
-        return acc;
-      }, {} as Record<string, number>),
+      counts: results.reduce(
+        (acc, curr) => {
+          acc[curr.status] = curr.total;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
       items: results.flatMap((item) => item.items),
       currentPage: page,
-      nextPage: results.some((result) => result.nextPage !== null) ? page + 1 : null,
+      nextPage: results.some((result) => result.nextPage !== null)
+        ? page + 1
+        : null,
     };
   }
 
@@ -124,7 +129,7 @@ export class AutobookingService {
    */
   async createAutobooking(
     userId: number,
-    data: CreateAutobookingDto
+    data: CreateAutobookingDto,
   ): Promise<Autobooking> {
     // Get user for subscription and credit check
     const user = await prisma.user.findUnique({
@@ -141,23 +146,30 @@ export class AutobookingService {
     });
 
     if (!account) {
-      throw new AutobookingUpdateError('Selected account not found', 'ACCOUNT_NOT_FOUND', 404);
+      throw new AutobookingUpdateError(
+        'Selected account not found',
+        'ACCOUNT_NOT_FOUND',
+        404,
+      );
     }
 
     if (!account.selectedSupplierId) {
       throw new AutobookingUpdateError(
         'Selected account does not have a supplier configured',
         'NO_SUPPLIER',
-        400
+        400,
       );
     }
 
     // Validate monopallet count for MONOPALLETE
-    if (data.supplyType === 'MONOPALLETE' && (!data.monopalletCount || data.monopalletCount < 1)) {
+    if (
+      data.supplyType === 'MONOPALLETE' &&
+      (!data.monopalletCount || data.monopalletCount < 1)
+    ) {
       throw new AutobookingUpdateError(
         'Для типа поставки "Монопаллета" необходимо указать количество монопаллет (минимум 1)',
         'INVALID_MONOPALLET_COUNT',
-        400
+        400,
       );
     }
 
@@ -172,20 +184,36 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         `У вас недостаточно кредитов. Требуется: ${requiredCount}, доступно: ${user.autobookingCount}`,
         'INSUFFICIENT_CREDITS',
-        403
+        403,
       );
     }
 
     // Normalize dates to UTC midnight
     const normalizedStartDate = data.startDate
-      ? new Date(Date.UTC(data.startDate.getFullYear(), data.startDate.getMonth(), data.startDate.getDate()))
+      ? new Date(
+          Date.UTC(
+            data.startDate.getFullYear(),
+            data.startDate.getMonth(),
+            data.startDate.getDate(),
+          ),
+        )
       : null;
     const normalizedEndDate = data.endDate
-      ? new Date(Date.UTC(data.endDate.getFullYear(), data.endDate.getMonth(), data.endDate.getDate()))
+      ? new Date(
+          Date.UTC(
+            data.endDate.getFullYear(),
+            data.endDate.getMonth(),
+            data.endDate.getDate(),
+          ),
+        )
       : null;
-    const normalizedCustomDates = data.customDates?.map((date) =>
-      new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-    ) || [];
+    const normalizedCustomDates =
+      data.customDates?.map(
+        (date) =>
+          new Date(
+            Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+          ),
+      ) || [];
 
     // Create autobooking and decrement credits in transaction
     const [autobooking] = await prisma.$transaction([
@@ -221,14 +249,17 @@ export class AutobookingService {
    */
   async updateAutobooking(
     userId: number,
-    data: UpdateAutobookingDto
+    data: UpdateAutobookingDto,
   ): Promise<Autobooking> {
     // Check if there's any data to update
-    if (Object.keys(data).length === 0 || (Object.keys(data).length === 1 && 'id' in data)) {
+    if (
+      Object.keys(data).length === 0 ||
+      (Object.keys(data).length === 1 && 'id' in data)
+    ) {
       throw new AutobookingUpdateError(
         'No valid update data provided',
         'NO_UPDATE_DATA',
-        400
+        400,
       );
     }
 
@@ -241,7 +272,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         'Autobooking not found or access denied',
         'AUTOBOOKING_NOT_FOUND',
-        404
+        404,
       );
     }
 
@@ -249,7 +280,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         'The autobooking status is COMPLETED',
         'AUTOBOOKING_IS_COMPLETED',
-        400
+        400,
       );
     }
 
@@ -267,72 +298,87 @@ export class AutobookingService {
         throw new AutobookingUpdateError(
           'Insufficient autobooking count. Required: ' + countAdjustment,
           'INSUFFICIENT_AUTOBOOKING_COUNT',
-          403
+          403,
         );
       }
     }
 
     // Build update data with validation
     const updateData: Partial<Autobooking> = {};
-    
+
     if (data.draftId !== undefined) {
       this.validateDraftId(data.draftId);
       updateData.draftId = data.draftId;
     }
-    
+
     if (data.warehouseId !== undefined) {
       this.validateWarehouseId(data.warehouseId);
       updateData.warehouseId = data.warehouseId;
     }
-    
+
     if (data.transitWarehouseId !== undefined) {
       updateData.transitWarehouseId = data.transitWarehouseId;
     }
-    
+
     if (data.transitWarehouseName !== undefined) {
       updateData.transitWarehouseName = data.transitWarehouseName;
     }
-    
+
     if (data.supplyType !== undefined) {
       this.validateSupplyType(data.supplyType);
       updateData.supplyType = data.supplyType;
     }
-    
+
     if (data.dateType !== undefined) {
       this.validateDateType(data.dateType);
       updateData.dateType = data.dateType;
     }
-    
+
     if (data.startDate !== undefined) {
       updateData.startDate = data.startDate
-        ? new Date(Date.UTC(data.startDate.getFullYear(), data.startDate.getMonth(), data.startDate.getDate()))
+        ? new Date(
+            Date.UTC(
+              data.startDate.getFullYear(),
+              data.startDate.getMonth(),
+              data.startDate.getDate(),
+            ),
+          )
         : null;
     }
-    
+
     if (data.endDate !== undefined) {
       updateData.endDate = data.endDate
-        ? new Date(Date.UTC(data.endDate.getFullYear(), data.endDate.getMonth(), data.endDate.getDate()))
+        ? new Date(
+            Date.UTC(
+              data.endDate.getFullYear(),
+              data.endDate.getMonth(),
+              data.endDate.getDate(),
+            ),
+          )
         : null;
     }
-    
+
     if (data.customDates !== undefined) {
-      updateData.customDates = data.customDates.map((date) =>
-        new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+      updateData.customDates = data.customDates.map(
+        (date) =>
+          new Date(
+            Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+          ),
       );
     }
-    
+
     if (data.maxCoefficient !== undefined) {
       this.validateMaxCoefficient(data.maxCoefficient);
       updateData.maxCoefficient = data.maxCoefficient;
     }
-    
+
     if (data.monopalletCount !== undefined) {
       if (data.monopalletCount !== null) {
         this.validateMonopalletCount(data.monopalletCount);
       }
       updateData.monopalletCount = data.monopalletCount;
     }
-    
+
     if (data.status !== undefined) {
       this.validateStatus(data.status);
       updateData.status = data.status;
@@ -369,14 +415,18 @@ export class AutobookingService {
    */
   async deleteAutobooking(
     userId: number,
-    autobookingId: string
+    autobookingId: string,
   ): Promise<{ message: string; returnedCredits: number }> {
     const autobooking = await prisma.autobooking.findFirst({
       where: { id: autobookingId, userId },
     });
 
     if (!autobooking) {
-      throw new AutobookingUpdateError('Autobooking not found', 'AUTOBOOKING_NOT_FOUND', 404);
+      throw new AutobookingUpdateError(
+        'Autobooking not found',
+        'AUTOBOOKING_NOT_FOUND',
+        404,
+      );
     }
 
     // Calculate return count
@@ -412,12 +462,12 @@ export class AutobookingService {
    */
   private calculateCountAdjustment(
     existing: Autobooking,
-    update: UpdateAutobookingDto
+    update: UpdateAutobookingDto,
   ): number {
     const currentDateType = this.validateDateType(existing.dateType);
     const currentCost = this.calculateCost(
       currentDateType,
-      existing.customDates || []
+      existing.customDates || [],
     );
 
     const newDateType = update.dateType || currentDateType;
@@ -442,7 +492,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         `Invalid date type: ${dateType}`,
         'INVALID_DATE_TYPE',
-        400
+        400,
       );
     }
     return dateType as AutobookingDateType;
@@ -453,7 +503,7 @@ export class AutobookingService {
    */
   private calculateCost(
     dateType: AutobookingDateType,
-    customDates: Date[]
+    customDates: Date[],
   ): number {
     switch (dateType) {
       case 'CUSTOM_DATES':
@@ -473,11 +523,15 @@ export class AutobookingService {
    * Validate draft ID
    */
   private validateDraftId(draftId: string): void {
-    if (!draftId || typeof draftId !== 'string' || draftId.trim().length === 0) {
+    if (
+      !draftId ||
+      typeof draftId !== 'string' ||
+      draftId.trim().length === 0
+    ) {
       throw new AutobookingUpdateError(
         'Draft ID must be a non-empty string',
         'INVALID_DRAFT_ID',
-        400
+        400,
       );
     }
   }
@@ -490,7 +544,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         'Warehouse ID must be a positive integer',
         'INVALID_WAREHOUSE_ID',
-        400
+        400,
       );
     }
   }
@@ -504,7 +558,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         `Supply type must be one of: ${validTypes.join(', ')}`,
         'INVALID_SUPPLY_TYPE',
-        400
+        400,
       );
     }
   }
@@ -513,11 +567,15 @@ export class AutobookingService {
    * Validate max coefficient
    */
   private validateMaxCoefficient(maxCoefficient: number): void {
-    if (typeof maxCoefficient !== 'number' || maxCoefficient < 0 || maxCoefficient > 20) {
+    if (
+      typeof maxCoefficient !== 'number' ||
+      maxCoefficient < 0 ||
+      maxCoefficient > 20
+    ) {
       throw new AutobookingUpdateError(
         'Max coefficient must be a number between 0 and 20',
         'INVALID_MAX_COEFFICIENT',
-        400
+        400,
       );
     }
   }
@@ -526,11 +584,15 @@ export class AutobookingService {
    * Validate monopallet count
    */
   private validateMonopalletCount(monopalletCount: number): void {
-    if (!Number.isInteger(monopalletCount) || monopalletCount <= 0 || monopalletCount > 100) {
+    if (
+      !Number.isInteger(monopalletCount) ||
+      monopalletCount <= 0 ||
+      monopalletCount > 100
+    ) {
       throw new AutobookingUpdateError(
         'Monopallet count must be an integer between 1 and 100',
         'INVALID_MONOPALLET_COUNT',
-        400
+        400,
       );
     }
   }
@@ -544,7 +606,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         `Status must be one of: ${validStatuses.join(', ')}`,
         'INVALID_STATUS',
-        400
+        400,
       );
     }
   }
@@ -554,7 +616,7 @@ export class AutobookingService {
    */
   private validateBusinessRules(
     processedData: Partial<Autobooking>,
-    updateData: UpdateAutobookingDto
+    updateData: UpdateAutobookingDto,
   ): void {
     // Monopallet count required for MONOPALLETE
     if (
@@ -564,7 +626,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         'Monopallet count is required for MONOPALLETE supply type',
         'MONOPALLET_COUNT_REQUIRED',
-        400
+        400,
       );
     }
 
@@ -577,7 +639,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         'Custom dates are required for custom date types',
         'CUSTOM_DATES_REQUIRED',
-        400
+        400,
       );
     }
 
@@ -591,7 +653,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         'Start date is required for period-based date types',
         'START_DATE_REQUIRED',
-        400
+        400,
       );
     }
 
@@ -600,7 +662,7 @@ export class AutobookingService {
       throw new AutobookingUpdateError(
         'End date is required for CUSTOM_PERIOD date type',
         'END_DATE_REQUIRED',
-        400
+        400,
       );
     }
   }

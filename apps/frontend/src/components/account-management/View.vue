@@ -11,10 +11,7 @@
     <div class="space-y-6">
       <!-- Show Terms Modal Content -->
       <div v-if="showTermsModal">
-        <TermsContent
-          @agreed="showTermsModal = false"
-          @cancel="closeModal"
-        />
+        <TermsContent @agreed="showTermsModal = false" @cancel="closeModal" />
       </div>
 
       <!-- Show Auth Modal Content -->
@@ -53,16 +50,9 @@
     </div>
 
     <!-- Main Footer -->
-    <template
-      v-if="!showTermsModal && !showAuthModal"
-      #footer
-    >
+    <template v-if="!showTermsModal && !showAuthModal" #footer>
       <div class="flex justify-between">
-        <Button
-          label="Отмена"
-          text
-          @click="closeModal"
-        />
+        <Button label="Отмена" text @click="closeModal" />
         <Button
           label="Сохранить выбор"
           :disabled="!canSave"

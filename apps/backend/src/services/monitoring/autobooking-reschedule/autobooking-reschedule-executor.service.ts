@@ -34,7 +34,7 @@ export class AutobookingRescheduleExecutorService
    */
   filterMatchingAvailabilities(
     reschedule: AutobookingReschedule,
-    availabilities: import('../interfaces/reschedule.interfaces').WarehouseAvailability[]
+    availabilities: import('../interfaces/reschedule.interfaces').WarehouseAvailability[],
   ): Array<{
     availability: import('../interfaces/reschedule.interfaces').WarehouseAvailability;
     matchingDates: Array<{

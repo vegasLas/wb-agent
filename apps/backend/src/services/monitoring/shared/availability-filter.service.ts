@@ -1,10 +1,10 @@
 /**
  * Availability Filter Service
  * Phase 3: Availability Filtering - Date filtering logic for all date types
- * 
+ *
  * Purpose: Filters warehouse availabilities based on booking criteria
  * including coefficient limits and date ranges
- * 
+ *
  * NOTE: Uses regular local dates (NOT Moscow timezone) - same as deprecated project
  */
 
@@ -33,7 +33,9 @@ const BOX_TYPE_MAPPINGS = {
  * Service for filtering warehouse availabilities based on item criteria
  * Works with autobookings, reschedules, and triggers
  */
-export class SharedAvailabilityFilterService implements ISharedAvailabilityFilterService {
+export class SharedAvailabilityFilterService
+  implements ISharedAvailabilityFilterService
+{
   /**
    * Generic method to filter matching availabilities for any schedulable item
    * @param item - The schedulable item (autobooking, reschedule, etc.)
@@ -42,18 +44,18 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
    */
   filterMatchingAvailabilities<T extends SchedulableItem>(
     item: T & { effectiveDates?: Date[] },
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): FilteredMatch[] {
     const boxTypeId = this.getBoxTypeId(item.supplyType);
     const effectiveDates = this.getEffectiveDates(item);
 
-    const matchingAvailabilities = availabilities.filter(availability =>
-      this.isAvailabilityMatching(availability, item, boxTypeId)
+    const matchingAvailabilities = availabilities.filter((availability) =>
+      this.isAvailabilityMatching(availability, item, boxTypeId),
     );
 
     const results = matchingAvailabilities
-      .map(availability =>
-        this.processAvailabilityDates(availability, item, effectiveDates)
+      .map((availability) =>
+        this.processAvailabilityDates(availability, item, effectiveDates),
       )
       .filter((result): result is FilteredMatch => result !== null);
 
@@ -79,7 +81,7 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
   private isAvailabilityMatching(
     availability: WarehouseAvailability,
     item: SchedulableItem,
-    boxTypeId: BoxTypeId
+    boxTypeId: BoxTypeId,
   ): boolean {
     return (
       availability.warehouseId === item.warehouseId &&
@@ -90,12 +92,12 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
   /**
    * Gets effective dates for an item based on its configuration
    * Uses regular local dates (NOT Moscow timezone)
-   * 
+   *
    * @param item - Schedulable item with date configuration
    * @returns Array of effective dates
    */
   private getEffectiveDates(
-    item: SchedulableItem & { effectiveDates?: Date[] }
+    item: SchedulableItem & { effectiveDates?: Date[] },
   ): Date[] {
     // If effectiveDates is already provided (legacy AutobookingWithDates), use it
     if (item.effectiveDates && item.effectiveDates.length > 0) {
@@ -107,8 +109,8 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
     today.setHours(0, 0, 0, 0);
 
     // For items that have completed some dates, exclude them
-    const completedDateStrings = item.completedDates.map(date =>
-      date.toDateString()
+    const completedDateStrings = item.completedDates.map((date) =>
+      date.toDateString(),
     );
 
     let effectiveDates: Date[] = [];
@@ -117,13 +119,13 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
       case 'CUSTOM_DATES':
       case 'CUSTOM_DATES_SINGLE':
         effectiveDates = item.customDates
-          .filter(date => {
+          .filter((date) => {
             const dateObj = new Date(date);
             dateObj.setHours(0, 0, 0, 0);
             return dateObj >= today;
           })
           .filter(
-            date => !completedDateStrings.includes(date.toDateString())
+            (date) => !completedDateStrings.includes(date.toDateString()),
           );
         break;
 
@@ -131,29 +133,29 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
         if (!item.startDate) return [];
         effectiveDates = this.generateDateRange(
           item.startDate,
-          WEEK_DURATION_DAYS
-        ).filter(date => !completedDateStrings.includes(date.toDateString()));
+          WEEK_DURATION_DAYS,
+        ).filter((date) => !completedDateStrings.includes(date.toDateString()));
         break;
 
       case 'MONTH':
         if (!item.startDate) return [];
         effectiveDates = this.generateDateRange(
           item.startDate,
-          MONTH_DURATION_DAYS
-        ).filter(date => !completedDateStrings.includes(date.toDateString()));
+          MONTH_DURATION_DAYS,
+        ).filter((date) => !completedDateStrings.includes(date.toDateString()));
         break;
 
       case 'CUSTOM_PERIOD': {
         if (!item.startDate || !item.endDate) return [];
         const daysDiff = Math.ceil(
           (item.endDate.getTime() - item.startDate.getTime()) /
-            (1000 * 60 * 60 * 24)
+            (1000 * 60 * 60 * 24),
         );
         // Include both start and end dates: if start=15th, end=17th, we want 15th, 16th, 17th (3 days)
         effectiveDates = this.generateDateRange(
           item.startDate,
-          daysDiff + 1
-        ).filter(date => !completedDateStrings.includes(date.toDateString()));
+          daysDiff + 1,
+        ).filter((date) => !completedDateStrings.includes(date.toDateString()));
         break;
       }
 
@@ -165,7 +167,7 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
     if (item.currentDate) {
       const currentDateString = new Date(item.currentDate).toDateString();
       effectiveDates = effectiveDates.filter(
-        date => date.toDateString() !== currentDateString
+        (date) => date.toDateString() !== currentDateString,
       );
     }
 
@@ -204,11 +206,11 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
   private processAvailabilityDates(
     availability: WarehouseAvailability,
     item: SchedulableItem & { effectiveDates?: Date[] },
-    effectiveDates: Date[]
+    effectiveDates: Date[],
   ): FilteredMatch | null {
     const validDates = effectiveDates
-      .map(effectiveDate =>
-        this.processEffectiveDate(effectiveDate, item, availability)
+      .map((effectiveDate) =>
+        this.processEffectiveDate(effectiveDate, item, availability),
       )
       .filter((match): match is NonNullable<typeof match> => match !== null);
 
@@ -227,13 +229,16 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
   private processEffectiveDate(
     effectiveDate: Date,
     item: SchedulableItem,
-    availability: WarehouseAvailability
-  ): { effectiveDate: Date; availableDate: { date: string; coefficient: number } } | null {
+    availability: WarehouseAvailability,
+  ): {
+    effectiveDate: Date;
+    availableDate: { date: string; coefficient: number };
+  } | null {
     // Find matching available date
     const availableDate = this.findMatchingAvailableDate(
       effectiveDate,
       item,
-      availability
+      availability,
     );
     return availableDate ? { effectiveDate, availableDate } : null;
   }
@@ -241,7 +246,7 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
   /**
    * Finds matching available date for effective date
    * Checks coefficient limit
-   * 
+   *
    * @param effectiveDate - The effective date
    * @param item - Schedulable item with max coefficient
    * @param availability - Warehouse availability
@@ -250,9 +255,9 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
   private findMatchingAvailableDate(
     effectiveDate: Date,
     item: SchedulableItem & { effectiveDates?: Date[] },
-    availability: WarehouseAvailability
+    availability: WarehouseAvailability,
   ): { date: string; coefficient: number } | undefined {
-    return availability.availableDates.find(d => {
+    return availability.availableDates.find((d) => {
       const dateMatches =
         new Date(d.date).toDateString() === effectiveDate.toDateString();
 
@@ -281,7 +286,7 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
    * @returns Standardized schedulable item
    */
   convertToSchedulableItem(
-    item: SchedulableItem & Record<string, unknown>
+    item: SchedulableItem & Record<string, unknown>,
   ): SchedulableItem & { effectiveDates?: Date[] } {
     return {
       id: item.id,
@@ -315,4 +320,5 @@ export class SharedAvailabilityFilterService implements ISharedAvailabilityFilte
 /**
  * Singleton instance of the availability filter service
  */
-export const sharedAvailabilityFilterService = new SharedAvailabilityFilterService();
+export const sharedAvailabilityFilterService =
+  new SharedAvailabilityFilterService();

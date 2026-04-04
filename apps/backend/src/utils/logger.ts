@@ -24,7 +24,7 @@ export const logger = winston.createLogger({
           : combine(
               colorize(),
               timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-              devFormat
+              devFormat,
             ),
     }),
   ],
@@ -33,5 +33,5 @@ export const logger = winston.createLogger({
 // Request logging format
 export const requestLoggerFormat = winston.format.combine(
   winston.format.timestamp(),
-  winston.format.json()
+  winston.format.json(),
 );

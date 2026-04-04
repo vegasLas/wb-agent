@@ -6,7 +6,10 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { body, query } from 'express-validator';
-import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
+import {
+  authenticate,
+  AuthenticatedRequest,
+} from '../middleware/auth.middleware';
 import { wbSupplierService } from '../services/wb-supplier.service';
 import { accountService } from '../services/account.service';
 import { userService } from '../services/user.service';
@@ -58,9 +61,9 @@ router.post(
 
       // Verify the supplier belongs to this account
       const supplierExists = account.suppliers.some(
-        (s: { supplierId: string }) => s.supplierId === supplierId
+        (s: { supplierId: string }) => s.supplierId === supplierId,
       );
-      
+
       if (!supplierExists) {
         throw new ApiError(400, 'Supplier not found in the specified account');
       }
@@ -92,7 +95,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // GET /api/v1/supplies/supply-details
@@ -100,13 +103,11 @@ router.post(
 router.get(
   '/supply-details',
   authenticate,
-  [
-    query('supplyId').isNumeric().withMessage('Valid supplyId is required'),
-  ],
+  [query('supplyId').isNumeric().withMessage('Valid supplyId is required')],
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const user = (req as AuthenticatedRequest).user!;
-      
+
       // Get account using selectedAccountId from user
       if (!user.selectedAccountId) {
         throw new ApiError(400, 'No account selected for user');
@@ -165,15 +166,25 @@ router.get(
       }
 
       // Extract only the goods data that we need for the UI
-      const goods = response.result.data.map((item: { imgSrc?: string; imtName?: string; quantity?: number; barcode?: string; brandName?: string; subjectName?: string; colorName?: string }) => ({
-        imgSrc: item.imgSrc,
-        imtName: item.imtName,
-        quantity: item.quantity,
-        barcode: item.barcode,
-        brandName: item.brandName,
-        subjectName: item.subjectName,
-        colorName: item.colorName,
-      }));
+      const goods = response.result.data.map(
+        (item: {
+          imgSrc?: string;
+          imtName?: string;
+          quantity?: number;
+          barcode?: string;
+          brandName?: string;
+          subjectName?: string;
+          colorName?: string;
+        }) => ({
+          imgSrc: item.imgSrc,
+          imtName: item.imtName,
+          quantity: item.quantity,
+          barcode: item.barcode,
+          brandName: item.brandName,
+          subjectName: item.subjectName,
+          colorName: item.colorName,
+        }),
+      );
 
       res.json({
         success: true,
@@ -211,7 +222,7 @@ router.get(
       // For other errors, pass to error handler
       next(error);
     }
-  }
+  },
 );
 
 export default router;

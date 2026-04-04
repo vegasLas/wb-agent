@@ -1,7 +1,7 @@
 /**
  * Ban Service Tests
  * Migrated from: server/services/monitoring/shared/__tests__/banService.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
@@ -1068,7 +1068,9 @@ describe('SharedBanService', () => {
         expect(service.getStatistics().banAttemptsCount).toBe(1);
 
         // Ban attempt should still be tracked
-        expect(service.getStatistics().activeBanAttempts.length).toBeGreaterThanOrEqual(0);
+        expect(
+          service.getStatistics().activeBanAttempts.length,
+        ).toBeGreaterThanOrEqual(0);
       });
     });
   });

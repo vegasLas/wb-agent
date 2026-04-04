@@ -2,8 +2,11 @@
   <div class="space-y-4">
     <!-- Warehouses -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        Склады (максимум 3) <span class="text-red-500 dark:text-red-400">*</span>
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
+        Склады (максимум 3)
+        <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <MultiSelect
         :model-value="warehouseIds"
@@ -26,7 +29,9 @@
 
     <!-- Supply Types -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         Типы коробов <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <MultiSelect
@@ -48,7 +53,9 @@
 
     <!-- Check Interval -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         Интервал проверки <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <Select
@@ -67,7 +74,9 @@
 
     <!-- Search Mode -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         Режим поиска <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <Select
@@ -83,7 +92,9 @@
 
     <!-- Date Range (for RANGE mode) -->
     <div v-if="showDatePicker">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         Период поиска <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <DatePicker
@@ -100,7 +111,9 @@
 
     <!-- Selected Dates (for CUSTOM_DATES mode) -->
     <div v-if="showRangePicker">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         Выбрать даты <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <MultiSelect
@@ -118,7 +131,9 @@
 
     <!-- Max Coefficient -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         Максимальный коэффициент выгрузки
       </label>
       <div class="flex items-center gap-4">
@@ -186,7 +201,7 @@ const emit = defineEmits<{
   'update:startDate': [value: string | null];
   'update:endDate': [value: string | null];
   'update:selectedDates': [value: string[]];
-  'searchModeChange': [mode: SearchMode];
+  searchModeChange: [mode: SearchMode];
 }>();
 
 const intervalOptions = TRIGGER_INTERVALS.map((i) => ({
@@ -241,7 +256,9 @@ function handleMaxCoefficientChange(value: number) {
   emit('update:maxCoefficient', value);
 }
 
-function handleDateRangeChange(val: Date | Date[] | (Date | null)[] | null | undefined) {
+function handleDateRangeChange(
+  val: Date | Date[] | (Date | null)[] | null | undefined,
+) {
   if (!Array.isArray(val) || val.length !== 2 || !val[0] || !val[1]) {
     emit('update:startDate', null);
     emit('update:endDate', null);

@@ -101,7 +101,7 @@ export interface IAutobookingExecutorService {
       effectiveDate: Date;
       coefficient: number;
       booking: SchedulableItem;
-    }
+    },
   ): void;
 
   /**
@@ -110,7 +110,7 @@ export interface IAutobookingExecutorService {
   logSuccessfulBooking(
     booking: SchedulableItem,
     effectiveDate: Date,
-    userId: number
+    userId: number,
   ): void;
 
   /**
@@ -141,13 +141,16 @@ export interface IAutobookingNotificationService {
     warehouseName: string,
     date: Date,
     coefficient: number,
-    transitWarehouseName?: string | null
+    transitWarehouseName?: string | null,
   ): Promise<void>;
 
   /**
    * Update autobooking status after successful booking
    */
-  updateAutobookingStatus(booking: SchedulableItem, bookedDate: Date): Promise<void>;
+  updateAutobookingStatus(
+    booking: SchedulableItem,
+    bookedDate: Date,
+  ): Promise<void>;
 }
 
 /**
@@ -160,7 +163,7 @@ export interface IAutobookingMonitoringService {
    */
   processAvailabilities(
     monitoringUsers: MonitoringUser[],
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void>;
 }
 

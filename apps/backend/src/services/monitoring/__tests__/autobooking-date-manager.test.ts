@@ -1,7 +1,7 @@
 /**
  * Autobooking Date Manager Service Tests
  * Migrated from: server/services/monitoring/autobookingDateManager.service.test.ts
- * 
+ *
  * Changes made:
  * - Replaced vitest (vi) with jest
  * - Updated import paths
@@ -129,9 +129,9 @@ describe('AutobookingDateManagerService', () => {
 
       // Act
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (autobookingDateManagerService as any).notifyUserAboutArchivedAutobooking(
-        mockAutobooking,
-      );
+      await (
+        autobookingDateManagerService as any
+      ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
@@ -164,9 +164,9 @@ describe('AutobookingDateManagerService', () => {
 
       // Act
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (autobookingDateManagerService as any).notifyUserAboutArchivedAutobooking(
-        mockAutobooking,
-      );
+      await (
+        autobookingDateManagerService as any
+      ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert
       expect(TBOT.sendMessage).not.toHaveBeenCalled();
@@ -183,9 +183,9 @@ describe('AutobookingDateManagerService', () => {
 
       // Act
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (autobookingDateManagerService as any).notifyUserAboutArchivedAutobooking(
-        mockAutobooking,
-      );
+      await (
+        autobookingDateManagerService as any
+      ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert
       expect(TBOT.sendMessage).not.toHaveBeenCalled();
@@ -200,9 +200,9 @@ describe('AutobookingDateManagerService', () => {
 
       // Act
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (autobookingDateManagerService as any).notifyUserAboutArchivedAutobooking(
-        mockAutobooking,
-      );
+      await (
+        autobookingDateManagerService as any
+      ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert
       expect(prisma.user.findUnique).not.toHaveBeenCalled();
@@ -232,9 +232,9 @@ describe('AutobookingDateManagerService', () => {
 
       // Act - should not throw
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (autobookingDateManagerService as any).notifyUserAboutArchivedAutobooking(
-        mockAutobooking,
-      );
+      await (
+        autobookingDateManagerService as any
+      ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert - error was logged
       expect(TBOT.sendMessage).toHaveBeenCalled();
@@ -244,9 +244,9 @@ describe('AutobookingDateManagerService', () => {
   describe('getSupplyTypeText', () => {
     it('should return correct text for known supply types', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((autobookingDateManagerService as any).getSupplyTypeText('BOX')).toBe(
-        'Короб',
-      );
+      expect(
+        (autobookingDateManagerService as any).getSupplyTypeText('BOX'),
+      ).toBe('Короб');
       expect(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (autobookingDateManagerService as any).getSupplyTypeText('MONOPALLETE'),
@@ -260,7 +260,9 @@ describe('AutobookingDateManagerService', () => {
     it('should return the original value for unknown supply types', () => {
       expect(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (autobookingDateManagerService as any).getSupplyTypeText('UNKNOWN_TYPE'),
+        (autobookingDateManagerService as any).getSupplyTypeText(
+          'UNKNOWN_TYPE',
+        ),
       ).toBe('UNKNOWN_TYPE');
     });
   });
@@ -268,13 +270,13 @@ describe('AutobookingDateManagerService', () => {
   describe('getDateTypeText', () => {
     it('should return correct text for known date types', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((autobookingDateManagerService as any).getDateTypeText('WEEK')).toBe(
-        'Неделя',
-      );
+      expect(
+        (autobookingDateManagerService as any).getDateTypeText('WEEK'),
+      ).toBe('Неделя');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((autobookingDateManagerService as any).getDateTypeText('MONTH')).toBe(
-        'Месяц',
-      );
+      expect(
+        (autobookingDateManagerService as any).getDateTypeText('MONTH'),
+      ).toBe('Месяц');
       expect(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (autobookingDateManagerService as any).getDateTypeText('CUSTOM_DATES'),
@@ -304,11 +306,15 @@ describe('AutobookingDateManagerService', () => {
       } as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -333,11 +339,15 @@ describe('AutobookingDateManagerService', () => {
       } as unknown as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -362,11 +372,15 @@ describe('AutobookingDateManagerService', () => {
       } as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -391,11 +405,15 @@ describe('AutobookingDateManagerService', () => {
       } as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -420,11 +438,15 @@ describe('AutobookingDateManagerService', () => {
       } as unknown as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -452,11 +474,15 @@ describe('AutobookingDateManagerService', () => {
       } as unknown as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -484,11 +510,15 @@ describe('AutobookingDateManagerService', () => {
       } as unknown as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -513,11 +543,15 @@ describe('AutobookingDateManagerService', () => {
       } as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -542,11 +576,15 @@ describe('AutobookingDateManagerService', () => {
       } as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 
@@ -571,11 +609,15 @@ describe('AutobookingDateManagerService', () => {
       } as unknown as Autobooking;
 
       const updateSpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { updateAutobookingStatus: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          updateAutobookingStatus: (a: Autobooking) => Promise<void>;
+        },
         'updateAutobookingStatus',
       );
       const notifySpy = jest.spyOn(
-        autobookingDateManagerService as unknown as { notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void> },
+        autobookingDateManagerService as unknown as {
+          notifyUserAboutArchivedAutobooking: (a: Autobooking) => Promise<void>;
+        },
         'notifyUserAboutArchivedAutobooking',
       );
 

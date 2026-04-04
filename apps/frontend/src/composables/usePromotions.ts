@@ -1,6 +1,6 @@
 /**
  * usePromotions Composable
- * 
+ *
  * Main composable for managing promotions state, filtering, and interactions.
  * Encapsulates complex logic for the promotions feature including:
  * - Timeline fetching with date ranges
@@ -8,7 +8,7 @@
  * - Dialog state management
  * - Detail and Excel data fetching with retry logic
  * - User change watchers
- * 
+ *
  * @example
  * const {
  *   // State
@@ -16,13 +16,13 @@
  *   loading,
  *   error,
  *   currentFilter,
- *   
+ *
  *   // Dialogs
  *   showDetailDialog,
  *   showParticipantsDialog,
  *   selectedPromotion,
  *   selectedPromotionId,
- *   
+ *
  *   // Actions
  *   setFilter,
  *   refreshData,
@@ -58,29 +58,29 @@ export interface UsePromotionsReturn {
   error: Ref<string | null>;
   currentFilter: Ref<PromotionFilter>;
   filterTabs: FilterTab[];
-  
+
   // Detail state
   promotionDetail: Ref<PromotionDetail | null>;
   detailLoading: Ref<boolean>;
   detailError: Ref<string | null>;
-  
+
   // Excel/Participants state
   excelItems: Ref<readonly Record<string, unknown>[]>;
   excelLoading: Ref<boolean>;
   excelError: Ref<string | null>;
   reportPending: Ref<boolean>;
   estimatedWaitTime: Ref<number | null>;
-  
+
   // Dialogs
   showDetailDialog: Ref<boolean>;
   showParticipantsDialog: Ref<boolean>;
   selectedPromotionId: Ref<number | null>;
   selectedPromotion: Ref<PromotionItem | null>;
-  
+
   // Stats
   participationCounts: Ref<Record<PromotionFilter, number>>;
   hasPromotions: Ref<boolean>;
-  
+
   // Actions
   setFilter: (filter: PromotionFilter) => Promise<void>;
   refreshData: () => Promise<void>;
@@ -99,18 +99,20 @@ const filterTabs: FilterTab[] = [
   { label: 'Не участвую', value: 'SKIPPED' },
 ];
 
-export function usePromotions(options: UsePromotionsOptions = {}): UsePromotionsReturn {
+export function usePromotions(
+  options: UsePromotionsOptions = {},
+): UsePromotionsReturn {
   const { initialFilter = 'PARTICIPATING', immediate = false } = options;
-  
+
   const promotionsStore = usePromotionsStore();
   const userStore = useUserStore();
-  
+
   // Local state
   const currentFilter = ref<PromotionFilter>(initialFilter);
   const showDetailDialog = ref(false);
   const showParticipantsDialog = ref(false);
   const selectedPromotionId = ref<number | null>(null);
-  
+
   // Store state refs
   const promotions = computed(() => promotionsStore.promotions);
   const loading = computed(() => promotionsStore.loading);
@@ -124,13 +126,16 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
   const reportPending = computed(() => promotionsStore.reportPending);
   const estimatedWaitTime = computed(() => promotionsStore.estimatedWaitTime);
   const hasPromotions = computed(() => promotionsStore.hasPromotions);
-  
+
   // Selected promotion computed
   const selectedPromotion = computed(() => {
     if (!selectedPromotionId.value) return null;
-    return promotions.value.find(p => p.promoID === selectedPromotionId.value) || null;
+    return (
+      promotions.value.find((p) => p.promoID === selectedPromotionId.value) ||
+      null
+    );
   });
-  
+
   // Participation counts by filter
   const participationCounts = computed(() => {
     const counts: Record<PromotionFilter, number> = {
@@ -138,7 +143,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
       PARTICIPATING: 0,
       SKIPPED: 0,
     };
-    
+
     for (const promotion of promotions.value) {
       const status = promotion.participation?.status;
       if (status === 'PARTICIPATING' || status === 'WILL_PARTICIPATE') {
@@ -147,21 +152,24 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
         counts.SKIPPED++;
       }
     }
-    
+
     return counts;
   });
-  
+
   /**
    * Fetch promotions for a specific date range
    */
-  async function fetchForDateRange(startDate: Date, endDate: Date): Promise<void> {
+  async function fetchForDateRange(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<void> {
     await promotionsStore.fetchTimeline(
       startDate.toISOString(),
       endDate.toISOString(),
-      currentFilter.value
+      currentFilter.value,
     );
   }
-  
+
   /**
    * Refresh data with current filter
    */
@@ -170,10 +178,10 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     const endDate = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-    
+
     await fetchForDateRange(startDate, endDate);
   }
-  
+
   /**
    * Set filter and refresh data
    */
@@ -182,7 +190,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
     currentFilter.value = filter;
     await refreshData();
   }
-  
+
   /**
    * Show promotion details
    */
@@ -191,7 +199,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
     showDetailDialog.value = true;
     await promotionsStore.fetchDetail(promoID);
   }
-  
+
   /**
    * Show promotion participants
    */
@@ -200,7 +208,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
     showParticipantsDialog.value = true;
     await promotionsStore.selectPromotionAndLoadExcel(promoID);
   }
-  
+
   /**
    * Retry fetching participants data
    */
@@ -211,7 +219,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
       await promotionsStore.fetchExcel(detail.periodID);
     }
   }
-  
+
   /**
    * Close detail dialog
    */
@@ -219,7 +227,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
     showDetailDialog.value = false;
     selectedPromotionId.value = null;
   }
-  
+
   /**
    * Close participants dialog
    */
@@ -227,7 +235,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
     showParticipantsDialog.value = false;
     selectedPromotionId.value = null;
   }
-  
+
   /**
    * Clear all errors
    */
@@ -238,7 +246,7 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
       excelError: null,
     });
   }
-  
+
   // Watch for user changes
   watch(
     () => userStore.user.selectedAccountId,
@@ -246,23 +254,23 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
       if (userStore.user.selectedAccountId) {
         refreshData();
       }
-    }
+    },
   );
-  
+
   watch(
     () => userStore.activeSupplier?.supplierId,
     () => {
       if (userStore.activeSupplier?.supplierId) {
         refreshData();
       }
-    }
+    },
   );
-  
+
   // Immediate fetch if requested
   if (immediate) {
     refreshData();
   }
-  
+
   return {
     // State
     promotions,
@@ -270,29 +278,29 @@ export function usePromotions(options: UsePromotionsOptions = {}): UsePromotions
     error,
     currentFilter,
     filterTabs,
-    
+
     // Detail
     promotionDetail,
     detailLoading,
     detailError,
-    
+
     // Excel
     excelItems,
     excelLoading,
     excelError,
     reportPending,
     estimatedWaitTime,
-    
+
     // Dialogs
     showDetailDialog,
     showParticipantsDialog,
     selectedPromotionId,
     selectedPromotion,
-    
+
     // Stats
     participationCounts,
     hasPromotions,
-    
+
     // Actions
     setFilter,
     refreshData,

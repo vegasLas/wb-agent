@@ -163,7 +163,7 @@ export interface IRescheduleExecutorService {
       effectiveDate: Date;
       coefficient: number;
       reschedule: AutobookingReschedule;
-    }
+    },
   ): void;
 
   /**
@@ -172,7 +172,7 @@ export interface IRescheduleExecutorService {
   logSuccessfulReschedule(
     reschedule: AutobookingReschedule,
     effectiveDate: Date,
-    userId: number
+    userId: number,
   ): void;
 
   /**
@@ -193,7 +193,7 @@ export interface IRescheduleExecutorService {
    */
   filterMatchingAvailabilities(
     reschedule: AutobookingReschedule,
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Array<{
     availability: WarehouseAvailability;
     matchingDates: Array<{
@@ -207,7 +207,7 @@ export interface IRescheduleExecutorService {
    */
   updateRescheduleStatus(
     reschedule: AutobookingReschedule,
-    rescheduledDate: Date
+    rescheduledDate: Date,
   ): Promise<void>;
 }
 
@@ -220,7 +220,7 @@ export interface IRescheduleNotificationService {
    */
   updateRescheduleStatus(
     reschedule: AutobookingReschedule,
-    rescheduledDate: Date
+    rescheduledDate: Date,
   ): Promise<void>;
 
   /**
@@ -230,14 +230,14 @@ export interface IRescheduleNotificationService {
     chatId: string,
     warehouseName: string,
     date: Date,
-    coefficient: number
+    coefficient: number,
   ): Promise<void>;
 
   /**
    * Sends banned date notification for reschedule
    */
   sendBannedDateNotification(
-    params: Omit<RescheduleBanParams, 'withoutDate'>
+    params: Omit<RescheduleBanParams, 'withoutDate'>,
   ): Promise<void>;
 }
 
@@ -250,6 +250,6 @@ export interface IRescheduleMonitoringService {
    */
   processRescheduleAvailabilities(
     monitoringUsers: MonitoringUser[],
-    availabilities: WarehouseAvailability[]
+    availabilities: WarehouseAvailability[],
   ): Promise<void>;
 }

@@ -9,22 +9,22 @@ class RateLimiter {
   constructor(
     private windowMs: number,
     private maxRequests: number,
-    private _type: string
+    private _type: string,
   ) {}
 
   async isRateLimited(userId: string): Promise<boolean> {
     const now = Date.now();
     const userTimestamps = this.timestamps.get(userId) || [];
-    
+
     // Remove old timestamps
     const validTimestamps = userTimestamps.filter(
-      (ts) => now - ts < this.windowMs
+      (ts) => now - ts < this.windowMs,
     );
-    
+
     if (validTimestamps.length >= this.maxRequests) {
       return true;
     }
-    
+
     validTimestamps.push(now);
     this.timestamps.set(userId, validTimestamps);
     return false;
@@ -33,7 +33,7 @@ class RateLimiter {
   async getRemainingTime(userId: string): Promise<number> {
     const userTimestamps = this.timestamps.get(userId) || [];
     if (userTimestamps.length === 0) return 0;
-    
+
     const oldestTimestamp = userTimestamps[0];
     return this.windowMs - (Date.now() - oldestTimestamp);
   }
@@ -82,11 +82,11 @@ if (env.TELEGRAM_BOT_TOKEN) {
       const isLimited = await limiter.isRateLimited(userId);
       if (isLimited) {
         const remainingTime = Math.ceil(
-          (await limiter.getRemainingTime(userId)) / 1000
+          (await limiter.getRemainingTime(userId)) / 1000,
         );
         await bot?.sendMessage(
           msg.chat.id,
-          `⚠️ Слишком много запросов. Пожалуйста, подождите ${remainingTime} секунд.`
+          `⚠️ Слишком много запросов. Пожалуйста, подождите ${remainingTime} секунд.`,
         );
       }
     });
@@ -98,7 +98,7 @@ if (env.TELEGRAM_BOT_TOKEN) {
       const isLimited = await callbackRateLimiter.isRateLimited(userId);
       if (isLimited) {
         const remainingTime = Math.ceil(
-          (await callbackRateLimiter.getRemainingTime(userId)) / 1000
+          (await callbackRateLimiter.getRemainingTime(userId)) / 1000,
         );
         await bot?.answerCallbackQuery(query.id, {
           text: `⚠️ Слишком много запросов. Пожалуйста, подождите ${remainingTime} секунд.`,

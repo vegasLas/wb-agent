@@ -151,8 +151,6 @@ export const getSalesReport = async ({
 
     // Create new order if no matching report found
     if (!existingOrder) {
-
-
       const orderResponse = await ordersController.createSalesOrder({
         accountId,
         supplierId,
@@ -180,7 +178,6 @@ export const getSalesReport = async ({
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           );
           orderToUse = sortedOrders[0];
-
         } else {
           result.error = 'Failed to create order and no existing orders found';
           return result;
@@ -188,7 +185,6 @@ export const getSalesReport = async ({
       }
     } else {
       orderToUse = existingOrder;
-
     }
 
     // Fetch and parse XLSX data

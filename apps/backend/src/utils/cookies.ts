@@ -83,7 +83,7 @@ function isValidCookie(cookie: unknown): cookie is Cookie {
  */
 export async function saveCookiesToAccount(
   cookies: Cookie[],
-  accountId: string
+  accountId: string,
 ): Promise<void> {
   const encodedCookies = encodeCookies(cookies);
 
@@ -101,7 +101,9 @@ export async function saveCookiesToAccount(
  * @param accountId - Account ID
  * @returns Array of cookies or empty array
  */
-export async function getCookiesFromAccount(accountId: string): Promise<Cookie[]> {
+export async function getCookiesFromAccount(
+  accountId: string,
+): Promise<Cookie[]> {
   const account = await prisma.account.findUnique({
     where: { id: accountId },
   });
@@ -120,7 +122,7 @@ export async function getCookiesFromAccount(accountId: string): Promise<Cookie[]
  */
 export async function updateAccountCookieValues(
   accountId: string,
-  cookieUpdates: CookieUpdate[]
+  cookieUpdates: CookieUpdate[],
 ): Promise<void> {
   const account = await prisma.account.findUnique({
     where: { id: accountId },
@@ -135,7 +137,9 @@ export async function updateAccountCookieValues(
 
   // Update each cookie
   for (const update of cookieUpdates) {
-    const cookieIndex = cookies.findIndex((cookie) => cookie.name === update.name);
+    const cookieIndex = cookies.findIndex(
+      (cookie) => cookie.name === update.name,
+    );
 
     if (cookieIndex === -1) {
       console.warn(`Cookie with name '${update.name}' not found, skipping...`);
@@ -168,7 +172,7 @@ export async function updateAccountCookieValues(
  */
 export async function getCookieByName(
   accountId: string,
-  cookieName: string
+  cookieName: string,
 ): Promise<Cookie | null> {
   const cookies = await getCookiesFromAccount(accountId);
   return cookies.find((cookie) => cookie.name === cookieName) || null;

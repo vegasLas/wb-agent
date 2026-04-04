@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-[#171819] flex flex-col lg:flex-row">
+  <div
+    class="min-h-screen bg-white dark:bg-[#171819] flex flex-col lg:flex-row"
+  >
     <!-- App Header/Navigation -->
     <AppHeader
       class="lg:w-64 lg:flex-shrink-0"
@@ -8,7 +10,9 @@
     />
 
     <!-- Main Content -->
-    <main class="flex-1 container mx-auto px-2 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative">
+    <main
+      class="flex-1 container mx-auto px-2 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative"
+    >
       <!-- Content skeleton overlay during view loading/navigation -->
       <div
         v-if="showContentSkeleton"
@@ -40,5 +44,7 @@ const showHelpModal = ref(false);
 const currentRouteSkeleton = inject('currentRouteSkeleton');
 const { showSkeleton, isRouterInitializing } = useSkeleton();
 
-const showContentSkeleton = computed(() => showSkeleton.value && !isRouterInitializing.value);
+const showContentSkeleton = computed(
+  () => showSkeleton.value && !isRouterInitializing.value,
+);
 </script>

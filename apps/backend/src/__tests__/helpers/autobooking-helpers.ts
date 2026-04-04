@@ -4,7 +4,10 @@
  */
 
 import type { Autobooking } from '@prisma/client';
-import type { SchedulableItem, WarehouseAvailability } from '../../services/monitoring/shared/interfaces/sharedInterfaces';
+import type {
+  SchedulableItem,
+  WarehouseAvailability,
+} from '../../services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Supply type constants matching the app
 export const SUPPLY_TYPES = {
@@ -13,11 +16,11 @@ export const SUPPLY_TYPES = {
   SUPERSAFE: 'SUPERSAFE',
 } as const;
 
-export type SupplyType = typeof SUPPLY_TYPES[keyof typeof SUPPLY_TYPES];
+export type SupplyType = (typeof SUPPLY_TYPES)[keyof typeof SUPPLY_TYPES];
 
 // Helper function to create a complete Autobooking object
 export const createAutobooking = (
-  overrides: Partial<Autobooking> = {}
+  overrides: Partial<Autobooking> = {},
 ): Autobooking => {
   // Use a future date that won't be filtered out by today's date check
   const futureDate = new Date();
@@ -72,7 +75,7 @@ export interface MonitoringUser {
 }
 
 export const createMonitoringUser = (
-  overrides: Partial<MonitoringUser> = {}
+  overrides: Partial<MonitoringUser> = {},
 ): MonitoringUser => {
   const userId = overrides.userId || 1;
   const supplierId = overrides.supplierId || 'supplier-1';
@@ -100,7 +103,7 @@ export const createMonitoringUser = (
 
 // Helper function to create test availability data
 export const createAvailability = (
-  overrides: Partial<WarehouseAvailability> = {}
+  overrides: Partial<WarehouseAvailability> = {},
 ): WarehouseAvailability => {
   // Use a future date that matches the autobooking helper
   const futureDate = new Date();
@@ -118,7 +121,7 @@ export const createAvailability = (
 
 // Helper function to create a SchedulableItem for testing
 export const createSchedulableItem = (
-  overrides: Partial<SchedulableItem> = {}
+  overrides: Partial<SchedulableItem> = {},
 ): SchedulableItem => {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + 7);

@@ -6,11 +6,11 @@ import type { ViewType } from '../types';
 /**
  * @deprecated This store is deprecated and will be removed in a future version.
  * Please use Vue Router directly instead:
- * 
+ *
  * import { useRouter, useRoute } from 'vue-router';
  * const router = useRouter();
  * const route = useRoute();
- * 
+ *
  * Navigation:
  * - router.push({ name: 'Autobooking' }) - for autobooking list
  * - router.push({ name: 'AutobookingCreate' }) - for creating autobooking
@@ -24,7 +24,7 @@ import type { ViewType } from '../types';
  * - router.push({ name: 'StoreSubscription' }) - for subscription tab
  * - router.push({ name: 'StoreBookings' }) - for bookings tab
  * - router.push({ name: 'Account' }) - for account
- * 
+ *
  * Going back:
  * - router.back()
  */
@@ -33,7 +33,7 @@ export const useViewStore = defineStore('view', () => {
   // Note: This will only work properly when called within component setup
   let router: ReturnType<typeof useRouter> | undefined;
   let route: ReturnType<typeof useRoute> | undefined;
-  
+
   try {
     router = useRouter();
     route = useRoute();
@@ -44,16 +44,19 @@ export const useViewStore = defineStore('view', () => {
   // Map current route to view type for backwards compatibility
   const currentView = computed<ViewType>(() => {
     if (!route?.name) return 'autobookings-main';
-    
+
     const routeName = route.name as string;
-    
+
     // Map route names to view types
-    if (routeName === 'Autobooking' || routeName === 'AutobookingList') return 'autobookings-main';
+    if (routeName === 'Autobooking' || routeName === 'AutobookingList')
+      return 'autobookings-main';
     if (routeName === 'AutobookingCreate') return 'autobookings-form';
     if (routeName === 'AutobookingUpdate') return 'autobookings-update';
-    if (routeName === 'Triggers' || routeName === 'TriggersList') return 'triggers-main';
+    if (routeName === 'Triggers' || routeName === 'TriggersList')
+      return 'triggers-main';
     if (routeName === 'TriggerCreate') return 'triggers-form';
-    if (routeName === 'Reschedules' || routeName === 'ReschedulesList') return 'reschedules-main';
+    if (routeName === 'Reschedules' || routeName === 'ReschedulesList')
+      return 'reschedules-main';
     if (routeName === 'ReschedulesCreate') return 'reschedules-form';
     if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
     if (routeName === 'Store') return 'store';
@@ -62,7 +65,7 @@ export const useViewStore = defineStore('view', () => {
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
     if (routeName === 'Promotions') return 'promotions';
-    
+
     return 'autobookings-main';
   });
 
@@ -74,8 +77,10 @@ export const useViewStore = defineStore('view', () => {
    * @deprecated Use router.push() instead
    */
   function setView(view: ViewType) {
-    console.warn('useViewStore.setView() is deprecated. Use router.push() instead.');
-    
+    console.warn(
+      'useViewStore.setView() is deprecated. Use router.push() instead.',
+    );
+
     if (!router) {
       console.error('Router not available');
       return;
@@ -91,12 +96,12 @@ export const useViewStore = defineStore('view', () => {
       'reschedules-main': 'Reschedules',
       'reschedules-form': 'ReschedulesCreate',
       'reschedules-update': 'ReschedulesUpdate',
-      'store': 'Store',
+      store: 'Store',
       'store-subscription': 'StoreSubscription',
       'store-bookings': 'StoreBookings',
-      'account': 'Account',
-      'report': 'Reports',
-      'promotions': 'Promotions',
+      account: 'Account',
+      report: 'Reports',
+      promotions: 'Promotions',
     };
 
     const targetRoute = routeMap[view];
@@ -109,7 +114,9 @@ export const useViewStore = defineStore('view', () => {
    * @deprecated Use router.back() instead
    */
   function goBack() {
-    console.warn('useViewStore.goBack() is deprecated. Use router.back() instead.');
+    console.warn(
+      'useViewStore.goBack() is deprecated. Use router.back() instead.',
+    );
     router?.back();
   }
 
@@ -117,7 +124,9 @@ export const useViewStore = defineStore('view', () => {
    * @deprecated No longer needed with router-based navigation
    */
   function clearPrevView() {
-    console.warn('useViewStore.clearPrevView() is deprecated and no longer needed.');
+    console.warn(
+      'useViewStore.clearPrevView() is deprecated and no longer needed.',
+    );
     prevView.value = null;
   }
 
@@ -125,7 +134,13 @@ export const useViewStore = defineStore('view', () => {
    * Check if current view is a form (based on route name)
    */
   const isForm = computed(() => {
-    const formRoutes = ['AutobookingCreate', 'AutobookingUpdate', 'TriggerCreate', 'ReschedulesCreate', 'ReschedulesUpdate'];
+    const formRoutes = [
+      'AutobookingCreate',
+      'AutobookingUpdate',
+      'TriggerCreate',
+      'ReschedulesCreate',
+      'ReschedulesUpdate',
+    ];
     return route ? formRoutes.includes(route.name as string) : false;
   });
 

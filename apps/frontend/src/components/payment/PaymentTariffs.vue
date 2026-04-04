@@ -1,21 +1,13 @@
 <template>
   <div class="space-y-6">
     <!-- Subscription Requirement Alert -->
-    <Message
-      v-if="!userStore.subscriptionActive"
-      severity="warn"
-      class="mb-6"
-    >
+    <Message v-if="!userStore.subscriptionActive" severity="warn" class="mb-6">
       <div class="space-y-2">
         <p>
           Если у вас не активна подписка поставки не будут забронированы и
           перепланированы, даже при наличии кредитов.
         </p>
-        <Button
-          size="small"
-          variant="outlined"
-          @click="goToSubscription"
-        >
+        <Button size="small" variant="outlined" @click="goToSubscription">
           продлить
         </Button>
       </div>
@@ -44,9 +36,7 @@
           <!-- Price and Description -->
           <div class="space-y-4">
             <div class="flex items-center gap-2">
-              <p class="text-2xl font-bold">
-                {{ tariff.price }} ₽
-              </p>
+              <p class="text-2xl font-bold">{{ tariff.price }} ₽</p>
               <p
                 v-if="tariff.discount"
                 class="text-sm text-gray-400 line-through"

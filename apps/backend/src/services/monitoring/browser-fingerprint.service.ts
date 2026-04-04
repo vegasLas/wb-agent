@@ -231,7 +231,7 @@ export class BrowserFingerprintService {
       hardwareConcurrency: envInfo.hardwareConcurrency,
       colorDepth: envInfo.colorDepth,
       webGlVendor: this.getWebGlVendor(
-        envInfo.platform as 'Win32' | 'MacIntel' | 'Linux x86_64'
+        envInfo.platform as 'Win32' | 'MacIntel' | 'Linux x86_64',
       ),
       webGlRenderer:
         (envInfo.platform as string) === 'MacIntel'
@@ -249,7 +249,7 @@ export class BrowserFingerprintService {
   generate(
     platform?: string,
     language?: string,
-    timezone?: number
+    timezone?: number,
   ): Fingerprint {
     const selectedPlatform =
       (platform as 'Win32' | 'MacIntel' | 'Linux x86_64') ||
@@ -350,65 +350,62 @@ export class BrowserFingerprintService {
    */
   async inject(page: Page, fingerprint: Fingerprint): Promise<void> {
     try {
-      await page.addInitScript(
-        (fp) => {
-          // Spoof navigator properties
-          Object.defineProperty(navigator, 'userAgent', {
-            get: () => fp.userAgent,
-          });
+      await page.addInitScript((fp) => {
+        // Spoof navigator properties
+        Object.defineProperty(navigator, 'userAgent', {
+          get: () => fp.userAgent,
+        });
 
-          Object.defineProperty(navigator, 'platform', {
-            get: () => fp.platform,
-          });
+        Object.defineProperty(navigator, 'platform', {
+          get: () => fp.platform,
+        });
 
-          Object.defineProperty(navigator, 'language', {
-            get: () => fp.language,
-          });
+        Object.defineProperty(navigator, 'language', {
+          get: () => fp.language,
+        });
 
-          Object.defineProperty(navigator, 'hardwareConcurrency', {
-            get: () => fp.hardwareConcurrency,
-          });
+        Object.defineProperty(navigator, 'hardwareConcurrency', {
+          get: () => fp.hardwareConcurrency,
+        });
 
-          Object.defineProperty(navigator, 'deviceMemory', {
-            get: () => fp.deviceMemory,
-          });
+        Object.defineProperty(navigator, 'deviceMemory', {
+          get: () => fp.deviceMemory,
+        });
 
-          // Spoof screen properties
-          Object.defineProperty(screen, 'width', {
-            get: () => fp.screenResolution[0],
-          });
+        // Spoof screen properties
+        Object.defineProperty(screen, 'width', {
+          get: () => fp.screenResolution[0],
+        });
 
-          Object.defineProperty(screen, 'height', {
-            get: () => fp.screenResolution[1],
-          });
+        Object.defineProperty(screen, 'height', {
+          get: () => fp.screenResolution[1],
+        });
 
-          Object.defineProperty(screen, 'colorDepth', {
-            get: () => fp.colorDepth,
-          });
+        Object.defineProperty(screen, 'colorDepth', {
+          get: () => fp.colorDepth,
+        });
 
-          // Remove webdriver property
-          Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined,
-          });
+        // Remove webdriver property
+        Object.defineProperty(navigator, 'webdriver', {
+          get: () => undefined,
+        });
 
-          // Spoof WebGL
-          const getParameter = WebGLRenderingContext.prototype.getParameter;
-          WebGLRenderingContext.prototype.getParameter = function (parameter) {
-            if (parameter === 37445) {
-              return fp.webGlVendor;
-            }
-            if (parameter === 37446) {
-              return fp.webGlRenderer;
-            }
-            return getParameter.call(this, parameter);
-          };
-        },
-        fingerprint
-      );
+        // Spoof WebGL
+        const getParameter = WebGLRenderingContext.prototype.getParameter;
+        WebGLRenderingContext.prototype.getParameter = function (parameter) {
+          if (parameter === 37445) {
+            return fp.webGlVendor;
+          }
+          if (parameter === 37446) {
+            return fp.webGlRenderer;
+          }
+          return getParameter.call(this, parameter);
+        };
+      }, fingerprint);
     } catch (error) {
       console.warn(
         '⚠️ Could not inject fingerprint:',
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -422,7 +419,7 @@ export class BrowserFingerprintService {
         .split('.')
         .map((part) => part.padStart(3, '0'))
         .join(''),
-      10
+      10,
     );
 
     const getSeededRandom = () => {
@@ -452,7 +449,7 @@ export class BrowserFingerprintService {
    * Helper: Get user agent for platform
    */
   private getUserAgentForPlatform(
-    platform: 'Win32' | 'MacIntel' | 'Linux x86_64'
+    platform: 'Win32' | 'MacIntel' | 'Linux x86_64',
   ): string {
     const agents = this.getUserAgentsForPlatform(platform);
     return agents[Math.floor(Math.random() * agents.length)];
@@ -462,7 +459,7 @@ export class BrowserFingerprintService {
    * Helper: Get user agent array for platform
    */
   private getUserAgentsForPlatform(
-    platform: 'Win32' | 'MacIntel' | 'Linux x86_64'
+    platform: 'Win32' | 'MacIntel' | 'Linux x86_64',
   ): string[] {
     if (platform === 'MacIntel') return this.userAgents.mac;
     if (platform === 'Linux x86_64') return this.userAgents.linux;
@@ -513,7 +510,7 @@ export class BrowserFingerprintService {
    * Helper: Get WebGL vendor for platform
    */
   private getWebGlVendor(
-    platform: 'Win32' | 'MacIntel' | 'Linux x86_64'
+    platform: 'Win32' | 'MacIntel' | 'Linux x86_64',
   ): string {
     if (platform === 'MacIntel') return 'Apple Inc.';
     if (platform === 'Linux x86_64') return 'Mozilla';
@@ -524,7 +521,7 @@ export class BrowserFingerprintService {
    * Helper: Get random WebGL renderer for platform
    */
   private getRandomWebGlRenderer(
-    platform: 'Win32' | 'MacIntel' | 'Linux x86_64'
+    platform: 'Win32' | 'MacIntel' | 'Linux x86_64',
   ): string {
     const renderers =
       this.webGlRenderers[platform] || this.webGlRenderers['Win32'];
@@ -568,7 +565,7 @@ export class BrowserFingerprintService {
     return this.instance.generate(
       undefined,
       options.russian ? 'ru-RU' : undefined,
-      options.russian ? 180 : undefined
+      options.russian ? 180 : undefined,
     );
   }
 
@@ -584,7 +581,7 @@ export class BrowserFingerprintService {
    */
   static generateDeterministicFingerprint(
     proxyIp: string,
-    proxyTimezone?: number
+    proxyTimezone?: number,
   ): Fingerprint {
     return this.instance.generateFromProxy(proxyIp, proxyTimezone);
   }
@@ -596,7 +593,7 @@ export class BrowserFingerprintService {
   static async injectFingerprint(
     page: Page,
     fingerprint: Fingerprint,
-    _config?: FingerprintInjectionConfig
+    _config?: FingerprintInjectionConfig,
   ): Promise<void> {
     await this.instance.inject(page, fingerprint);
   }

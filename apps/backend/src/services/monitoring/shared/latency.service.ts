@@ -1,7 +1,7 @@
 /**
  * Latency Service
  * Phase 1: Foundation - Generates realistic API call delays
- * 
+ *
  * Purpose: Simulates realistic network latency for API calls to avoid
  * detection patterns and rate limiting
  */
@@ -9,7 +9,7 @@
 import type { ISharedLatencyService } from './interfaces/sharedInterfaces';
 
 // Constants for latency calculation (in milliseconds)
-const LATENCY_MIN_MS = 8.1 * 1000;  // 8.1 seconds minimum
+const LATENCY_MIN_MS = 8.1 * 1000; // 8.1 seconds minimum
 const LATENCY_MAX_MS = 14.5 * 1000; // 14.5 seconds maximum
 
 /**
@@ -27,7 +27,7 @@ export class SharedLatencyService implements ISharedLatencyService {
       (
         Math.random() * (LATENCY_MAX_MS - LATENCY_MIN_MS) +
         LATENCY_MIN_MS
-      ).toFixed(16)
+      ).toFixed(16),
     );
   }
 
@@ -66,7 +66,7 @@ export class SharedLatencyService implements ISharedLatencyService {
    */
   async sleepWithLatency(): Promise<void> {
     const latency = this.generateLatency();
-    return new Promise(resolve => setTimeout(resolve, latency));
+    return new Promise((resolve) => setTimeout(resolve, latency));
   }
 
   /**
@@ -77,7 +77,7 @@ export class SharedLatencyService implements ISharedLatencyService {
    */
   async sleepWithCustomLatency(minMs: number, maxMs: number): Promise<void> {
     const latency = this.generateCustomLatency(minMs, maxMs);
-    return new Promise(resolve => setTimeout(resolve, latency));
+    return new Promise((resolve) => setTimeout(resolve, latency));
   }
 }
 

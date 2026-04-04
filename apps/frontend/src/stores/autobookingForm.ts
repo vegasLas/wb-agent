@@ -202,7 +202,10 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
         warehouseId: form.value.warehouseId!,
         transitWarehouseId: form.value.transitWarehouseId,
         transitWarehouseName: form.value.transitWarehouseName,
-        supplyType: form.value.supplyType as 'BOX' | 'MONOPALLETE' | 'SUPERSAFE',
+        supplyType: form.value.supplyType as
+          | 'BOX'
+          | 'MONOPALLETE'
+          | 'SUPERSAFE',
         dateType: form.value.dateType,
         startDate: form.value.startDate || null,
         endDate: form.value.endDate || null,

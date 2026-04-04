@@ -5,12 +5,14 @@
 /**
  * Format a date to a short string (DD.MM.YYYY)
  */
-export function formatDateShort(date: string | Date | null | undefined): string {
+export function formatDateShort(
+  date: string | Date | null | undefined,
+): string {
   if (!date) return '';
-  
+
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '';
-  
+
   return d.toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
@@ -21,12 +23,15 @@ export function formatDateShort(date: string | Date | null | undefined): string 
 /**
  * Format a date range
  */
-export function formatDateRange(startDate: string | Date, endDate: string | Date): string {
+export function formatDateRange(
+  startDate: string | Date,
+  endDate: string | Date,
+): string {
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
-  
+
   if (isNaN(start.getTime()) || isNaN(end.getTime())) return '';
-  
+
   return `${start.toLocaleDateString('ru-RU')} - ${end.toLocaleDateString('ru-RU')}`;
 }
 
@@ -34,7 +39,8 @@ export function formatDateRange(startDate: string | Date, endDate: string | Date
  * Get the end date for a week period
  */
 export function getWeekEndDate(startDate: string | Date): Date {
-  const date = typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
+  const date =
+    typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
   date.setDate(date.getDate() + 6);
   return date;
 }
@@ -43,7 +49,8 @@ export function getWeekEndDate(startDate: string | Date): Date {
  * Get the end date for a month period
  */
 export function getMonthEndDate(startDate: string | Date): Date {
-  const date = typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
+  const date =
+    typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
   date.setMonth(date.getMonth() + 1);
   return date;
 }
@@ -53,9 +60,9 @@ export function getMonthEndDate(startDate: string | Date): Date {
  */
 export function getSupplyTypeText(supplyType: string): string {
   const typeMap: Record<string, string> = {
-    'BOX': 'Короба',
-    'MONOPALLETE': 'Монопаллета',
-    'SUPERSAFE': 'Суперсейф',
+    BOX: 'Короба',
+    MONOPALLETE: 'Монопаллета',
+    SUPERSAFE: 'Суперсейф',
   };
   return typeMap[supplyType] || supplyType;
 }
@@ -65,11 +72,11 @@ export function getSupplyTypeText(supplyType: string): string {
  */
 export function getDateTypeText(dateType: string): string {
   const typeMap: Record<string, string> = {
-    'WEEK': 'Неделя',
-    'MONTH': 'Месяц',
-    'CUSTOM_PERIOD': 'Свой период',
-    'CUSTOM_DATES': 'Выбранные даты',
-    'CUSTOM_DATES_SINGLE': 'Выбранные даты (одна)',
+    WEEK: 'Неделя',
+    MONTH: 'Месяц',
+    CUSTOM_PERIOD: 'Свой период',
+    CUSTOM_DATES: 'Выбранные даты',
+    CUSTOM_DATES_SINGLE: 'Выбранные даты (одна)',
   };
   return typeMap[dateType] || dateType;
 }

@@ -36,7 +36,7 @@ export class AccountService {
     accountId: string,
     userAgent: string,
     proxy?: UserEnvInfo['proxy'],
-    supplierId = ''
+    supplierId = '',
   ): Promise<{ name: string; id: string }[]> {
     try {
       const response = await wbAccountRequest<[SupplierResponse]>({
@@ -126,7 +126,7 @@ export class AccountService {
   async updateSelectedSupplier(
     accountId: string,
     supplierId: string,
-    userId: number
+    userId: number,
   ) {
     // Verify account belongs to user and contains supplier
     const account = await prisma.account.findFirst({
@@ -141,7 +141,7 @@ export class AccountService {
 
     if (!account) {
       throw new Error(
-        'Account not found or does not contain the specified supplier'
+        'Account not found or does not contain the specified supplier',
       );
     }
 
@@ -158,7 +158,7 @@ export class AccountService {
   async updateAccountCookies(
     accountId: string,
     wbCookies: string,
-    phoneWb?: string
+    phoneWb?: string,
   ): Promise<void> {
     await prisma.account.update({
       where: { id: accountId },
@@ -194,7 +194,7 @@ export class AccountService {
   async syncAccountSuppliers(
     accountId: string,
     userAgent: string,
-    proxy?: UserEnvInfo['proxy']
+    proxy?: UserEnvInfo['proxy'],
   ): Promise<void> {
     const account = await prisma.account.findUnique({
       where: { id: accountId },
@@ -209,7 +209,7 @@ export class AccountService {
         accountId,
         userAgent,
         proxy,
-        account.selectedSupplierId || ''
+        account.selectedSupplierId || '',
       );
 
       // Remove suppliers that no longer exist
@@ -272,7 +272,7 @@ export class AccountService {
       const allSuppliers = await this.getAccountSuppliers(
         account.id,
         userAgent,
-        proxy
+        proxy,
       );
 
       if (allSuppliers.length === 0) {
@@ -331,7 +331,7 @@ export class AccountService {
    */
   async updateAccountLocalStorage(
     accountId: string,
-    wbLocalStorage: string
+    wbLocalStorage: string,
   ): Promise<void> {
     await prisma.account.update({
       where: { id: accountId },

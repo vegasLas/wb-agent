@@ -12,7 +12,11 @@ export interface RescheduleFilters {
   dateTo?: string;
 }
 
-export type RescheduleSortBy = 'createdAt' | 'updatedAt' | 'supplyId' | 'supplierId';
+export type RescheduleSortBy =
+  | 'createdAt'
+  | 'updatedAt'
+  | 'supplyId'
+  | 'supplierId';
 export type RescheduleSortOrder = 'asc' | 'desc';
 
 export const useRescheduleListStore = defineStore('rescheduleList', () => {
