@@ -14,6 +14,7 @@ export type ViewType =
   | 'reschedules-main'
   | 'reschedules-form'
   | 'reschedules-update'
+  | 'promotions'
   | 'store'
   | 'account'
   | 'store-subscription'
@@ -568,6 +569,137 @@ export interface TelegramWebAppInitData {
 // Auth Step Types
 // -----------------------------------------------------------------------------
 export type AuthStep = 'idle' | 'phone' | 'sms' | 'two_factor' | 'completed' | 'error';
+
+// -----------------------------------------------------------------------------
+// Promotions Calendar Types
+// -----------------------------------------------------------------------------
+export interface PromotionsTimelineResponse {
+  data: {
+    promotions: PromotionItem[];
+    participationCounts: ParticipationCounts;
+  };
+}
+
+export interface ParticipationCounts {
+  available: number;
+  participating: number;
+  skipped: number;
+  all: number;
+}
+
+export interface PromotionItem {
+  promoID: number;
+  name: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  advantages: string[];
+  promotion: string;
+  participation: PromotionParticipation;
+}
+
+export interface PromotionParticipation {
+  status: string;
+  counts: PromotionCounts;
+}
+
+export interface PromotionCounts {
+  eligible: number;
+  participating: number;
+  available: number;
+  participatingOutOfStock: number;
+  availableOutOfStock: number;
+}
+
+export interface PromotionDetailResponse {
+  data: PromotionDetail;
+}
+
+export interface PromotionDetail {
+  promoID: number;
+  periodID: number;
+  groupID: number;
+  name: string;
+  description: string;
+  formattedDescription: string;
+  advantages: string[];
+  startDt: string;
+  endDt: string;
+  status: number;
+  participationStatus: string;
+  isAutoAction: boolean;
+  isImportant: boolean;
+  isAnnouncement: boolean;
+  inPromoActionLeftovers: number;
+  inPromoActionTotal: number;
+  isHasNotParticipationNm: boolean;
+  isHasRecovery: boolean;
+  isParticipateInAutoPromo: boolean;
+  isHasAnalyticalCalculations: boolean;
+  notInPromoActionLeftovers: number;
+  notInPromoActionTotal: number;
+  participationPercentage: number;
+  participationPercentageForSpp: number;
+  calculateProductsCount: number;
+  actionInStock: number;
+  autoPromo?: unknown;
+  ranging: PromotionRanging;
+  sppProperties?: unknown;
+  isMultiLevels: boolean;
+  selectedDiscountLevelName?: unknown;
+  discountOptions?: unknown;
+  isParticipateForAnalytics: boolean;
+}
+
+export interface PromotionRanging {
+  levels: PromotionLevel[];
+  boost: string;
+  currentCoefficient: number;
+  isMaxLevel: boolean;
+  nmToNextLevel: number;
+  nmToMaxLevel: number;
+}
+
+export interface PromotionLevel {
+  nomenclatures: number;
+  coefficient: number;
+}
+
+export interface PromotionExcelItem {
+  'Товар уже участвует в акции': string;
+  'Бренд': string;
+  'Предмет': string;
+  'Наименование': string;
+  'Артикул поставщика': string;
+  'Артикул WB': number;
+  'Количество дней на сайте': number;
+  'Оборачиваемость': number;
+  'Остаток товара на складах Wb (шт.)': number;
+  'Остаток товара на складе продавца Wb (шт.)': number;
+  'Плановая цена для акции': number;
+  'Текущая розничная цена': number;
+  'Валюта': string;
+  'Текущая скидка на сайте, %': number;
+  'Загружаемая скидка для участия в акции': number;
+  [key: string]: unknown;
+}
+
+export interface PromotionParsedData {
+  items: PromotionExcelItem[];
+  meta: {
+    totalItems: number;
+    sheetName: string;
+    allSheets: string[];
+    reportInfo: ReportInfo;
+  };
+}
+
+export interface PromotionApiPayload {
+  items: PromotionExcelItem[] | null;
+  error: string | null;
+  reportPending?: boolean;
+  estimatedWaitTime?: number | null;
+}
 
 // -----------------------------------------------------------------------------
 // Global Window Extensions
