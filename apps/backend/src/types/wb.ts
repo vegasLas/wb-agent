@@ -534,3 +534,108 @@ export interface Supply {
   /** Whether unloading is allowed */
   allowUnload: boolean;
 }
+
+// ============ Promotions Calendar Types ============
+
+export interface PromotionsTimelineResponse {
+  data: {
+    promotions: Promotion[];
+    participationCounts: ParticipationCounts;
+  };
+}
+
+export interface ParticipationCounts {
+  available: number;
+  participating: number;
+  skipped: number;
+  all: number;
+}
+
+export interface Promotion {
+  promoID: number;
+  name: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  advantages: string[];
+  promotion: string;
+  participation: Participation;
+}
+
+export interface Participation {
+  status: string;
+  counts: Counts;
+}
+
+export interface Counts {
+  eligible: number;
+  participating: number;
+  available: number;
+  participatingOutOfStock: number;
+  availableOutOfStock: number;
+}
+
+export interface PromotionDetailResponse {
+  data: {
+    promoID: number;
+    periodID: number;
+    groupID: number;
+    name: string;
+    description: string;
+    formattedDescription: string;
+    advantages: string[];
+    startDt: string;
+    endDt: string;
+    status: number;
+    participationStatus: string;
+    isAutoAction: boolean;
+    isImportant: boolean;
+    isAnnouncement: boolean;
+    inPromoActionLeftovers: number;
+    inPromoActionTotal: number;
+    isHasNotParticipationNm: boolean;
+    isHasRecovery: boolean;
+    isParticipateInAutoPromo: boolean;
+    isHasAnalyticalCalculations: boolean;
+    notInPromoActionLeftovers: number;
+    notInPromoActionTotal: number;
+    participationPercentage: number;
+    participationPercentageForSpp: number;
+    calculateProductsCount: number;
+    actionInStock: number;
+    autoPromo?: unknown;
+    ranging: Ranging;
+    sppProperties?: unknown;
+    isMultiLevels: boolean;
+    selectedDiscountLevelName?: unknown;
+    discountOptions?: unknown;
+    isParticipateForAnalytics: boolean;
+  };
+}
+
+export interface Ranging {
+  levels: Level[];
+  boost: string;
+  currentCoefficient: number;
+  isMaxLevel: boolean;
+  nmToNextLevel: number;
+  nmToMaxLevel: number;
+}
+
+export interface Level {
+  nomenclatures: number;
+  coefficient: number;
+}
+
+export interface PromotionExcelCreateResponse {
+  // Empty object response
+}
+
+export interface PromotionExcelGetResponse {
+  data: PromotionExcelData;
+}
+
+export interface PromotionExcelData {
+  uploadDate: string;
+  file: string;
+}
