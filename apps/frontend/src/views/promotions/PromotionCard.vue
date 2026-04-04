@@ -4,8 +4,12 @@
   >
     <!-- Header: Title -->
     <div class="mb-3">
-      <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
-        <span class="text-orange-600 dark:text-orange-400">{{ display.typeLabel.value }}</span>
+      <h3
+        class="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2"
+      >
+        <span class="text-orange-600 dark:text-orange-400">{{
+          display.typeLabel.value
+        }}</span>
         {{ display.name.value }}
       </h3>
     </div>
@@ -18,13 +22,15 @@
         :severity="display.participationStatusSeverity.value"
         class="text-xs"
       />
-      
+
       <!-- Participation Percentage -->
-      <span class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+      <span
+        class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1"
+      >
         <i class="pi pi-arrow-up-right text-xs" />
         {{ display.participationText.value }}
       </span>
-      
+
       <!-- Coefficient Boost -->
       <span
         v-if="display.hasBoost.value"

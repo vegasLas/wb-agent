@@ -51,7 +51,9 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
 
   // Computed
   const showDatePicker = computed(() => form.value.searchMode === 'RANGE');
-  const showRangePicker = computed(() => form.value.searchMode === 'CUSTOM_DATES');
+  const showRangePicker = computed(
+    () => form.value.searchMode === 'CUSTOM_DATES',
+  );
 
   const isValid = computed(() => {
     return (
@@ -82,7 +84,7 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
 
   function setFormField<K extends keyof CreateTriggerRequest>(
     field: K,
-    value: CreateTriggerRequest[K]
+    value: CreateTriggerRequest[K],
   ) {
     form.value[field] = value;
   }
@@ -105,13 +107,16 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
       error.value = null;
 
       const trigger = await triggersAPI.createTrigger(form.value);
-      triggerStore.triggers.unshift(trigger as unknown as typeof triggerStore.triggers[0]);
-      
+      triggerStore.triggers.unshift(
+        trigger as unknown as (typeof triggerStore.triggers)[0],
+      );
+
       resetForm();
-      
+
       return trigger;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create trigger';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to create trigger';
       error.value = errorMsg;
       throw err;
     } finally {

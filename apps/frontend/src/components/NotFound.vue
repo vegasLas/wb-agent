@@ -1,9 +1,7 @@
 <template>
   <div class="flex flex-col items-center justify-center min-h-[80vh] px-4">
     <div class="text-center">
-      <div class="text-6xl font-bold text-gray-300 mb-4">
-        404
-      </div>
+      <div class="text-6xl font-bold text-gray-300 mb-4">404</div>
       <div class="text-red-500 dark:text-red-400 w-16 h-16 mb-4 mx-auto">
         <i class="pi pi-exclamation-triangle text-6xl" />
       </div>
@@ -26,17 +24,20 @@
 <script setup lang="ts">
 import Button from 'primevue/button';
 
-withDefaults(defineProps<{
-  title?: string;
-  message?: string;
-  buttonText?: string;
-  showButton?: boolean;
-}>(), {
-  title: 'Страница не найдена',
-  message: 'Извините, запрашиваемая страница не существует',
-  buttonText: 'Попробовать снова',
-  showButton: false,
-});
+withDefaults(
+  defineProps<{
+    title?: string;
+    message?: string;
+    buttonText?: string;
+    showButton?: boolean;
+  }>(),
+  {
+    title: 'Страница не найдена',
+    message: 'Извините, запрашиваемая страница не существует',
+    buttonText: 'Попробовать снова',
+    showButton: false,
+  },
+);
 
 const emit = defineEmits<{
   retry: [];

@@ -16,13 +16,16 @@ export function useAppState() {
   const accountModalStore = useAccountSupplierModalStore();
 
   // Initialize Telegram WebApp
-  async function initTelegram(): Promise<{ isTgClient: boolean; colorScheme: string }> {
+  async function initTelegram(): Promise<{
+    isTgClient: boolean;
+    colorScheme: string;
+  }> {
     const vueTg = await import('vue-tg');
     const { colorScheme } = vueTg.useWebAppTheme();
     const initData = vueTg.useWebApp().initData;
-    
+
     telegramColorScheme.value = colorScheme.value;
-    
+
     return {
       isTgClient: Boolean(initData),
       colorScheme: colorScheme.value,
@@ -32,11 +35,11 @@ export function useAppState() {
   // Initialize user data
   async function initUserData(): Promise<void> {
     await userStore.fetchUser();
-    
+
     // Fetch background data
     rescheduleStore.fetchReschedules();
     warehouseStore.fetchWarehouses();
-    
+
     // Handle auth query param
     const query = router.currentRoute.value.query;
     if (query.auth === 'true') {

@@ -6,18 +6,22 @@
     <div class="space-y-1">
       <div class="flex items-center gap-2">
         <i class="pi pi-mobile text-blue-500 dark:text-blue-400" />
-        <span class="text-sm">Аккаунт:
+        <span class="text-sm"
+          >Аккаунт:
           {{
             selectedAccount
               ? !selectedAccount.phoneWb
                 ? 'Номер не указан'
                 : selectedAccount.phoneWb
               : 'Не выбран'
-          }}</span>
+          }}</span
+        >
       </div>
       <div class="flex items-center gap-2">
         <i class="pi pi-building text-green-500 dark:text-green-400" />
-        <span class="text-sm">Поставщик: {{ selectedSupplier?.supplierName || 'Не выбран' }}</span>
+        <span class="text-sm"
+          >Поставщик: {{ selectedSupplier?.supplierName || 'Не выбран' }}</span
+        >
       </div>
     </div>
   </div>

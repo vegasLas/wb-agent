@@ -47,10 +47,7 @@
 
       <template v-else>
         <!-- Supply Information Section -->
-        <div
-          v-if="supplyDetails"
-          class="mb-6"
-        >
+        <div v-if="supplyDetails" class="mb-6">
           <div
             class="grid grid-cols-1 gap-3 p-4 rounded-lg text-sm bg-gray-50 dark:bg-gray-700"
           >
@@ -72,10 +69,7 @@
               <i class="pi pi-calendar text-gray-500 dark:text-gray-400" />
               {{ formatSupplyDate(supplyDetails.supplyDate) }}
             </div>
-            <div
-              v-if="supplyDetails.statusId"
-              class="flex items-center gap-2"
-            >
+            <div v-if="supplyDetails.statusId" class="flex items-center gap-2">
               <i class="pi pi-info-circle text-gray-500 dark:text-gray-400" />
               <Tag
                 :value="getStatusName(supplyDetails.statusId)"
@@ -99,41 +93,31 @@
           size="small"
           class="p-datatable-sm"
         >
-          <Column
-            header=""
-            style="width: 4rem"
-          >
+          <Column header="" style="width: 4rem">
             <template #body="slotProps">
               <img
                 v-if="slotProps.data.imgSrc"
                 :src="slotProps.data.imgSrc"
                 class="w-10 h-10 rounded object-cover"
                 :alt="slotProps.data.imtName"
-              >
+              />
             </template>
           </Column>
-          <Column
-            field="imtName"
-            header="Название"
-          >
+          <Column field="imtName" header="Название">
             <template #body="slotProps">
               <span class="text-sm text-gray-900 dark:text-gray-100">{{
                 slotProps.data.imtName
               }}</span>
             </template>
           </Column>
-          <Column
-            field="quantity"
-            header="Количество"
-          >
+          <Column field="quantity" header="Количество">
             <template #body="slotProps">
-              <span class="text-sm text-gray-500 dark:text-gray-400">{{ slotProps.data.quantity }} шт.</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400"
+                >{{ slotProps.data.quantity }} шт.</span
+              >
             </template>
           </Column>
-          <Column
-            field="brandName"
-            header="Бренд"
-          >
+          <Column field="brandName" header="Бренд">
             <template #body="slotProps">
               <span
                 v-if="slotProps.data.brandName"
@@ -162,19 +146,13 @@
         </div>
 
         <!-- Empty State -->
-        <div
-          v-else
-          class="text-center py-12 text-gray-500 dark:text-gray-400"
-        >
+        <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
           Товары не найдены
         </div>
       </template>
     </div>
     <template #footer>
-      <Button
-        label="Закрыть"
-        @click="visible = false"
-      />
+      <Button label="Закрыть" @click="visible = false" />
     </template>
   </Dialog>
 </template>

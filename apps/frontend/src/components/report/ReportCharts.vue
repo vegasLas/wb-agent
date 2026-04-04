@@ -6,7 +6,9 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-clock text-5xl mb-4 text-blue-500 dark:text-blue-400 animate-pulse" />
+        <i
+          class="pi pi-clock text-5xl mb-4 text-blue-500 dark:text-blue-400 animate-pulse"
+        />
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Отчет создается
         </h3>
@@ -32,7 +34,9 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-exclamation-triangle text-5xl mb-4 text-red-500 dark:text-red-400" />
+        <i
+          class="pi pi-exclamation-triangle text-5xl mb-4 text-red-500 dark:text-red-400"
+        />
         <h3 class="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
           Ошибка загрузки отчета
         </h3>
@@ -57,7 +61,9 @@
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >
       <template #content>
-        <i class="pi pi-spin pi-refresh text-5xl mb-4 text-blue-500 dark:text-blue-400" />
+        <i
+          class="pi pi-spin pi-refresh text-5xl mb-4 text-blue-500 dark:text-blue-400"
+        />
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Загрузка отчета
         </h3>
@@ -72,14 +78,8 @@
       v-else-if="itemsByWarehouse && itemsByWarehouse.length > 0"
       class="space-y-8"
     >
-      <div
-        v-for="{ warehouse, items } in itemsByWarehouse"
-        :key="warehouse"
-      >
-        <WarehousePolarAreaChart
-          :warehouse-name="warehouse"
-          :items="items"
-        />
+      <div v-for="{ warehouse, items } in itemsByWarehouse" :key="warehouse">
+        <WarehousePolarAreaChart :warehouse-name="warehouse" :items="items" />
       </div>
     </div>
 
@@ -87,8 +87,8 @@
     <Card
       v-else-if="
         data &&
-          (data.items.length === 0 || !data.items) &&
-          (!itemsByWarehouse || itemsByWarehouse.length === 0)
+        (data.items.length === 0 || !data.items) &&
+        (!itemsByWarehouse || itemsByWarehouse.length === 0)
       "
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >

@@ -50,11 +50,15 @@ const colorMode = useColorMode({
 
 // Watch Telegram's color scheme and apply it
 const { colorScheme: telegramColorScheme } = useTelegram();
-watch(telegramColorScheme, (newScheme) => {
-  if (newScheme) {
-    colorMode.value = newScheme;
-  }
-}, { immediate: true });
+watch(
+  telegramColorScheme,
+  (newScheme) => {
+    if (newScheme) {
+      colorMode.value = newScheme;
+    }
+  },
+  { immediate: true },
+);
 
 const router = useRouter();
 const route = useRoute();

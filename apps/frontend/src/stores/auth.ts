@@ -4,7 +4,13 @@ import { authAPI } from '../api';
 import { useUserStore } from './user';
 import { useAccountSupplierModalStore } from './accountSupplierModal';
 
-export type AuthStep = 'idle' | 'phone' | 'sms' | 'two_factor' | 'completed' | 'error';
+export type AuthStep =
+  | 'idle'
+  | 'phone'
+  | 'sms'
+  | 'two_factor'
+  | 'completed'
+  | 'error';
 
 export interface AuthState {
   sessionId: string | null;
@@ -81,9 +87,14 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(response.message || 'Failed to verify phone number');
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       const errorMessage =
-        error?.response?.data?.message || error.message || 'Failed to verify phone number';
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to verify phone number';
       error.value = errorMessage;
 
       // For retryable errors, don't change step
@@ -120,9 +131,14 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(response.message || 'Failed to verify SMS code');
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       const errorMessage =
-        error?.response?.data?.message || error.message || 'Failed to verify SMS code';
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to verify SMS code';
       error.value = errorMessage;
 
       // For retryable errors, clear invalid code and don't change step
@@ -159,9 +175,14 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(response.message || 'Failed to verify two-factor code');
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       const errorMessage =
-        error?.response?.data?.message || error.message || 'Failed to verify two-factor code';
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to verify two-factor code';
       error.value = errorMessage;
 
       // For retryable errors, clear invalid code and don't change step

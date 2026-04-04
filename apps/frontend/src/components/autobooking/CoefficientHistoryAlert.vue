@@ -1,27 +1,13 @@
 <template>
-  <Message
-    v-if="coefficientHistory.length > 0"
-    severity="info"
-    class="mt-2"
-  >
+  <Message v-if="coefficientHistory.length > 0" severity="info" class="mt-2">
     <div class="space-y-2">
       <div class="flex items-center justify-between">
-        <p class="text-sm font-medium">
-          Последние коэффициенты:
-        </p>
-        <Button
-          text
-          size="small"
-          class="text-xs"
-          @click="toggleExpanded"
-        >
+        <p class="text-sm font-medium">Последние коэффициенты:</p>
+        <Button text size="small" class="text-xs" @click="toggleExpanded">
           <i :class="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" />
         </Button>
       </div>
-      <div
-        v-if="isExpanded"
-        class="space-y-1 max-h-60 overflow-y-auto"
-      >
+      <div v-if="isExpanded" class="space-y-1 max-h-60 overflow-y-auto">
         <div
           v-for="(coefficient, index) in coefficientHistory"
           :key="index"
@@ -138,7 +124,10 @@ const coefficientHistory = computed(() => {
 
   warehouseIdsArray.value.forEach((warehouseId) => {
     supplyTypesArray.value.forEach((supplyType) => {
-      const history = coefficientsStore.getLastThreeCoefficientDetails(warehouseId, supplyType);
+      const history = coefficientsStore.getLastThreeCoefficientDetails(
+        warehouseId,
+        supplyType,
+      );
       history.forEach((item) => {
         allHistory.push({
           ...item,

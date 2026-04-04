@@ -49,7 +49,9 @@ interface UseTelegramReturn {
   themeParams: Ref<ThemeParams | undefined>;
   showAlert: (message: string) => Promise<void>;
   showConfirm: (message: string) => Promise<boolean>;
-  hapticFeedback: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
+  hapticFeedback: (
+    type: 'light' | 'medium' | 'heavy' | 'success' | 'error',
+  ) => void;
   getUser: () => TelegramUser | undefined;
   getInitData: () => string | undefined;
 }
@@ -58,11 +60,11 @@ interface UseTelegramReturn {
 export function useTelegram(): UseTelegramReturn {
   const isReady = ref(false);
   const isTelegram = ref(false);
-  
+
   // Reactive refs for theme
   const colorScheme = ref<string | undefined>(undefined);
   const themeParams = ref<ThemeParams | undefined>(undefined);
-  
+
   // Raw values from Telegram WebApp
   let initData = '';
   let initDataUnsafe: WebAppInitData | undefined = undefined;
@@ -72,11 +74,11 @@ export function useTelegram(): UseTelegramReturn {
   // Initialize Telegram WebApp
   onMounted(() => {
     const tg = window.Telegram?.WebApp;
-    
+
     if (tg) {
       isTelegram.value = true;
       isReady.value = true;
-      
+
       // Store values
       initData = tg.initData || '';
       initDataUnsafe = tg.initDataUnsafe;
@@ -84,12 +86,12 @@ export function useTelegram(): UseTelegramReturn {
       platform = tg.platform;
       colorScheme.value = tg.colorScheme;
       themeParams.value = tg.themeParams;
-      
+
       // Expand the WebApp to full height
       if (tg.expand) {
         tg.expand();
       }
-      
+
       // Notify Telegram that the app is ready
       if (tg.ready) {
         tg.ready();
@@ -108,7 +110,6 @@ export function useTelegram(): UseTelegramReturn {
       if (tg?.showAlert) {
         tg.showAlert(message, resolve);
       } else {
-         
         alert(message);
         resolve();
       }
@@ -124,7 +125,6 @@ export function useTelegram(): UseTelegramReturn {
           resolve(confirmed);
         });
       } else {
-         
         const confirmed = confirm(message);
         resolve(confirmed);
       }
@@ -132,12 +132,14 @@ export function useTelegram(): UseTelegramReturn {
   };
 
   // Haptic feedback
-  const hapticFeedback = (type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') => {
+  const hapticFeedback = (
+    type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light',
+  ) => {
     const tg = window.Telegram?.WebApp;
     if (!tg?.HapticFeedback) return;
-    
+
     const haptic = tg.HapticFeedback;
-    
+
     switch (type) {
       case 'light':
         haptic.impactOccurred('light');
@@ -171,17 +173,17 @@ export function useTelegram(): UseTelegramReturn {
     // State
     isReady,
     isTelegram,
-    
+
     // WebApp data
     initData,
     initDataUnsafe,
     version,
     platform,
-    
+
     // Theme
     colorScheme,
     themeParams,
-    
+
     // Methods
     showAlert,
     showConfirm,
@@ -213,7 +215,7 @@ export function useMainButton(): UseMainButtonReturn {
   const getMainButton = () => {
     return window.Telegram?.WebApp?.MainButton;
   };
-  
+
   const setMainButton = (params: {
     text: string;
     color?: string;
@@ -226,7 +228,8 @@ export function useMainButton(): UseMainButtonReturn {
 
     if (params.text !== undefined) btn.setText(params.text);
     if (params.color !== undefined) btn.setParams({ color: params.color });
-    if (params.textColor !== undefined) btn.setParams({ text_color: params.textColor });
+    if (params.textColor !== undefined)
+      btn.setParams({ text_color: params.textColor });
     if (params.isVisible !== undefined) {
       if (params.isVisible) {
         btn.show();

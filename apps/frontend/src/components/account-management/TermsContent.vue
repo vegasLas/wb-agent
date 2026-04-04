@@ -1,18 +1,14 @@
 <template>
   <div class="h-full flex flex-col">
     <div class="mb-4">
-      <h1 class="text-2xl font-bold">
-        📜 Пользовательское соглашение
-      </h1>
+      <h1 class="text-2xl font-bold">📜 Пользовательское соглашение</h1>
     </div>
 
     <div
       class="flex-1 overflow-y-auto pr-2 space-y-6 text-gray-700 dark:text-gray-300"
     >
       <section>
-        <h2 class="text-xl font-semibold mb-3">
-          1. ✅ Принятие условий
-        </h2>
+        <h2 class="text-xl font-semibold mb-3">1. ✅ Принятие условий</h2>
         <p class="leading-relaxed">
           Настоящее пользовательское соглашение (далее — «Соглашение»)
           регулирует использование бота Автобронь Wildberries (далее —
@@ -24,9 +20,7 @@
       </section>
 
       <section>
-        <h2 class="text-xl font-semibold mb-3">
-          2. 🤖 Описание сервиса
-        </h2>
+        <h2 class="text-xl font-semibold mb-3">2. 🤖 Описание сервиса</h2>
         <p class="leading-relaxed">
           Сервис представляет собой автоматизированный инструмент для выполнения
           определенных действий на платформе Wildberries (например,
@@ -95,26 +89,18 @@
       </section>
     </div>
 
-    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-      <Message
-        severity="info"
-        :closable="false"
-      >
-        <div class="font-medium">
-          ❗️ Важное уведомление
-        </div>
+    <div
+      class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4"
+    >
+      <Message severity="info" :closable="false">
+        <div class="font-medium">❗️ Важное уведомление</div>
         <div class="text-sm">
           Внимательно ознакомьтесь с условиями перед использованием сервиса.
         </div>
       </Message>
 
       <div class="flex justify-between items-center gap-4">
-        <Button
-          variant="text"
-          @click="$emit('cancel')"
-        >
-          Отмена
-        </Button>
+        <Button variant="text" @click="$emit('cancel')"> Отмена </Button>
         <Button
           :loading="loading"
           severity="primary"

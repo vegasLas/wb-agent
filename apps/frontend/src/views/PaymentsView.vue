@@ -40,15 +40,10 @@
     </div>
 
     <!-- Subscription Tab -->
-    <div
-      v-if="activeTab === 'subscription'"
-      class="space-y-6"
-    >
+    <div v-if="activeTab === 'subscription'" class="space-y-6">
       <Card>
         <template #title>
-          <h2 class="text-lg font-medium">
-            Продление подписки
-          </h2>
+          <h2 class="text-lg font-medium">Продление подписки</h2>
         </template>
         <template #content>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
@@ -61,15 +56,10 @@
     </div>
 
     <!-- Credits Tab -->
-    <div
-      v-if="activeTab === 'credits'"
-      class="space-y-6"
-    >
+    <div v-if="activeTab === 'credits'" class="space-y-6">
       <Card>
         <template #title>
-          <h2 class="text-lg font-medium">
-            Покупка кредитов
-          </h2>
+          <h2 class="text-lg font-medium">Покупка кредитов</h2>
         </template>
         <template #content>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">

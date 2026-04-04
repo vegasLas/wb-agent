@@ -93,7 +93,12 @@ export interface Autobooking {
   transitWarehouseId?: number | null;
   transitWarehouseName?: string | null;
   supplyType: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
-  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+  dateType:
+    | 'WEEK'
+    | 'MONTH'
+    | 'CUSTOM_PERIOD'
+    | 'CUSTOM_DATES'
+    | 'CUSTOM_DATES_SINGLE';
   startDate?: Date | string | null;
   endDate?: Date | string | null;
   customDates?: Date[] | string[];
@@ -113,7 +118,12 @@ export interface AutobookingCreateData {
   transitWarehouseId?: number | null;
   transitWarehouseName?: string | null;
   supplyType: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
-  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+  dateType:
+    | 'WEEK'
+    | 'MONTH'
+    | 'CUSTOM_PERIOD'
+    | 'CUSTOM_DATES'
+    | 'CUSTOM_DATES_SINGLE';
   startDate?: Date | string | null;
   endDate?: Date | string | null;
   customDates?: Date[] | string[];
@@ -127,7 +137,12 @@ export interface AutobookingUpdateData {
   transitWarehouseId?: number | null;
   transitWarehouseName?: string | null;
   supplyType?: 'BOX' | 'MONOPALLETE' | 'SUPERSAFE';
-  dateType?: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
+  dateType?:
+    | 'WEEK'
+    | 'MONTH'
+    | 'CUSTOM_PERIOD'
+    | 'CUSTOM_DATES'
+    | 'CUSTOM_DATES_SINGLE';
   startDate?: Date | string | null;
   endDate?: Date | string | null;
   customDates?: Date[] | string[];
@@ -450,7 +465,7 @@ export interface ReportRequestParams {
   limit?: number;
   offset?: number;
   dateFrom?: string; // Format: DD.MM.YY or YYYY-MM-DD
-  dateTo?: string;   // Format: DD.MM.YY or YYYY-MM-DD
+  dateTo?: string; // Format: DD.MM.YY or YYYY-MM-DD
 }
 
 // Warehouse Suggestion Types
@@ -568,7 +583,13 @@ export interface TelegramWebAppInitData {
 // -----------------------------------------------------------------------------
 // Auth Step Types
 // -----------------------------------------------------------------------------
-export type AuthStep = 'idle' | 'phone' | 'sms' | 'two_factor' | 'completed' | 'error';
+export type AuthStep =
+  | 'idle'
+  | 'phone'
+  | 'sms'
+  | 'two_factor'
+  | 'completed'
+  | 'error';
 
 // -----------------------------------------------------------------------------
 // Promotions Calendar Types
@@ -649,6 +670,7 @@ export interface PromotionDetail {
   selectedDiscountLevelName?: unknown;
   discountOptions?: unknown;
   isParticipateForAnalytics: boolean;
+  participation?: PromotionParticipation;
 }
 
 export interface PromotionRanging {
@@ -667,18 +689,18 @@ export interface PromotionLevel {
 
 export interface PromotionExcelItem {
   'Товар уже участвует в акции': string;
-  'Бренд': string;
-  'Предмет': string;
-  'Наименование': string;
+  Бренд: string;
+  Предмет: string;
+  Наименование: string;
   'Артикул поставщика': string;
   'Артикул WB': number;
   'Количество дней на сайте': number;
-  'Оборачиваемость': number;
+  Оборачиваемость: number;
   'Остаток товара на складах Wb (шт.)': number;
   'Остаток товара на складе продавца Wb (шт.)': number;
   'Плановая цена для акции': number;
   'Текущая розничная цена': number;
-  'Валюта': string;
+  Валюта: string;
   'Текущая скидка на сайте, %': number;
   'Загружаемая скидка для участия в акции': number;
   [key: string]: unknown;
@@ -725,14 +747,21 @@ declare global {
         expand: () => void;
         enableClosingConfirmation: () => void;
         disableClosingConfirmation: () => void;
-        showPopup: (params: { title?: string; message: string; buttons?: Array<{ id?: string; type?: string; text: string }> }) => Promise<string>;
+        showPopup: (params: {
+          title?: string;
+          message: string;
+          buttons?: Array<{ id?: string; type?: string; text: string }>;
+        }) => Promise<string>;
         showAlert: (message: string) => Promise<void>;
         showConfirm: (message: string) => Promise<boolean>;
         onEvent: (eventType: string, eventHandler: () => void) => void;
         offEvent: (eventType: string, eventHandler: () => void) => void;
         sendData: (data: string) => void;
         switchInlineQuery: (query: string, chooseChatTypes?: string[]) => void;
-        openLink: (url: string, options?: { try_instant_view?: boolean }) => void;
+        openLink: (
+          url: string,
+          options?: { try_instant_view?: boolean },
+        ) => void;
         openTelegramLink: (url: string) => void;
         openInvoice: (url: string) => Promise<string>;
         readTextFromClipboard: () => Promise<string>;

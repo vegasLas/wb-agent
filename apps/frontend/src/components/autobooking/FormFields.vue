@@ -44,15 +44,9 @@
     </div>
 
     <!-- Validation Failure Alert -->
-    <Message
-      v-if="showValidationFailureAlert"
-      severity="error"
-      class="w-full"
-    >
+    <Message v-if="showValidationFailureAlert" severity="error" class="w-full">
       <div class="space-y-2 text-sm">
-        <p class="font-medium">
-          Ошибка валидации склада и черновика
-        </p>
+        <p class="font-medium">Ошибка валидации склада и черновика</p>
         <p>
           К сожалению, выбранный склад не принимает товары из этого черновика.
           Это может быть связано с:
@@ -90,10 +84,7 @@
     />
 
     <!-- Monopallet Count (only for MONOPALLETE supply type) -->
-    <div
-      v-if="props.form.supplyType === 'MONOPALLETE'"
-      class="space-y-2"
-    >
+    <div v-if="props.form.supplyType === 'MONOPALLETE'" class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Количество монопаллет
         <span class="text-red-500 dark:text-red-400">*</span>
@@ -222,7 +213,9 @@ const warehouseStore = useWarehousesStore();
 // Track previous values for change detection
 const prevWarehouseId = ref<number | null>(props.form.warehouseId);
 const prevDraftId = ref<string>(props.form.draftId);
-const prevTransitWarehouseId = ref<number | null>(props.form.transitWarehouseId);
+const prevTransitWarehouseId = ref<number | null>(
+  props.form.transitWarehouseId,
+);
 
 // Check if we're in update mode
 const isUpdateMode = computed(() => !!updateStore.currentAutobooking);
@@ -323,8 +316,16 @@ function handleWarehouseChange(warehouseId: number) {
 
 // Watch for changes in warehouse or draft selection - validate and reset supply type
 watch(
-  () => [props.form.warehouseId, props.form.draftId, props.form.transitWarehouseId] as const,
-  async ([newWarehouseId, newDraftId, newTransitWarehouseId], [oldWarehouseId, oldDraftId, oldTransitWarehouseId]) => {
+  () =>
+    [
+      props.form.warehouseId,
+      props.form.draftId,
+      props.form.transitWarehouseId,
+    ] as const,
+  async (
+    [newWarehouseId, newDraftId, newTransitWarehouseId],
+    [oldWarehouseId, oldDraftId, oldTransitWarehouseId],
+  ) => {
     // Skip if values haven't actually changed (prevents recursion)
     if (
       newWarehouseId === oldWarehouseId &&
@@ -333,15 +334,18 @@ watch(
     ) {
       return;
     }
-    
+
     // Reset supply type when warehouse or draft changes
-    if (newWarehouseId !== prevWarehouseId.value || newDraftId !== prevDraftId.value) {
+    if (
+      newWarehouseId !== prevWarehouseId.value ||
+      newDraftId !== prevDraftId.value
+    ) {
       // Only reset if supplyType is not already empty
       if (props.form.supplyType !== '') {
         updateField('supplyType', '');
       }
     }
-    
+
     // Only validate if both values are present and either has changed
     if (
       newWarehouseId &&

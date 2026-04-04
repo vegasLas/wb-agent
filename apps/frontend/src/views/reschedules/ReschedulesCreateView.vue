@@ -4,11 +4,7 @@
       <h3 class="text-xl text-center font-semibold flex-1">
         Создание перепланирования
       </h3>
-      <Button
-        variant="outlined"
-        severity="warn"
-        @click="showHintsModal = true"
-      >
+      <Button variant="outlined" severity="warn" @click="showHintsModal = true">
         <i class="pi pi-question-circle" />
       </Button>
     </div>
@@ -27,25 +23,22 @@
       :warehouse-id="formStore.form.warehouseId"
       :supply-type="formStore.form.supplyType"
       @refresh-supplies="formStore.refreshSupplies"
-      @open-supply-details="supplyDetailsStore.openModal(String(formStore.selectedSupplyId || ''))"
+      @open-supply-details="
+        supplyDetailsStore.openModal(String(formStore.selectedSupplyId || ''))
+      "
     />
 
-    <Message
-      severity="warn"
-      class="mt-4"
-    >
+    <Message severity="warn" class="mt-4">
       <div class="text-sm space-y-2">
-        <p class="font-semibold mb-2">
-          Важная информация
-        </p>
+        <p class="font-semibold mb-2">Важная информация</p>
         <p>
           <strong>Автоматическое перепланирование</strong> работает как
           автобронирование — бот будет пытаться перепланировать поставку, но
           <strong>успех не гарантирован</strong>.
         </p>
         <p>
-          Обязательно <strong>проверьте историю коэффициентов</strong> и
-          будьте готовы к тому, что перепланирование может не сработать.
+          Обязательно <strong>проверьте историю коэффициентов</strong> и будьте
+          готовы к тому, что перепланирование может не сработать.
         </p>
       </div>
     </Message>
@@ -67,9 +60,7 @@
   />
 
   <!-- Hints Modal -->
-  <ReschedulesHints
-    v-model:show="showHintsModal"
-  />
+  <ReschedulesHints v-model:show="showHintsModal" />
 
   <BackButton @click="goBack" />
 </template>

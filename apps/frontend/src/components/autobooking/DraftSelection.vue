@@ -12,10 +12,7 @@
       class="w-full"
       @update:model-value="(value) => $emit('update:modelValue', value)"
     />
-    <div
-      v-if="modelValue"
-      class="flex justify-end"
-    >
+    <div v-if="modelValue" class="flex justify-end">
       <Button
         size="small"
         severity="secondary"

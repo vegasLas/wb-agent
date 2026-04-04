@@ -5,24 +5,15 @@
         <h3 class="text-xl text-center font-semibold flex-1">
           Редактировать перепланирование
         </h3>
-        <Button
-          severity="warning"
-          text
-          @click="showHintsModal = true"
-        >
+        <Button severity="warning" text @click="showHintsModal = true">
           <i class="pi pi-question-circle" />
         </Button>
       </div>
 
       <form class="space-y-6">
         <!-- Supply Section -->
-        <div
-          v-if="reschedule"
-          class="space-y-3"
-        >
-          <h4 class="font-medium text-gray-900 dark:text-white">
-            Поставка
-          </h4>
+        <div v-if="reschedule" class="space-y-3">
+          <h4 class="font-medium text-gray-900 dark:text-white">Поставка</h4>
 
           <!-- Supply Information (read-only) -->
           <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -35,7 +26,9 @@
                 <div>
                   <span class="font-medium">Склад:</span>
                   {{
-                    updateFormStore.getWarehouseName(reschedule?.warehouseId || 0)
+                    updateFormStore.getWarehouseName(
+                      reschedule?.warehouseId || 0,
+                    )
                   }}
                 </div>
                 <div>
@@ -79,7 +72,9 @@
 
         <!-- Max Coefficient Update -->
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Максимальный коэффициент
           </label>
           <div class="flex items-center gap-4">
@@ -90,14 +85,16 @@
               :step="1"
               :min="0"
               :max="20"
-            >
+            />
             <div class="min-w-[4rem] text-center">
-              <span class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+              <span
+                class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+              >
                 {{ formData.maxCoefficientInput }}
               </span>
             </div>
           </div>
-          
+
           <!-- Coefficient History -->
           <CoefficientHistoryAlert
             v-if="reschedule?.warehouseId && reschedule?.supplyType"
@@ -137,11 +134,8 @@
     />
 
     <!-- Hints Modal -->
-    <ReschedulesHints
-      :show="showHintsModal"
-      @close="showHintsModal = false"
-    />
-    
+    <ReschedulesHints :show="showHintsModal" @close="showHintsModal = false" />
+
     <!-- Telegram Back Button -->
     <BackButton @click="goBack" />
   </div>
@@ -167,13 +161,8 @@ const updateFormStore = useRescheduleUpdateFormStore();
 const supplyDetailsStore = useSupplyDetailsStore();
 
 // Destructure reactive refs from stores
-const {
-  formData,
-  reschedule,
-  hasChanges,
-  isFormValid,
-  selectedSupply,
-} = storeToRefs(updateFormStore);
+const { formData, reschedule, hasChanges, isFormValid, selectedSupply } =
+  storeToRefs(updateFormStore);
 
 // Modal states
 const showHintsModal = ref(false);

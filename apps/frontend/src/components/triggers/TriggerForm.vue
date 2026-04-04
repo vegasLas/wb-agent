@@ -3,22 +3,12 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <Button
-          variant="text"
-          size="small"
-          @click="goBack"
-        >
+        <Button variant="text" size="small" @click="goBack">
           <i class="pi pi-arrow-left" />
         </Button>
-        <h2 class="text-xl font-semibold">
-          Создание таймслота
-        </h2>
+        <h2 class="text-xl font-semibold">Создание таймслота</h2>
       </div>
-      <Button
-        variant="text"
-        size="small"
-        @click="showHintsModal = true"
-      >
+      <Button variant="text" size="small" @click="showHintsModal = true">
         <i class="pi pi-question-circle text-yellow-600 dark:text-yellow-400" />
       </Button>
     </div>
@@ -26,14 +16,22 @@
     <!-- Form -->
     <Card
       class="shadow-sm"
-      :pt="{ root: { class: 'rounded-lg border border-gray-200 dark:border-gray-700' }, content: { class: 'p-4' } }"
+      :pt="{
+        root: {
+          class: 'rounded-lg border border-gray-200 dark:border-gray-700',
+        },
+        content: { class: 'p-4' },
+      }"
     >
       <template #content>
         <div class="space-y-5">
           <!-- Warehouses -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Склады (максимум 3) <span class="text-red-500 dark:text-red-400">*</span>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Склады (максимум 3)
+              <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <MultiSelect
               v-model="triggerFormStore.form.warehouseIds"
@@ -55,7 +53,9 @@
 
           <!-- Supply Types -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Типы коробов <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <MultiSelect
@@ -76,12 +76,20 @@
 
           <!-- Check Interval -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Интервал проверки <span class="text-red-500 dark:text-red-400">*</span>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Интервал проверки
+              <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <Select
               v-model="triggerFormStore.form.checkInterval"
-              :options="TRIGGER_INTERVALS.map(i => ({ label: i.label, value: i.value }))"
+              :options="
+                TRIGGER_INTERVALS.map((i) => ({
+                  label: i.label,
+                  value: i.value,
+                }))
+              "
               option-label="label"
               option-value="value"
               placeholder="Интервал проверки"
@@ -94,7 +102,9 @@
 
           <!-- Search Mode -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Режим поиска <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <Select
@@ -110,8 +120,11 @@
 
           <!-- Date Range (for RANGE mode) -->
           <div v-if="triggerFormStore.showDatePicker">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Период поиска <span class="text-red-500 dark:text-red-400">*</span>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Период поиска
+              <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <DatePicker
               :model-value="dateRangeValue"
@@ -126,7 +139,9 @@
 
           <!-- Selected Dates (for CUSTOM_DATES mode) -->
           <div v-if="triggerFormStore.showRangePicker">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Выбрать даты <span class="text-red-500 dark:text-red-400">*</span>
             </label>
             <MultiSelect
@@ -141,7 +156,9 @@
 
           <!-- Max Coefficient -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Максимальный коэффициент выгрузки
             </label>
             <div class="flex items-center gap-4">
@@ -168,11 +185,7 @@
 
     <!-- Actions -->
     <div class="flex gap-2">
-      <Button
-        variant="outlined"
-        class="flex-1"
-        @click="goBack"
-      >
+      <Button variant="outlined" class="flex-1" @click="goBack">
         Отмена
       </Button>
       <Button
@@ -197,10 +210,7 @@
     <BackButton @click="goBack" />
 
     <!-- Hints Modal -->
-    <TriggerHints
-      :show="showHintsModal"
-      @close="showHintsModal = false"
-    />
+    <TriggerHints :show="showHintsModal" @close="showHintsModal = false" />
   </div>
 </template>
 
@@ -364,7 +374,9 @@ function handleUntilFoundMode() {
   triggerFormStore.form.selectedDates = [];
 }
 
-function onDateRangeChange(val: Date | Date[] | (Date | null)[] | null | undefined) {
+function onDateRangeChange(
+  val: Date | Date[] | (Date | null)[] | null | undefined,
+) {
   if (!Array.isArray(val) || val.length !== 2 || !val[0] || !val[1]) {
     return;
   }

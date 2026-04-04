@@ -52,7 +52,7 @@ export const authAPI = {
   async verifyPhone(phoneNumber: string): Promise<VerifyPhoneResponse> {
     const response = await apiClient.post<VerifyPhoneResponse>(
       '/auth/verify-phone',
-      { phoneNumber }
+      { phoneNumber },
     );
     return response.data;
   },
@@ -61,10 +61,13 @@ export const authAPI = {
    * POST /api/v1/auth/verify-sms
    * Verify SMS code
    */
-  async verifySMS(smsCode: string, sessionId: string): Promise<VerifySMSResponse> {
+  async verifySMS(
+    smsCode: string,
+    sessionId: string,
+  ): Promise<VerifySMSResponse> {
     const response = await apiClient.post<VerifySMSResponse>(
       '/auth/verify-sms',
-      { smsCode, sessionId }
+      { smsCode, sessionId },
     );
     return response.data;
   },
@@ -73,10 +76,13 @@ export const authAPI = {
    * POST /api/v1/auth/verify-two-factor
    * Verify two-factor authentication code
    */
-  async verifyTwoFactor(twoFactorCode: string, sessionId: string): Promise<VerifyTwoFactorResponse> {
+  async verifyTwoFactor(
+    twoFactorCode: string,
+    sessionId: string,
+  ): Promise<VerifyTwoFactorResponse> {
     const response = await apiClient.post<VerifyTwoFactorResponse>(
       '/auth/verify-two-factor',
-      { twoFactorCode, sessionId }
+      { twoFactorCode, sessionId },
     );
     return response.data;
   },
@@ -86,10 +92,9 @@ export const authAPI = {
    * Cancel authentication session
    */
   async cancelAuth(sessionId: string): Promise<CancelAuthResponse> {
-    const response = await apiClient.post<CancelAuthResponse>(
-      '/auth/cancel',
-      { sessionId }
-    );
+    const response = await apiClient.post<CancelAuthResponse>('/auth/cancel', {
+      sessionId,
+    });
     return response.data;
   },
 };

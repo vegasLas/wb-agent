@@ -162,7 +162,9 @@ export const useAccountSupplierModalStore = defineStore(
     async function removeAccount(accountId: string) {
       try {
         // Show confirmation dialog
-        const confirmed = confirm('Вы уверены, что хотите удалить этот аккаунт ?');
+        const confirmed = confirm(
+          'Вы уверены, что хотите удалить этот аккаунт ?',
+        );
 
         if (!confirmed) return;
 

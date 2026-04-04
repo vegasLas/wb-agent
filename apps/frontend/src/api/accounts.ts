@@ -55,8 +55,13 @@ export const accountsAPI = {
    * DELETE /api/v1/accounts/:id
    * Delete an account
    */
-  async deleteAccount(accountId: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete<{ success: boolean; message: string }>(`/accounts/${accountId}`);
+  async deleteAccount(
+    accountId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.delete<{
+      success: boolean;
+      message: string;
+    }>(`/accounts/${accountId}`);
     return response.data;
   },
 
@@ -66,12 +71,15 @@ export const accountsAPI = {
    */
   async updateAccountSupplier(
     accountId: string,
-    supplierId: string
+    supplierId: string,
   ): Promise<UpdateSupplierResponse> {
-    const response = await apiClient.patch<UpdateSupplierResponse>('/accounts/supplier', { 
-      accountId, 
-      supplierId 
-    });
+    const response = await apiClient.patch<UpdateSupplierResponse>(
+      '/accounts/supplier',
+      {
+        accountId,
+        supplierId,
+      },
+    );
     return response.data;
   },
 
@@ -79,8 +87,12 @@ export const accountsAPI = {
    * GET /api/v1/accounts/:accountId/suppliers
    * Sync and get suppliers for an account
    */
-  async syncAccountSuppliers(accountId: string): Promise<SyncSuppliersResponse> {
-    const response = await apiClient.get<SyncSuppliersResponse>(`/accounts/${accountId}/suppliers`);
+  async syncAccountSuppliers(
+    accountId: string,
+  ): Promise<SyncSuppliersResponse> {
+    const response = await apiClient.get<SyncSuppliersResponse>(
+      `/accounts/${accountId}/suppliers`,
+    );
     return response.data;
   },
 
@@ -88,8 +100,12 @@ export const accountsAPI = {
    * POST /api/v1/accounts/:accountId/suppliers/sync
    * Explicitly sync suppliers for an account
    */
-  async explicitSyncSuppliers(accountId: string): Promise<SyncSuppliersResponse> {
-    const response = await apiClient.post<SyncSuppliersResponse>(`/accounts/${accountId}/suppliers/sync`);
+  async explicitSyncSuppliers(
+    accountId: string,
+  ): Promise<SyncSuppliersResponse> {
+    const response = await apiClient.post<SyncSuppliersResponse>(
+      `/accounts/${accountId}/suppliers/sync`,
+    );
     return response.data;
   },
 };

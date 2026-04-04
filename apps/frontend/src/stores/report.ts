@@ -13,34 +13,34 @@ import type {
 // Helper to convert warehouse names to Russian
 const convertWarehouseName = (name: string): string => {
   const warehouseMap: Record<string, string> = {
-    'Kazan': 'Казань',
-    'Kazan_2': 'Казань 2',
-    'Novosibirsk': 'Новосибирск',
-    'Novosibirsk_2': 'Новосибирск 2',
-    'Omsk': 'Омск',
-    'Omsk_2': 'Омск 2',
-    'Ekaterinburg': 'Екатеринбург',
-    'Ekaterinburg_2': 'Екатеринбург 2',
-    'Chekhov': 'Чехов',
-    'Chekhov_2': 'Чехов 2',
-    'Podolsk': 'Подольск',
-    'Podolsk_2': 'Подольск 2',
-    'Elektrostal': 'Электросталь',
-    'Elektrostal_2': 'Электросталь 2',
-    'Krasnodar': 'Краснодар',
-    'Krasnodar_2': 'Краснодар 2',
-    'Pulkovo': 'Пулково',
-    'Pulkovo_2': 'Пулково 2',
-    'Koledino': 'Коледино',
-    'Koledino_2': 'Коледино 2',
-    'Tver': 'Тверь',
-    'Tver_2': 'Тверь 2',
-    'Belyastok': 'Белая Столб',
-    'Belyastok_2': 'Белая Столб 2',
-    'Quadrator': 'Квадратор',
-    'Quadrator_2': 'Квадратор 2',
-    'Shelkovskaya': 'Щелковская',
-    'Shelkovskaya_2': 'Щелковская 2',
+    Kazan: 'Казань',
+    Kazan_2: 'Казань 2',
+    Novosibirsk: 'Новосибирск',
+    Novosibirsk_2: 'Новосибирск 2',
+    Omsk: 'Омск',
+    Omsk_2: 'Омск 2',
+    Ekaterinburg: 'Екатеринбург',
+    Ekaterinburg_2: 'Екатеринбург 2',
+    Chekhov: 'Чехов',
+    Chekhov_2: 'Чехов 2',
+    Podolsk: 'Подольск',
+    Podolsk_2: 'Подольск 2',
+    Elektrostal: 'Электросталь',
+    Elektrostal_2: 'Электросталь 2',
+    Krasnodar: 'Краснодар',
+    Krasnodar_2: 'Краснодар 2',
+    Pulkovo: 'Пулково',
+    Pulkovo_2: 'Пулково 2',
+    Koledino: 'Коледино',
+    Koledino_2: 'Коледино 2',
+    Tver: 'Тверь',
+    Tver_2: 'Тверь 2',
+    Belyastok: 'Белая Столб',
+    Belyastok_2: 'Белая Столб 2',
+    Quadrator: 'Квадратор',
+    Quadrator_2: 'Квадратор 2',
+    Shelkovskaya: 'Щелковская',
+    Shelkovskaya_2: 'Щелковская 2',
   };
   return warehouseMap[name] || name;
 };
@@ -156,7 +156,8 @@ export const useReportStore = defineStore('report', () => {
     estimatedWaitTime.value = null;
 
     try {
-      const response: ReportApiPayload = await reportsAPI.fetchSalesReport(params);
+      const response: ReportApiPayload =
+        await reportsAPI.fetchSalesReport(params);
 
       if (response.error) {
         error.value = response.error;
@@ -165,7 +166,10 @@ export const useReportStore = defineStore('report', () => {
         estimatedWaitTime.value = response.estimatedWaitTime || null;
       } else {
         // Remove header row if present
-        if (response.parsedData?.items && response.parsedData.items.length > 0) {
+        if (
+          response.parsedData?.items &&
+          response.parsedData.items.length > 0
+        ) {
           response.parsedData.items.shift();
         }
 
@@ -182,7 +186,8 @@ export const useReportStore = defineStore('report', () => {
         estimatedWaitTime.value = null;
       }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMsg =
+        err instanceof Error ? err.message : 'An unexpected error occurred';
       error.value = errorMsg;
       data.value = null;
       reportPending.value = false;
@@ -202,7 +207,8 @@ export const useReportStore = defineStore('report', () => {
       isFetched.value = true;
       return result;
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch report';
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch report';
       error.value = errorMsg;
       throw err;
     } finally {

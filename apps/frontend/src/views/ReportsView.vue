@@ -7,16 +7,14 @@
     <template
       v-if="
         userStore.user.selectedAccountId &&
-          userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+        userStore.hasValidSupplier &&
+        userStore.subscriptionActive
       "
     >
       <!-- Date Range Selection -->
       <Card class="mb-6">
         <template #title>
-          <h3 class="text-lg font-semibold">
-            Отчет продаж за период
-          </h3>
+          <h3 class="text-lg font-semibold">Отчет продаж за период</h3>
         </template>
         <template #content>
           <div
@@ -65,7 +63,9 @@
         <Card>
           <template #content>
             <div class="text-center">
-              <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div
+                class="text-2xl font-bold text-green-600 dark:text-green-400"
+              >
                 {{ summaryStats.totalRevenue.toLocaleString('ru-RU') }} ₽
               </div>
               <div class="text-xs text-gray-600 dark:text-gray-400">
@@ -78,7 +78,9 @@
         <Card>
           <template #content>
             <div class="text-center">
-              <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <div
+                class="text-2xl font-bold text-purple-600 dark:text-purple-400"
+              >
                 {{ summaryStats.totalOrdered.toLocaleString('ru-RU') }}
               </div>
               <div class="text-xs text-gray-600 dark:text-gray-400">
@@ -91,7 +93,9 @@
         <Card>
           <template #content>
             <div class="text-center">
-              <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              <div
+                class="text-2xl font-bold text-orange-600 dark:text-orange-400"
+              >
                 {{ summaryStats.uniqueItems.toLocaleString('ru-RU') }}
               </div>
               <div class="text-xs text-gray-600 dark:text-gray-400">
@@ -103,17 +107,12 @@
       </div>
 
       <!-- Top Products Table -->
-      <Card
-        v-if="topProducts.length > 0"
-        class="mb-6"
-      >
+      <Card v-if="topProducts.length > 0" class="mb-6">
         <template #title>
           <div
             class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
-            <h4 class="text-lg font-semibold">
-              Топ-10 продаваемых товаров
-            </h4>
+            <h4 class="text-lg font-semibold">Топ-10 продаваемых товаров</h4>
             <MultiSelect
               v-model="selectedColumns"
               :options="availableColumns"
@@ -146,13 +145,14 @@
       </Card>
 
       <!-- View Toggle Buttons -->
-      <div
-        v-if="!reportStore.loading"
-        class="mb-6 flex space-x-2"
-      >
+      <div v-if="!reportStore.loading" class="mb-6 flex space-x-2">
         <Button
-          :severity="reportViewStore.activeView === 'charts' ? 'primary' : 'secondary'"
-          :variant="reportViewStore.activeView === 'charts' ? 'filled' : 'outlined'"
+          :severity="
+            reportViewStore.activeView === 'charts' ? 'primary' : 'secondary'
+          "
+          :variant="
+            reportViewStore.activeView === 'charts' ? 'filled' : 'outlined'
+          "
           size="small"
           @click="reportViewStore.setActiveView('charts')"
         >
@@ -160,8 +160,14 @@
           Графики
         </Button>
         <Button
-          :severity="reportViewStore.activeView === 'suggestions' ? 'primary' : 'secondary'"
-          :variant="reportViewStore.activeView === 'suggestions' ? 'filled' : 'outlined'"
+          :severity="
+            reportViewStore.activeView === 'suggestions'
+              ? 'primary'
+              : 'secondary'
+          "
+          :variant="
+            reportViewStore.activeView === 'suggestions' ? 'filled' : 'outlined'
+          "
           size="small"
           @click="reportViewStore.setActiveView('suggestions')"
         >
@@ -171,7 +177,9 @@
       </div>
 
       <!-- Conditional Rendering based on activeView -->
-      <WarehouseSuggestions v-if="reportViewStore.activeView === 'suggestions'" />
+      <WarehouseSuggestions
+        v-if="reportViewStore.activeView === 'suggestions'"
+      />
 
       <ReportCharts
         v-if="reportViewStore.activeView === 'charts'"
@@ -211,7 +219,9 @@ const reportViewStore = useReportViewStore();
 // Yesterday for max date
 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
 
-function onDateRangeChange(val: Date | Date[] | (Date | null)[] | null | undefined) {
+function onDateRangeChange(
+  val: Date | Date[] | (Date | null)[] | null | undefined,
+) {
   if (Array.isArray(val) && val.length === 2 && val[0] && val[1]) {
     reportViewStore.setDateRange({ start: val[0], end: val[1] });
   } else {
@@ -325,10 +335,14 @@ const topProducts = computed((): TopProduct[] => {
         };
       }
 
-      acc[key].orderedQty = (acc[key].orderedQty as number) + (item.orderedQty || 0);
-      acc[key].orderedSum = (acc[key].orderedSum as number) + (item.orderedSum || 0);
-      acc[key].purchasedQty = (acc[key].purchasedQty as number) + (item.purchasedQty || 0);
-      acc[key].purchasedSum = (acc[key].purchasedSum as number) + (item.purchasedSum || 0);
+      acc[key].orderedQty =
+        (acc[key].orderedQty as number) + (item.orderedQty || 0);
+      acc[key].orderedSum =
+        (acc[key].orderedSum as number) + (item.orderedSum || 0);
+      acc[key].purchasedQty =
+        (acc[key].purchasedQty as number) + (item.purchasedQty || 0);
+      acc[key].purchasedSum =
+        (acc[key].purchasedSum as number) + (item.purchasedSum || 0);
       acc[key].qty = (acc[key].qty as number) + (item.stockQty || 0);
 
       return acc;
@@ -366,22 +380,24 @@ const sortedTopProducts = computed(() => {
   sorted.sort((a, b) => {
     const aVal = a[sortColumn.value];
     const bVal = b[sortColumn.value];
-    
+
     // Handle string vs number comparison
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortDirection.value === 'asc'
         ? aVal.localeCompare(bVal)
         : bVal.localeCompare(aVal);
     }
-    
+
     // Extract numeric value from formatted strings (e.g., "1 234 ₽" -> 1234)
-    const aNum = typeof aVal === 'string' 
-      ? parseInt(aVal.replace(/[^\d]/g, '')) || 0 
-      : (aVal as number) || 0;
-    const bNum = typeof bVal === 'string' 
-      ? parseInt(bVal.replace(/[^\d]/g, '')) || 0 
-      : (bVal as number) || 0;
-    
+    const aNum =
+      typeof aVal === 'string'
+        ? parseInt(aVal.replace(/[^\d]/g, '')) || 0
+        : (aVal as number) || 0;
+    const bNum =
+      typeof bVal === 'string'
+        ? parseInt(bVal.replace(/[^\d]/g, '')) || 0
+        : (bVal as number) || 0;
+
     return sortDirection.value === 'asc' ? aNum - bNum : bNum - aNum;
   });
   return sorted;

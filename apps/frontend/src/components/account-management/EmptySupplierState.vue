@@ -1,6 +1,8 @@
 <template>
   <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-    <i class="pi pi-exclamation-triangle text-5xl mx-auto mb-2 opacity-50 block" />
+    <i
+      class="pi pi-exclamation-triangle text-5xl mx-auto mb-2 opacity-50 block"
+    />
     <p>У выбранного аккаунта нет поставщиков</p>
     <Button
       size="small"

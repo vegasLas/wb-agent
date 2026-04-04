@@ -10,7 +10,9 @@ interface UseAutobookingValidationOptions {
   form: Ref<FormState>;
 }
 
-export function useAutobookingValidation({ form }: UseAutobookingValidationOptions) {
+export function useAutobookingValidation({
+  form,
+}: UseAutobookingValidationOptions) {
   const errors = ref<string[]>([]);
 
   const validate = (): ValidationResult => {
@@ -44,14 +46,20 @@ export function useAutobookingValidation({ form }: UseAutobookingValidationOptio
       if (!form.value.endDate) {
         newErrors.push('Необходимо выбрать дату окончания');
       }
-    } else if (form.value.dateType === 'CUSTOM_DATES' || form.value.dateType === 'CUSTOM_DATES_SINGLE') {
+    } else if (
+      form.value.dateType === 'CUSTOM_DATES' ||
+      form.value.dateType === 'CUSTOM_DATES_SINGLE'
+    ) {
       if (!form.value.customDates || form.value.customDates.length === 0) {
         newErrors.push('Необходимо выбрать хотя бы одну дату');
       }
     }
 
     // Check monopallet count for MONOPALLETE
-    if (form.value.supplyType === 'MONOPALLETE' && !form.value.monopalletCount) {
+    if (
+      form.value.supplyType === 'MONOPALLETE' &&
+      !form.value.monopalletCount
+    ) {
       newErrors.push('Необходимо указать количество монопаллет');
     }
 
@@ -64,7 +72,16 @@ export function useAutobookingValidation({ form }: UseAutobookingValidationOptio
   };
 
   const isValid = computed(() => {
-    const { warehouseId, draftId, supplyType, dateType, startDate, endDate, customDates, monopalletCount } = form.value;
+    const {
+      warehouseId,
+      draftId,
+      supplyType,
+      dateType,
+      startDate,
+      endDate,
+      customDates,
+      monopalletCount,
+    } = form.value;
 
     if (!warehouseId || !draftId || !supplyType || !dateType) {
       return false;
@@ -75,7 +92,10 @@ export function useAutobookingValidation({ form }: UseAutobookingValidationOptio
       if (!startDate) return false;
     } else if (dateType === 'CUSTOM_PERIOD') {
       if (!startDate || !endDate) return false;
-    } else if (dateType === 'CUSTOM_DATES' || dateType === 'CUSTOM_DATES_SINGLE') {
+    } else if (
+      dateType === 'CUSTOM_DATES' ||
+      dateType === 'CUSTOM_DATES_SINGLE'
+    ) {
       if (!customDates || customDates.length === 0) return false;
     }
 

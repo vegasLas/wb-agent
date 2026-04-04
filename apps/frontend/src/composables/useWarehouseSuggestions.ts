@@ -41,7 +41,8 @@ export function useWarehouseSuggestions() {
     // --- Dynamic Threshold Calculations ---
     let actualMinSalesForVolume = DEFAULT_MIN_SALES_FOR_VOLUME_ALERT;
     let actualMinSalesVelocity = DEFAULT_MIN_SALES_VELOCITY_FOR_TURNOVER_ALERT;
-    let actualHighTurnoverStockDays = DEFAULT_HIGH_TURNOVER_STOCK_DAYS_THRESHOLD;
+    let actualHighTurnoverStockDays =
+      DEFAULT_HIGH_TURNOVER_STOCK_DAYS_THRESHOLD;
 
     // Calculate dynamicMinSalesForVolumeAlert based on average warehouse sales
     const warehouseSalesVolumes = itemsByWarehouse
@@ -213,7 +214,8 @@ export function useWarehouseSuggestions() {
                   recommendedAdditionalUnits > 0
                     ? recommendedAdditionalUnits
                     : undefined,
-                isReplenishment: recommendedAdditionalUnits > 0 ? isReplenishment : undefined,
+                isReplenishment:
+                  recommendedAdditionalUnits > 0 ? isReplenishment : undefined,
               };
             }
           });

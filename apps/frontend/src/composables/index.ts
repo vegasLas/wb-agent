@@ -5,8 +5,16 @@ export { useDraftsFetcher } from './useDraftsFetcher';
 export { useAutobookingValidation } from './useAutobookingValidation';
 
 // Promotions composables
-export { usePromotions, type PromotionFilter, type FilterTab } from './usePromotions';
-export { usePromotionsCalendar, type MonthInfo, type GroupedPromotions } from './usePromotionsCalendar';
+export {
+  usePromotions,
+  type PromotionFilter,
+  type FilterTab,
+} from './usePromotions';
+export {
+  usePromotionsCalendar,
+  type MonthInfo,
+  type GroupedPromotions,
+} from './usePromotionsCalendar';
 export {
   usePromotionItem,
   usePromotionDetail,
@@ -22,3 +30,14 @@ export {
   type UsePromotionsUnifiedReturn,
   type EmptyStateConfig,
 } from './usePromotionsUnified';
+export {
+  usePromotionsTimeline,
+  type MonthInfo as TimelineMonthInfo,
+  type PromotionPosition,
+  type UsePromotionsTimelineReturn,
+} from './usePromotionsTimeline';
+export {
+  usePromotionDetailEnhanced,
+  type RangingLevelDisplay,
+  type UsePromotionDetailEnhancedReturn,
+} from './usePromotionDetailEnhanced';

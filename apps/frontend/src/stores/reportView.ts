@@ -36,10 +36,14 @@ export const useReportViewStore = defineStore('reportView', () => {
   // Actions
   async function fetchReportData() {
     if (
-      !(dateRange.value.start instanceof Date &&
-        !isNaN(dateRange.value.start.valueOf())) ||
-      !(dateRange.value.end instanceof Date &&
-        !isNaN(dateRange.value.end.valueOf()))
+      !(
+        dateRange.value.start instanceof Date &&
+        !isNaN(dateRange.value.start.valueOf())
+      ) ||
+      !(
+        dateRange.value.end instanceof Date &&
+        !isNaN(dateRange.value.end.valueOf())
+      )
     ) {
       console.error('Invalid Date objects in dateRange', dateRange.value);
       return;
