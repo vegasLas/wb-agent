@@ -26,7 +26,17 @@ process.on('unhandledRejection', (reason, promise) => {
 setupTelegramPlugin();
 
 // Start the server
-startServer().catch((error) => {
-  logger.error('Failed to start server:', error);
-  process.exit(1);
-});
+startServer()
+  .then(() => {
+    if (process.env.RUN_SMOKE_TEST === 'true') {
+      setTimeout(() => {
+        import('./scripts/smoke-test')
+          .then((m) => m.runSmokeTest())
+          .catch((err) => logger.error('Smoke test failed to run:', err));
+      }, 5000);
+    }
+  })
+  .catch((error) => {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  });
