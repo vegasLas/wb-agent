@@ -11,3 +11,4 @@ export * from './reschedules';
 export * from './reschedules/list';
 export * from './reschedules/createForm';
 export * from './reschedules/updateForm';
+export * from './promotions';

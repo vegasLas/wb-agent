@@ -61,6 +61,7 @@ export const useViewStore = defineStore('view', () => {
     if (routeName === 'StoreBookings') return 'store-bookings';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
+    if (routeName === 'Promotions') return 'promotions';
     
     return 'autobookings-main';
   });
@@ -95,6 +96,7 @@ export const useViewStore = defineStore('view', () => {
       'store-bookings': 'StoreBookings',
       'account': 'Account',
       'report': 'Reports',
+      'promotions': 'Promotions',
     };
 
     const targetRoute = routeMap[view];
@@ -138,6 +140,7 @@ export const useViewStore = defineStore('view', () => {
     if (routeName?.startsWith('Store')) return 'store';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
+    if (routeName === 'Promotions') return 'promotions';
     return 'autobookings';
   });
 

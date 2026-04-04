@@ -12,6 +12,7 @@ import {
   ReschedulesUpdateView,
 } from '../views/reschedules';
 import { TriggersListView, TriggersCreateView } from '../views/triggers';
+import { PromotionsView } from '../views/promotions';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
@@ -125,6 +126,14 @@ const routes: RouteRecordRaw[] = [
         component: TriggersCreateView,
         meta: {
           title: 'Создание таймслота',
+        },
+      },
+      {
+        path: 'promotions',
+        name: 'Promotions',
+        component: PromotionsView,
+        meta: {
+          title: 'Акции',
         },
       },
       {
