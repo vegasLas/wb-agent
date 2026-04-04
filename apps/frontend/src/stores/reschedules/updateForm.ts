@@ -19,6 +19,17 @@ export interface OriginalRescheduleData {
   maxCoefficient: number;
 }
 
+/**
+ * Helper function to format Date to YYYY-MM-DD using local date components
+ * Avoids timezone issues caused by toISOString() UTC conversion
+ */
+function formatDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export const useRescheduleUpdateFormStore = defineStore(
   'rescheduleUpdateForm',
   () => {
@@ -63,13 +74,17 @@ export const useRescheduleUpdateFormStore = defineStore(
       startDate:
         typeof formData.value.startDateInput === 'string'
           ? formData.value.startDateInput
-          : formData.value.startDateInput?.toISOString().split('T')[0] || '',
+          : formData.value.startDateInput
+            ? formatDateToYYYYMMDD(formData.value.startDateInput)
+            : '',
       endDate:
         typeof formData.value.endDateInput === 'string'
           ? formData.value.endDateInput
-          : formData.value.endDateInput?.toISOString().split('T')[0] || '',
+          : formData.value.endDateInput
+            ? formatDateToYYYYMMDD(formData.value.endDateInput)
+            : '',
       customDates: formData.value.customDates.map((date) =>
-        typeof date === 'string' ? date : date.toISOString().split('T')[0],
+        typeof date === 'string' ? date : formatDateToYYYYMMDD(date),
       ),
       maxCoefficient: formData.value.maxCoefficientInput,
     }));
@@ -93,14 +108,18 @@ export const useRescheduleUpdateFormStore = defineStore(
         startDate:
           typeof formData.value.startDateInput === 'string'
             ? formData.value.startDateInput
-            : formData.value.startDateInput?.toISOString().split('T')[0] || '',
+            : formData.value.startDateInput
+              ? formatDateToYYYYMMDD(formData.value.startDateInput)
+              : '',
         endDate:
           typeof formData.value.endDateInput === 'string'
             ? formData.value.endDateInput
-            : formData.value.endDateInput?.toISOString().split('T')[0] || '',
+            : formData.value.endDateInput
+              ? formatDateToYYYYMMDD(formData.value.endDateInput)
+              : '',
         customDates: formData.value.customDates
           .map((date) =>
-            typeof date === 'string' ? date : date.toISOString().split('T')[0],
+            typeof date === 'string' ? date : formatDateToYYYYMMDD(date),
           )
           .sort(),
         maxCoefficient: formData.value.maxCoefficientInput,
@@ -153,13 +172,17 @@ export const useRescheduleUpdateFormStore = defineStore(
         startDate:
           typeof formData.value.startDateInput === 'string'
             ? formData.value.startDateInput
-            : formData.value.startDateInput?.toISOString().split('T')[0] || '',
+            : formData.value.startDateInput
+              ? formatDateToYYYYMMDD(formData.value.startDateInput)
+              : '',
         endDate:
           typeof formData.value.endDateInput === 'string'
             ? formData.value.endDateInput
-            : formData.value.endDateInput?.toISOString().split('T')[0] || '',
+            : formData.value.endDateInput
+              ? formatDateToYYYYMMDD(formData.value.endDateInput)
+              : '',
         customDates: formData.value.customDates.map((date) =>
-          typeof date === 'string' ? date : date.toISOString().split('T')[0],
+          typeof date === 'string' ? date : formatDateToYYYYMMDD(date),
         ),
         maxCoefficient: formData.value.maxCoefficientInput,
       };
