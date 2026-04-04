@@ -177,6 +177,7 @@ export const useAutobookingUpdateStore = defineStore(
     // Actions
     /**
      * Helper function to normalize date to YYYY-MM-DD format
+     * Uses local date components to avoid timezone issues
      */
     function normalizeDate(date: Date | string | null | undefined): string {
       if (!date) return '';
@@ -187,8 +188,11 @@ export const useAutobookingUpdateStore = defineStore(
         }
         return date; // Already in YYYY-MM-DD format
       }
-      // Handle Date object
-      return date.toISOString().split('T')[0];
+      // Handle Date object - use local date components to avoid timezone shifts
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
 
     /**
