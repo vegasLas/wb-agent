@@ -25,8 +25,8 @@ RUN npm install
 COPY . .
 
 # Install Playwright browser
-RUN npx playwright install chromium
-RUN npx playwright install-deps
+# RUN npx playwright install chromium
+# RUN npx playwright install-deps
 
 
 # Generate Prisma client
@@ -43,25 +43,25 @@ FROM --platform=linux/amd64 node:20-bookworm-slim
 WORKDIR /app
 
 # Install Playwright system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
-    libatspi2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     openssl \
+#     libnss3 \
+#     libnspr4 \
+#     libatk1.0-0 \
+#     libatk-bridge2.0-0 \
+#     libcups2 \
+#     libdrm2 \
+#     libxkbcommon0 \
+#     libxcomposite1 \
+#     libxdamage1 \
+#     libxfixes3 \
+#     libxrandr2 \
+#     libgbm1 \
+#     libpango-1.0-0 \
+#     libcairo2 \
+#     libasound2 \
+#     libatspi2.0-0 \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
@@ -71,7 +71,7 @@ COPY --from=builder /app/node_modules ./node_modules
 RUN npm prune --omit=dev
 
 # Copy Playwright browsers from builder
-COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
+# COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
