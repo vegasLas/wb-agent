@@ -1,20 +1,24 @@
 <template>
   <div class="space-y-4">
     <AutobookingWarehouseSelection
-      v-model="localForm.warehouseId"
-      v-model:transit-warehouse-id="localForm.transitWarehouseId"
-      v-model:use-transit="localUseTransit"
+      :model-value="props.form.warehouseId"
+      :transit-warehouse-id="props.form.transitWarehouseId"
+      :use-transit="props.useTransit"
       :warehouse-options="warehouseOptions"
       :transit-options="warehouseStore.transitOptions"
       :loading="warehouseStore.loading"
       :account-id="userStore.selectedAccount?.id"
+      @update:model-value="updateField('warehouseId', $event)"
+      @update:transit-warehouse-id="updateField('transitWarehouseId', $event)"
+      @update:use-transit="emit('update:useTransit', $event)"
       @warehouse-change="handleWarehouseChange"
     />
 
     <AutobookingDraftSelection
-      v-model="localForm.draftId"
+      :model-value="props.form.draftId"
       :options="draftStore.draftOptions"
       :loading="draftStore.loading"
+      @update:model-value="updateField('draftId', $event)"
       @view-goods="
         (draftId) => draftStore.showDraftGoods(draftId, props.supplierId)
       "
@@ -26,8 +30,8 @@
         Тип поставки <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <Select
-        :key="`supply-${availableSupplyTypes.length}-${localForm.supplyType}`"
-        v-model="localForm.supplyType"
+        :key="`supply-${availableSupplyTypes.length}-${props.form.supplyType}`"
+        :model-value="props.form.supplyType"
         :options="availableSupplyTypes"
         option-label="label"
         option-value="value"
@@ -35,6 +39,7 @@
         :disabled="!canSelectSupplyType"
         :loading="props.validationLoading"
         class="w-full"
+        @update:model-value="updateField('supplyType', $event)"
       />
     </div>
 
@@ -65,17 +70,20 @@
     </Message>
 
     <DateSelection
-      v-model:date-type="localForm.dateType"
-      v-model:start-date="localForm.startDate"
-      v-model:end-date="localForm.endDate"
-      v-model:custom-dates="localForm.customDates"
+      :date-type="props.form.dateType"
+      :start-date="props.form.startDate"
+      :end-date="props.form.endDate"
+      :custom-dates="props.form.customDates"
       mode="autobooking"
+      @update:date-type="updateField('dateType', $event)"
+      @update:start-date="updateField('startDate', $event)"
+      @update:end-date="updateField('endDate', $event)"
       @update:custom-dates="handleCustomDatesChange"
     />
 
     <DateSelectionAlerts
-      :date-type="localForm.dateType"
-      :custom-dates="localForm.customDates"
+      :date-type="props.form.dateType"
+      :custom-dates="props.form.customDates"
       :available-count="userStore.user.autobookingCount"
       :is-update-mode="isUpdateMode"
       :remaining-count="remainingCount"
@@ -83,7 +91,7 @@
 
     <!-- Monopallet Count (only for MONOPALLETE supply type) -->
     <div
-      v-if="localForm.supplyType === 'MONOPALLETE'"
+      v-if="props.form.supplyType === 'MONOPALLETE'"
       class="space-y-2"
     >
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -91,10 +99,11 @@
         <span class="text-red-500 dark:text-red-400">*</span>
       </label>
       <InputNumber
-        v-model="localForm.monopalletCount"
+        :model-value="props.form.monopalletCount"
         type="number"
         placeholder="Введите количество монопаллет"
         class="w-full"
+        @update:model-value="updateField('monopalletCount', $event)"
       />
     </div>
 
@@ -106,14 +115,15 @@
       </label>
       <div class="flex items-center gap-4">
         <Slider
-          v-model="localForm.maxCoefficient"
+          :model-value="props.form.maxCoefficient"
           :min="0"
           :max="20"
           class="flex-1"
+          @update:model-value="updateField('maxCoefficient', $event)"
         />
         <div class="min-w-[4rem] text-center">
           <Tag
-            :value="String(localForm.maxCoefficient)"
+            :value="String(props.form.maxCoefficient)"
             severity="secondary"
           />
         </div>
@@ -132,8 +142,8 @@
 
       <!-- Coefficient History -->
       <CoefficientHistoryAlert
-        :warehouse-id="localForm.warehouseId"
-        :supply-type="localForm.supplyType"
+        :warehouse-id="props.form.warehouseId"
+        :supply-type="props.form.supplyType"
       />
     </div>
   </div>
@@ -156,6 +166,7 @@ import DateSelectionAlerts from '../common/DateSelectionAlerts.vue';
 import AutobookingWarehouseSelection from './WarehouseSelection.vue';
 import AutobookingDraftSelection from './DraftSelection.vue';
 import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
+
 interface FormData {
   draftId: string;
   warehouseId: number | null;
@@ -190,15 +201,28 @@ interface Props {
   validationResult?: ValidationResult | null;
   suggestedCoefficient?: number | null;
   accountId?: string;
+  supplierId?: string;
 }
 
 const props = defineProps<Props>();
 
-// Use the draft store directly
+const emit = defineEmits<{
+  'warehouse-change': [warehouseId: number];
+  'validate-warehouse': [];
+  'update:form': [form: FormData];
+  'update:useTransit': [useTransit: boolean];
+}>();
+
+// Use stores directly
 const draftStore = useDraftStore();
 const userStore = useUserStore();
 const updateStore = useAutobookingUpdateStore();
 const warehouseStore = useWarehousesStore();
+
+// Track previous values for change detection
+const prevWarehouseId = ref<number | null>(props.form.warehouseId);
+const prevDraftId = ref<string>(props.form.draftId);
+const prevTransitWarehouseId = ref<number | null>(props.form.transitWarehouseId);
 
 // Check if we're in update mode
 const isUpdateMode = computed(() => !!updateStore.currentAutobooking);
@@ -216,62 +240,35 @@ const remainingCount = computed(() => {
   if (isUpdateMode.value) {
     return updateStore.remainingAutobookingCount;
   } else {
-    const requiredCount = localForm.value.customDates?.length || 0;
+    const requiredCount = props.form.customDates?.length || 0;
     return availableCount.value - requiredCount;
   }
 });
 
-const emit = defineEmits<{
-  'warehouse-change': [warehouseId: number];
-  'validate-warehouse': [];
-  'update:form': [form: FormData];
-  'update:useTransit': [useTransit: boolean];
-}>();
-
-// Create internal reactive refs that sync with props
-const localForm = ref<FormData>({ ...props.form });
-const localUseTransit = ref(props.useTransit);
-
-// Flag to prevent recursive updates
-const isUpdatingFromParent = ref(false);
-
-// Sync local state with props when they change from parent
-watch(
-  () => props.form,
-  (newForm) => {
-    isUpdatingFromParent.value = true;
-    localForm.value = { ...newForm };
-    isUpdatingFromParent.value = false;
-  },
-  { deep: true, immediate: true },
-);
-
-watch(
-  () => props.useTransit,
-  (newUseTransit) => {
-    isUpdatingFromParent.value = true;
-    localUseTransit.value = newUseTransit;
-    isUpdatingFromParent.value = false;
-  },
-  { immediate: true },
-);
-
-// Emit updates when local state changes (only if not updating from parent)
-watch(
-  localForm,
-  (newForm) => {
-    if (!isUpdatingFromParent.value) {
-      emit('update:form', { ...newForm });
-    }
-  },
-  { deep: true },
-);
-
-watch(localUseTransit, (newUseTransit) => {
-  if (!isUpdatingFromParent.value) {
-    emit('update:useTransit', newUseTransit);
+// Emit individual field update - avoids circular updates
+function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
+  // Only emit if value actually changed
+  if (props.form[field] === value) {
+    return;
   }
-});
+  emit('update:form', { ...props.form, [field]: value });
+}
+
+// Emit full form update for complex changes
+function updateForm(updates: Partial<FormData>) {
+  // Only include changed values
+  const changedUpdates: Partial<FormData> = {};
+  for (const [key, value] of Object.entries(updates)) {
+    if (props.form[key as keyof FormData] !== value) {
+      (changedUpdates as Record<string, unknown>)[key] = value;
+    }
+  }
+  // Only emit if there are actual changes
+  if (Object.keys(changedUpdates).length === 0) {
+    return;
+  }
+  emit('update:form', { ...props.form, ...changedUpdates });
+}
 
 // Base supply type options
 const supplyTypeOptions = [
@@ -290,7 +287,7 @@ const supplyTypeOptions = [
 
 // Computed property to check if supply type can be selected
 const canSelectSupplyType = computed(() =>
-  Boolean(localForm.value.warehouseId && localForm.value.draftId),
+  Boolean(props.form.warehouseId && props.form.draftId),
 );
 
 // Filter available supply types based on validation result
@@ -311,8 +308,8 @@ const availableSupplyTypes = computed(() => {
 // Computed property to show validation failure alert
 const showValidationFailureAlert = computed(() => {
   return Boolean(
-    localForm.value.warehouseId &&
-      localForm.value.draftId &&
+    props.form.warehouseId &&
+      props.form.draftId &&
       !props.validationLoading &&
       props.validationResult?.result &&
       (!props.validationResult.result.metaInfo ||
@@ -324,47 +321,60 @@ function handleWarehouseChange(warehouseId: number) {
   emit('warehouse-change', warehouseId);
 }
 
-// Watch for changes in warehouse or draft selection
+// Watch for changes in warehouse or draft selection - validate and reset supply type
 watch(
-  [
-    () => localForm.value.warehouseId,
-    () => localForm.value.draftId,
-    () => localForm.value.transitWarehouseId,
-  ],
-  async (
-    [newWarehouseId, newDraftId, newTransitWarehouseId],
-    [oldWarehouseId, oldDraftId, oldTransitWarehouseId],
-  ) => {
-    // Reset supply type when warehouse or draft changes
-    if (newWarehouseId !== oldWarehouseId || newDraftId !== oldDraftId) {
-      localForm.value.supplyType = '';
+  () => [props.form.warehouseId, props.form.draftId, props.form.transitWarehouseId] as const,
+  async ([newWarehouseId, newDraftId, newTransitWarehouseId], [oldWarehouseId, oldDraftId, oldTransitWarehouseId]) => {
+    // Skip if values haven't actually changed (prevents recursion)
+    if (
+      newWarehouseId === oldWarehouseId &&
+      newDraftId === oldDraftId &&
+      newTransitWarehouseId === oldTransitWarehouseId
+    ) {
+      return;
     }
+    
+    // Reset supply type when warehouse or draft changes
+    if (newWarehouseId !== prevWarehouseId.value || newDraftId !== prevDraftId.value) {
+      // Only reset if supplyType is not already empty
+      if (props.form.supplyType !== '') {
+        updateField('supplyType', '');
+      }
+    }
+    
     // Only validate if both values are present and either has changed
     if (
       newWarehouseId &&
       newDraftId &&
-      (newWarehouseId !== oldWarehouseId ||
-        newDraftId !== oldDraftId ||
-        newTransitWarehouseId !== oldTransitWarehouseId)
+      (newWarehouseId !== prevWarehouseId.value ||
+        newDraftId !== prevDraftId.value ||
+        newTransitWarehouseId !== prevTransitWarehouseId.value)
     ) {
+      // Update previous values before emitting
+      prevWarehouseId.value = newWarehouseId;
+      prevDraftId.value = newDraftId;
+      prevTransitWarehouseId.value = newTransitWarehouseId;
       emit('validate-warehouse');
+    } else {
+      // Just update previous values
+      prevWarehouseId.value = newWarehouseId;
+      prevDraftId.value = newDraftId;
+      prevTransitWarehouseId.value = newTransitWarehouseId;
     }
   },
+  { immediate: false },
 );
 
 // Watch for dateType changes to clean related fields
 watch(
-  () => localForm.value.dateType,
+  () => props.form.dateType,
   (newDateType, oldDateType) => {
     if (newDateType !== oldDateType) {
-      // Clear startDate and endDate when switching to custom dates
-      localForm.value.startDate = '';
-      localForm.value.endDate = '';
-      // Clear customDates when switching away from custom dates
-      localForm.value.customDates = [];
-
-      // Clear endDate for WEEK and MONTH types
-      localForm.value.endDate = '';
+      updateForm({
+        startDate: '',
+        endDate: '',
+        customDates: [],
+      });
     }
   },
 );
@@ -377,7 +387,7 @@ watch(
       newSuggestedCoefficient !== null &&
       newSuggestedCoefficient !== undefined
     ) {
-      localForm.value.maxCoefficient = newSuggestedCoefficient;
+      updateField('maxCoefficient', newSuggestedCoefficient);
     }
   },
   { immediate: true },
@@ -385,22 +395,22 @@ watch(
 
 // Watch for supply type changes to reset monopallet count when not MONOPALLETE
 watch(
-  () => localForm.value.supplyType,
+  () => props.form.supplyType,
   (newSupplyType) => {
     if (newSupplyType !== 'MONOPALLETE') {
-      localForm.value.monopalletCount = null;
+      updateField('monopalletCount', null);
     }
   },
 );
 
 // Watch for useTransit changes to fetch transits when enabled
 watch(
-  () => localUseTransit.value,
+  () => props.useTransit,
   async (newValue) => {
-    if (newValue && localForm.value.warehouseId) {
-      await warehouseStore.fetchTransits(localForm.value.warehouseId);
+    if (newValue && props.form.warehouseId) {
+      await warehouseStore.fetchTransits(props.form.warehouseId);
     } else {
-      localForm.value.transitWarehouseId = null;
+      updateField('transitWarehouseId', null);
     }
   },
 );
@@ -408,12 +418,12 @@ watch(
 // Handle custom dates changes with validation
 function handleCustomDatesChange(newDates: (string | Date)[]) {
   const requiredCount =
-    localForm.value.dateType === 'CUSTOM_DATES_SINGLE' ? 1 : newDates.length;
+    props.form.dateType === 'CUSTOM_DATES_SINGLE' ? 1 : newDates.length;
 
   // In update mode, check against remaining count after adjustment
   const checkCount = isUpdateMode.value
     ? updateStore.remainingAutobookingCount -
-      (requiredCount - (localForm.value.customDates?.length || 0))
+      (requiredCount - (props.form.customDates?.length || 0))
     : availableCount.value;
 
   if (checkCount < 0) {
@@ -424,6 +434,6 @@ function handleCustomDatesChange(newDates: (string | Date)[]) {
   }
 
   // Update the dates
-  localForm.value.customDates = newDates;
+  updateField('customDates', newDates);
 }
 </script>
