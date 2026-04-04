@@ -149,6 +149,12 @@ const navConfig = [
     icon: 'pi pi-clock',
     route: 'TriggersList',
   },
+  {
+    id: 'promotions',
+    label: 'акции',
+    icon: 'pi pi-tags',
+    route: 'Promotions',
+  },
   { id: 'reports', label: 'отчеты', icon: 'pi pi-chart-pie', route: 'Reports' },
 ];
 

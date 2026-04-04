@@ -20,6 +20,7 @@ export * from './triggers';
 export * from './reschedules';
 export * from './reports';
 export * from './payments';
+export * from './promotions';
 
 // Generic API methods
 export const api = {

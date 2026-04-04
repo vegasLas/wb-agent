@@ -39,6 +39,7 @@ import {
   SkeletonReport,
   SkeletonPayments,
   SkeletonReschedules,
+  SkeletonPromotions,
 } from '../components/skeleton';
 
 // Initialize color mode with proper configuration for class-based dark mode
@@ -82,6 +83,7 @@ const routeSkeletonMap: Record<string, any> = {
   Triggers: SkeletonTriggers,
   TriggersList: SkeletonTriggers,
   TriggerCreate: SkeletonTriggers,
+  Promotions: SkeletonPromotions,
   Reports: SkeletonReport,
   Store: SkeletonStore,
   StoreSubscription: SkeletonStore,

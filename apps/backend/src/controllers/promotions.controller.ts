@@ -134,12 +134,12 @@ export const fetchPromotionExcel = async (req: Request, res: Response): Promise<
       periodID,
     });
 
-    if (result.error && !result.parsedData) {
+    if (result.error && !result.items) {
       if (result.reportPending) {
         res.status(202).json({
           success: true,
           data: {
-            parsedData: null,
+            items: null,
             error: result.error,
             reportPending: true,
             estimatedWaitTime: result.estimatedWaitTime || 30,
@@ -158,7 +158,7 @@ export const fetchPromotionExcel = async (req: Request, res: Response): Promise<
     res.status(200).json({
       success: true,
       data: {
-        parsedData: result.parsedData,
+        items: result.items,
         error: null,
         reportPending: false,
         estimatedWaitTime: null,
