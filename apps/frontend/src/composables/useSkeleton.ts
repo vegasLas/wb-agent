@@ -16,6 +16,7 @@ const pathToRouteNameMap = [
   { pattern: /^\/autobooking(\/|$)/, routeName: 'Autobooking' },
   { pattern: /^\/reschedules(\/|$)/, routeName: 'Reschedules' },
   { pattern: /^\/triggers(\/|$)/, routeName: 'Triggers' },
+  { pattern: /^\/promotions(\/|$)/, routeName: 'Promotions' },
   { pattern: /^\/reports(\/|$)/, routeName: 'Reports' },
   { pattern: /^\/store(\/|$)/, routeName: 'Store' },
   { pattern: /^\/payments(\/|$)/, routeName: 'Payments' },
