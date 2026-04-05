@@ -13,34 +13,53 @@
         size="small"
         class="p-datatable-sm"
       >
-        <Column field="supplierArticle" header="Артикул">
+        <Column
+          field="supplierArticle"
+          header="Артикул"
+        >
           <template #body="slotProps">
             {{ slotProps.data.supplierArticle }}
           </template>
         </Column>
-        <Column field="quantity" header="Количество">
+        <Column
+          field="quantity"
+          header="Количество"
+        >
           <template #body="slotProps">
             {{ slotProps.data.quantity }} шт.
           </template>
         </Column>
       </DataTable>
 
-      <div v-else-if="loading" class="flex justify-center items-center py-12">
+      <div
+        v-else-if="loading"
+        class="flex justify-center items-center py-12"
+      >
         <i
           class="pi pi-spin pi-spinner text-2xl text-blue-500 dark:text-blue-400"
         />
       </div>
 
-      <div v-else-if="error" class="text-center py-12">
+      <div
+        v-else-if="error"
+        class="text-center py-12"
+      >
         <div class="text-red-500 dark:text-red-400 mb-4">
           {{ error }}
         </div>
-        <Button severity="danger" variant="outlined" @click="$emit('retry')">
+        <Button
+          severity="danger"
+          variant="outlined"
+          @click="$emit('retry')"
+        >
           Попробовать снова
         </Button>
       </div>
 
-      <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
+      <div
+        v-else
+        class="text-center py-12 text-gray-500 dark:text-gray-400"
+      >
         Остатки не найдены
       </div>
     </div>

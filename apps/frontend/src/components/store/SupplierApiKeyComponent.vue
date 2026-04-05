@@ -2,11 +2,16 @@
   <div class="api-key-component space-y-4">
     <Card>
       <template #title>
-        <h3 class="font-medium">API ключ поставщика</h3>
+        <h3 class="font-medium">
+          API ключ поставщика
+        </h3>
       </template>
       <template #content>
         <!-- Status -->
-        <div v-if="apiKeyStatus" class="mb-4">
+        <div
+          v-if="apiKeyStatus"
+          class="mb-4"
+        >
           <Tag
             :severity="apiKeyStatus.valid ? 'success' : 'danger'"
             :icon="
@@ -15,7 +20,10 @@
             :value="apiKeyStatus.valid ? 'Ключ действителен' : 'Ошибка ключа'"
             class="mb-2"
           />
-          <p v-if="apiKeyStatus.message" class="text-sm text-gray-500 mt-1">
+          <p
+            v-if="apiKeyStatus.message"
+            class="text-sm text-gray-500 mt-1"
+          >
             {{ apiKeyStatus.message }}
           </p>
         </div>
@@ -81,8 +89,7 @@
             <span
               v-if="formError"
               class="text-red-500 dark:text-red-400 text-xs ml-2"
-              >{{ formError }}</span
-            >
+            >{{ formError }}</span>
           </label>
           <div class="flex gap-2">
             <InputText
@@ -133,8 +140,7 @@
               href="https://seller.wildberries.ru"
               target="_blank"
               class="underline"
-              >WB Партнеры</a
-            >
+            >WB Партнеры</a>
           </li>
           <li>Перейдите в раздел "Настройки" → "Доступ к API"</li>
           <li>Скопируйте ключ и вставьте в поле выше</li>
@@ -143,7 +149,11 @@
     </Card>
 
     <!-- Error Alert -->
-    <Message v-if="apiKeyStore.error" severity="error" class="mt-4">
+    <Message
+      v-if="apiKeyStore.error"
+      severity="error"
+      class="mt-4"
+    >
       {{ apiKeyStore.error }}
     </Message>
   </div>

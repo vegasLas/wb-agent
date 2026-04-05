@@ -20,7 +20,10 @@
         </div>
       </div>
     </div>
-    <div v-if="isSelected" class="text-blue-600 dark:text-blue-400">
+    <div
+      v-if="isSelected"
+      class="text-blue-600 dark:text-blue-400"
+    >
       <i class="pi pi-check-circle" />
     </div>
   </div>

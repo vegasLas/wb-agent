@@ -35,7 +35,9 @@
 
       <!-- Склад -->
       <div class="space-y-2">
-        <h4 class="font-medium text-gray-900 dark:text-white">Выбор склада</h4>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Выбор склада
+        </h4>
         <ul
           class="list-disc pl-4 text-sm text-gray-600 dark:text-gray-400 space-y-1"
         >
@@ -60,7 +62,9 @@
 
       <!-- Тип поставки -->
       <div class="space-y-2">
-        <h4 class="font-medium text-gray-900 dark:text-white">Тип поставки</h4>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Тип поставки
+        </h4>
         <p class="text-sm text-gray-600 dark:text-gray-400">
           Доступные типы зависят от вашего черновика и выбранного склада:
         </p>
@@ -74,16 +78,16 @@
           </li>
         </ul>
         <div class="mt-2 text-sm">
-          <span class="text-blue-600 dark:text-blue-400"
-            >💡 Система автоматически:</span
-          >
+          <span class="text-blue-600 dark:text-blue-400">💡 Система автоматически:</span>
           Показывает только доступные типы поставок для вашего товара и склада.
         </div>
       </div>
 
       <!-- Даты -->
       <div class="space-y-2">
-        <h4 class="font-medium text-gray-900 dark:text-white">Выбор дат</h4>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Выбор дат
+        </h4>
         <p class="text-sm text-gray-600 dark:text-gray-400">
           Доступные варианты:
         </p>
@@ -120,7 +124,9 @@
 
       <!-- Коэффициент -->
       <div class="space-y-2">
-        <h4 class="font-medium text-gray-900 dark:text-white">Коэффициент</h4>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Коэффициент
+        </h4>
         <p class="text-sm text-gray-600 dark:text-gray-400">
           Настройка максимального коэффициента:
         </p>

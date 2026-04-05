@@ -104,7 +104,11 @@ export const usePromotionsStore = defineStore('promotions', () => {
     }
   }
 
-  async function fetchExcel(periodID: number, retryCount = 1) {
+  async function fetchExcel(
+    periodID: number,
+    isRecovery = true,
+    retryCount = 1,
+  ) {
     if (!userStore.user?.selectedAccountId) {
       excelError.value = 'Необходимо выбрать аккаунт';
       return;
@@ -125,7 +129,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
     _excelItems.value = [];
 
     try {
-      const response = await promotionsAPI.fetchExcel({ periodID });
+      const response = await promotionsAPI.fetchExcel({ periodID, isRecovery });
 
       if (response.error) {
         excelError.value = response.error;
@@ -136,7 +140,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
           const waitMs = (response.estimatedWaitTime || 5) * 1000;
           await new Promise((resolve) => setTimeout(resolve, waitMs));
           excelLoading.value = false;
-          return fetchExcel(periodID, retryCount - 1);
+          return fetchExcel(periodID, isRecovery, retryCount - 1);
         }
         return;
       }
@@ -160,10 +164,64 @@ export const usePromotionsStore = defineStore('promotions', () => {
   /**
    * Convenience action: fetch detail then auto-fetch Excel if periodID exists
    */
-  async function selectPromotionAndLoadExcel(promoID: number) {
+  async function selectPromotionAndLoadExcel(
+    promoID: number,
+    isRecovery = true,
+  ) {
     await fetchDetail(promoID);
     if (promotionDetail.value?.periodID) {
-      await fetchExcel(promotionDetail.value.periodID);
+      await fetchExcel(promotionDetail.value.periodID, isRecovery);
+    }
+  }
+
+  /**
+   * Apply promotion recovery with selected items
+   *
+   * isRecovery: true = recover only selected items (add to promotion)
+   * isRecovery: false = exclude selected items (remove from promotion, keep others)
+   */
+  async function applyRecovery(
+    selectedItems: string[],
+    isRecovery: boolean,
+  ): Promise<boolean> {
+    if (!userStore.user?.selectedAccountId) {
+      excelError.value = 'Необходимо выбрать аккаунт';
+      return false;
+    }
+    if (!userStore.hasValidSupplier) {
+      excelError.value = 'Необходимо выбрать поставщика';
+      return false;
+    }
+    if (!userStore.subscriptionActive) {
+      excelError.value = 'Необходимо активировать подписку';
+      return false;
+    }
+
+    const periodID = promotionDetail.value?.periodID;
+    if (!periodID) {
+      excelError.value = 'ID периода не найден';
+      return false;
+    }
+
+    excelLoading.value = true;
+    excelError.value = null;
+
+    try {
+      await promotionsAPI.applyRecovery({
+        periodID,
+        selectedItems,
+        isRecovery,
+      });
+      return true;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Failed to apply promotion recovery';
+      excelError.value = errorMsg;
+      return false;
+    } finally {
+      excelLoading.value = false;
     }
   }
 
@@ -210,5 +268,6 @@ export const usePromotionsStore = defineStore('promotions', () => {
     selectPromotionAndLoadExcel,
     selectPromotion,
     clearPromotions,
+    applyRecovery,
   };
 });

@@ -6,14 +6,16 @@
       class="text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       {{ label }}
-      <span v-if="required" class="text-red-500 dark:text-red-400">*</span>
+      <span
+        v-if="required"
+        class="text-red-500 dark:text-red-400"
+      >*</span>
     </label>
     <slot :invalid="!!error" />
     <small
       v-if="error"
       class="p-error text-xs text-red-500 dark:text-red-400"
-      >{{ error }}</small
-    >
+    >{{ error }}</small>
   </div>
 </template>
 

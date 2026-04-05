@@ -1,7 +1,12 @@
 <template>
   <div @click.stop>
-    <h4 class="text-lg font-medium mb-3">Выберите аккаунт WB</h4>
-    <div v-if="hasAccounts" class="space-y-2 max-h-60 overflow-y-auto">
+    <h4 class="text-lg font-medium mb-3">
+      Выберите аккаунт WB
+    </h4>
+    <div
+      v-if="hasAccounts"
+      class="space-y-2 max-h-60 overflow-y-auto"
+    >
       <AccountCard
         v-for="account in accounts"
         :key="account.id"
@@ -34,7 +39,10 @@
         </div>
       </div>
     </div>
-    <AddAccountCard v-else @add-account="$emit('add-account')" />
+    <AddAccountCard
+      v-else
+      @add-account="$emit('add-account')"
+    />
   </div>
 </template>
 

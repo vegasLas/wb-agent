@@ -723,6 +723,12 @@ export interface PromotionApiPayload {
   estimatedWaitTime?: number | null;
 }
 
+export interface PromotionRecoveryParams {
+  periodID: number;
+  selectedItems: string[]; // supplier article IDs like "BOX20CARD"
+  isRecovery: boolean; // true = recover only selected items, false = exclude selected items
+}
+
 // -----------------------------------------------------------------------------
 // Global Window Extensions
 // -----------------------------------------------------------------------------

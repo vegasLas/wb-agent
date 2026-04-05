@@ -27,7 +27,10 @@
           <i class="pi pi-refresh" />
         </Button>
       </div>
-      <p v-if="suppliesError" class="text-sm text-red-600 dark:text-red-400">
+      <p
+        v-if="suppliesError"
+        class="text-sm text-red-600 dark:text-red-400"
+      >
         {{ suppliesError }}
       </p>
       <p
@@ -39,8 +42,15 @@
     </div>
 
     <!-- Supply Information Toggle -->
-    <div v-if="selectedSupply" class="flex items-center justify-end">
-      <Button size="small" variant="outlined" @click="openSupplyDetails">
+    <div
+      v-if="selectedSupply"
+      class="flex items-center justify-end"
+    >
+      <Button
+        size="small"
+        variant="outlined"
+        @click="openSupplyDetails"
+      >
         <i class="pi pi-info-circle mr-1" />
         детали
       </Button>

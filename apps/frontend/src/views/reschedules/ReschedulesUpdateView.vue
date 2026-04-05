@@ -4,15 +4,24 @@
       <h3 class="text-xl text-center font-semibold flex-1">
         Редактирование перепланирования
       </h3>
-      <Button variant="outlined" severity="warn" @click="showHintsModal = true">
+      <Button
+        variant="outlined"
+        severity="warn"
+        @click="showHintsModal = true"
+      >
         <i class="pi pi-question-circle" />
       </Button>
     </div>
 
     <div class="space-y-4">
       <!-- Supply Section -->
-      <div v-if="updateFormStore.reschedule" class="space-y-3">
-        <h4 class="font-medium text-gray-900 dark:text-white">Поставка</h4>
+      <div
+        v-if="updateFormStore.reschedule"
+        class="space-y-3"
+      >
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Поставка
+        </h4>
 
         <!-- Supply Information (read-only) -->
         <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -94,7 +103,7 @@
         <CoefficientHistoryAlert
           v-if="
             updateFormStore.reschedule?.warehouseId &&
-            updateFormStore.reschedule?.supplyType
+              updateFormStore.reschedule?.supplyType
           "
           :warehouse-id="updateFormStore.reschedule.warehouseId"
           :supply-type="updateFormStore.reschedule.supplyType"
@@ -105,7 +114,7 @@
       <div
         v-if="
           updateFormStore.reschedule &&
-          updateFormStore.reschedule.completedDates.length > 0
+            updateFormStore.reschedule.completedDates.length > 0
         "
         class="space-y-2"
       >

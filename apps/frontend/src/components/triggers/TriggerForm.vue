@@ -3,12 +3,22 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <Button variant="text" size="small" @click="goBack">
+        <Button
+          variant="text"
+          size="small"
+          @click="goBack"
+        >
           <i class="pi pi-arrow-left" />
         </Button>
-        <h2 class="text-xl font-semibold">Создание таймслота</h2>
+        <h2 class="text-xl font-semibold">
+          Создание таймслота
+        </h2>
       </div>
-      <Button variant="text" size="small" @click="showHintsModal = true">
+      <Button
+        variant="text"
+        size="small"
+        @click="showHintsModal = true"
+      >
         <i class="pi pi-question-circle text-yellow-600 dark:text-yellow-400" />
       </Button>
     </div>
@@ -185,7 +195,11 @@
 
     <!-- Actions -->
     <div class="flex gap-2">
-      <Button variant="outlined" class="flex-1" @click="goBack">
+      <Button
+        variant="outlined"
+        class="flex-1"
+        @click="goBack"
+      >
         Отмена
       </Button>
       <Button
@@ -210,7 +224,10 @@
     <BackButton @click="goBack" />
 
     <!-- Hints Modal -->
-    <TriggerHints :show="showHintsModal" @close="showHintsModal = false" />
+    <TriggerHints
+      :show="showHintsModal"
+      @close="showHintsModal = false"
+    />
   </div>
 </template>
 

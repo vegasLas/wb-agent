@@ -631,9 +631,7 @@ export interface Level {
   coefficient: number;
 }
 
-export interface PromotionExcelCreateResponse {
-  // Empty object response
-}
+export type PromotionExcelCreateResponse = Record<string, never>;
 
 export interface PromotionExcelGetResponse {
   data: PromotionExcelData;
@@ -642,4 +640,25 @@ export interface PromotionExcelGetResponse {
 export interface PromotionExcelData {
   uploadDate: string;
   file: string;
+}
+
+export interface PromotionRecoveryRequest {
+  periodID: number;
+  isRecovery: boolean;
+  file: string;
+}
+
+export type PromotionRecoveryResponse = Record<string, never>;
+
+export interface PromotionRecoveryInitRequest {
+  periodID: number;
+  isRecovery: boolean;
+}
+
+export type PromotionRecoveryInitResponse = Record<string, never>;
+
+export interface PromotionRecoveryBody {
+  periodID: number;
+  selectedItems: string[];
+  isRecovery: boolean; // true = recover only selected items, false = exclude selected items (keep the rest)
 }

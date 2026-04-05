@@ -7,8 +7,8 @@
     <template
       v-if="
         userStore.selectedAccount &&
-        userStore.hasValidSupplier &&
-        userStore.subscriptionActive
+          userStore.hasValidSupplier &&
+          userStore.subscriptionActive
       "
     >
       <!-- Status Filter Buttons -->
@@ -51,10 +51,8 @@
           class="w-full"
         >
           <div class="flex items-center justify-between w-full">
-            <span
-              >Приобретите пакет кредитов, чтобы создать новые, или удалите
-              архивные.</span
-            >
+            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите
+              архивные.</span>
             <Button
               variant="outlined"
               severity="primary"
@@ -65,7 +63,10 @@
             </Button>
           </div>
         </Message>
-        <div v-else class="flex justify-between items-center">
+        <div
+          v-else
+          class="flex justify-between items-center"
+        >
           <Tag
             :severity="
               userStore.user.autobookingCount === 0 ? 'danger' : 'info'
@@ -73,7 +74,10 @@
           >
             доступно кредитов: {{ userStore.user.autobookingCount }}
           </Tag>
-          <Button severity="primary" @click="navigateToCreate">
+          <Button
+            severity="primary"
+            @click="navigateToCreate"
+          >
             добавить
           </Button>
         </div>

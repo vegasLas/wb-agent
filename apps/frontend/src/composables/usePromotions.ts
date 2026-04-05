@@ -37,7 +37,7 @@ import { usePromotionsStore } from '../stores/promotions';
 import { useUserStore } from '../stores/user';
 import type { PromotionItem, PromotionDetail } from '../types';
 
-export type PromotionFilter = 'ALL' | 'PARTICIPATING' | 'SKIPPED';
+export type PromotionFilter = 'AVAILABLE' | 'PARTICIPATING' | 'SKIPPING';
 
 export interface FilterTab {
   label: string;
@@ -91,18 +91,22 @@ export interface UsePromotionsReturn {
   closeDetailDialog: () => void;
   closeParticipantsDialog: () => void;
   clearErrors: () => void;
+  applyRecovery: (
+    selectedItems: string[],
+    isRecovery: boolean,
+  ) => Promise<boolean>;
 }
 
 const filterTabs: FilterTab[] = [
-  { label: 'Доступные', value: 'ALL' },
+  { label: 'Доступные', value: 'AVAILABLE' },
   { label: 'Участвую', value: 'PARTICIPATING' },
-  { label: 'Не участвую', value: 'SKIPPED' },
+  { label: 'Не участвую', value: 'SKIPPING' },
 ];
 
 export function usePromotions(
   options: UsePromotionsOptions = {},
 ): UsePromotionsReturn {
-  const { initialFilter = 'PARTICIPATING', immediate = false } = options;
+  const { initialFilter = 'AVAILABLE', immediate = false } = options;
 
   const promotionsStore = usePromotionsStore();
   const userStore = useUserStore();
@@ -139,9 +143,9 @@ export function usePromotions(
   // Participation counts by filter
   const participationCounts = computed(() => {
     const counts: Record<PromotionFilter, number> = {
-      ALL: promotions.value.length,
+      AVAILABLE: promotions.value.length,
       PARTICIPATING: 0,
-      SKIPPED: 0,
+      SKIPPING: 0,
     };
 
     for (const promotion of promotions.value) {
@@ -149,7 +153,7 @@ export function usePromotions(
       if (status === 'PARTICIPATING' || status === 'WILL_PARTICIPATE') {
         counts.PARTICIPATING++;
       } else if (status === 'SKIPPED') {
-        counts.SKIPPED++;
+        counts.SKIPPING++;
       }
     }
 
@@ -311,5 +315,6 @@ export function usePromotions(
     closeDetailDialog,
     closeParticipantsDialog,
     clearErrors,
+    applyRecovery: promotionsStore.applyRecovery,
   };
 }

@@ -14,11 +14,16 @@
         class="flex flex-col items-center justify-center py-16"
       >
         <i class="pi pi-refresh animate-spin text-4xl text-orange-500 mb-4" />
-        <p class="text-gray-600 dark:text-gray-400">Загрузка деталей...</p>
+        <p class="text-gray-600 dark:text-gray-400">
+          Загрузка деталей...
+        </p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="detailError" class="text-center py-12 px-4">
+      <div
+        v-else-if="detailError"
+        class="text-center py-12 px-4"
+      >
         <div
           class="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
         >
@@ -30,7 +35,10 @@
       </div>
 
       <!-- Detail Content -->
-      <div v-else-if="detail" class="space-y-5">
+      <div
+        v-else-if="detail"
+        class="space-y-5"
+      >
         <!-- Header Section: Date Range + Status -->
         <div class="flex items-center gap-3 flex-wrap">
           <div class="text-lg text-gray-900 dark:text-gray-100">
@@ -117,7 +125,10 @@
         </div>
 
         <!-- Search Promotion Section -->
-        <div v-if="d.rangingLevels.value.length > 0" class="pt-2">
+        <div
+          v-if="d.rangingLevels.value.length > 0"
+          class="pt-2"
+        >
           <div class="flex items-center gap-2 mb-4">
             <h4 class="text-base font-medium text-gray-900 dark:text-gray-100">
               Продвижение в поиске и каталоге
@@ -217,7 +228,10 @@
               </div>
 
               <!-- Goal Badge - positioned at the end -->
-              <div v-if="d.isMaxLevel.value" class="absolute -right-2 -top-3">
+              <div
+                v-if="d.isMaxLevel.value"
+                class="absolute -right-2 -top-3"
+              >
                 <div
                   class="bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center"
                 >
@@ -227,11 +241,13 @@
             </div>
 
             <!-- Goal Label -->
-            <div v-if="d.isMaxLevel.value" class="text-right mt-4">
+            <div
+              v-if="d.isMaxLevel.value"
+              class="text-right mt-4"
+            >
               <span
                 class="text-xs text-green-600 dark:text-green-400 font-medium"
-                >Цель выполнена</span
-              >
+              >Цель выполнена</span>
             </div>
           </div>
         </div>
@@ -280,14 +296,21 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="text-center py-16 text-gray-500 dark:text-gray-400">
+      <div
+        v-else
+        class="text-center py-16 text-gray-500 dark:text-gray-400"
+      >
         <i class="pi pi-inbox text-4xl mb-4" />
         <p>Нет данных для отображения</p>
       </div>
     </div>
 
     <template #footer>
-      <Button label="Закрыть" severity="secondary" @click="visible = false" />
+      <Button
+        label="Закрыть"
+        severity="secondary"
+        @click="visible = false"
+      />
     </template>
   </Dialog>
 
@@ -314,7 +337,11 @@
       </p>
     </div>
     <template #footer>
-      <Button label="Понятно" severity="primary" @click="showRules = false" />
+      <Button
+        label="Понятно"
+        severity="primary"
+        @click="showRules = false"
+      />
     </template>
   </Dialog>
 </template>

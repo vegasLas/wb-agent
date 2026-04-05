@@ -5,15 +5,24 @@
         <h3 class="text-xl text-center font-semibold flex-1">
           Редактировать перепланирование
         </h3>
-        <Button severity="warning" text @click="showHintsModal = true">
+        <Button
+          severity="warning"
+          text
+          @click="showHintsModal = true"
+        >
           <i class="pi pi-question-circle" />
         </Button>
       </div>
 
       <form class="space-y-6">
         <!-- Supply Section -->
-        <div v-if="reschedule" class="space-y-3">
-          <h4 class="font-medium text-gray-900 dark:text-white">Поставка</h4>
+        <div
+          v-if="reschedule"
+          class="space-y-3"
+        >
+          <h4 class="font-medium text-gray-900 dark:text-white">
+            Поставка
+          </h4>
 
           <!-- Supply Information (read-only) -->
           <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -85,7 +94,7 @@
               :step="1"
               :min="0"
               :max="20"
-            />
+            >
             <div class="min-w-[4rem] text-center">
               <span
                 class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
@@ -134,7 +143,10 @@
     />
 
     <!-- Hints Modal -->
-    <ReschedulesHints :show="showHintsModal" @close="showHintsModal = false" />
+    <ReschedulesHints
+      :show="showHintsModal"
+      @close="showHintsModal = false"
+    />
 
     <!-- Telegram Back Button -->
     <BackButton @click="goBack" />

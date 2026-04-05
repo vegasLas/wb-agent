@@ -3,6 +3,7 @@ import type {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
   PromotionApiPayload,
+  PromotionRecoveryParams,
 } from '../types';
 
 /**
@@ -22,6 +23,7 @@ export interface DetailParams {
 
 export interface ExcelParams {
   periodID: number;
+  isRecovery?: boolean; // true = recovery mode, false = exclusion mode (default: true)
 }
 
 export const promotionsAPI = {
@@ -65,5 +67,13 @@ export const promotionsAPI = {
       params,
     );
     return response.data.data;
+  },
+
+  /**
+   * POST /api/v1/promotions/recovery
+   * Apply promotion recovery with selected items
+   */
+  async applyRecovery(params: PromotionRecoveryParams): Promise<void> {
+    await apiClient.post('/promotions/recovery', params);
   },
 };
