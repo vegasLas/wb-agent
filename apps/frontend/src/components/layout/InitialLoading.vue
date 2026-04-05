@@ -16,7 +16,9 @@
         stroke-width="4"
         animation-duration="1s"
       />
-      <p class="text-gray-600 dark:text-gray-400 text-sm">Загрузка...</p>
+      <p class="text-gray-600 dark:text-gray-400 text-sm">
+        Загрузка...
+      </p>
     </div>
   </div>
 </template>

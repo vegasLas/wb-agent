@@ -14,14 +14,17 @@
         size="small"
         class="p-datatable-sm"
       >
-        <Column field="image" header="Фото">
+        <Column
+          field="image"
+          header="Фото"
+        >
           <template #body="slotProps">
             <img
               v-if="slotProps.data.imgSrc || slotProps.data.image"
               :src="slotProps.data.imgSrc || slotProps.data.image"
               :alt="slotProps.data.imtName || slotProps.data.name"
               class="h-12 w-12 object-cover rounded"
-            />
+            >
             <div
               v-else
               class="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 dark:text-gray-500"
@@ -30,27 +33,39 @@
             </div>
           </template>
         </Column>
-        <Column field="article" header="Артикул">
+        <Column
+          field="article"
+          header="Артикул"
+        >
           <template #body="slotProps">
             {{
               slotProps.data.nmSa || slotProps.data.sa || slotProps.data.article
             }}
           </template>
         </Column>
-        <Column field="quantity" header="Количество">
+        <Column
+          field="quantity"
+          header="Количество"
+        >
           <template #body="slotProps">
             {{ slotProps.data.quantity }} шт.
           </template>
         </Column>
       </DataTable>
 
-      <div v-else-if="loading" class="flex justify-center items-center py-12">
+      <div
+        v-else-if="loading"
+        class="flex justify-center items-center py-12"
+      >
         <i
           class="pi pi-spin pi-spinner text-2xl text-blue-500 dark:text-blue-400"
         />
       </div>
 
-      <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
+      <div
+        v-else
+        class="text-center py-12 text-gray-500 dark:text-gray-400"
+      >
         Товары не найдены
       </div>
     </div>

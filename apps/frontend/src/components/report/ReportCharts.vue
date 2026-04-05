@@ -78,8 +78,14 @@
       v-else-if="itemsByWarehouse && itemsByWarehouse.length > 0"
       class="space-y-8"
     >
-      <div v-for="{ warehouse, items } in itemsByWarehouse" :key="warehouse">
-        <WarehousePolarAreaChart :warehouse-name="warehouse" :items="items" />
+      <div
+        v-for="{ warehouse, items } in itemsByWarehouse"
+        :key="warehouse"
+      >
+        <WarehousePolarAreaChart
+          :warehouse-name="warehouse"
+          :items="items"
+        />
       </div>
     </div>
 
@@ -87,8 +93,8 @@
     <Card
       v-else-if="
         data &&
-        (data.items.length === 0 || !data.items) &&
-        (!itemsByWarehouse || itemsByWarehouse.length === 0)
+          (data.items.length === 0 || !data.items) &&
+          (!itemsByWarehouse || itemsByWarehouse.length === 0)
       "
       class="text-center min-h-[300px] flex flex-col justify-center items-center"
     >

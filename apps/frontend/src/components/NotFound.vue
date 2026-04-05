@@ -1,7 +1,9 @@
 <template>
   <div class="flex flex-col items-center justify-center min-h-[80vh] px-4">
     <div class="text-center">
-      <div class="text-6xl font-bold text-gray-300 mb-4">404</div>
+      <div class="text-6xl font-bold text-gray-300 mb-4">
+        404
+      </div>
       <div class="text-red-500 dark:text-red-400 w-16 h-16 mb-4 mx-auto">
         <i class="pi pi-exclamation-triangle text-6xl" />
       </div>

@@ -1,8 +1,14 @@
 <template>
   <div class="warehouse-suggestions">
     <!-- Suggestions List -->
-    <div v-if="suggestions && suggestions.length > 0" class="space-y-4">
-      <Card v-for="(suggestion, index) in suggestions" :key="index">
+    <div
+      v-if="suggestions && suggestions.length > 0"
+      class="space-y-4"
+    >
+      <Card
+        v-for="(suggestion, index) in suggestions"
+        :key="index"
+      >
         <!-- Header with priority icon -->
         <template #title>
           <div
@@ -49,22 +55,34 @@
                   scroll-height="flex"
                   class="p-datatable-sm"
                 >
-                  <Column field="vendorCode" header="Товар (Артикул)">
+                  <Column
+                    field="vendorCode"
+                    header="Товар (Артикул)"
+                  >
                     <template #body="{ data }">
                       <span class="font-medium">{{ data.vendorCode }}</span>
                     </template>
                   </Column>
-                  <Column field="stockQty" header="Остаток">
+                  <Column
+                    field="stockQty"
+                    header="Остаток"
+                  >
                     <template #body="{ data }">
                       {{ data.stockQty.toLocaleString('ru-RU') }}
                     </template>
                   </Column>
-                  <Column field="purchasedQty" header="Продано (30д)">
+                  <Column
+                    field="purchasedQty"
+                    header="Продано (30д)"
+                  >
                     <template #body="{ data }">
                       {{ data.purchasedQty.toLocaleString('ru-RU') }}
                     </template>
                   </Column>
-                  <Column field="calculatedDaysOfStock" header="Запас (дн.)">
+                  <Column
+                    field="calculatedDaysOfStock"
+                    header="Запас (дн.)"
+                  >
                     <template #body="{ data }">
                       {{ formatDaysOfStock(data.calculatedDaysOfStock) }}
                     </template>
@@ -92,17 +110,25 @@
     </div>
 
     <!-- Loading State -->
-    <Card v-else-if="reportStore.loading" class="mt-8 text-center py-12">
+    <Card
+      v-else-if="reportStore.loading"
+      class="mt-8 text-center py-12"
+    >
       <template #content>
         <i
           class="pi pi-spin pi-refresh text-3xl mx-auto mb-4 text-blue-500 dark:text-blue-400"
         />
-        <p class="text-gray-500 dark:text-gray-400">Анализ рекомендаций...</p>
+        <p class="text-gray-500 dark:text-gray-400">
+          Анализ рекомендаций...
+        </p>
       </template>
     </Card>
 
     <!-- Empty State -->
-    <Card v-else class="mt-8 text-center py-12">
+    <Card
+      v-else
+      class="mt-8 text-center py-12"
+    >
       <template #content>
         <i class="pi pi-info-circle text-4xl mx-auto mb-4 text-gray-400" />
         <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">

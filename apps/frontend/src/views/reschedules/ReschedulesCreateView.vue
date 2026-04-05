@@ -4,7 +4,11 @@
       <h3 class="text-xl text-center font-semibold flex-1">
         Создание перепланирования
       </h3>
-      <Button variant="outlined" severity="warn" @click="showHintsModal = true">
+      <Button
+        variant="outlined"
+        severity="warn"
+        @click="showHintsModal = true"
+      >
         <i class="pi pi-question-circle" />
       </Button>
     </div>
@@ -28,9 +32,14 @@
       "
     />
 
-    <Message severity="warn" class="mt-4">
+    <Message
+      severity="warn"
+      class="mt-4"
+    >
       <div class="text-sm space-y-2">
-        <p class="font-semibold mb-2">Важная информация</p>
+        <p class="font-semibold mb-2">
+          Важная информация
+        </p>
         <p>
           <strong>Автоматическое перепланирование</strong> работает как
           автобронирование — бот будет пытаться перепланировать поставку, но

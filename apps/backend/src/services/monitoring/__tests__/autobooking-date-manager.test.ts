@@ -128,7 +128,7 @@ describe('AutobookingDateManagerService', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(mockUser);
 
       // Act
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
@@ -163,7 +163,7 @@ describe('AutobookingDateManagerService', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(mockUser);
 
       // Act
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
@@ -182,7 +182,7 @@ describe('AutobookingDateManagerService', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
       // Act
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
@@ -199,7 +199,7 @@ describe('AutobookingDateManagerService', () => {
       } as unknown as Autobooking;
 
       // Act
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
@@ -231,7 +231,7 @@ describe('AutobookingDateManagerService', () => {
       );
 
       // Act - should not throw
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
@@ -243,7 +243,7 @@ describe('AutobookingDateManagerService', () => {
 
   describe('getSupplyTypeText', () => {
     it('should return correct text for known supply types', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       expect(
         (autobookingDateManagerService as any).getSupplyTypeText('BOX'),
       ).toBe('Короб');
@@ -269,11 +269,11 @@ describe('AutobookingDateManagerService', () => {
 
   describe('getDateTypeText', () => {
     it('should return correct text for known date types', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       expect(
         (autobookingDateManagerService as any).getDateTypeText('WEEK'),
       ).toBe('Неделя');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       expect(
         (autobookingDateManagerService as any).getDateTypeText('MONTH'),
       ).toBe('Месяц');

@@ -32,7 +32,10 @@
       >
         <i class="pi pi-trash" />
       </Button>
-      <div v-if="isSelected" class="text-blue-600 dark:text-blue-400 flex">
+      <div
+        v-if="isSelected"
+        class="text-blue-600 dark:text-blue-400 flex"
+      >
         <i class="pi pi-check-circle" />
       </div>
     </div>

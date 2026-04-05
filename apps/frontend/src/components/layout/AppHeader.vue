@@ -24,7 +24,11 @@
               <i class="pi pi-chevron-down" />
             </Button>
 
-            <Menu ref="navMenu" :model="navItems" :popup="true" />
+            <Menu
+              ref="navMenu"
+              :model="navItems"
+              :popup="true"
+            />
           </div>
 
           <!-- Desktop nav items as individual buttons -->

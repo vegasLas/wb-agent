@@ -59,7 +59,10 @@
         </div>
 
         <!-- Supply Information Toggle -->
-        <div v-if="selectedSupply" class="flex items-center justify-end">
+        <div
+          v-if="selectedSupply"
+          class="flex items-center justify-end"
+        >
           <Button
             size="small"
             variant="outlined"
@@ -108,7 +111,7 @@
                     Number((e.target as HTMLInputElement).value),
                   )
               "
-            />
+            >
             <div class="min-w-[4rem] text-center">
               <Tag severity="secondary">
                 {{ maxCoefficientInput }}
@@ -129,9 +132,14 @@
         </div>
       </form>
 
-      <Message severity="warn" class="mb-4">
+      <Message
+        severity="warn"
+        class="mb-4"
+      >
         <div class="text-sm space-y-2">
-          <p class="font-semibold mb-2">Важная информация</p>
+          <p class="font-semibold mb-2">
+            Важная информация
+          </p>
           <p>
             <strong>Автоматическое перепланирование</strong> работает как
             автобронирование — бот будет пытаться перепланировать поставку, но
@@ -162,7 +170,10 @@
   />
 
   <!-- Hints Modal -->
-  <ReschedulesHints :show="showHintsModal" @close="showHintsModal = false" />
+  <ReschedulesHints
+    :show="showHintsModal"
+    @close="showHintsModal = false"
+  />
 
   <!-- Telegram Back Button -->
   <BackButton @click="goBack" />

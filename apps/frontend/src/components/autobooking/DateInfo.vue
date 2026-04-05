@@ -33,7 +33,10 @@
     </div>
   </div>
   <!-- Completed Dates Section -->
-  <div v-if="booking.completedDates?.length" class="flex items-center gap-2">
+  <div
+    v-if="booking.completedDates?.length"
+    class="flex items-center gap-2"
+  >
     <i class="pi pi-check-circle text-gray-500 dark:text-gray-400 text-sm" />
     <div class="grid grid-cols-2 gap-2">
       <Tag
