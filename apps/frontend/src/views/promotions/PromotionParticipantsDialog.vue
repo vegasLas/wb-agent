@@ -14,11 +14,16 @@
         class="flex flex-col items-center justify-center py-16"
       >
         <i class="pi pi-refresh animate-spin text-4xl text-orange-500 mb-4" />
-        <p class="text-gray-600 dark:text-gray-400">Загрузка данных...</p>
+        <p class="text-gray-600 dark:text-gray-400">
+          Загрузка данных...
+        </p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="excelError" class="text-center py-12 px-4">
+      <div
+        v-else-if="excelError"
+        class="text-center py-12 px-4"
+      >
         <div
           class="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
         >
@@ -38,38 +43,65 @@
         </div>
       </div>
 
-      <!-- Data Table -->
+      <!-- Data Content (shown when data is available) -->
       <div v-else-if="excelItems.length > 0">
+        <!-- Cannot Edit Warning -->
+        <div
+          v-if="!canEdit"
+          class="mb-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+        >
+          <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            <i class="pi pi-lock text-lg" />
+            <span class="font-medium">Редактирование недоступно</span>
+          </div>
+          <p class="text-sm text-amber-600 dark:text-amber-300 mt-1">
+            Акция уже началась. Восстановление и исключение товаров доступно только до начала акции.
+          </p>
+        </div>
+
+        <!-- Data Table -->
         <!-- Summary Info and Column Selector -->
         <div
           class="mb-4 p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800"
         >
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap gap-6 text-sm">
-              <div>
-                <span class="text-gray-500 dark:text-gray-400"
-                  >Всего товаров:</span
+              <div v-if="canEdit">
+                <span class="text-gray-500 dark:text-gray-400">Режим:</span>
+                <span
+                  :class="[
+                    'ml-1 font-medium',
+                    isRecovery 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-red-600 dark:text-red-400'
+                  ]"
                 >
+                  {{ isRecovery ? 'Восстановление' : 'Исключение' }}
+                </span>
+              </div>
+              <div v-else>
+                <span class="text-gray-500 dark:text-gray-400">Режим:</span>
+                <span class="ml-1 font-medium text-gray-600 dark:text-gray-400">
+                  Просмотр
+                </span>
+              </div>
+              <div>
+                <span class="text-gray-500 dark:text-gray-400">Всего товаров:</span>
                 <span
                   class="ml-1 font-medium text-gray-900 dark:text-gray-100"
-                  >{{ excelItems.length }}</span
-                >
+                >{{ excelItems.length }}</span>
               </div>
               <div v-if="participatingCount > 0">
                 <span class="text-gray-500 dark:text-gray-400">Участвует:</span>
                 <span
                   class="ml-1 font-medium text-green-600 dark:text-green-400"
-                  >{{ participatingCount }}</span
-                >
+                >{{ participatingCount }}</span>
               </div>
               <div v-if="notParticipatingCount > 0">
-                <span class="text-gray-500 dark:text-gray-400"
-                  >Не участвует:</span
-                >
+                <span class="text-gray-500 dark:text-gray-400">Не участвует:</span>
                 <span
                   class="ml-1 font-medium text-gray-600 dark:text-gray-400"
-                  >{{ notParticipatingCount }}</span
-                >
+                >{{ notParticipatingCount }}</span>
               </div>
             </div>
             <div class="min-w-[200px]">
@@ -90,6 +122,7 @@
 
         <!-- Participants Table -->
         <DataTable
+          v-model:selection="selectedItems"
           :value="excelItems"
           size="small"
           class="p-datatable-sm"
@@ -100,7 +133,16 @@
           :rows-per-page-options="[10, 25, 50, 100]"
           striped-rows
           removable-sort
+          :selection-mode="canEdit ? 'multiple' : undefined"
+          data-key="Артикул поставщика"
         >
+          <!-- Selection Checkbox -->
+          <Column
+            v-if="canEdit"
+            selection-mode="multiple"
+            header-style="width: 3rem"
+          />
+
           <!-- Vendor Code -->
           <Column
             v-if="isColumnVisible('Артикул поставщика')"
@@ -350,27 +392,55 @@
         </DataTable>
       </div>
 
-      <!-- Empty State -->
-      <div v-else class="text-center py-16 text-gray-500 dark:text-gray-400">
+      <!-- Empty State (only shown when not loading, no error, and no data) -->
+      <div
+        v-else
+        class="text-center py-16 text-gray-500 dark:text-gray-400"
+      >
         <i class="pi pi-inbox text-4xl mb-4" />
         <p>Нет данных для отображения</p>
       </div>
     </div>
 
     <template #footer>
-      <Button label="Закрыть" severity="secondary" @click="visible = false" />
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-2">
+          <span
+            v-if="canEdit && selectedItems.length > 0"
+            class="text-sm text-gray-600 dark:text-gray-400"
+          >
+            Выбрано: {{ selectedItems.length }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Button 
+            label="Закрыть" 
+            severity="secondary" 
+            @click="visible = false" 
+          />
+          <Button
+            v-if="canEdit && selectedItems.length > 0"
+            :label="isRecovery ? 'Восстановить' : 'Исключить'"
+            :severity="isRecovery ? 'success' : 'danger'"
+            :icon="isRecovery ? 'pi pi-check' : 'pi pi-times'"
+            :loading="applying"
+            @click="handleApply"
+          />
+        </div>
+      </div>
     </template>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
+import Checkbox from 'primevue/checkbox';
 import { useLocalStorage } from '@vueuse/core';
 import type { PromotionExcelItem } from '../../types';
 
@@ -442,6 +512,8 @@ interface Props {
   excelLoading: boolean;
   excelError: string | null;
   reportPending: boolean;
+  isRecovery: boolean; // true = recover mode, false = exclude mode
+  canEdit: boolean; // true = can recover/exclude items (promotion hasn't started)
 }
 
 const props = defineProps<Props>();
@@ -449,7 +521,12 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   'update:show': [value: boolean];
   retry: [];
+  'apply-recovery': [selectedItems: string[], isRecovery: boolean];
 }>();
+
+// Selected items for recovery/exclusion
+const selectedItems = ref<PromotionExcelItem[]>([]);
+const applying = ref(false);
 
 // Selected columns for display (default to columns with defaultVisible: true)
 const defaultColumns = availableColumns
@@ -483,9 +560,12 @@ const visible = computed({
 
 // Dialog header
 const dialogHeader = computed(() => {
+  const modeLabel = props.canEdit
+    ? (props.isRecovery ? 'Восстановление' : 'Исключение')
+    : 'Просмотр';
   return props.promotionName
-    ? `Участники: ${props.promotionName}`
-    : 'Участники акции';
+    ? `${modeLabel}: ${props.promotionName}`
+    : `${modeLabel} участников`;
 });
 
 // Count participating items (Товар уже участвует в акции === 'Да')
@@ -573,6 +653,32 @@ function getTurnoverClass(turnover: number): string {
 function retryFetch() {
   emit('retry');
 }
+
+// Handle apply recovery/exclusion
+async function handleApply() {
+  if (selectedItems.value.length === 0) return;
+  
+  applying.value = true;
+  try {
+    // Extract supplier article IDs (Артикул поставщика)
+    const articleIds = selectedItems.value.map(
+      (item) => item['Артикул поставщика']
+    );
+    emit('apply-recovery', articleIds, props.isRecovery);
+  } finally {
+    applying.value = false;
+  }
+}
+
+// Reset selected items when dialog opens/closes
+watch(
+  () => props.show,
+  (newVal) => {
+    if (!newVal) {
+      selectedItems.value = [];
+    }
+  }
+);
 </script>
 
 <style scoped>

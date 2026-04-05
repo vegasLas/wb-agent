@@ -30,6 +30,21 @@
             Сегодня: {{ p.todayLabel.value }}
           </div>
         </div>
+
+        <!-- Filter Buttons -->
+        <div class="flex items-center gap-2">
+          <Button
+            v-for="tab in p.filterTabs"
+            :key="tab.value"
+            :label="tab.label"
+            :severity="
+              p.currentFilter.value === tab.value ? 'primary' : 'secondary'
+            "
+            :text="p.currentFilter.value !== tab.value"
+            size="small"
+            @click="p.setFilter(tab.value)"
+          />
+        </div>
       </div>
     </div>
 
@@ -56,6 +71,24 @@
       />
     </div>
 
+    <!-- Mobile Filter Buttons -->
+    <div
+      class="sm:hidden flex items-center justify-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+    >
+      <Button
+        v-for="tab in p.filterTabs"
+        :key="tab.value"
+        :label="tab.label"
+        :severity="
+          p.currentFilter.value === tab.value ? 'primary' : 'secondary'
+        "
+        :text="p.currentFilter.value !== tab.value"
+        size="small"
+        class="text-xs"
+        @click="p.setFilter(tab.value)"
+      />
+    </div>
+
     <!-- Main Content -->
     <div class="p-4">
       <!-- Loading State -->
@@ -64,11 +97,16 @@
         class="flex flex-col items-center justify-center py-20"
       >
         <i class="pi pi-refresh animate-spin text-5xl text-orange-500 mb-4" />
-        <p class="text-gray-600 dark:text-gray-400">Загрузка акций...</p>
+        <p class="text-gray-600 dark:text-gray-400">
+          Загрузка акций...
+        </p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="p.error.value" class="text-center py-16 px-4">
+      <div
+        v-else-if="p.error.value"
+        class="text-center py-16 px-4"
+      >
         <div
           class="p-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 max-w-md mx-auto"
         >
@@ -76,7 +114,11 @@
           <p class="text-red-600 dark:text-red-400">
             {{ p.error.value }}
           </p>
-          <Button class="mt-4" severity="primary" @click="p.refreshData">
+          <Button
+            class="mt-4"
+            severity="primary"
+            @click="p.refreshData"
+          >
             <i class="pi pi-refresh mr-2" />
             Повторить
           </Button>
@@ -84,7 +126,10 @@
       </div>
 
       <!-- Promotions Timeline -->
-      <div v-else class="promotions-timeline -mx-4">
+      <div
+        v-else
+        class="promotions-timeline -mx-4"
+      >
         <!-- Horizontal Scrollable Container -->
         <div class="overflow-x-auto pb-4">
           <div class="min-w-[1200px] px-4">
@@ -193,96 +238,27 @@
                 <div
                   v-for="(row, rowIndex) in promotionRows"
                   :key="`row-${rowIndex}`"
-                  class="relative h-[90px]"
+                  class="relative min-h-[70px]"
                 >
                   <!-- Promotion Cards in this row -->
-                  <div
+                  <PromotionTimelineCard
                     v-for="promotion in row"
                     :key="promotion.promoID"
-                    class="absolute h-[85px] promotion-card-wrapper"
+                    :promotion="promotion"
+                    :is-expanded="isExpanded(promotion.promoID)"
                     :style="timeline.getPromotionStyle(promotion)"
-                  >
-                    <div
-                      class="h-full mx-1 rounded-lg border border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50/90 to-white dark:from-orange-900/30 dark:to-gray-800/50 px-3 py-2 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 hover:z-10 relative overflow-hidden flex items-center gap-3"
-                      @click="p.handleShowDetails(promotion.promoID)"
-                    >
-                      <!-- Content Section -->
-                      <div class="flex-1 min-w-0">
-                        <!-- Title -->
-                        <div
-                          class="text-xs font-medium text-gray-900 dark:text-gray-100 truncate mb-1 pr-10"
-                        >
-                          <span class="text-orange-600 dark:text-orange-400">
-                            {{ getPromotionDisplay(promotion).typeLabel.value }}
-                          </span>
-                          {{ getPromotionDisplay(promotion).name.value }}
-                        </div>
-
-                        <!-- Status & Stats Row -->
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <Tag
-                            :value="
-                              getPromotionDisplay(promotion)
-                                .participationStatusLabel.value
-                            "
-                            :severity="
-                              getPromotionDisplay(promotion)
-                                .participationStatusSeverity.value
-                            "
-                            class="text-xs"
-                          />
-
-                          <span
-                            class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5"
-                          >
-                            <i class="pi pi-arrow-up-right text-[10px]" />
-                            {{
-                              getPromotionDisplay(promotion).participationText
-                                .value
-                            }}
-                          </span>
-
-                          <span
-                            v-if="getPromotionDisplay(promotion).hasBoost.value"
-                            class="text-xs text-orange-600 dark:text-orange-400 font-medium"
-                          >
-                            {{ getPromotionDisplay(promotion).boostText.value }}
-                          </span>
-                        </div>
-
-                        <!-- Date Range & Product Count -->
-                        <div
-                          class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2"
-                        >
-                          <span class="truncate">{{
-                            getShortDateRange(promotion)
-                          }}</span>
-                          <span class="truncate"
-                            >·
-                            {{
-                              getPromotionDisplay(promotion).productCountText
-                                .value
-                            }}</span
-                          >
-                        </div>
-                      </div>
-
-                      <!-- View Button (Right Side) -->
-                      <Button
-                        icon="pi pi-eye"
-                        size="small"
-                        severity="primary"
-                        class="flex-shrink-0 w-8 h-8"
-                        :loading="
-                          p.excelLoading.value &&
-                          p.selectedPromotionId.value === promotion.promoID
-                        "
-                        @click.stop="
-                          p.handleShowParticipants(promotion.promoID)
-                        "
-                      />
-                    </div>
-                  </div>
+                    :detail-loading="
+                      p.detailLoading.value &&
+                        p.selectedPromotionId.value === promotion.promoID
+                    "
+                    :excel-loading="
+                      p.excelLoading.value &&
+                        p.selectedPromotionId.value === promotion.promoID
+                    "
+                    @toggle-expand="toggleExpand(promotion.promoID)"
+                    @show-details="p.handleShowDetails(promotion.promoID)"
+                    @show-participants="handleShowParticipants(promotion.promoID)"
+                  />
                 </div>
 
                 <!-- Empty state for no promotions -->
@@ -294,7 +270,7 @@
                     <i
                       :class="
                         p.emptyState.value.icon +
-                        ' text-5xl text-gray-300 dark:text-gray-600 mb-3'
+                          ' text-5xl text-gray-300 dark:text-gray-600 mb-3'
                       "
                     />
                     <p class="text-gray-500 dark:text-gray-400">
@@ -326,34 +302,93 @@
       :excel-loading="p.excelLoading.value"
       :excel-error="p.excelError.value"
       :report-pending="p.reportPending.value"
+      :is-recovery="participantsIsRecovery"
+      :can-edit="canEditPromotion"
       @retry="p.handleParticipantsRetry"
+      @apply-recovery="handleApplyRecovery"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import Button from 'primevue/button';
-import Tag from 'primevue/tag';
 import {
   usePromotionsUnified,
   useViewReady,
-  usePromotionItem,
   usePromotionsTimeline,
 } from '../../composables';
 import PromotionDetailDialog from './PromotionDetailDialog.vue';
 import PromotionParticipantsDialog from './PromotionParticipantsDialog.vue';
+import PromotionTimelineCard from './PromotionTimelineCard.vue';
 import type { PromotionItem } from '../../types';
 
 const { viewReady } = useViewReady();
 
 const p = usePromotionsUnified({
-  initialFilter: 'PARTICIPATING',
+  initialFilter: 'AVAILABLE',
   immediate: false,
 });
 
 // Use the timeline composable
 const timeline = usePromotionsTimeline(p.currentDate);
+
+// Recovery mode for participants dialog
+const participantsIsRecovery = ref(true);
+
+// Check if promotion can be edited (hasn't started yet)
+const canEditPromotion = computed(() => {
+  const promotion = p.selectedPromotion.value;
+  if (!promotion) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const startDate = new Date(promotion.startDate);
+  startDate.setHours(0, 0, 0, 0);
+
+  // Can edit if start date is today or in the future
+  return startDate >= today;
+});
+
+// Track expanded promotion cards
+const expandedPromotions = ref<Set<number>>(new Set());
+
+function isExpanded(promoID: number): boolean {
+  return expandedPromotions.value.has(promoID);
+}
+
+function toggleExpand(promoID: number) {
+  if (expandedPromotions.value.has(promoID)) {
+    expandedPromotions.value.delete(promoID);
+  } else {
+    expandedPromotions.value.add(promoID);
+  }
+}
+
+// Handle show participants with isRecovery flag based on promotion data
+function handleShowParticipants(promoID: number) {
+  const promotion = p.promotions.value.find((p) => p.promoID === promoID);
+  if (promotion) {
+    // If available > 0, set isRecovery to false (exclude mode)
+    // Otherwise, set isRecovery to true (recover mode)
+    participantsIsRecovery.value = promotion.participation.counts.available > 0;
+  }
+  p.handleShowParticipants(promoID);
+}
+
+// Handle apply recovery from participants dialog
+async function handleApplyRecovery(
+  selectedItems: string[],
+  isRecovery: boolean,
+) {
+  const success = await p.applyRecovery(selectedItems, isRecovery);
+  if (success) {
+    // Refresh the data after successful recovery
+    p.showParticipantsDialog.value = false;
+    await p.refreshData();
+  }
+}
 
 // All promotions from API
 const allPromotions = computed(() => [...p.promotions.value]);
@@ -363,29 +398,7 @@ const promotionRows = computed(() =>
   timeline.groupPromotionsIntoRows(allPromotions.value),
 );
 
-// Get promotion display helpers
-function getPromotionDisplay(promotion: PromotionItem) {
-  return usePromotionItem(() => promotion);
-}
 
-// Get short date range
-function getShortDateRange(promotion: PromotionItem): string {
-  const display = getPromotionDisplay(promotion);
-  const start = display.startDate.value;
-  const end = display.endDate.value;
-  if (!start || !end) return '';
-
-  const formatShort = (date: Date) => {
-    return date
-      .toLocaleDateString('ru-RU', {
-        day: 'numeric',
-        month: 'short',
-      })
-      .replace('.', '');
-  };
-
-  return `${formatShort(start)} - ${formatShort(end)}`;
-}
 
 onMounted(async () => {
   await p.refreshData();
@@ -398,8 +411,8 @@ onMounted(async () => {
   transition: all 0.2s ease;
 }
 
-.promotion-card-wrapper:hover {
-  z-index: 20;
+.promotion-card-wrapper.expanded {
+  z-index: 100 !important;
 }
 
 /* Ensure text truncates properly */

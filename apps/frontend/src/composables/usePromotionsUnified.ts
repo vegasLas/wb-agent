@@ -147,6 +147,8 @@ export interface UsePromotionsUnifiedReturn {
   isToday: (monthDate: Date, day: number) => boolean;
   /** Format date range */
   formatDateRange: (startDate: string, endDate: string) => string;
+  /** Apply recovery/exclusion for selected items */
+  applyRecovery: (selectedItems: string[], isRecovery: boolean) => Promise<boolean>;
 }
 
 // Empty state messages
@@ -155,11 +157,11 @@ const EMPTY_STATE_MESSAGES: Record<PromotionFilter, EmptyStateConfig> = {
     message: 'У вас пока нет акций, в которых вы участвуете',
     icon: 'pi pi-calendar-times',
   },
-  SKIPPED: {
+  SKIPPING: {
     message: 'У вас нет пропущенных акций',
     icon: 'pi pi-calendar-minus',
   },
-  ALL: {
+  AVAILABLE: {
     message: 'Нет доступных акций',
     icon: 'pi pi-calendar',
   },
@@ -168,7 +170,7 @@ const EMPTY_STATE_MESSAGES: Record<PromotionFilter, EmptyStateConfig> = {
 export function usePromotionsUnified(
   options: UsePromotionsUnifiedOptions = {},
 ): UsePromotionsUnifiedReturn {
-  const { initialFilter = 'PARTICIPATING', immediate = false } = options;
+  const { initialFilter = 'AVAILABLE', immediate = false } = options;
 
   // Initialize sub-composables
   const promotions = usePromotions({ initialFilter, immediate: false });
@@ -306,5 +308,6 @@ export function usePromotionsUnified(
     clearErrors: promotions.clearErrors,
     isToday: calendar.isToday,
     formatDateRange: calendar.formatDateRange,
+    applyRecovery: promotions.applyRecovery,
   };
 }
