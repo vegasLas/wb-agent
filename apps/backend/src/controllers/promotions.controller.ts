@@ -8,6 +8,7 @@ import {
   getPromotionsTimeline,
   getPromotionDetail,
   getPromotionExcel,
+  applyPromotionRecovery,
 } from '../services/promotions.service';
 import { logger } from '../utils/logger';
 
@@ -128,7 +129,10 @@ export const fetchPromotionExcel = async (
       return;
     }
 
-    const { periodID } = req.body as { periodID?: number };
+    const { periodID, isRecovery } = req.body as {
+      periodID?: number;
+      isRecovery?: boolean;
+    };
 
     if (!periodID) {
       res.status(400).json({
@@ -138,13 +142,17 @@ export const fetchPromotionExcel = async (
       return;
     }
 
+    // Default to true if not provided
+    const recoveryFlag = isRecovery !== false;
+
     logger.info(
-      `Fetching promotion Excel for user ${userId}, periodID: ${periodID}`,
+      `Fetching promotion Excel for user ${userId}, periodID: ${periodID}, isRecovery: ${recoveryFlag}`,
     );
 
     const result = await getPromotionExcel({
       userId,
       periodID,
+      isRecovery: recoveryFlag,
     });
 
     if (result.error && !result.items) {
@@ -186,8 +194,90 @@ export const fetchPromotionExcel = async (
   }
 };
 
+/**
+ * POST /api/v1/promotions/recovery
+ * Apply promotion recovery with selected items
+ */
+export const promotionRecovery = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+      return;
+    }
+
+    const { periodID, selectedItems, isRecovery } = req.body as {
+      periodID?: number;
+      selectedItems?: string[];
+      isRecovery?: boolean;
+    };
+
+    if (!periodID) {
+      res.status(400).json({
+        success: false,
+        error: 'periodID is required',
+      });
+      return;
+    }
+
+    if (!selectedItems || !Array.isArray(selectedItems)) {
+      res.status(400).json({
+        success: false,
+        error: 'selectedItems is required and must be an array',
+      });
+      return;
+    }
+
+    if (typeof isRecovery !== 'boolean') {
+      res.status(400).json({
+        success: false,
+        error: 'isRecovery is required and must be a boolean',
+      });
+      return;
+    }
+
+    logger.info(
+      `Applying promotion recovery for user ${userId}, periodID: ${periodID}, items: ${selectedItems.length}, isRecovery: ${isRecovery}`,
+    );
+
+    const result = await applyPromotionRecovery({
+      userId,
+      periodID,
+      selectedItems,
+      isRecovery,
+    });
+
+    if (!result.success) {
+      res.status(400).json({
+        success: false,
+        error: result.error,
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {},
+    });
+  } catch (error) {
+    logger.error('Error in promotionRecovery controller:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message || 'Internal server error',
+    });
+  }
+};
+
 export default {
   fetchPromotionsTimeline,
   fetchPromotionDetail,
   fetchPromotionExcel,
+  promotionRecovery,
 };

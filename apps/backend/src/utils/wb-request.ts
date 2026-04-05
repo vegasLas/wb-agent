@@ -149,6 +149,11 @@ async function makeHttpRequest(
 ): Promise<unknown> {
   let response: Response;
 
+  // Log request body for debugging
+  logger.debug(`[WB API Request] ${method} ${url}`, {
+    body: body ? JSON.parse(body) : undefined,
+  });
+
   if (proxy) {
     const proxyUrl = formatProxyUrl(proxy);
     // Use dynamic import for node-fetch
@@ -171,8 +176,29 @@ async function makeHttpRequest(
   }
 
   if (!response.ok) {
+    // Try to get the error response body
+    let errorBody: unknown;
+    try {
+      const responseClone = response.clone();
+      errorBody = await responseClone.json();
+    } catch {
+      try {
+        const responseClone = response.clone();
+        errorBody = await responseClone.text();
+      } catch {
+        errorBody = 'Could not read error response body';
+      }
+    }
+
+    logger.error(`[WB API Error] ${method} ${url}`, {
+      status: response.status,
+      statusText: response.statusText,
+      requestBody: body ? JSON.parse(body) : undefined,
+      responseBody: errorBody,
+    });
+
     const error: WBError = {
-      message: `Request failed with status ${response.status}`,
+      message: `Request failed with status ${response.status}: ${JSON.stringify(errorBody)}`,
       status: response.status,
       method,
       url,

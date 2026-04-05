@@ -8,6 +8,7 @@ import {
   fetchPromotionsTimeline,
   fetchPromotionDetail,
   fetchPromotionExcel,
+  promotionRecovery,
 } from '../controllers/promotions.controller';
 
 const router = Router();
@@ -34,8 +35,19 @@ router.get('/detail', fetchPromotionDetail);
  * @route   POST /api/v1/promotions/excel
  * @desc    Create and fetch promotion Excel report
  * @body    periodID - Period ID
+ * @body    isRecovery - true = recovery mode, false = exclusion mode (default: true)
  * @access  Private
  */
 router.post('/excel', fetchPromotionExcel);
+
+/**
+ * @route   POST /api/v1/promotions/recovery
+ * @desc    Apply promotion recovery with selected items
+ * @body    periodID - Period ID
+ * @body    selectedItems - Array of supplier article IDs
+ * @body    isRecovery - true = recover selected items, false = exclude selected items
+ * @access  Private
+ */
+router.post('/recovery', promotionRecovery);
 
 export default router;
