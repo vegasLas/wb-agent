@@ -8,6 +8,7 @@
 
 import { startServer } from './app';
 import { setupTelegramPlugin } from './plugins/telegram.plugin';
+import { setupTriggerDateUpdatePlugin } from './plugins/trigger-date-update.plugin';
 import { logger } from './utils/logger';
 
 // Handle uncaught exceptions
@@ -24,6 +25,10 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Setup Telegram bot plugin
 setupTelegramPlugin();
+
+// Setup Trigger Date Update plugin (migrated from deprecated project)
+// Handles: dynamic interval monitoring, warehouse fetching, midnight trigger cleanup
+setupTriggerDateUpdatePlugin();
 
 // Start the server
 startServer();
