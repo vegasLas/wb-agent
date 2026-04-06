@@ -2,11 +2,13 @@
   <Dialog
     v-model:visible="visible"
     position="bottom"
-    :header="dialogHeader"
     :style="{ width: '95vw', maxWidth: '1400px' }"
     :modal="true"
     :maximizable="true"
   >
+    <template #header>
+      <span class="text-base md:text-lg font-semibold">{{ dialogHeader }}</span>
+    </template>
     <div class="max-h-[70vh] overflow-auto">
       <!-- Loading State -->
       <div
@@ -50,12 +52,15 @@
           v-if="!canEdit"
           class="mb-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
         >
-          <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+          <div
+            class="flex items-center gap-2 text-amber-700 dark:text-amber-400"
+          >
             <i class="pi pi-lock text-lg" />
             <span class="font-medium">Редактирование недоступно</span>
           </div>
           <p class="text-sm text-amber-600 dark:text-amber-300 mt-1">
-            Акция уже началась. Восстановление и исключение товаров доступно только до начала акции.
+            Акция уже началась. Восстановление и исключение товаров доступно
+            только до начала акции.
           </p>
         </div>
 
@@ -71,9 +76,9 @@
                 <span
                   :class="[
                     'ml-1 font-medium',
-                    isRecovery 
-                      ? 'text-green-600 dark:text-green-400' 
-                      : 'text-red-600 dark:text-red-400'
+                    isRecovery
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400',
                   ]"
                 >
                   {{ isRecovery ? 'Восстановление' : 'Исключение' }}
@@ -413,10 +418,10 @@
           </span>
         </div>
         <div class="flex items-center gap-2">
-          <Button 
-            label="Закрыть" 
-            severity="secondary" 
-            @click="visible = false" 
+          <Button
+            label="Закрыть"
+            severity="secondary"
+            @click="visible = false"
           />
           <Button
             v-if="canEdit && selectedItems.length > 0"
@@ -442,7 +447,10 @@ import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
 import Checkbox from 'primevue/checkbox';
 import { useLocalStorage } from '@vueuse/core';
+import { usePromotionsStore } from '../../stores/promotions';
 import type { PromotionExcelItem } from '../../types';
+
+const promotionsStore = usePromotionsStore();
 
 // Available columns configuration
 interface ColumnConfig {
@@ -561,7 +569,9 @@ const visible = computed({
 // Dialog header
 const dialogHeader = computed(() => {
   const modeLabel = props.canEdit
-    ? (props.isRecovery ? 'Восстановление' : 'Исключение')
+    ? props.isRecovery
+      ? 'Восстановление'
+      : 'Исключение'
     : 'Просмотр';
   return props.promotionName
     ? `${modeLabel}: ${props.promotionName}`
@@ -657,12 +667,12 @@ function retryFetch() {
 // Handle apply recovery/exclusion
 async function handleApply() {
   if (selectedItems.value.length === 0) return;
-  
+
   applying.value = true;
   try {
     // Extract supplier article IDs (Артикул поставщика)
     const articleIds = selectedItems.value.map(
-      (item) => item['Артикул поставщика']
+      (item) => item['Артикул поставщика'],
     );
     emit('apply-recovery', articleIds, props.isRecovery);
   } finally {
@@ -670,14 +680,17 @@ async function handleApply() {
   }
 }
 
-// Reset selected items when dialog opens/closes
+// Clean up data when dialog closes
 watch(
   () => props.show,
-  (newVal) => {
-    if (!newVal) {
+  (newVal, oldVal) => {
+    if (oldVal && !newVal) {
+      // Dialog was open and now closed - clean up
       selectedItems.value = [];
+      applying.value = false;
+      promotionsStore.clearExcelData();
     }
-  }
+  },
 );
 </script>
 

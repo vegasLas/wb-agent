@@ -31,19 +31,30 @@
           </div>
         </div>
 
-        <!-- Filter Buttons -->
-        <div class="flex items-center gap-2">
+        <!-- Filter Buttons (Desktop) -->
+        <div class="hidden sm:flex items-center gap-2">
           <Button
             v-for="tab in p.filterTabs"
             :key="tab.value"
-            :label="tab.label"
             :severity="
               p.currentFilter.value === tab.value ? 'primary' : 'secondary'
             "
             :text="p.currentFilter.value !== tab.value"
             size="small"
             @click="p.setFilter(tab.value)"
-          />
+          >
+            <span>{{ tab.label }}</span>
+            <span
+              class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full"
+              :class="
+                p.currentFilter.value === tab.value
+                  ? 'bg-white/20 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+              "
+            >
+              {{ p.participationCounts.value[tab.value] }}
+            </span>
+          </Button>
         </div>
       </div>
     </div>
@@ -71,14 +82,13 @@
       />
     </div>
 
-    <!-- Mobile Filter Buttons -->
+    <!-- Filter Buttons (Mobile) -->
     <div
       class="sm:hidden flex items-center justify-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
     >
       <Button
         v-for="tab in p.filterTabs"
         :key="tab.value"
-        :label="tab.label"
         :severity="
           p.currentFilter.value === tab.value ? 'primary' : 'secondary'
         "
@@ -86,7 +96,19 @@
         size="small"
         class="text-xs"
         @click="p.setFilter(tab.value)"
-      />
+      >
+        <span>{{ tab.label }}</span>
+        <span
+          class="ml-1 px-1 py-0 text-[10px] rounded-full"
+          :class="
+            p.currentFilter.value === tab.value
+              ? 'bg-white/20 text-white'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+          "
+        >
+          {{ p.participationCounts.value[tab.value] }}
+        </span>
+      </Button>
     </div>
 
     <!-- Main Content -->
