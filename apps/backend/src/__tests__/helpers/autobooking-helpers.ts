@@ -71,7 +71,7 @@ export interface MonitoringUser {
   autobookings: Autobooking[];
   supplyTriggers: unknown[];
   reschedules: unknown[];
-  accounts: Record<string, string[]>;
+  accounts: Record<string, { supplierIds: string[]; wbCookies?: string | null }>;
 }
 
 export const createMonitoringUser = (
@@ -95,7 +95,7 @@ export const createMonitoringUser = (
     supplyTriggers: [],
     reschedules: [],
     accounts: {
-      [accountId]: [supplierId],
+      [accountId]: { supplierIds: [supplierId], wbCookies: 'test-cookies' },
     },
     ...overrides,
   };
