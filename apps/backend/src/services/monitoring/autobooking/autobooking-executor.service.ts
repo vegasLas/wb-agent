@@ -12,7 +12,9 @@ import { bookingErrorService } from '../../booking-error.service';
 import { autobookingSupplyIdCacheService } from './autobooking-supply-id-cache.service';
 import { supplyService } from '../../supply.service';
 import { prisma } from '../../../config/database';
-import { logger } from '../../../utils/logger';
+import { createLogger } from '../../../utils/logger';
+
+const logger = createLogger('AutobookingExecutor');
 import type { Proxy } from '../../../utils/userEnvInfo';
 import {
   playwrightBrowserService,
@@ -38,7 +40,7 @@ const DEFAULT_BAN_DURATION_MS = 60 * 1000; // 60 seconds
 export class AutobookingExecutorService implements IAutobookingExecutorService {
   /**
    * Creates a booking task for the monitoring system
-   * Phase 5: Creates the supply/preorder (API flow)
+   * Phase 5: Creates the supply/pxreorder (API flow)
    * Phase 6: Adds browser automation for date selection when draftId exists
    */
   async createBookingTask(params: {
@@ -50,9 +52,8 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
   }): Promise<void> {
     const { booking, effectiveDate, account, user, latency } = params;
     const randomNumber = Math.floor(Math.random() * 100000);
-
-    logger.info(
-      `[AutobookingExecutor] Creating booking task for booking ${booking.id}, ` +
+    logger.debug(
+      `Creating booking task for ${booking.id}, ` +
         `warehouse ${booking.warehouseId}, date ${effectiveDate.toDateString()}`,
     );
 
@@ -69,17 +70,18 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
       });
 
     if (!preorderId) {
-      logger.error(
-        `[AutobookingExecutor] Failed to get preorder ID for booking ${booking.id}`,
-      );
+      logger.error(`Failed to get preorder ID for booking ${booking.id}`);
       throw new Error(`Failed to get preorder ID for booking ${booking.id}`);
     }
 
-    logger.info(
-      `[AutobookingExecutor] Successfully created preorder ${preorderId} for booking ${booking.id}`,
-    );
+    logger.debug(`Created preorder ${preorderId} for ${booking.id}`);
 
     // Step 2: Browser automation for date selection (Phase 6)
+    logger.debug(
+      `[BrowserAutomationCheck] Booking ${booking.id}: draftId=${booking.draftId ? 'present' : 'MISSING'}, ` +
+        `wbCookies=${account.wbCookies ? 'present' : 'MISSING'}`
+    );
+    
     if (booking.draftId && account.wbCookies) {
       await this.executeBrowserAutomation({
         booking,
@@ -104,14 +106,29 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
   }): Promise<void> {
     const { booking, effectiveDate, account, user, preorderId } = params;
 
-    logger.info(
-      `[AutobookingExecutor] Starting browser automation for booking ${booking.id}`,
+    logger.debug(
+      `[executeBrowserAutomation] Starting browser automation for booking ${booking.id}`,
+    );
+    logger.debug(
+      `[executeBrowserAutomation] Account: ${account.id}, Preorder: ${preorderId}`,
+    );
+    logger.debug(
+      `[executeBrowserAutomation] Effective date: ${effectiveDate.toISOString()}`,
+    );
+    logger.debug(
+      `[executeBrowserAutomation] Warehouse: ${booking.warehouseId}, Supply type: ${booking.supplyType}`,
     );
 
     try {
       // Generate fingerprint from user env info
+      logger.debug(
+        `[executeBrowserAutomation] Generating browser fingerprint for user ${user.userId}`,
+      );
       const fingerprint = browserFingerprintService.generateFromEnvInfo(
         user as unknown as import('../../../types/wb').UserEnvInfo,
+      );
+      logger.debug(
+        `[executeBrowserAutomation] Fingerprint generated successfully`,
       );
 
       // Get monopallet count if applicable
@@ -122,7 +139,13 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
         booking.supplyType === 'MONOPALLETE'
           ? (booking as unknown as BookingWithMonopallet).monopalletCount || 1
           : null;
+      logger.debug(
+        `[executeBrowserAutomation] Monopallet count: ${monopalletCount}`,
+      );
 
+      logger.debug(
+        `[executeBrowserAutomation] Calling selectDateAndNavigate for booking ${booking.id}`,
+      );
       await playwrightBrowserService.selectDateAndNavigate({
         warehouseId: booking.warehouseId.toString(),
         draftId: booking.draftId!,
@@ -139,15 +162,18 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
         monopalletCount,
       });
 
-      logger.info(
-        `[AutobookingExecutor] Browser automation completed successfully for booking ${booking.id}`,
+      logger.debug(
+        `[executeBrowserAutomation] Browser automation completed successfully for ${booking.id}`,
       );
     } catch (error) {
       const browserError = error as Error & { code?: BrowserErrorCode };
 
       logger.error(
-        `[AutobookingExecutor] Browser automation failed for booking ${booking.id}:`,
-        browserError.message,
+        `[executeBrowserAutomation] Browser automation failed for ${booking.id}:`,
+        browserError,
+      );
+      logger.debug(
+        `[executeBrowserAutomation] Error code: ${browserError.code || 'N/A'}`,
       );
 
       // Handle specific browser errors
@@ -197,7 +223,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     userId: number,
   ): void {
     logger.info(
-      `[AutobookingExecutor] ✅ Successfully booked: Autobooking ${booking.id}, ` +
+      `✅ Successfully booked: Autobooking ${booking.id}, ` +
         `Warehouse ${booking.warehouseId}, Date ${effectiveDate.toDateString()}, User ${userId}`,
     );
   }
@@ -221,10 +247,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     // Use shared error handling service to categorize
     const errorCategory = sharedErrorHandlingService.categorizeError(error);
 
-    logger.warn(
-      `[AutobookingExecutor] Handling error for booking ${booking.id}: ` +
-        `${errorCategory.type} - ${error.message}`,
-    );
+    logger.debug(`Handling error for ${booking.id}: ${errorCategory.type}`);
 
     // Handle specific error types
     switch (errorCategory.type) {
@@ -242,9 +265,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
         break;
 
       case 'order_not_exist':
-        logger.info(
-          `[AutobookingExecutor] Order doesn't exist, clearing cached supply ID for booking ${booking.id}`,
-        );
+        logger.debug(`Order doesn't exist, clearing cache for ${booking.id}`);
         await autobookingSupplyIdCacheService.clearSupplyIdFromCache(
           booking.id,
         );
@@ -290,10 +311,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     error: BookingError,
     coefficient: number,
   ): Promise<void> {
-    logger.info(
-      `[AutobookingExecutor] Date unavailable for booking ${booking.id}, ` +
-        `coefficient: ${booking.maxCoefficient}, availability coefficient: ${coefficient}`,
-    );
+    logger.debug(`Date unavailable for ${booking.id}`);
 
     sharedBanService.banSingleDate({
       warehouseId: booking.warehouseId,
@@ -311,7 +329,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
    */
   private async handleTooActiveError(userId: number): Promise<void> {
     logger.warn(
-      `[AutobookingExecutor] Too active error detected for user ${userId} - ` +
+      `Too active error detected for user ${userId} - ` +
         `blacklisting for ${TOO_ACTIVE_BLACKLIST_DURATION_MS / 60000} minutes`,
     );
 
@@ -340,7 +358,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
       }
     } catch (notifyError) {
       logger.error(
-        '[AutobookingExecutor] Failed to notify admin about too_active error:',
+        'Failed to notify admin about too_active error:',
         notifyError,
       );
     }
@@ -375,7 +393,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     preorderId: number,
   ): Promise<void> {
     try {
-      logger.info(`[AutobookingExecutor] Deleting preorder: ${preorderId}`);
+      logger.debug(`Deleting preorder: ${preorderId}`);
       await supplyService.deletePreorder({
         accountId: account.id,
         supplierId: booking.supplierId,
@@ -383,9 +401,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
         userAgent: user.userAgent,
         proxy: user.proxy,
       });
-      logger.info(
-        `[AutobookingExecutor] Successfully deleted preorder ${preorderId}`,
-      );
+      logger.debug(`Deleted preorder ${preorderId}`);
     } catch (deleteError) {
       await this.handlePreorderDeletionError(
         deleteError as BookingError,
@@ -404,15 +420,10 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     preorderId: number,
   ): Promise<void> {
     if (error.message?.includes('Предзаказ не существует')) {
-      logger.info(
-        `[AutobookingExecutor] Preorder ${preorderId} doesn't exist, clearing from cache`,
-      );
+      logger.debug(`Preorder ${preorderId} doesn't exist`);
       await autobookingSupplyIdCacheService.clearSupplyIdFromCache(booking.id);
     } else {
-      logger.warn(
-        `[AutobookingExecutor] Failed to delete preorder ${preorderId}:`,
-        error.message,
-      );
+      logger.warn(`Failed to delete preorder ${preorderId}:`, error.message);
     }
   }
 }
