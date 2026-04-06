@@ -318,13 +318,11 @@ router.get('/check', query('key').notEmpty(), async (req, res) => {
     const key = req.query?.key as string;
 
     if (!key) {
-      return res
-        .status(400)
-        .send(
-          getPaymentTemplate('error', {
-            errorMessage: 'Ключ платежа не найден',
-          }),
-        );
+      return res.status(400).send(
+        getPaymentTemplate('error', {
+          errorMessage: 'Ключ платежа не найден',
+        }),
+      );
     }
 
     // Find payment by idempotencyKey
@@ -334,13 +332,11 @@ router.get('/check', query('key').notEmpty(), async (req, res) => {
     });
 
     if (!dbPayment) {
-      return res
-        .status(404)
-        .send(
-          getPaymentTemplate('error', {
-            errorMessage: 'Платеж не найден в базе данных',
-          }),
-        );
+      return res.status(404).send(
+        getPaymentTemplate('error', {
+          errorMessage: 'Платеж не найден в базе данных',
+        }),
+      );
     }
 
     // Check if payment is already processed successfully
@@ -407,13 +403,11 @@ router.get('/check', query('key').notEmpty(), async (req, res) => {
     const err = error as { message?: string };
     logger.error('Payment creation failed:', err);
     logger.error('Payment verification failed:', err);
-    return res
-      .status((err as { statusCode?: number }).statusCode || 400)
-      .send(
-        getPaymentTemplate('error', {
-          errorMessage: err.message || '❌ Ошибка при проверке платежа',
-        }),
-      );
+    return res.status((err as { statusCode?: number }).statusCode || 400).send(
+      getPaymentTemplate('error', {
+        errorMessage: err.message || '❌ Ошибка при проверке платежа',
+      }),
+    );
   }
 });
 
