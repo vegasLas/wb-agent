@@ -6,8 +6,12 @@
 import { prisma } from '../config/database';
 import { wbAccountRequest } from '../utils/wb-request';
 import type { ProxyConfig } from '../utils/wb-request';
-import * as XLSX from 'xlsx';
 import { logger } from '../utils/logger';
+import {
+  parseExcelFromBase64,
+  filterExcelRows,
+  buildFilteredExcel,
+} from '../utils/excel';
 import type {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
@@ -32,11 +36,16 @@ const promotionExcelColumnMap: Record<string, string> = {
   'Target promo price': 'Плановая цена для акции',
   'Current retail price': 'Текущая розничная цена',
   Валюта: 'Валюта',
+  'Minimum price for Smart Promo discount':
+    'Минимальная цена для скидки Смарт-промо',
+  'Minimum price: Days remaining': 'Минимальная цена: Осталось дней',
+  'Smart Promos disabled (Yes / No)': 'Смарт-промо отключены',
+  'Days until Smart Promo discount can be changed':
+    'Дней до изменения скидки Смарт-промо',
   'Current discount (%)': 'Текущая скидка на сайте, %',
   'Recommended promo discount': 'Загружаемая скидка для участия в акции',
   Status: 'Статус',
 };
-
 interface RawExcelResult {
   data: any[][];
   totalRows: number;
@@ -105,6 +114,14 @@ function parsePromotionExcelData(
     }
 
     items.push(item);
+  }
+
+  // DEBUG: Log first item fields to see what columns are being returned
+  if (items.length > 0) {
+    logger.info('[parsePromotionExcelData] First item fields:', {
+      fieldCount: Object.keys(items[0]).length,
+      fields: Object.keys(items[0]),
+    });
   }
 
   return items;
@@ -279,7 +296,7 @@ export const getPromotionExcel = async ({
     // Wait a bit for the init to take effect
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Step 2: Fetch Excel report
+    // Step 2: Fetch Excel report (use /excel endpoint - 17 columns)
     const excelResult = await fetchPromotionExcelReport(
       periodID,
       accountId,
@@ -298,24 +315,17 @@ export const getPromotionExcel = async ({
     }
 
     // Step 3: Parse base64 Excel
-    const binaryString = atob(excelResult.data.data.file);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    const workbook = XLSX.read(bytes, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-      header: 1,
-      defval: '',
-    });
+    const {
+      data: jsonData,
+      sheetName,
+      allSheets,
+    } = parseExcelFromBase64(excelResult.data.data.file);
 
     const rawResult: RawExcelResult = {
-      data: jsonData as any[][],
+      data: jsonData,
       totalRows: jsonData.length,
       sheetName,
-      allSheets: workbook.SheetNames,
+      allSheets,
     };
 
     // Use dedicated promotion parser
@@ -360,7 +370,7 @@ async function callRecoveryInit(
 
 /**
  * Fetch Excel report from WB
- * Simple fetch without any retry/init logic
+ * Supports both /excel (17 cols) and /recovery (21 cols) endpoints
  */
 async function fetchPromotionExcelReport(
   periodID: number,
@@ -368,10 +378,16 @@ async function fetchPromotionExcelReport(
   supplierId: string,
   userAgent: string,
   proxy: ProxyConfig | undefined,
+  useRecoveryEndpoint = false,
+  isRecovery = true,
 ): Promise<{ data?: PromotionExcelGetResponse; error?: string }> {
-  const fetchUrl =
-    `https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/excel` +
-    `?periodID=${encodeURIComponent(periodID)}`;
+  // Use /recovery endpoint for full 21 columns (Smart Promo), /excel for 17 columns
+  const fetchUrl = useRecoveryEndpoint
+    ? `https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/recovery` +
+      `?isRecovery=${encodeURIComponent(isRecovery)}` +
+      `&periodID=${encodeURIComponent(periodID)}`
+    : `https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/excel` +
+      `?periodID=${encodeURIComponent(periodID)}`;
 
   try {
     const response = await wbAccountRequest<PromotionExcelGetResponse>({
@@ -395,12 +411,8 @@ async function fetchPromotionExcelReport(
 
 /**
  * Apply promotion recovery with selected items
- * Flow: Call init endpoint (inverted) -> Fetch Excel -> Filter -> Call apply
- *
- * The Excel always contains only the selected items
- * The isRecovery flag determines the action on those items:
- * - isRecovery: true = recover the selected items (add to promotion)
- * - isRecovery: false = exclude the selected items (remove from promotion)
+ * - isRecovery: true = recover (add to promotion)
+ * - isRecovery: false = exclude (remove from promotion)
  */
 export const applyPromotionRecovery = async ({
   userId,
@@ -414,33 +426,18 @@ export const applyPromotionRecovery = async ({
   isRecovery: boolean;
 }): Promise<{ success: boolean; error: string | null }> => {
   try {
-    const { accountId, supplierId, userAgent, proxy } =
-      await resolveAccountContext(userId);
+    const ctx = await resolveAccountContext(userId);
 
-    // Step 1: Call init endpoint with inverted isRecovery flag
-    try {
-      await callRecoveryInit(
-        periodID,
-        !isRecovery, // Inverted flag
-        accountId,
-        supplierId,
-        userAgent,
-        proxy,
-      );
-    } catch (initError) {
-      logger.warn('Init endpoint failed, continuing:', initError);
-    }
-
-    // Wait a bit for the init to take effect
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Step 2: Fetch Excel report
+    // Fetch Excel (use /recovery endpoint to get full 21 columns like browser)
+    await new Promise((r) => setTimeout(r, 1000));
     const excelResult = await fetchPromotionExcelReport(
       periodID,
-      accountId,
-      supplierId,
-      userAgent,
-      proxy,
+      ctx.accountId,
+      ctx.supplierId,
+      ctx.userAgent,
+      ctx.proxy,
+      true, // useRecoveryEndpoint=true for 21 columns
+      true, // isRecovery=true
     );
 
     if (excelResult.error || !excelResult.data?.data?.file) {
@@ -450,95 +447,39 @@ export const applyPromotionRecovery = async ({
       };
     }
 
-    // Step 2: Parse the Excel file
-    const binaryString = atob(excelResult.data.data.file);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    // Parse and filter Excel (column 4 = "Артикул поставщика")
+    const { workbook, data } = parseExcelFromBase64(excelResult.data.data.file);
+    if (!data.length) {
+      return { success: false, error: 'Excel файл пуст.' };
     }
 
-    const workbook = XLSX.read(bytes, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const { headerRow, filteredRows } = filterExcelRows(data, (row) =>
+      selectedItems.includes(String(row[4] || '')),
+    );
 
-    // Convert to array format (header: 1 means array of arrays)
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-      header: 1,
-      defval: '',
-    }) as any[][];
-
-    if (!jsonData.length || jsonData.length < 1) {
-      return {
-        success: false,
-        error: 'Excel файл пуст или имеет неверный формат.',
-      };
-    }
-
-    // Step 3: Filter data - always include only selected items
-    // Column index 4 is "Артикул поставщика"
-    const headerRow = jsonData[0];
-    const dataRows = jsonData.slice(1);
-
-    // In both cases (isRecovery: true or false), include only selected items
-    const filteredRows = dataRows.filter((row) => {
-      const supplierArticle = String(row[4] || '');
-      return selectedItems.includes(supplierArticle);
-    });
-
-    // WB API requires all rows to be filled in - no empty rows allowed
     if (filteredRows.length === 0) {
-      return {
-        success: false,
-        error: 'Выбранные товары не найдены в отчете. Пожалуйста, обновите список и попробуйте снова.',
-      };
+      return { success: false, error: 'Выбранные товары не найдены в отчете.' };
     }
 
-    // Only include header and rows with actual data
-    const finalData = [headerRow, ...filteredRows];
-
-    // Step 4: Create new Excel workbook
-    const newWorkbook = XLSX.utils.book_new();
-    const newWorksheet = XLSX.utils.aoa_to_sheet(finalData);
-
-    // Set column widths (optional, for better formatting)
-    const colWidths = headerRow.map(() => ({ wch: 20 }));
-    newWorksheet['!cols'] = colWidths;
-
-    XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, sheetName);
-
-    // Step 5: Convert to base64 (without data URI prefix)
-    const base64File = XLSX.write(newWorkbook, {
-      type: 'base64',
-      bookType: 'xlsx',
-    });
-
-    // Step 6: Call WB recovery apply API with user's isRecovery flag
-    const recoveryUrl =
-      'https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/recovery/apply';
-
+    // Build filtered Excel and send to WB
+    const base64File = buildFilteredExcel(
+      workbook,
+      filteredRows,
+      headerRow.length,
+    );
     await wbAccountRequest<PromotionRecoveryResponse>({
-      url: recoveryUrl,
-      accountId,
-      userAgent,
-      proxy,
-      supplierId,
+      url: 'https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/recovery/apply',
+      accountId: ctx.accountId,
+      userAgent: ctx.userAgent,
+      proxy: ctx.proxy,
+      supplierId: ctx.supplierId,
       method: 'POST',
-      body: {
-        periodID,
-        isRecovery, // Pass user's isRecovery flag (true = recover, false = exclude)
-        file: base64File,
-      },
+      body: { periodID, isRecovery, file: base64File },
     });
 
-    return {
-      success: true,
-      error: null,
-    };
+    return { success: true, error: null };
   } catch (error) {
-    logger.error('Error in applyPromotionRecovery:', error);
-    return {
-      success: false,
-      error: (error as Error).message || 'Failed to apply promotion recovery',
-    };
+    logger.error('applyPromotionRecovery error:', error);
+    return { success: false, error: (error as Error).message };
   }
 };
