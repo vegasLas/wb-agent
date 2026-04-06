@@ -242,6 +242,14 @@ export const usePromotionsStore = defineStore('promotions', () => {
     estimatedWaitTime.value = null;
   }
 
+  function clearExcelData() {
+    _excelItems.value = [];
+    excelError.value = null;
+    reportPending.value = false;
+    estimatedWaitTime.value = null;
+    excelLoading.value = false;
+  }
+
   return {
     // State
     promotions: readonly(promotions),
@@ -268,6 +276,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
     selectPromotionAndLoadExcel,
     selectPromotion,
     clearPromotions,
+    clearExcelData,
     applyRecovery,
   };
 });
