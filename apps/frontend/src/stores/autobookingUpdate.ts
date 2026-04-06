@@ -120,8 +120,20 @@ export const useAutobookingUpdateStore = defineStore(
       if (!form.value.supplyType) return false;
       if (!form.value.dateType) return false;
 
-      // Coefficient is required (must be > 0)
-      if (!form.value.maxCoefficient || form.value.maxCoefficient <= 0) {
+      // Coefficient is required (must be >= 0)
+      if (
+        form.value.maxCoefficient === null ||
+        form.value.maxCoefficient === undefined ||
+        form.value.maxCoefficient < 0
+      ) {
+        return false;
+      }
+
+      // Check monopallet count for MONOPALLETE
+      if (
+        form.value.supplyType === 'MONOPALLETE' &&
+        (!form.value.monopalletCount || form.value.monopalletCount <= 0)
+      ) {
         return false;
       }
 
@@ -135,14 +147,6 @@ export const useAutobookingUpdateStore = defineStore(
         form.value.dateType === 'CUSTOM_DATES_SINGLE'
       ) {
         return form.value.customDates && form.value.customDates.length > 0;
-      }
-
-      // Check monopallet count for MONOPALLETE
-      if (
-        form.value.supplyType === 'MONOPALLETE' &&
-        !form.value.monopalletCount
-      ) {
-        return false;
       }
 
       return true;

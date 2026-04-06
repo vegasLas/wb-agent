@@ -9,6 +9,7 @@
       option-label="label"
       option-value="value"
       placeholder="Выберите черновик"
+      :loading="loading"
       class="w-full"
       @update:model-value="(value) => $emit('update:modelValue', value)"
     />

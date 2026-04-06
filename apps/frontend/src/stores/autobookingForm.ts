@@ -86,8 +86,8 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
       return false;
     }
 
-    // Coefficient is required (must be > 0)
-    if (!maxCoefficient || maxCoefficient <= 0) {
+    // Coefficient is required (must be >= 0)
+    if (maxCoefficient === null || maxCoefficient === undefined || maxCoefficient < 0) {
       return false;
     }
 

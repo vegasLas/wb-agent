@@ -28,6 +28,7 @@
       :show-date-picker="triggerFormStore.showDatePicker"
       :show-range-picker="triggerFormStore.showRangePicker"
       :form-errors="formErrors"
+      :loading="triggerFormStore.loading"
       @search-mode-change="onSearchModeChange"
     />
   </div>
@@ -59,6 +60,8 @@ import type { SearchMode } from '../../types';
 
 const router = useRouter();
 const triggerFormStore = useTriggerFormStore();
+
+
 const { viewReady } = useViewReady();
 
 const showHintsModal = ref(false);
@@ -173,6 +176,7 @@ onMounted(async () => {
       handleTodayMode();
     }
   } finally {
+    // Dismiss skeleton immediately for form views
     viewReady();
   }
 });

@@ -113,7 +113,7 @@
         Максимальный коэффициент
         <span class="text-red-500 dark:text-red-400">*</span>
       </label>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-4 px-4 pb-2">
         <Slider
           :model-value="props.form.maxCoefficient"
           :min="0"

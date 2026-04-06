@@ -17,6 +17,7 @@
         class="w-full"
         :max-selected-labels="3"
         :selection-limit="3"
+        :loading="loading"
         @update:model-value="handleWarehouseIdsChange"
       />
       <p
@@ -136,7 +137,7 @@
       >
         Максимальный коэффициент выгрузки
       </label>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-4 px-2 pb-2">
         <Slider
           :model-value="maxCoefficient"
           :min="0"
@@ -188,6 +189,7 @@ interface Props {
   showDatePicker: boolean;
   showRangePicker: boolean;
   formErrors: Record<string, string>;
+  loading?: boolean;
 }
 
 const props = defineProps<Props>();

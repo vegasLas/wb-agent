@@ -105,7 +105,8 @@
         </div>
 
         <!-- Date Range & Product Count -->
-        <div class="text-xs space-y-1 mb-3"
+        <div
+          class="text-xs space-y-1 mb-3"
           :class="display.isExpired.value
             ? 'text-gray-400 dark:text-gray-500'
             : 'text-gray-500 dark:text-gray-400'"
