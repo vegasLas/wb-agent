@@ -11,7 +11,9 @@
 import { scheduleJob } from 'node-schedule';
 import { autobookingDateManagerService } from '../services/monitoring/autobooking-date-manager.service';
 import { triggerDateManagerService } from '../services/monitoring/trigger-date-manager.service';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('MonitoringCleanup');
 import { env } from '../config/env';
 
 // Flag to prevent concurrent executions
@@ -27,33 +29,33 @@ export function initializeMonitoringCleanupJobs(): void {
 
   if (!isCleanupEnabled) {
     logger.info(
-      '[MonitoringCleanup] RUN_MONITORING_CLEANUP is false, skipping cleanup jobs',
+      'RUN_MONITORING_CLEANUP is false, skipping cleanup jobs',
     );
     return;
   }
 
-  logger.info('[MonitoringCleanup] Initializing monitoring cleanup cron jobs');
+  logger.info('Initializing monitoring cleanup cron jobs');
 
   // Schedule job to run at midnight Moscow time (21:00 UTC)
   // This archives expired autobookings
   scheduleJob('00 21 * * *', async () => {
     if (isCleaning) {
       logger.warn(
-        '[MonitoringCleanup] Cleanup already in progress, skipping...',
+        'Cleanup already in progress, skipping...',
       );
       return;
     }
 
     isCleaning = true;
     logger.info(
-      '[MonitoringCleanup] Running midnight (Moscow time) autobooking cleanup...',
+      'Running midnight (Moscow time) autobooking cleanup...',
     );
 
     try {
       await autobookingDateManagerService.cleanAllAutobookings();
-      logger.info('[MonitoringCleanup] Autobooking cleanup completed');
+      logger.info('Autobooking cleanup completed');
     } catch (error) {
-      logger.error('[MonitoringCleanup] Error in autobooking cleanup:', error);
+      logger.error('Error in autobooking cleanup:', error);
     } finally {
       isCleaning = false;
     }
@@ -64,40 +66,40 @@ export function initializeMonitoringCleanupJobs(): void {
   scheduleJob('18 21 * * *', async () => {
     if (isCleaning) {
       logger.warn(
-        '[MonitoringCleanup] Cleanup already in progress, skipping...',
+        'Cleanup already in progress, skipping...',
       );
       return;
     }
 
     isCleaning = true;
     logger.info(
-      '[MonitoringCleanup] Running midnight (Moscow time) trigger cleanup...',
+      'Running midnight (Moscow time) trigger cleanup...',
     );
 
     try {
       await triggerDateManagerService.cleanAllTriggers();
-      logger.info('[MonitoringCleanup] Trigger cleanup completed');
+      logger.info('Trigger cleanup completed');
     } catch (error) {
-      logger.error('[MonitoringCleanup] Error in trigger cleanup:', error);
+      logger.error('Error in trigger cleanup:', error);
     } finally {
       isCleaning = false;
     }
   });
 
   logger.info(
-    '[MonitoringCleanup] Scheduled jobs: Autobooking cleanup at 00:00 MSK, Trigger cleanup at 00:18 MSK',
+    'Scheduled jobs: Autobooking cleanup at 00:00 MSK, Trigger cleanup at 00:18 MSK',
   );
 
   // Also run once at startup to clean any items that might have expired while the server was down
   // Use setTimeout to allow server to fully start before running cleanup
   setTimeout(async () => {
-    logger.info('[MonitoringCleanup] Running initial cleanup at startup...');
+    logger.info('Running initial cleanup at startup...');
     try {
       await autobookingDateManagerService.cleanAllAutobookings();
       await triggerDateManagerService.cleanAllTriggers();
-      logger.info('[MonitoringCleanup] Initial cleanup completed');
+      logger.info('Initial cleanup completed');
     } catch (error) {
-      logger.error('[MonitoringCleanup] Error during initial cleanup:', error);
+      logger.error('Error during initial cleanup:', error);
     }
   }, 5000); // Wait 5 seconds after startup
 }
@@ -109,16 +111,16 @@ export async function runManualCleanup(): Promise<{
   autobookings: number;
   triggers: number;
 }> {
-  logger.info('[MonitoringCleanup] Running manual cleanup...');
+  logger.info('Running manual cleanup...');
 
   try {
     await autobookingDateManagerService.cleanAllAutobookings();
     await triggerDateManagerService.cleanAllTriggers();
 
-    logger.info('[MonitoringCleanup] Manual cleanup completed');
+    logger.info('Manual cleanup completed');
     return { autobookings: 0, triggers: 0 };
   } catch (error) {
-    logger.error('[MonitoringCleanup] Error during manual cleanup:', error);
+    logger.error('Error during manual cleanup:', error);
     throw error;
   }
 }

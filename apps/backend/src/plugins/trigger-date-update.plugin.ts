@@ -13,7 +13,9 @@ import { triggerDateManagerService } from '../services/monitoring/trigger-date-m
 import { warehouseMonitoringV2Service } from '../services/monitoring/warehouse-monitoring-v2.service';
 import { freeWarehouseService } from '../services/free-warehouse.service';
 import { closeApiService } from '../services/close-api.service';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('TriggerDateUpdate');
 import { env } from '../config/env';
 
 // Processing state flags to prevent concurrent executions
@@ -34,13 +36,13 @@ function scheduleTriggerCleanupJob(): void {
 
   if (isDisabled) {
     logger.info(
-      '[TriggerDateUpdatePlugin] RUN_AUTOB_DATE_UPDATE is false, skipping trigger date update job',
+      'RUN_AUTOB_DATE_UPDATE is false, skipping trigger date update job',
     );
     return;
   }
 
-  logger.info(
-    '[TriggerDateUpdatePlugin] Scheduling trigger cleanup job at 00:18 Moscow time (21:18 UTC)',
+  logger.debug(
+    'Scheduling trigger cleanup job at 00:18 Moscow time (21:18 UTC)',
   );
 
   // Schedule job to run at 00:18 Moscow time (21:18 UTC)
@@ -48,24 +50,24 @@ function scheduleTriggerCleanupJob(): void {
   const job = scheduleJob('18 21 * * *', async () => {
     if (isCleaning) {
       logger.warn(
-        '[TriggerDateUpdatePlugin] Cleanup already in progress, skipping...',
+        'Cleanup already in progress, skipping...',
       );
       return;
     }
 
     isCleaning = true;
-    logger.info(
-      '[TriggerDateUpdatePlugin] Running midnight (Moscow time) trigger date update...',
+    logger.debug(
+      'Running midnight (Moscow time) trigger date update...',
     );
 
     try {
       await triggerDateManagerService.cleanAllTriggers();
-      logger.info(
-        '[TriggerDateUpdatePlugin] Trigger cleanup completed - processed all triggers',
+      logger.debug(
+        'Trigger cleanup completed - processed all triggers',
       );
     } catch (error) {
       logger.error(
-        '[TriggerDateUpdatePlugin] Error in midnight trigger update:',
+        'Error in midnight trigger update:',
         error,
       );
     } finally {
@@ -87,8 +89,8 @@ function scheduleTriggerCleanupJob(): void {
  * This is the core monitoring flow from the deprecated project
  */
 function scheduleDynamicMonitoring(): void {
-  logger.info(
-    '[TriggerDateUpdatePlugin] Starting dynamic interval monitoring...',
+  logger.debug(
+    'Starting dynamic interval monitoring...',
   );
 
   const scheduleNextMonitoring = () => {
@@ -118,12 +120,10 @@ function scheduleDynamicMonitoring(): void {
 
         // Calculate optimal interval for next request based on number of API keys
         currentIntervalMs = freeWarehouseService.getOptimalInterval();
-        logger.debug(
-          `[TriggerDateUpdatePlugin] Monitoring cycle completed. Next interval: ${currentIntervalMs}ms`,
-        );
+        // Routine monitoring cycle - debug only
       } catch (error) {
         logger.error(
-          '[TriggerDateUpdatePlugin] Error in warehouse monitoring:',
+          'Error in warehouse monitoring:',
           error,
         );
         // On error, use a longer interval to prevent hammering
@@ -138,13 +138,10 @@ function scheduleDynamicMonitoring(): void {
   // Start the monitoring loop
   scheduleNextMonitoring();
 
-  // Log initial status
+  // Log initial status (debug only)
   const cacheInfo = freeWarehouseService.getCacheInfo();
-  logger.info(
-    `[TriggerDateUpdatePlugin] Monitoring started with initial interval: ${currentIntervalMs}ms`,
-  );
-  logger.info(
-    `[TriggerDateUpdatePlugin] Free warehouse cache: ${cacheInfo.warehouseCount} warehouses, optimal interval: ${cacheInfo.optimalInterval}ms`,
+  logger.debug(
+    `Monitoring started with interval: ${currentIntervalMs}ms, warehouses: ${cacheInfo.warehouseCount}`,
   );
 }
 
@@ -153,8 +150,8 @@ function scheduleDynamicMonitoring(): void {
  * Called once during server startup from main.ts
  */
 export function setupTriggerDateUpdatePlugin(): void {
-  logger.info(
-    '[TriggerDateUpdatePlugin] Setting up trigger date update plugin...',
+  logger.debug(
+    'Setting up trigger date update plugin...',
   );
 
   // 1. Schedule the midnight cleanup job (from deprecated plugin)
@@ -166,7 +163,7 @@ export function setupTriggerDateUpdatePlugin(): void {
   // 3. Setup cleanup handlers for graceful shutdown
   setupCleanupHandlers();
 
-  logger.info('[TriggerDateUpdatePlugin] Setup complete');
+  logger.debug('Setup complete');
 }
 
 /**
@@ -174,7 +171,7 @@ export function setupTriggerDateUpdatePlugin(): void {
  */
 function setupCleanupHandlers(): void {
   const cleanup = () => {
-    logger.info('[TriggerDateUpdatePlugin] Cleaning up...');
+    logger.debug('Cleaning up...');
 
     if (currentInterval) {
       clearTimeout(currentInterval);
