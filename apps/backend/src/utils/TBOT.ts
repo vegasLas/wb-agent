@@ -1,6 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { env } from '../config/env';
-import { logger } from './logger';
+import { createLogger } from './logger';
+
+const logger = createLogger('TBOT');
 
 // Rate limiting configuration
 class RateLimiter {
