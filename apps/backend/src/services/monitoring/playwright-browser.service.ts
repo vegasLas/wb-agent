@@ -28,7 +28,9 @@ import {
   getLocalStorageFromAccount,
   mergeLocalStorageToAccount,
 } from '../../utils/localStorage';
-import { logger } from '../../utils/logger';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('PlaywrightBrowser');
 
 // Browser error codes
 export enum BrowserErrorCode {
@@ -317,7 +319,7 @@ export class PlaywrightBrowserService {
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
-        `[Navigator] Failed to set monopallet count: ${err.message}`,
+        `Failed to set monopallet count: ${err.message}`,
       );
       throw this.createError(
         BrowserErrorCode.DATE_SELECTION_FAILED,
@@ -415,7 +417,7 @@ export class PlaywrightBrowserService {
   async selectDateByDateString(dateString: string): Promise<void> {
     try {
       if (!this.page) {
-        logger.error(`[Navigator] Page not created`);
+        logger.error(`Page not created`);
         throw this.createError(
           BrowserErrorCode.PAGE_CREATION_FAILED,
           'Page not created.',
@@ -430,7 +432,7 @@ export class PlaywrightBrowserService {
 
         if (dateElements.length === 0) {
           logger.error(
-            `[Navigator] No date elements found for "${dateString}"`,
+            `No date elements found for "${dateString}"`,
           );
           throw this.createError(
             BrowserErrorCode.DATE_ELEMENT_NOT_FOUND,
@@ -491,7 +493,7 @@ export class PlaywrightBrowserService {
 
         if (!dateSelected) {
           logger.error(
-            `[Navigator] Could not select any date element for "${dateString}"`,
+            `Could not select any date element for "${dateString}"`,
           );
           throw this.createError(
             BrowserErrorCode.DATE_ELEMENT_NOT_FOUND,
@@ -506,7 +508,7 @@ export class PlaywrightBrowserService {
           throw error;
         }
         const err = error instanceof Error ? error : new Error(String(error));
-        logger.error(`[Navigator] Date selection failed: ${err.message}`);
+        logger.error(`Date selection failed: ${err.message}`);
         throw this.createError(
           BrowserErrorCode.DATE_SELECTION_FAILED,
           `Failed to select date: ${err.message}`,
@@ -546,7 +548,7 @@ export class PlaywrightBrowserService {
 
         if (!isEnabled) {
           logger.error(
-            `[Navigator] Button still disabled after 10s. Last error: ${lastError || 'none'}`,
+            `Button still disabled after 10s. Last error: ${lastError || 'none'}`,
           );
           throw new Error('Next button is still disabled after 10s');
         }
@@ -554,7 +556,7 @@ export class PlaywrightBrowserService {
         await nextButton.click();
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
-        logger.error(`[Navigator] Next button error: ${err.message}`);
+        logger.error(`Next button error: ${err.message}`);
         if (err.message.includes('not found')) {
           throw this.createError(
             BrowserErrorCode.NEXT_BUTTON_NOT_FOUND,
@@ -589,7 +591,7 @@ export class PlaywrightBrowserService {
                 )
                 .join('; ');
               logger.error(
-                `[Navigator] Error notification detected: ${summary}`,
+                `Error notification detected: ${summary}`,
               );
               throw this.createError(
                 BrowserErrorCode.PAGE_ERROR_NOTIFICATION,
@@ -605,7 +607,7 @@ export class PlaywrightBrowserService {
         )
           throw error;
         const err = error instanceof Error ? error : new Error(String(error));
-        logger.error(`[Navigator] Packaging view timeout: ${err.message}`);
+        logger.error(`Packaging view timeout: ${err.message}`);
         throw this.createError(
           BrowserErrorCode.PACKAGING_VIEW_TIMEOUT,
           `Timeout: ${err.message}`,
@@ -615,7 +617,7 @@ export class PlaywrightBrowserService {
     } catch (error) {
       if ((error as BrowserError).code) throw error;
       logger.error(
-        `[Navigator] Unknown error in selectDateByDateString: ${error instanceof Error ? error.message : String(error)}`,
+        `Unknown error in selectDateByDateString: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw this.createError(
         BrowserErrorCode.UNKNOWN_ERROR,
@@ -877,41 +879,62 @@ export class PlaywrightBrowserService {
    * This is the main entry point for date selection automation
    */
   async selectDateAndNavigate(options: SelectDateOptions): Promise<void> {
+    logger.debug(`[selectDateAndNavigate] Starting with accountId: ${options.accountId}, supplierId: ${options.supplierId}`);
+    logger.debug(`[selectDateAndNavigate] Warehouse: ${options.warehouseId}, draftId: ${options.draftId}`);
+    logger.debug(`[selectDateAndNavigate] PreorderId: ${options.preorderId}, effectiveDate: ${options.effectiveDate.toISOString()}`);
+    logger.debug(`[selectDateAndNavigate] Supply type: ${options.supplyType}, monopalletCount: ${options.monopalletCount || 'N/A'}`);
+    logger.debug(`[selectDateAndNavigate] Has proxy: ${!!options.proxy}, UserAgent: ${options.userAgent ? 'provided' : 'not provided'}`);
+
     try {
       this.accountId = options.accountId;
       this.transitWarehouseId = options.transitWarehouseId || null;
+      logger.debug(`[selectDateAndNavigate] Set accountId and transitWarehouseId: ${this.transitWarehouseId || 'null'}`);
 
+      logger.debug(`[selectDateAndNavigate] Decoding cookies for supplier ${options.supplierId}`);
       const cookiesFromString = await this.decodeCookiesFromString(
         options.cookiesString,
         options.supplierId,
       );
+      logger.debug(`[selectDateAndNavigate] Decoded ${cookiesFromString.length} cookies`);
+
       const russianDateString = this.formatDateToRussian(options.effectiveDate);
       const englishDateString = this.formatDateToEnglish(options.effectiveDate);
+      logger.debug(`[selectDateAndNavigate] Date strings - Russian: "${russianDateString}", English: "${englishDateString}"`);
 
+      logger.debug(`[selectDateAndNavigate] Initializing browser with fingerprint`);
       await this.initialize(
         options.proxy,
         options.userAgent,
         options.fingerprint,
       );
+      logger.debug(`[selectDateAndNavigate] Browser initialized, creating context`);
       await this.createContext(cookiesFromString);
+      logger.debug(`[selectDateAndNavigate] Context created, creating page`);
       await this.createPage();
+      logger.debug(`[selectDateAndNavigate] Page created: ${!!this.page}`);
 
       if (this.page) {
+        logger.debug(`[selectDateAndNavigate] Navigating to seller.wildberries.ru`);
         await this.page.goto('https://seller.wildberries.ru', {
           waitUntil: 'domcontentloaded',
           timeout: 30000,
         });
+        logger.debug(`[selectDateAndNavigate] Page loaded, starting periodic refresh`);
         this.startPeriodicRefresh();
 
         // Restore localStorage
+        logger.debug(`[selectDateAndNavigate] Restoring localStorage`);
         await this.restoreLocalStorage();
+        logger.debug(`[selectDateAndNavigate] localStorage restored`);
 
+        logger.debug(`[selectDateAndNavigate] Navigating to supply management`);
         await this.navigateToSupplyManagement({
           warehouseId: options.warehouseId,
           draftId: options.draftId,
           preorderId: options.preorderId,
           dateString: russianDateString,
         });
+        logger.debug(`[selectDateAndNavigate] Supply management navigation completed`);
 
         // Set monopallet count before navigating (if MONOPALLETE)
         if (
@@ -919,18 +942,28 @@ export class PlaywrightBrowserService {
           options.monopalletCount &&
           options.monopalletCount > 0
         ) {
+          logger.debug(`[selectDateAndNavigate] Setting monopallet count: ${options.monopalletCount}`);
           await this.setMonopalletCount(options.monopalletCount);
+          logger.debug(`[selectDateAndNavigate] Monopallet count set successfully`);
         }
 
+        logger.debug(`[selectDateAndNavigate] Selecting date with Russian format: "${russianDateString}"`);
         try {
           await this.selectDateByDateString(russianDateString);
+          logger.debug(`[selectDateAndNavigate] Date selected successfully with Russian format`);
         } catch (err) {
+          logger.debug(`[selectDateAndNavigate] Russian format failed, trying English format: "${englishDateString}"`);
           await this.selectDateByDateString(englishDateString);
+          logger.debug(`[selectDateAndNavigate] Date selected successfully with English format`);
         }
+      } else {
+        logger.debug(`[selectDateAndNavigate] Page creation failed, skipping navigation`);
       }
+      logger.debug(`[selectDateAndNavigate] Completed successfully`);
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error(`[Navigator] Error in selectDateAndNavigate: ${errMsg}`);
+      logger.error(`[selectDateAndNavigate] Error: ${errMsg}`);
+      logger.debug(`[selectDateAndNavigate] Full error:`, error);
 
       // Check if LoginFormView is present (indicating deprecated credentials)
       if (await this.isLoginFormDetected()) {
