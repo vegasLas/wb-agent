@@ -387,11 +387,11 @@ export class AutobookingRescheduleMonitoringService
   private findAccountForReschedule(
     user: MonitoringUser,
     reschedule: { supplierId: string },
-  ): { id: string } | null {
+  ): { id: string; wbCookies?: string | null } | null {
     // Find the account ID that contains the supplier ID for this reschedule
-    for (const [accountId, supplierIds] of Object.entries(user.accounts)) {
-      if (supplierIds.includes(reschedule.supplierId)) {
-        return { id: accountId };
+    for (const [accountId, accountData] of Object.entries(user.accounts)) {
+      if (accountData.supplierIds.includes(reschedule.supplierId)) {
+        return { id: accountId, wbCookies: accountData.wbCookies };
       }
     }
     return null;
