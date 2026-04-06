@@ -65,7 +65,7 @@ export interface MonitoringUser {
   autobookings: import('@prisma/client').Autobooking[];
   supplyTriggers: import('@prisma/client').SupplyTrigger[];
   reschedules: AutobookingReschedule[];
-  accounts: { [accountId: string]: string[] };
+  accounts: { [accountId: string]: { supplierIds: string[]; wbCookies?: string | null } };
 }
 
 /**

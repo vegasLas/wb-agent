@@ -299,7 +299,7 @@ export interface ISharedAvailabilityFilterService {
 export interface TaskOrganizerUser {
   userId: number;
   chatId?: string | null;
-  accounts: Record<string, string[]>;
+  accounts: Record<string, { supplierIds: string[]; wbCookies?: string | null }>;
   proxy?: {
     ip: string;
     port: string;
@@ -416,7 +416,7 @@ export interface MonitoringUser {
   autobookings: Autobooking[];
   supplyTriggers: SupplyTrigger[];
   reschedules: AutobookingReschedule[];
-  accounts: { [accountId: string]: string[] };
+  accounts: { [accountId: string]: { supplierIds: string[]; wbCookies?: string | null } };
 }
 
 export interface WarehouseMonitoring {
