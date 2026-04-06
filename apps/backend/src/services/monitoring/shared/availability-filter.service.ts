@@ -9,6 +9,8 @@
  */
 
 import { sharedBanService } from './ban.service';
+import { createLogger } from '../../../utils/logger';
+const logger = createLogger('AvailabilityFilter');
 import type {
   SchedulableItem,
   ISharedAvailabilityFilterService,
@@ -49,8 +51,34 @@ export class SharedAvailabilityFilterService
     const boxTypeId = this.getBoxTypeId(item.supplyType);
     const effectiveDates = this.getEffectiveDates(item);
 
+    logger.debug(
+      `[Filter] Processing item ${item.id}: warehouseId=${item.warehouseId}, ` +
+        `supplyType=${item.supplyType}, boxTypeId=${boxTypeId}, ` +
+        `maxCoefficient=${item.maxCoefficient}, dateType=${item.dateType}, ` +
+        `effectiveDates=[${effectiveDates.map((d) => d.toISOString()).join(', ')}]`,
+    );
+
+    // Log all available availabilities for this warehouse/boxType
+    const potentialMatches = availabilities.filter(
+      (a) => a.warehouseId === item.warehouseId && a.boxTypeID === boxTypeId,
+    );
+    logger.debug(
+      `[Filter] Found ${potentialMatches.length} potential warehouse matches for item ${item.id}`,
+    );
+    for (const pm of potentialMatches) {
+      logger.debug(
+        `[Filter]   Potential match: warehouseId=${pm.warehouseId}, boxTypeID=${pm.boxTypeID}, ` +
+          `dates=[${pm.availableDates.map((d) => `${d.date}(coef:${d.coefficient})`).join(', ')}]`,
+      );
+    }
+
     const matchingAvailabilities = availabilities.filter((availability) =>
       this.isAvailabilityMatching(availability, item, boxTypeId),
+    );
+
+    logger.debug(
+      `[Filter] Item ${item.id}: ${matchingAvailabilities.length} availabilities match warehouse/boxType ` +
+        `(out of ${availabilities.length} total)`,
     );
 
     const results = matchingAvailabilities
@@ -58,6 +86,16 @@ export class SharedAvailabilityFilterService
         this.processAvailabilityDates(availability, item, effectiveDates),
       )
       .filter((result): result is FilteredMatch => result !== null);
+
+    logger.debug(
+      `[Filter] Item ${item.id}: ${results.length} final matches after date/coefficient filtering`,
+    );
+    for (const result of results) {
+      logger.debug(
+        `[Filter]   Final match: warehouseId=${result.availability.warehouseId}, ` +
+          `dates=[${result.matchingDates.map((md) => `${md.effectiveDate.toISOString()}(coef:${md.availableDate.coefficient})`).join(', ')}]`,
+      );
+    }
 
     return results;
   }
@@ -101,6 +139,9 @@ export class SharedAvailabilityFilterService
   ): Date[] {
     // If effectiveDates is already provided (legacy AutobookingWithDates), use it
     if (item.effectiveDates && item.effectiveDates.length > 0) {
+      logger.debug(
+        `[EffectiveDates] Item ${item.id}: Using ${item.effectiveDates.length} pre-calculated effectiveDates`,
+      );
       return item.effectiveDates;
     }
 
@@ -113,6 +154,12 @@ export class SharedAvailabilityFilterService
       date.toDateString(),
     );
 
+    logger.debug(
+      `[EffectiveDates] Item ${item.id}: dateType=${item.dateType}, ` +
+        `customDates=[${item.customDates?.map((d) => new Date(d).toISOString()).join(', ')}], ` +
+        `completedDates=[${completedDateStrings.join(', ')}], today=${today.toISOString()}`,
+    );
+
     let effectiveDates: Date[] = [];
 
     switch (item.dateType as DateType) {
@@ -122,11 +169,25 @@ export class SharedAvailabilityFilterService
           .filter((date) => {
             const dateObj = new Date(date);
             dateObj.setHours(0, 0, 0, 0);
-            return dateObj >= today;
+            const isAfterToday = dateObj >= today;
+            if (!isAfterToday) {
+              logger.debug(
+                `[EffectiveDates] Item ${item.id}: Filtering out date ${dateObj.toISOString()} (before today ${today.toISOString()})`,
+              );
+            }
+            return isAfterToday;
           })
-          .filter(
-            (date) => !completedDateStrings.includes(date.toDateString()),
-          );
+          .filter((date) => {
+            const isCompleted = completedDateStrings.includes(
+              date.toDateString(),
+            );
+            if (isCompleted) {
+              logger.debug(
+                `[EffectiveDates] Item ${item.id}: Filtering out date ${date.toDateString()} (already completed)`,
+              );
+            }
+            return !isCompleted;
+          });
         break;
 
       case 'WEEK':
@@ -240,6 +301,7 @@ export class SharedAvailabilityFilterService
       item,
       availability,
     );
+
     return availableDate ? { effectiveDate, availableDate } : null;
   }
 
