@@ -6,7 +6,9 @@
 import { prisma } from '../config/database';
 import { wbAccountRequest } from '../utils/wb-request';
 import type { ProxyConfig } from '../utils/wb-request';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Promotions');
 import {
   parseExcelFromBase64,
   filterExcelRows,
@@ -118,7 +120,7 @@ function parsePromotionExcelData(
 
   // DEBUG: Log first item fields to see what columns are being returned
   if (items.length > 0) {
-    logger.info('[parsePromotionExcelData] First item fields:', {
+    logger.info('First item fields:', {
       fieldCount: Object.keys(items[0]).length,
       fields: Object.keys(items[0]),
     });

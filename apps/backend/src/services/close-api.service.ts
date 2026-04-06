@@ -8,7 +8,9 @@ import { prisma } from '../config/database';
 import { Supply } from '../types/wb';
 import { AcceptanceType } from '../types/wb';
 import { wbWarehouseService } from './wb-warehouse.service';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('CloseApi');
 import { ProxyConfig } from '../utils/wb-request';
 
 interface CloseApiWarehouse {
@@ -661,32 +663,22 @@ export class CloseApiService {
     const cacheInfo = this.getCacheInfo();
     const currentInterval = this.getCalculatedInterval();
 
-    logger.info('=== Close API Service Statistics (10min) ===');
-    logger.info(`📊 Requests sent: ${totalRequests}`);
-    logger.info(`🏢 Accounts available: ${this.availableAccounts.length}`);
-    logger.info(`🔄 Accounts used: ${accountsUsed}`);
-    logger.info(`⏱️ Current interval: ${currentInterval}ms`);
-    logger.info(
-      `💾 Cache: ${cacheInfo.count} warehouses (${cacheInfo.isFresh ? 'fresh' : 'stale'})`,
-    );
-    logger.info(
-      `⏰ Last API call: ${new Date(this.lastApiCall).toISOString()}`,
+    // Statistics summary (compact format)
+    const lastCallStr = this.lastApiCall
+      ? new Date(this.lastApiCall).toLocaleTimeString()
+      : 'never';
+    logger.debug(
+      `Stats: ${totalRequests} reqs, ${this.availableAccounts.length} accs, ${cacheInfo.count} whs, last: ${lastCallStr}`,
     );
 
-    // Log cached warehouses in format: [warehouseId-date-coefficient-boxType, ...]
-    if (this.cache.data.length > 0) {
-      const warehouseDetails = this.cache.data.map((warehouse) => {
-        const warehouseId = warehouse.warehouseID;
-        const date = warehouse.date.split('T')[0];
-        const coefficient = warehouse.coefficient;
-        const boxType = warehouse.boxTypeName || 'Unknown';
-        return `${warehouseId}-${date}-${coefficient}-${boxType}`;
-      });
-
-      logger.info('🏢 Cached warehouses:', `[${warehouseDetails.join(', ')}]`);
+    // Warehouse cache details (debug only)
+    if (this.cache.data.length > 0 && this.requestCount > 0) {
+      const warehouseDetails = this.cache.data
+        .slice(0, 5)
+        .map((w) => `${w.warehouseID}-${w.coefficient}`);
+      const more = this.cache.data.length > 5 ? ` +${this.cache.data.length - 5} more` : '';
+      logger.debug(`Warehouses: [${warehouseDetails.join(', ')}]${more}`);
     }
-
-    logger.info('============================================');
 
     // Reset counters for next 5-minute period
     this.accountUsageCount.clear();

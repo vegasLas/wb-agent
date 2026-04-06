@@ -11,7 +11,9 @@
 import { prisma } from '../../config/database';
 import type { SupplyTrigger } from '@prisma/client';
 import { TBOT } from '../../utils/TBOT';
-import { logger } from '../../utils/logger';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('TriggerDateManager');
 import { cacheService } from '../cache.service';
 import type { Warehouse } from '../../types/wb';
 
@@ -126,7 +128,7 @@ export class TriggerDateManagerService {
         await this.cleanTrigger(trigger);
       }
     } catch (error) {
-      logger.error('[TriggerDateManager] Error cleaning triggers:', error);
+      logger.error('Error cleaning triggers:', error);
     }
   }
 
@@ -144,7 +146,7 @@ export class TriggerDateManagerService {
       });
     } catch (error) {
       logger.error(
-        `[TriggerDateManager] Error updating trigger status for ${trigger.id}:`,
+        `Error updating trigger status for ${trigger.id}:`,
         error,
       );
     }
@@ -188,7 +190,7 @@ export class TriggerDateManagerService {
       });
     } catch (error) {
       logger.error(
-        '[TriggerDateManager] Error sending expired trigger notification:',
+        'Error sending expired trigger notification:',
         error,
       );
     }

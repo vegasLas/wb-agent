@@ -8,7 +8,9 @@
 
 import { prisma } from '../config/database';
 import { wbAccountRequest, ProxyConfig } from '../utils/wb-request';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('SupplyService');
 
 // ============== Types ==============
 
@@ -108,7 +110,7 @@ export class SupplyService {
     const { accountId, supplierId, params, userAgent, proxy } = options;
 
     logger.info(
-      `[SupplyService] Creating supply for account ${accountId}, warehouse ${params.warehouseId}`,
+      `Creating supply for account ${accountId}, warehouse ${params.warehouseId}`,
     );
 
     const response = await wbAccountRequest<CreateSupplyResponse>({
@@ -130,7 +132,7 @@ export class SupplyService {
     });
 
     logger.info(
-      `[SupplyService] Supply created successfully, preorder ID: ${response.result?.ids?.[0]?.Id}`,
+      `Supply created successfully, preorder ID: ${response.result?.ids?.[0]?.Id}`,
     );
 
     return response;
@@ -145,7 +147,7 @@ export class SupplyService {
     const { accountId, supplierId, preorderId, userAgent, proxy } = options;
 
     logger.info(
-      `[SupplyService] Deleting preorder ${preorderId} for account ${accountId}`,
+      `Deleting preorder ${preorderId} for account ${accountId}`,
     );
 
     const response = await wbAccountRequest<DeletePreorderResponse>({
@@ -162,11 +164,11 @@ export class SupplyService {
 
     if (response.error) {
       logger.warn(
-        `[SupplyService] Preorder deletion returned error: ${response.error.message}`,
+        `Preorder deletion returned error: ${response.error.message}`,
       );
     } else {
       logger.info(
-        `[SupplyService] Preorder ${preorderId} deleted successfully`,
+        `Preorder ${preorderId} deleted successfully`,
       );
     }
 
@@ -202,7 +204,7 @@ export class SupplyService {
     const { accountId, supplierId, params, userAgent, proxy } = options;
 
     logger.info(
-      `[SupplyService] Updating supply plan for supply ${params.supplyId}, date ${params.deliveryDate}`,
+      `Updating supply plan for supply ${params.supplyId}, date ${params.deliveryDate}`,
     );
 
     const response = await wbAccountRequest<UpdateSupplyPlanResponse>({
@@ -222,13 +224,13 @@ export class SupplyService {
 
     if (response.error) {
       logger.warn(
-        `[SupplyService] Supply plan update returned error: ${response.error.message}`,
+        `Supply plan update returned error: ${response.error.message}`,
       );
       throw new Error(response.error.message);
     }
 
     logger.info(
-      `[SupplyService] Supply plan updated successfully for supply ${params.supplyId}`,
+      `Supply plan updated successfully for supply ${params.supplyId}`,
     );
     return response;
   }

@@ -9,7 +9,9 @@
  */
 
 import { prisma } from '../../config/database';
-import { logger } from '../../utils/logger';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('WarehouseMonitoring');
 import { freeWarehouseService } from '../free-warehouse.service';
 import { closeApiService } from '../close-api.service';
 import { fakeDataDetectionService } from './fake-data-detection.service';
@@ -126,34 +128,25 @@ export class WarehouseMonitoringV2Service {
    */
   async monitorWarehouses(): Promise<void> {
     try {
-      logger.info('[WarehouseMonitoringV2] Starting monitoring cycle');
+      logger.debug('Starting monitoring cycle');
 
       // 1. Collect active monitoring users
       const monitoringUsers = await this.collectMonitoringUsers();
-      if (monitoringUsers.length === 0) {
-        logger.info('[WarehouseMonitoringV2] No monitoring users found');
-        return;
-      }
-      logger.info(
-        `[WarehouseMonitoringV2] Found ${monitoringUsers.length} monitoring users`,
-      );
+      logger.debug(`Found ${monitoringUsers.length} monitoring users`);
 
       // 2. Collect required warehouse data
       const warehouses = this.collectWarehouseData(monitoringUsers);
       if (warehouses.length === 0) {
-        logger.info('[WarehouseMonitoringV2] No warehouses to monitor');
         return;
       }
-      logger.info(
-        `[WarehouseMonitoringV2] Monitoring ${warehouses.length} warehouse-boxtype combinations`,
+      logger.debug(
+        `Monitoring ${warehouses.length} warehouse-boxtype combinations`,
       );
 
       // 3. Fetch availability from APIs
       const validatedWarehouses = this.fetchAllWarehouses(warehouses);
       if (validatedWarehouses.length === 0) {
-        logger.info(
-          '[WarehouseMonitoringV2] No validated warehouses available',
-        );
+        logger.info('No validated warehouses available');
         return;
       }
 
@@ -162,19 +155,16 @@ export class WarehouseMonitoringV2Service {
 
       // 5. Process into availability format
       const availabilities = this.processWarehouseData(validatedWarehouses);
-      logger.info(
-        `[WarehouseMonitoringV2] Processed ${availabilities.length} warehouse availabilities`,
+      logger.debug(
+        `Processed ${availabilities.length} warehouse availabilities`,
       );
 
       // 6. Delegate to processing services
       await this.processMonitoringServices(monitoringUsers, availabilities);
 
-      logger.info('[WarehouseMonitoringV2] Monitoring cycle completed');
+      logger.debug('Monitoring cycle completed');
     } catch (error) {
-      logger.error(
-        '[WarehouseMonitoringV2] Error in warehouse monitoring:',
-        error,
-      );
+      logger.error('Error in warehouse monitoring:', error);
     }
   }
 
@@ -199,9 +189,7 @@ export class WarehouseMonitoringV2Service {
         const userId = parseInt(technicalModeUserId);
         if (!isNaN(userId)) {
           activeUserCondition = { id: userId };
-          logger.info(
-            `[WarehouseMonitoringV2] Technical mode: processing only user ${userId}`,
-          );
+          logger.info(`Technical mode: processing only user ${userId}`);
         }
       }
 
@@ -239,8 +227,8 @@ export class WarehouseMonitoringV2Service {
         }),
       ]);
 
-      logger.info(
-        `[WarehouseMonitoringV2] Raw counts - Autobookings: ${autobookings.length}, Triggers: ${supplyTriggers.length}, Reschedules: ${reschedules.length}`,
+      logger.debug(
+        `Raw counts - Autobookings: ${autobookings.length}, Triggers: ${supplyTriggers.length}, Reschedules: ${reschedules.length}`,
       );
 
       return this.groupUserBookingsAndTriggers({
@@ -249,10 +237,7 @@ export class WarehouseMonitoringV2Service {
         reschedules,
       });
     } catch (error) {
-      logger.error(
-        '[WarehouseMonitoringV2] Error collecting monitoring users:',
-        error,
-      );
+      logger.error('Error collecting monitoring users:', error);
       return [];
     }
   }
@@ -436,13 +421,18 @@ export class WarehouseMonitoringV2Service {
       proxy: Proxy;
     };
 
-    // Transform accounts to {accountId: supplierId[]} format
-    const accounts: { [accountId: string]: string[] } = {};
+    // Transform accounts to {accountId: {supplierIds: string[], wbCookies: string|null}} format
+    const accounts: {
+      [accountId: string]: { supplierIds: string[]; wbCookies?: string | null };
+    } = {};
     if (user.accounts && user.accounts.length > 0) {
       user.accounts.forEach((account: AccountData) => {
-        accounts[account.id] = account.suppliers.map(
-          (supplier: SupplierData) => supplier.supplierId,
-        );
+        accounts[account.id] = {
+          supplierIds: account.suppliers.map(
+            (supplier: SupplierData) => supplier.supplierId,
+          ),
+          wbCookies: account.wbCookies,
+        };
       });
     }
 
@@ -564,7 +554,7 @@ export class WarehouseMonitoringV2Service {
 
       if (problematicCheck.shouldSkip) {
         logger.warn(
-          '[WarehouseMonitoringV2] Skipping due to problematic warehouse pattern:',
+          'Skipping due to problematic warehouse pattern:',
           problematicCheck.reason,
         );
         return [];
@@ -672,10 +662,7 @@ export class WarehouseMonitoringV2Service {
     );
 
     if (!isKnownError) {
-      logger.error(
-        '[WarehouseMonitoringV2] Error fetching warehouse data:',
-        error,
-      );
+      logger.error('Error fetching warehouse data:', error);
     }
   }
 

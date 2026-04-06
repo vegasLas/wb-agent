@@ -7,7 +7,9 @@
 
 import { sharedTelegramNotificationService } from '../shared/telegram-notification.service';
 import { sharedStatusUpdateService } from '../shared/status-update.service';
-import { logger } from '../../../utils/logger';
+import { createLogger } from '../../../utils/logger';
+
+const logger = createLogger('AutobookingNotification');
 import type { IAutobookingNotificationService } from './autobooking.interfaces';
 import type { SchedulableItem } from '../shared/interfaces/sharedInterfaces';
 
@@ -34,7 +36,7 @@ export class AutobookingNotificationService
       );
 
     logger.info(
-      `[AutobookingNotification] Sending success notification to chat ${chatId} for ${warehouseName}`,
+      `Sending success notification to chat ${chatId} for ${warehouseName}`,
     );
 
     await sharedTelegramNotificationService.sendSuccessNotification(
@@ -51,7 +53,7 @@ export class AutobookingNotificationService
     bookedDate: Date,
   ): Promise<void> {
     logger.info(
-      `[AutobookingNotification] Updating status for booking ${booking.id}, date: ${bookedDate.toDateString()}`,
+      `Updating status for booking ${booking.id}, date: ${bookedDate.toDateString()}`,
     );
 
     await sharedStatusUpdateService.updateAutobookingStatus(

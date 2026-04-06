@@ -1,6 +1,8 @@
 import { Cookie } from 'playwright';
 import { prisma } from '../config/database';
-import { logger } from './logger';
+import { createLogger } from './logger';
+
+const logger = createLogger('WBRequest');
 import { getCookiesFromAccount } from './cookies';
 import * as pkg from 'https-proxy-agent';
 const { HttpsProxyAgent } = pkg;
@@ -150,7 +152,7 @@ async function makeHttpRequest(
   let response: Response;
 
   // Log request body for debugging
-  logger.debug(`[WB API Request] ${method} ${url}`, {
+  logger.debug(`${method} ${url}`, {
     body: body ? JSON.parse(body) : undefined,
   });
 
@@ -190,7 +192,7 @@ async function makeHttpRequest(
       }
     }
 
-    logger.error(`[WB API Error] ${method} ${url}`, {
+    logger.error(`${method} ${url}`, {
       status: response.status,
       statusText: response.statusText,
       requestBody: body ? JSON.parse(body) : undefined,

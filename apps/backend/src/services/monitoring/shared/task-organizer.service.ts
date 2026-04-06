@@ -13,6 +13,8 @@ import type {
   SchedulableItem,
 } from './interfaces/sharedInterfaces';
 import { sharedAvailabilityFilterService } from './availability-filter.service';
+import { createLogger } from '../../../utils/logger';
+const logger = createLogger('TaskOrganizer');
 
 // Re-export types for convenience
 export type GenericUser = TaskOrganizerUser;
@@ -48,10 +50,24 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
     >();
     const processedItemDates = new Set<string>();
 
+    logger.debug(
+      `[Organize] Starting with ${monitoringUsers.length} users, ${availabilities.length} availabilities`
+    );
+
+    let skippedUsers = 0;
+    let processedUsers = 0;
+
     for (const user of monitoringUsers) {
       if (!this.isValidUserForProcessing(user)) {
+        logger.debug(
+          `[Organize] Skipping user ${user.userId}: invalid for processing ` +
+            `(chatId=${(user as GenericUser & { chatId?: string }).chatId}, ` +
+            `autobookings=${user.autobookings?.length}, accounts=${Object.keys(user.accounts).length})`
+        );
+        skippedUsers++;
         continue;
       }
+      processedUsers++;
 
       this.processUserBookings(
         user,
@@ -61,9 +77,23 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
       );
     }
 
+    logger.debug(
+      `[Organize] User processing complete: ${processedUsers} processed, ${skippedUsers} skipped`
+    );
+
     this.optimizeAllTaskOrders(warehouseDateTasksMap);
 
-    return this.groupTasksByProxy(warehouseDateTasksMap);
+    const result = this.groupTasksByProxy(warehouseDateTasksMap);
+    logger.debug(
+      `[Organize] Final result: ${result.size} warehouse-date combinations`
+    );
+    for (const [key, groups] of result.entries()) {
+      logger.debug(
+        `[Organize]   ${key}: ${groups.length} proxy groups, ${groups.flat().length} total tasks`
+      );
+    }
+
+    return result;
   }
 
   /**
@@ -117,16 +147,32 @@ export class SharedTaskOrganizerService implements ISharedTaskOrganizerService {
     warehouseDateTasksMap: Map<string, Array<GenericTask<TBooking, TUser>>>,
     processedItemDates: Set<string>,
   ): void {
+    logger.debug(
+      `[ProcessUser] User ${user.userId}: Processing ${user.autobookings.length} bookings`
+    );
+
     for (const booking of user.autobookings) {
       const genericBooking =
         sharedAvailabilityFilterService.convertToSchedulableItem(
           booking as unknown as SchedulableItem & Record<string, unknown>,
         );
+      
+      logger.debug(
+        `[ProcessUser] User ${user.userId}: Processing booking ${(booking as GenericSchedulableItem).id}, ` +
+          `warehouseId=${(booking as GenericSchedulableItem).warehouseId}, ` +
+          `supplyType=${(booking as GenericSchedulableItem).supplyType}`
+      );
+      
       const matchingResults =
         sharedAvailabilityFilterService.filterMatchingAvailabilities(
           genericBooking,
           availabilities,
         );
+
+      logger.debug(
+        `[ProcessUser] User ${user.userId}, booking ${(booking as GenericSchedulableItem).id}: ` +
+          `${matchingResults.length} matching availabilities`
+      );
 
       for (const { availability, matchingDates } of matchingResults) {
         this.processTaskDates(
