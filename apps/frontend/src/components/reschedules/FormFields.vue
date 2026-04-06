@@ -76,7 +76,7 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Максимальный коэффициент
       </label>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-4 px-2 pb-2">
         <Slider
           :model-value="maxCoefficientInput"
           :min="0"

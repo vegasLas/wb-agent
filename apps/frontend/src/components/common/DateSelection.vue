@@ -31,7 +31,7 @@
           Дата начала <span class="text-red-500 dark:text-red-400">*</span>
         </label>
         <DatePicker
-          :model-value="startDateValue"
+          v-model="localStartDate"
           selection-mode="single"
           :min-date="new Date()"
           :disabled-dates="
@@ -59,7 +59,7 @@
           Выберите период <span class="text-red-500 dark:text-red-400">*</span>
         </label>
         <DatePicker
-          :model-value="dateRangeValue"
+          v-model="localDateRange"
           selection-mode="range"
           :min-date="new Date()"
           :disabled-dates="
@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import MultiSelect from 'primevue/multiselect';
@@ -154,7 +154,43 @@ const availableDateTypeOptions = computed(() => {
 const dateType = computed(() => props.dateType);
 const customDates = computed(() => props.customDates);
 
-// Convert string date to Date object for DatePicker
+// Local refs for DatePicker v-model (ensures proper two-way binding)
+const localStartDate = ref<Date | null>(null);
+const localDateRange = ref<Date[] | null>(null);
+
+// Sync localStartDate with prop
+watch(
+  () => props.startDate,
+  (newVal) => {
+    if (!newVal) {
+      localStartDate.value = null;
+    } else if (typeof newVal === 'string') {
+      const [year, month, day] = newVal.split('-').map(Number);
+      localStartDate.value = new Date(year, month - 1, day);
+    } else {
+      localStartDate.value = newVal;
+    }
+  },
+  { immediate: true },
+);
+
+// Sync localDateRange with props
+watch(
+  () => [props.startDate, props.endDate],
+  ([start, end]) => {
+    if (!start || !end) {
+      localDateRange.value = null;
+    } else {
+      const startDate =
+        typeof start === 'string' ? parseDateString(start) : start;
+      const endDate = typeof end === 'string' ? parseDateString(end) : end;
+      localDateRange.value = [startDate, endDate];
+    }
+  },
+  { immediate: true },
+);
+
+// Convert string date to Date object for DatePicker (fallback)
 const startDateValue = computed(() => {
   if (!props.startDate) return null;
   if (typeof props.startDate === 'string') {
@@ -164,7 +200,7 @@ const startDateValue = computed(() => {
   return props.startDate;
 });
 
-// Convert date range to array format for PrimeVue DatePicker
+// Convert date range to array format for PrimeVue DatePicker (fallback)
 const dateRangeValue = computed(() => {
   if (!props.startDate || !props.endDate) return null;
   const start =
@@ -193,14 +229,22 @@ function formatDateToYYYYMMDD(date: Date): string {
 function onPrimeDateRangeChange(
   dates: Date | Date[] | (Date | null)[] | null | undefined,
 ) {
-  if (!Array.isArray(dates) || dates.length !== 2 || !dates[0] || !dates[1]) {
-    emit('update:startDate', '');
-    emit('update:endDate', '');
+  // Handle range selection - PrimeVue DatePicker in range mode emits an array of dates
+  // The user selects two dates to form a range
+  if (Array.isArray(dates) && dates.length === 2 && dates[0] && dates[1]) {
+    const [start, end] = dates;
+    emit('update:startDate', formatDateToYYYYMMDD(start));
+    emit('update:endDate', formatDateToYYYYMMDD(end));
     return;
   }
-  const [start, end] = dates;
-  emit('update:startDate', formatDateToYYYYMMDD(start));
-  emit('update:endDate', formatDateToYYYYMMDD(end));
+
+  // If incomplete selection (user hasn't finished selecting both dates), don't clear existing values
+  // This prevents the form from being invalidated during the selection process
+  if (!dates || (Array.isArray(dates) && !dates[0] && !dates[1])) {
+    emit('update:startDate', '');
+    emit('update:endDate', '');
+  }
+  // Otherwise, keep existing values (user is in the middle of selection)
 }
 
 function onSingleDateChange(

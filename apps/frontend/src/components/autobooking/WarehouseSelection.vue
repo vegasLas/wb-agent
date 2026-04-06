@@ -11,6 +11,7 @@
       option-value="value"
       editable
       placeholder="Выберите склад"
+      :loading="loading"
       class="w-full"
       @update:model-value="onWarehouseChange"
     />
