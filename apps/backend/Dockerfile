@@ -1,33 +1,29 @@
 # ==========================================
 # WB Backend - Production Dockerfile
+# Using Microsoft Playwright base image
 # ==========================================
-# Standalone build using backend's package.json + shared libs
 
 # ------------------------------------------
 # Stage 1: Builder
+# Uses Playwright image with browsers pre-installed
 # ------------------------------------------
-FROM --platform=linux/amd64 node:20-bookworm-slim AS builder
+FROM --platform=linux/amd64 mcr.microsoft.com/playwright:v1.59.1-noble AS builder
 
 WORKDIR /app
 
-# Install build essentials
+# Install build essentials (Python, make, g++, openssl)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend package.json
+# Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install dependencies
+# Install npm dependencies
 RUN npm install
 
 # Copy source code (backend + libs)
 COPY . .
-
-# Install Playwright browser
-RUN npx playwright install chromium
-RUN npx playwright install-deps
-
 
 # Generate Prisma client
 RUN npx prisma generate --schema=prisma/schema.prisma
@@ -37,31 +33,11 @@ RUN npx tsc -p tsconfig.docker.json
 
 # ------------------------------------------
 # Stage 2: Production
+# Also uses Playwright image with browsers pre-installed
 # ------------------------------------------
-FROM --platform=linux/amd64 node:20-bookworm-slim
+FROM --platform=linux/amd64 mcr.microsoft.com/playwright:v1.59.1-noble
 
 WORKDIR /app
-
-# Install Playwright system dependencies
- RUN apt-get update && apt-get install -y --no-install-recommends \
-     openssl \
-     libnss3 \
-     libnspr4 \
-     libatk1.0-0 \
-     libatk-bridge2.0-0 \
-     libcups2 \
-     libdrm2 \
-     libxkbcommon0 \
-     libxcomposite1 \
-     libxdamage1 \
-     libxfixes3 \
-     libxrandr2 \
-     libgbm1 \
-     libpango-1.0-0 \
-     libcairo2 \
-     libasound2 \
-     libatspi2.0-0 \
-     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
@@ -69,9 +45,6 @@ COPY package*.json ./
 # Copy node_modules from builder, then prune dev dependencies
 COPY --from=builder /app/node_modules ./node_modules
 RUN npm prune --omit=dev
-
-# Copy Playwright browsers from builder
-COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
