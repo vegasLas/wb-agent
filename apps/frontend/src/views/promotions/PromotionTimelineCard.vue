@@ -6,15 +6,18 @@
       'h-[58px]': !isExpanded,
       expanded: isExpanded,
     }"
-    :style="style"
+    :style="cardStyle"
   >
     <div
-      class="mx-1 rounded-lg border border-orange-200 dark:border-orange-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-orange-400 dark:hover:border-orange-600 hover:z-20 relative overflow-hidden"
-      :class="
+      class="mx-1 rounded-lg border shadow-sm hover:shadow-md transition-all cursor-pointer hover:z-20 relative overflow-hidden"
+      :class="[
+        display.isExpired.value
+          ? 'border-gray-300 dark:border-gray-600 bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900'
+          : 'border-orange-200 dark:border-orange-800 hover:border-orange-400 dark:hover:border-orange-600 bg-gradient-to-r from-orange-50 to-white dark:from-orange-900/20 dark:to-gray-800/50',
         isExpanded
           ? 'p-3 bg-white dark:bg-gray-800'
-          : 'p-2 bg-gradient-to-r from-orange-50 to-white dark:from-orange-900/20 dark:to-gray-800/50'
-      "
+          : 'p-2',
+      ]"
     >
       <!-- Main Row (Always Visible) -->
       <div class="flex items-center gap-2">
@@ -33,14 +36,20 @@
           <div class="flex items-center gap-2 min-w-0">
             <!-- Type Badge -->
             <span
-              class="text-xs font-medium text-orange-600 dark:text-orange-400 flex-shrink-0"
+              class="text-xs font-medium flex-shrink-0"
+              :class="display.isExpired.value
+                ? 'text-gray-500 dark:text-gray-400'
+                : 'text-orange-600 dark:text-orange-400'"
             >
               {{ display.typeLabel.value }}
             </span>
 
             <!-- Title -->
             <span
-              class="text-xs font-medium text-gray-900 dark:text-gray-100 truncate"
+              class="text-xs font-medium truncate"
+              :class="display.isExpired.value
+                ? 'text-gray-600 dark:text-gray-400'
+                : 'text-gray-900 dark:text-gray-100'"
             >
               {{ display.name.value }}
             </span>
@@ -74,7 +83,7 @@
         <div class="mb-2">
           <Tag
             :value="display.participationStatusLabel.value"
-            :severity="display.participationStatusSeverity.value"
+            :severity="display.isExpired.value ? 'secondary' : display.participationStatusSeverity.value"
             class="text-xs"
           />
         </div>
@@ -96,16 +105,30 @@
         </div>
 
         <!-- Date Range & Product Count -->
-        <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-3">
-          <div>{{ dateRangeText }}</div>
+        <div class="text-xs space-y-1 mb-3"
+          :class="display.isExpired.value
+            ? 'text-gray-400 dark:text-gray-500'
+            : 'text-gray-500 dark:text-gray-400'"
+        >
+          <div>
+            {{ dateRangeText }}
+            <span
+              v-if="display.isExpired.value"
+              class="ml-1 text-gray-500 dark:text-gray-400 font-medium"
+            >(завершена)</span>
+          </div>
           <div>{{ display.productCountText.value }}</div>
         </div>
 
         <!-- Action Buttons (Moved to expanded section) -->
         <div
-          class="flex items-center justify-start gap-2 pt-2 border-t border-orange-100 dark:border-orange-900/30"
+          class="flex items-center justify-start gap-2 pt-2 border-t"
+          :class="display.isExpired.value
+            ? 'border-gray-200 dark:border-gray-700'
+            : 'border-orange-100 dark:border-orange-900/30'"
         >
           <Button
+            v-if="!display.isExpired.value"
             size="small"
             severity="primary"
             :loading="excelLoading"
@@ -152,6 +175,16 @@ const emit = defineEmits<{
   'show-details': [];
   'show-participants': [];
 }>();
+
+// Compute card style - remove width constraint when expanded to allow content to show fully
+const cardStyle = computed(() => {
+  if (props.isExpanded) {
+    // When expanded, only keep the left position, let width expand naturally
+    const { width, ...rest } = props.style;
+    return rest;
+  }
+  return props.style;
+});
 
 // Use the composable for all display logic
 const display = usePromotionItem(() => props.promotion);
