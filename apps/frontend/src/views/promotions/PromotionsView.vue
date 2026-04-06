@@ -157,14 +157,24 @@
           <div class="min-w-[1200px] px-4">
             <!-- Two Month Headers -->
             <div class="flex mb-2">
-              <div class="flex-1 text-center">
+              <div
+                class="text-center flex-shrink-0"
+                :style="{
+                  width: timeline.currentMonthDaysList.value.length * 40 + 'px',
+                }"
+              >
                 <h2
                   class="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize"
                 >
                   {{ timeline.visibleMonthsInfo.value[0]?.label }}
                 </h2>
               </div>
-              <div class="flex-1 text-center">
+              <div
+                class="text-center flex-shrink-0"
+                :style="{
+                  width: timeline.nextMonthDaysList.value.length * 40 + 'px',
+                }"
+              >
                 <h2
                   class="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize"
                 >
@@ -279,7 +289,9 @@
                     "
                     @toggle-expand="toggleExpand(promotion.promoID)"
                     @show-details="p.handleShowDetails(promotion.promoID)"
-                    @show-participants="handleShowParticipants(promotion.promoID)"
+                    @show-participants="
+                      handleShowParticipants(promotion.promoID)
+                    "
                   />
                 </div>
 
@@ -419,8 +431,6 @@ const allPromotions = computed(() => [...p.promotions.value]);
 const promotionRows = computed(() =>
   timeline.groupPromotionsIntoRows(allPromotions.value),
 );
-
-
 
 onMounted(async () => {
   await p.refreshData();

@@ -50,7 +50,9 @@
           <div class="flex items-center gap-3 mt-0.5">
             <span class="text-[10px] text-green-600 dark:text-green-400">
               Участвуют:
-              <strong>{{ promotion.participation.counts.participating }}</strong>
+              <strong>{{
+                promotion.participation.counts.participating
+              }}</strong>
             </span>
             <span class="text-[10px] text-gray-500 dark:text-gray-400">
               Не участвуют:
@@ -105,22 +107,22 @@
         >
           <Button
             size="small"
+            severity="primary"
+            :loading="excelLoading"
+            @click.stop="emit('show-participants')"
+          >
+            <i class="pi pi-box mr-1" />
+            товары
+          </Button>
+          <Button
+            size="small"
             severity="secondary"
             variant="outlined"
             :loading="detailLoading"
             @click.stop="emit('show-details')"
           >
             <i class="pi pi-info-circle mr-1" />
-            Детали
-          </Button>
-          <Button
-            size="small"
-            severity="primary"
-            :loading="excelLoading"
-            @click.stop="emit('show-participants')"
-          >
-            <i class="pi pi-users mr-1" />
-            Участники
+            детали
           </Button>
         </div>
       </div>
