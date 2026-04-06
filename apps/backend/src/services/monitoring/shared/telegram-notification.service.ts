@@ -273,7 +273,7 @@ export class SharedTelegramNotificationService
     const message = this.buildBanMessage(params);
 
     // Log the ban
-    logger.info(`[BanNotification] ${message}`);
+    logger.info(`${message}`);
 
     // Send the notification via TBOT (for testing purposes)
     if (TBOT) {

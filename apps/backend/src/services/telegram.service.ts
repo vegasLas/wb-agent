@@ -100,7 +100,18 @@ export class TelegramService {
       await channelSubscriptionService.checkUserSubscription(userId);
 
     if (isSubscribed && callbackQuery.message) {
-      await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
+      try {
+        await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
+      } catch (deleteError) {
+        // Silently ignore delete errors (message may already be deleted)
+        const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
+        if (
+          !errorMsg.includes("message can't be deleted for everyone") &&
+          !errorMsg.includes('message to delete not found')
+        ) {
+          logger.warn('Error deleting message in subscription check:', deleteError);
+        }
+      }
       await this.sendMainMenu({
         chatId,
         firstName:
@@ -112,10 +123,22 @@ export class TelegramService {
         sendGreeting: true,
       });
     } else {
-      await TBOT.answerCallbackQuery(callbackQuery.id, {
-        text: '❌ Вы еще не подписались на канал!',
-        show_alert: true,
-      });
+      try {
+        await TBOT.answerCallbackQuery(callbackQuery.id, {
+          text: '❌ Вы еще не подписались на канал!',
+          show_alert: true,
+        });
+      } catch (answerError) {
+        // Silently ignore errors for old/invalid queries
+        const errorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+        if (
+          !errorMsg.includes('query is too old') &&
+          !errorMsg.includes('response timeout expired') &&
+          !errorMsg.includes('query ID is invalid')
+        ) {
+          logger.warn('Error answering callback query in subscription check:', answerError);
+        }
+      }
     }
   }
 
@@ -149,7 +172,18 @@ export class TelegramService {
 
         case 'main_menu':
           if (callbackQuery.message?.message_id) {
-            await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
+            try {
+              await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
+            } catch (deleteError) {
+              // Silently ignore delete errors (message may already be deleted)
+              const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
+              if (
+                !errorMsg.includes("Bad Request: message can't be deleted for everyone") &&
+                !errorMsg.includes('message to delete not found')
+              ) {
+                logger.warn('Error deleting message in main_menu:', deleteError);
+              }
+            }
           }
           await this.sendMainMenu({
             chatId,
@@ -166,15 +200,38 @@ export class TelegramService {
             const MAX_DELETE_AGE = 48 * 60 * 60; // 48 hours in seconds
 
             if (messageAge > MAX_DELETE_AGE) {
-              await TBOT.answerCallbackQuery(callbackQuery.id, {
-                text: 'К сожалению сообщение может быть удалено кнопкой только в течение 48 часов после его отправки.',
-                show_alert: true,
-              });
+              try {
+                await TBOT.answerCallbackQuery(callbackQuery.id, {
+                  text: 'К сожалению сообщение может быть удалено кнопкой только в течение 48 часов после его отправки.',
+                  show_alert: true,
+                });
+              } catch (answerError) {
+                // Silently ignore if answering fails (query too old)
+                const errorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+                if (
+                  !errorMsg.includes('query is too old') &&
+                  !errorMsg.includes('response timeout expired') &&
+                  !errorMsg.includes('query ID is invalid')
+                ) {
+                  logger.warn('Error answering callback query for old message:', answerError);
+                }
+              }
             } else {
-              await TBOT.deleteMessage(
-                chatId,
-                callbackQuery.message.message_id,
-              );
+              try {
+                await TBOT.deleteMessage(
+                  chatId,
+                  callbackQuery.message.message_id,
+                );
+              } catch (deleteError) {
+                // Silently ignore delete errors (message may already be deleted)
+                const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
+                if (
+                  !errorMsg.includes("Bad Request: message can't be deleted for everyone") &&
+                  !errorMsg.includes('message to delete not found')
+                ) {
+                  logger.warn('Error deleting message in close_menu:', deleteError);
+                }
+              }
             }
           }
           break;
@@ -207,20 +264,43 @@ export class TelegramService {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       if (
-        errorMessage.includes(
-          "Bad Request: message can't be deleted for everyone",
-        )
+        errorMessage.includes("Bad Request: message can't be deleted for everyone") ||
+        errorMessage.includes('message to delete not found')
       ) {
-        await TBOT.answerCallbackQuery(callbackQuery.id, {
-          text: 'К сожалению сообщение может быть удалено кнопкой только в течение 48 часов после его отправки.',
-          show_alert: true,
-        });
+        try {
+          await TBOT.answerCallbackQuery(callbackQuery.id, {
+            text: 'К сожалению сообщение может быть удалено кнопкой только в течение 48 часов после его отправки.',
+            show_alert: true,
+          });
+        } catch (answerError) {
+          // Silently ignore if answering fails (query too old)
+          const answerErrorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+          if (
+            !answerErrorMsg.includes('query is too old') &&
+            !answerErrorMsg.includes('response timeout expired') &&
+            !answerErrorMsg.includes('query ID is invalid')
+          ) {
+            logger.warn('Error answering callback query for delete error:', answerError);
+          }
+        }
       } else {
         logger.error('Error in callback query:', error);
-        await TBOT.answerCallbackQuery(callbackQuery.id, {
-          text: 'Произошла ошибка. Пожалуйста, попробуйте позже.',
-          show_alert: true,
-        });
+        try {
+          await TBOT.answerCallbackQuery(callbackQuery.id, {
+            text: 'Произошла ошибка. Пожалуйста, попробуйте позже.',
+            show_alert: true,
+          });
+        } catch (answerError) {
+          // Silently ignore if answering fails (query too old)
+          const answerErrorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+          if (
+            !answerErrorMsg.includes('query is too old') &&
+            !answerErrorMsg.includes('response timeout expired') &&
+            !answerErrorMsg.includes('query ID is invalid')
+          ) {
+            logger.warn('Error answering callback query for generic error:', answerError);
+          }
+        }
       }
     }
   }

@@ -13,7 +13,9 @@ import {
   isAutobookingProcessingActive,
 } from '../services/autobooking-control.service';
 import { env } from '../config/env';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('TelegramPlugin');
 
 // Admin ID from environment variable (first ID in the list)
 const ADMIN_ID = env.TECHNICAL_MODE_USER_IDS
@@ -40,7 +42,7 @@ export function setupTelegramPlugin(): void {
     return;
   }
 
-  logger.info('Setting up Telegram bot plugin...');
+  logger.debug('Setting up Telegram bot plugin...');
 
   // Handle /start command
   TBOT.onText(/^\/start$/, async (msg) => {
@@ -222,12 +224,28 @@ export function setupTelegramPlugin(): void {
       await TBOT?.answerCallbackQuery(callbackQuery.id);
     } catch (error) {
       logger.error('Error handling callback query:', error);
-      await TBOT?.answerCallbackQuery(callbackQuery.id, {
-        text: 'Произошла ошибка. Пожалуйста, попробуйте позже.',
-        show_alert: true,
-      });
+      try {
+        await TBOT?.answerCallbackQuery(callbackQuery.id, {
+          text: 'Произошла ошибка. Пожалуйста, попробуйте позже.',
+          show_alert: true,
+        });
+      } catch (answerError) {
+        // Silently ignore errors when answering callback query fails
+        // (e.g., query is too old, response timeout expired, or query ID is invalid)
+        const answerErrorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+        if (
+          answerErrorMsg.includes('query is too old') ||
+          answerErrorMsg.includes('response timeout expired') ||
+          answerErrorMsg.includes('query ID is invalid') ||
+          answerErrorMsg.includes('message to delete not found')
+        ) {
+          // These are expected errors, ignore them
+          return;
+        }
+        logger.error('Error answering callback query:', answerError);
+      }
     }
   });
 
-  logger.info('Telegram bot plugin setup complete');
+  logger.debug('Telegram bot plugin setup complete');
 }
