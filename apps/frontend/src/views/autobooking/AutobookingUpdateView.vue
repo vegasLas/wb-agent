@@ -147,7 +147,7 @@ onMounted(async () => {
 
     await updateStore.validateWarehouse();
   } finally {
-    // Signal view is ready
+    // Dismiss skeleton immediately for form views
     viewReady();
   }
 });

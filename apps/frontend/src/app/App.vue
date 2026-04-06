@@ -106,9 +106,21 @@ const currentRouteSkeleton = computed(() => {
 // Provide the skeleton component so MainLayout can render it in the content area
 provide('currentRouteSkeleton', currentRouteSkeleton);
 
+// Form routes that should not show skeleton during navigation
+const formRouteNames = [
+  'AutobookingCreate',
+  'AutobookingUpdate',
+  'ReschedulesCreate',
+  'ReschedulesUpdate',
+  'TriggerCreate',
+];
+
 // Setup router hooks to handle navigation loading state
-router.beforeEach(() => {
-  onNavigationStart();
+router.beforeEach((to) => {
+  // Skip skeleton for form views - they handle loading themselves
+  if (!formRouteNames.includes(to.name as string)) {
+    onNavigationStart();
+  }
 });
 
 router.afterEach(() => {

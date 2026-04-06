@@ -147,7 +147,7 @@ onMounted(async () => {
     // Fetch drafts using the composable's unified method
     await draftsFetcher.fetchIfEmpty();
   } finally {
-    // Signal view is ready
+    // Dismiss skeleton immediately for form views
     viewReady();
   }
 });

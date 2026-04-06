@@ -198,6 +198,7 @@ onMounted(async () => {
   try {
     await updateFormStore.initialize();
   } finally {
+    // Dismiss skeleton immediately for form views
     viewReady();
   }
 });
