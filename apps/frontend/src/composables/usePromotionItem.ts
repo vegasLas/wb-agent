@@ -91,6 +91,9 @@ export interface UsePromotionItemReturn {
   boostValue: ComputedRef<number | null>;
   boostText: ComputedRef<string>;
 
+  // Expiration
+  isExpired: ComputedRef<boolean>;
+
   // Raw access
   raw: ComputedRef<PromotionItem>;
 }
@@ -296,6 +299,16 @@ export function usePromotionItem(
     boostValue.value ? `+${boostValue.value}` : '',
   );
 
+  // Expiration check - promotion is expired if end date is in the past
+  const isExpired = computed(() => {
+    if (!endDate.value) return false;
+    const now = new Date();
+    // Set time to end of day for accurate date comparison
+    const end = new Date(endDate.value);
+    end.setHours(23, 59, 59, 999);
+    return now > end;
+  });
+
   return {
     // Basic
     id,
@@ -330,6 +343,9 @@ export function usePromotionItem(
     hasBoost,
     boostValue,
     boostText,
+
+    // Expiration
+    isExpired,
 
     // Raw
     raw: computed(() => item()),

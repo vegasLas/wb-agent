@@ -13,7 +13,6 @@
  */
 
 import { computed, type ComputedRef, type Ref } from 'vue';
-import { usePromotionItem } from './usePromotionItem';
 import type { PromotionItem } from '../types';
 
 export interface MonthInfo {
@@ -25,7 +24,7 @@ export interface MonthInfo {
 
 export interface PromotionPosition {
   left: string;
-  width: string;
+  width?: string;
 }
 
 export interface UsePromotionsTimelineReturn {
@@ -130,11 +129,21 @@ export function usePromotionsTimeline(
     );
   }
 
+  /**
+   * Parse and normalize a promotion date string to midnight local time
+   */
+  function parsePromotionDate(dateStr: string | undefined): Date | null {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return null;
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
   // Calculate promotion position style using pixel-based positioning
   function getPromotionStyle(promotion: PromotionItem): PromotionPosition {
-    const display = usePromotionItem(() => promotion);
-    const startDate = display.startDate.value;
-    const endDate = display.endDate.value;
+    const startDate = parsePromotionDate(promotion.startDate);
+    const endDate = parsePromotionDate(promotion.endDate);
 
     if (!startDate || !endDate) {
       return { display: 'none' } as unknown as PromotionPosition;
@@ -143,26 +152,21 @@ export function usePromotionsTimeline(
     const timelineStart = new Date(timelineStartDate.value);
     timelineStart.setHours(0, 0, 0, 0);
 
-    const promoStart = new Date(startDate);
-    promoStart.setHours(0, 0, 0, 0);
-
-    const promoEnd = new Date(endDate);
-    promoEnd.setHours(0, 0, 0, 0);
-
     // Calculate days from timeline start
     const msPerDay = 1000 * 60 * 60 * 24;
     const startOffsetDays = Math.floor(
-      (promoStart.getTime() - timelineStart.getTime()) / msPerDay,
+      (startDate.getTime() - timelineStart.getTime()) / msPerDay,
     );
     const durationDays =
-      Math.floor((promoEnd.getTime() - promoStart.getTime()) / msPerDay) + 1;
+      Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
 
     // Calculate pixel positions
     let leftPx = startOffsetDays * COLUMN_WIDTH;
     let widthPx = durationDays * COLUMN_WIDTH;
 
-    // Ensure minimum visibility (at least 200px width so content is readable)
-    widthPx = Math.max(widthPx, 200);
+    // Ensure minimum visibility (at least 1 day = 40px, max 3 days = 120px)
+    // to prevent excessive overlap while keeping content readable
+    widthPx = Math.max(widthPx, COLUMN_WIDTH);
 
     // Clamp to visible area
     if (leftPx < 0) {
@@ -176,7 +180,7 @@ export function usePromotionsTimeline(
 
     return {
       left: `${leftPx}px`,
-      width: `${Math.max(widthPx, 180)}px`,
+      width: `${Math.max(widthPx, COLUMN_WIDTH)}px`,
     };
   }
 
@@ -184,26 +188,48 @@ export function usePromotionsTimeline(
   function groupPromotionsIntoRows(
     promotions: PromotionItem[],
   ): PromotionItem[][] {
+    // Pre-parse and normalize all dates to midnight for consistent comparison
+    const dateMap = new Map<
+      PromotionItem,
+      { start: Date | null; end: Date | null }
+    >();
+
+    for (const p of promotions) {
+      dateMap.set(p, {
+        start: parsePromotionDate(p.startDate),
+        end: parsePromotionDate(p.endDate),
+      });
+    }
+
+    // Sort by start date
     const sorted = [...promotions].sort((a, b) => {
-      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      const aTime = dateMap.get(a)?.start?.getTime() ?? 0;
+      const bTime = dateMap.get(b)?.start?.getTime() ?? 0;
+      return aTime - bTime;
     });
 
     const rows: PromotionItem[][] = [];
 
     for (const promotion of sorted) {
-      const display = usePromotionItem(() => promotion);
-      const start = display.startDate.value?.getTime() ?? 0;
-      const end = display.endDate.value?.getTime() ?? 0;
+      const dates = dateMap.get(promotion);
+      const start = dates?.start?.getTime() ?? 0;
+      const end = dates?.end?.getTime() ?? 0;
 
-      // Find a row that doesn't overlap
+      // Skip promotions with invalid dates
+      if (!start || !end || end < start) {
+        rows.push([promotion]);
+        continue;
+      }
+
+      // Find a row where this promotion doesn't overlap with any existing one
       let placed = false;
       for (const row of rows) {
         const hasOverlap = row.some((existing) => {
-          const existingDisplay = usePromotionItem(() => existing);
-          const existingStart = existingDisplay.startDate.value?.getTime() ?? 0;
-          const existingEnd = existingDisplay.endDate.value?.getTime() ?? 0;
+          const existingDates = dateMap.get(existing);
+          const existingStart = existingDates?.start?.getTime() ?? 0;
+          const existingEnd = existingDates?.end?.getTime() ?? 0;
 
-          // Check for overlap
+          // Check for overlap (inclusive date ranges)
           return start <= existingEnd && end >= existingStart;
         });
 
@@ -214,7 +240,7 @@ export function usePromotionsTimeline(
         }
       }
 
-      // If no row found, create new row
+      // If no non-overlapping row found, create a new row
       if (!placed) {
         rows.push([promotion]);
       }
