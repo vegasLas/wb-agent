@@ -1,6 +1,6 @@
 import { Cookie } from 'playwright';
 import { encrypt, decrypt } from './encryption';
-import { prisma } from '../config/database';
+import { prisma } from '@/config/database';
 
 export interface CookieUpdate {
   name: string;
