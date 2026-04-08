@@ -14,7 +14,7 @@ import webhookRoutes from './webhooks.routes';
 import coefficientsRoutes from './coefficients.routes';
 import reportsRoutes from './reports.routes';
 import promotionsRoutes from './promotions.routes';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate } from '@/middleware/auth.middleware';
 
 const router = Router();
 

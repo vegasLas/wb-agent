@@ -6,15 +6,15 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { body, query, validationResult } from 'express-validator';
-import { authenticate } from '../middleware/auth.middleware';
-import { wbWarehouseService } from '../services';
-import { wbSupplierService } from '../services';
-import { accountService } from '../services';
-import { userService } from '../services';
-import { cacheService } from '../services';
-import { ApiError } from '../utils/errors';
-import { logger } from '../utils/logger';
-import { UserEnvInfo } from '../types/wb';
+import { authenticate } from '@/middleware/auth.middleware';
+import { wbWarehouseService } from '@/services';
+import { wbSupplierService } from '@/services';
+import { accountService } from '@/services';
+import { userService } from '@/services';
+import { cacheService } from '@/services';
+import { ApiError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
+import { UserEnvInfo } from '@/types/wb';
 
 const router = Router();
 

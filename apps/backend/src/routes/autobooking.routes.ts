@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { body, query, validationResult } from 'express-validator';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate } from '@/middleware/auth.middleware';
 import {
   autobookingService,
   AutobookingUpdateError,
-} from '../services';
-import { ApiError } from '../utils/errors';
+} from '@/services';
+import { ApiError } from '@/utils/errors';
 
 const router = Router();
 
