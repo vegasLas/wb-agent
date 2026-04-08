@@ -7,11 +7,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { authenticate } from '../middleware/auth.middleware';
-import { wbWarehouseService } from '../services/wb-warehouse.service';
-import { wbSupplierService } from '../services/wb-supplier.service';
-import { accountService } from '../services/account.service';
-import { userService } from '../services/user.service';
-import { cacheService } from '../services/cache.service';
+import { wbWarehouseService } from '../services';
+import { wbSupplierService } from '../services';
+import { accountService } from '../services';
+import { userService } from '../services';
+import { cacheService } from '../services';
 import { ApiError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { UserEnvInfo } from '../types/wb';

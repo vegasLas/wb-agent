@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import axios from 'axios';
 import { authenticate } from '../middleware/auth.middleware';
-import { supplierApiKeyService } from '../services/supplier-api-key.service';
+import { supplierApiKeyService } from '../services';
 import { ApiError } from '../utils/errors';
 
 const router = Router();

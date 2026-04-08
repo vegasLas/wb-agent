@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { authenticate } from '../middleware/auth.middleware';
-import { rescheduleService } from '../services/reschedule.service';
+import { rescheduleService } from '../services';
 import { ApiError } from '../utils/errors';
-import { AutobookingUpdateError } from '../services/autobooking.service';
+import { AutobookingUpdateError } from '../services';
 
 const router = Router();
 
