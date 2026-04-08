@@ -5,13 +5,13 @@
  * Handles success notifications and status updates for autobookings.
  */
 
-import { sharedTelegramNotificationService } from '../shared/telegram-notification.service';
-import { sharedStatusUpdateService } from '../shared/status-update.service';
-import { createLogger } from '../../../utils/logger';
+import { sharedTelegramNotificationService } from '@/services/monitoring/shared/telegram-notification.service';
+import { sharedStatusUpdateService } from '@/services/monitoring/shared/status-update.service';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('AutobookingNotification');
 import type { IAutobookingNotificationService } from './autobooking.interfaces';
-import type { SchedulableItem } from '../shared/interfaces/sharedInterfaces';
+import type { SchedulableItem } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 export class AutobookingNotificationService
   implements IAutobookingNotificationService

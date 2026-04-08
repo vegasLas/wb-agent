@@ -13,7 +13,7 @@ import type {
   SchedulableItem,
 } from './interfaces/sharedInterfaces';
 import { sharedAvailabilityFilterService } from './availability-filter.service';
-import { createLogger } from '../../../utils/logger';
+import { createLogger } from '@/utils/logger';
 const logger = createLogger('TaskOrganizer');
 
 // Re-export types for convenience

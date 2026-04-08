@@ -1,10 +1,10 @@
 import { Browser, chromium, Page, BrowserContext, Cookie } from 'playwright';
-import { prisma } from '../config/database';
+import { prisma } from '@/config/database';
 import { userService } from './user.service';
 import { accountService } from './account.service';
-import { encodeCookies } from '../utils/cookies';
-import { encodeLocalStorage } from '../utils/localStorage';
-import { UserEnvInfo } from '../types/wb';
+import { encodeCookies } from '@/utils/cookies';
+import { encodeLocalStorage } from '@/utils/localStorage';
+import { UserEnvInfo } from '@/types/wb';
 
 const LOGIN_URL = 'https://seller-auth.wildberries.ru';
 

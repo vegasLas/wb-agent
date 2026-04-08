@@ -12,7 +12,7 @@ import type {
   BookingError,
 } from './interfaces/sharedInterfaces';
 import { sharedTelegramNotificationService } from './telegram-notification.service';
-import { prisma } from '../../../config/database';
+import { prisma } from '@/config/database';
 
 // Constants
 const BANNED_DATES_CLEAR_INTERVAL_MS = 5 * 1000; // 5 seconds

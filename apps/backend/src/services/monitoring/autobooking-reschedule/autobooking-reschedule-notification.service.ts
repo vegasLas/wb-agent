@@ -5,15 +5,15 @@
  * Handles notifications for reschedule operations.
  */
 
-import { prisma } from '../../../config/database';
-import { sharedTelegramNotificationService } from '../shared/telegram-notification.service';
-import { sharedStatusUpdateService } from '../shared/status-update.service';
-import { logger } from '../../../utils/logger';
+import { prisma } from '@/config/database';
+import { sharedTelegramNotificationService } from '@/services/monitoring/shared/telegram-notification.service';
+import { sharedStatusUpdateService } from '@/services/monitoring/shared/status-update.service';
+import { logger } from '@/utils/logger';
 import type {
   IRescheduleNotificationService,
   RescheduleBanParams,
   AutobookingRescheduleWithDates,
-} from '../interfaces/reschedule.interfaces';
+} from '@/services/monitoring/interfaces/reschedule.interfaces';
 import type { AutobookingReschedule } from '@prisma/client';
 
 export class AutobookingRescheduleNotificationService

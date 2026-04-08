@@ -1,6 +1,6 @@
 import { prisma } from "@/config/database";
 import type { AutobookingReschedule } from '@prisma/client';
-import { AutobookingUpdateError } from '../autobooking.service';
+import { AutobookingUpdateError } from '@/services/autobooking.service';
 
 /**
  * Valid date types for reschedule

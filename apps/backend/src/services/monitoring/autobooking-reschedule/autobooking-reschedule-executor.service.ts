@@ -6,18 +6,18 @@
  * Updates existing supply dates using updateSupplyPlan API.
  */
 
-import { sharedBanService } from '../shared/ban.service';
-import { sharedErrorHandlingService } from '../shared/error-handling.service';
-import { sharedStatusUpdateService } from '../shared/status-update.service';
-import { bookingErrorService } from '../../internal/booking-error.service';
-import { wbCookieSupplyService } from '../../external/wb-cookie/supply.service';
-import { logger } from '../../../utils/logger';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
+import { sharedStatusUpdateService } from '@/services/monitoring/shared/status-update.service';
+import { bookingErrorService } from '@/services/internal/booking-error.service';
+import { wbCookieSupplyService } from '@/services/external/wb-cookie/supply.service';
+import { logger } from '@/utils/logger';
 import type {
   IRescheduleExecutorService,
   SuccessfulReschedule,
   RescheduleBookingError,
-} from '../interfaces/reschedule.interfaces';
-import type { MonitoringUser } from '../interfaces/reschedule.interfaces';
+} from '@/services/monitoring/interfaces/reschedule.interfaces';
+import type { MonitoringUser } from '@/services/monitoring/interfaces/reschedule.interfaces';
 import type { AutobookingReschedule } from '@prisma/client';
 
 // ============== Constants ==============
