@@ -4,7 +4,7 @@
  */
 
 import { Request, Response } from 'express';
-import { getSalesReport } from '../services/report.service';
+import { getSalesReport } from '../services';
 import { logger } from '../utils/logger';
 
 /**
