@@ -9,14 +9,14 @@
  */
 
 import { scheduleJob } from 'node-schedule';
-import { triggerDateManagerService } from '../services/monitoring/trigger-date-manager.service';
-import { warehouseMonitoringV2Service } from '../services/monitoring/warehouse-monitoring-v2.service';
-import { freeWarehouseService } from '../services';
-import { closeApiService } from '../services';
-import { createLogger } from '../utils/logger';
+import { triggerDateManagerService } from '@/services/monitoring/trigger-date-manager.service';
+import { warehouseMonitoringV2Service } from '@/services/monitoring/warehouse-monitoring-v2.service';
+import { freeWarehouseService } from '@/services';
+import { closeApiService } from '@/services';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('TriggerDateUpdate');
-import { env } from '../config/env';
+import { env } from '@/config/env';
 
 // Processing state flags to prevent concurrent executions
 let isCleaning = false;
