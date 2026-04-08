@@ -9,8 +9,8 @@
 import { sharedBanService } from '../shared/ban.service';
 import { sharedErrorHandlingService } from '../shared/error-handling.service';
 import { sharedStatusUpdateService } from '../shared/status-update.service';
-import { bookingErrorService } from '../../booking-error.service';
-import { supplyService } from '../../supply.service';
+import { bookingErrorService } from '../../internal/booking-error.service';
+import { wbCookieSupplyService } from '../../external/wb-cookie/supply.service';
 import { logger } from '../../../utils/logger';
 import type {
   IRescheduleExecutorService,
@@ -89,7 +89,7 @@ export class AutobookingRescheduleExecutorService
     const { reschedule, effectiveDate, account, user, latency } = params;
     const randomNumber = Math.floor(Math.random() * 100000);
 
-    await supplyService.updateSupplyPlan({
+    await wbCookieSupplyService.updateSupplyPlan({
       accountId: account.id,
       supplierId: reschedule.supplierId,
       userId: user.userId,

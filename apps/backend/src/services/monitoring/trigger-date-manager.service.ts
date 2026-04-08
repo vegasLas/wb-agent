@@ -14,7 +14,7 @@ import { TBOT } from '../../utils/TBOT';
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('TriggerDateManager');
-import { cacheService } from '../cache.service';
+import { cacheService } from '../internal/cache.service';
 import type { Warehouse } from '../../types/wb';
 
 /**

@@ -12,13 +12,13 @@ import { prisma } from '../../config/database';
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('WarehouseMonitoring');
-import { freeWarehouseService } from '../free-warehouse.service';
-import { closeApiService } from '../close-api.service';
+import { freeWarehouseService } from '../internal/free-warehouse.service';
+import { closeApiService } from '../internal/close-api.service';
 import { fakeDataDetectionService } from './fake-data-detection.service';
 import { supplyTriggerMonitoringService } from './supply-trigger-monitoring.service';
 import { autobookingMonitoringService } from './autobooking/autobooking-monitoring.service';
 import { autobookingRescheduleMonitoringService } from './autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { isAutobookingProcessingActive } from '../autobooking-control.service';
+import { autobookingControlService } from '../internal/autobooking-control.service';
 import type {
   MonitoringUser,
   WarehouseMonitoring,
@@ -710,7 +710,7 @@ export class WarehouseMonitoringV2Service {
     availabilities: WarehouseAvailability[],
   ): Promise<void> {
     // Process autobookings only if enabled globally
-    const autobookingPromise = isAutobookingProcessingActive()
+    const autobookingPromise = autobookingControlService.isActive()
       ? this.processAutobookings(monitoringUsers, availabilities)
       : Promise.resolve();
 

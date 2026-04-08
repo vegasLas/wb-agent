@@ -10,7 +10,7 @@
  */
 
 import { SupplyTriggerMonitoringService } from '../supply-trigger-monitoring.service';
-import { triggerService } from '../../trigger.service';
+import { triggerService } from '../../internal/trigger.service';
 import { TBOT } from '../../../utils/TBOT';
 import { SUPPLY_TYPES } from '../../../constants/triggers';
 import type {

@@ -13,13 +13,13 @@ import {
   WarehouseMonitoringV2Service,
   warehouseMonitoringV2Service,
 } from '../warehouse-monitoring-v2.service';
-import { freeWarehouseService } from '../../free-warehouse.service';
-import { closeApiService } from '../../close-api.service';
+import { freeWarehouseService } from '../../internal/free-warehouse.service';
+import { closeApiService } from '../../internal/close-api.service';
 import { fakeDataDetectionService } from '../fake-data-detection.service';
 import { supplyTriggerMonitoringService } from '../supply-trigger-monitoring.service';
 import { autobookingMonitoringService } from '../autobooking/autobooking-monitoring.service';
 import { autobookingRescheduleMonitoringService } from '../autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { isAutobookingProcessingActive } from '../../autobooking-control.service';
+import { autobookingControlService } from '../../internal/autobooking-control.service';
 import { prisma } from '../../../config/database';
 
 // Mock dependencies
@@ -63,7 +63,7 @@ jest.mock(
 );
 
 jest.mock('../../autobooking-control.service', () => ({
-  isAutobookingProcessingActive: jest.fn().mockReturnValue(true),
+  autobookingControlService: { isActive: jest.fn().mockReturnValue(true) },
 }));
 
 jest.mock('../../../config/database', () => ({
@@ -883,7 +883,7 @@ describe('WarehouseMonitoringV2Service', () => {
     });
 
     it('should skip autobooking when processing is disabled', async () => {
-      (isAutobookingProcessingActive as jest.Mock).mockReturnValue(false);
+      (autobookingControlService.isActive as jest.Mock).mockReturnValue(false);
 
       mockPrisma.autobooking.findMany.mockResolvedValue([mockAutobooking]);
       mockPrisma.supplyTrigger.findMany.mockResolvedValue([]);

@@ -7,7 +7,7 @@
  */
 
 import { prisma } from '../../../config/database';
-import { supplyService } from '../../supply.service';
+import { wbCookieSupplyService } from '../../external/wb-cookie/supply.service';
 import { logger } from '../../../utils/logger';
 import { SUPPLY_TYPES } from '../../../constants/triggers';
 import type { IAutobookingSupplyIdCacheService } from './autobooking.interfaces';
@@ -173,7 +173,7 @@ export class AutobookingSupplyIdCacheService
     };
     const boxTypeMask = BOX_TYPE_MASK_MAPPINGS[booking.supplyType] || 4;
 
-    return supplyService.createSupply({
+    return wbCookieSupplyService.createSupply({
       accountId: account.id,
       supplierId: booking.supplierId,
       userId: user.userId,
@@ -202,7 +202,7 @@ export class AutobookingSupplyIdCacheService
     preorderId: number,
   ): Promise<void> {
     try {
-      await supplyService.deletePreorder({
+      await wbCookieSupplyService.deletePreorder({
         accountId: account.id,
         supplierId: booking.supplierId,
         preorderId,
