@@ -11,8 +11,8 @@
 import {
   SharedStatusUpdateService,
   sharedStatusUpdateService,
-} from '../status-update.service';
-import { prisma } from '../../../../config/database';
+} from '@/services/monitoring/shared/status-update.service';
+import { prisma } from '@/config/database';
 
 // Mock prisma
 jest.mock('../../../../config/database', () => ({

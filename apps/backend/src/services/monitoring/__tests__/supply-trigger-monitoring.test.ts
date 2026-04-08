@@ -9,14 +9,14 @@
  * - Preserved all test scenarios from deprecated tests
  */
 
-import { SupplyTriggerMonitoringService } from '../supply-trigger-monitoring.service';
-import { triggerService } from '../../internal/trigger.service';
-import { TBOT } from '../../../utils/TBOT';
-import { SUPPLY_TYPES } from '../../../constants/triggers';
+import { SupplyTriggerMonitoringService } from '@/services/monitoring/supply-trigger-monitoring.service';
+import { triggerService } from '@/services/internal/trigger.service';
+import { TBOT } from '@/utils/TBOT';
+import { SUPPLY_TYPES } from '@/constants/triggers';
 import type {
   WarehouseAvailability,
   MonitoringUser,
-} from '../interfaces/trigger-monitoring.interfaces';
+} from '@/services/monitoring/interfaces/trigger-monitoring.interfaces';
 import type { SupplyTrigger } from '@prisma/client';
 
 // Mock dependencies

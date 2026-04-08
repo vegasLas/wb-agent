@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { prisma } from '../config/database';
-import { accountRepository, userRepository } from '../repositories';
+import { prisma } from '@/config/database';
+import { accountRepository, userRepository } from '@/repositories';
 
 // Check if database is available
 let isDatabaseAvailable = false;

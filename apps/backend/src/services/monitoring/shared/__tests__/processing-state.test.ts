@@ -11,7 +11,7 @@
 import {
   SharedProcessingStateService,
   sharedProcessingStateService,
-} from '../processing-state.service';
+} from '@/services/monitoring/shared/processing-state.service';
 
 // Mock logger
 jest.mock('../../../../utils/logger', () => ({

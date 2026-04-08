@@ -9,18 +9,18 @@
  * - Same test logic preserved
  */
 
-import { AutobookingMonitoringService } from '../../../services/monitoring/autobooking/autobooking-monitoring.service';
-import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
-import { autobookingExecutorService } from '../../../services/monitoring/autobooking/autobooking-executor.service';
-import { bookingErrorService } from '../../../services/internal/booking-error.service';
-import { prisma } from '../../../config/database';
+import { AutobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
+import { bookingErrorService } from '@/services/internal/booking-error.service';
+import { prisma } from '@/config/database';
 import {
   createAutobooking,
   createMonitoringUser,
   getFutureDate,
   getFutureDateString,
-} from '../../helpers/autobooking-helpers';
-import type { MonitoringUser } from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
+} from '@/__tests__/helpers/autobooking-helpers';
+import type { MonitoringUser } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock dependencies
 jest.mock('../../../services/booking-error.service');

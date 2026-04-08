@@ -9,22 +9,22 @@
  * - Same test logic preserved
  */
 
-import { AutobookingMonitoringService } from '../../../services/monitoring/autobooking/autobooking-monitoring.service';
-import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
-import { sharedProcessingStateService } from '../../../services/monitoring/shared/processing-state.service';
-import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
-import { autobookingExecutorService } from '../../../services/monitoring/autobooking/autobooking-executor.service';
-import { autobookingNotificationService } from '../../../services/monitoring/autobooking/autobooking-notification.service';
-import { bookingErrorService } from '../../../services/internal/booking-error.service';
-import { wbCookieSupplyService } from '../../../services/external/wb-cookie/supply.service';
-import { prisma } from '../../../config/database';
+import { AutobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedProcessingStateService } from '@/services/monitoring/shared/processing-state.service';
+import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tracking.service';
+import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
+import { autobookingNotificationService } from '@/services/monitoring/autobooking/autobooking-notification.service';
+import { bookingErrorService } from '@/services/internal/booking-error.service';
+import { wbCookieSupplyService } from '@/services/external/wb-cookie/supply.service';
+import { prisma } from '@/config/database';
 import {
   createAutobooking,
   createMonitoringUser,
   getFutureDate,
   getFutureDateString,
-} from '../../helpers/autobooking-helpers';
-import type { MonitoringUser } from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
+} from '@/__tests__/helpers/autobooking-helpers';
+import type { MonitoringUser } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock dependencies
 jest.mock('../../../services/booking-error.service');
