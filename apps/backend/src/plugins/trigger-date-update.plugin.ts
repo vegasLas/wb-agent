@@ -11,8 +11,8 @@
 import { scheduleJob } from 'node-schedule';
 import { triggerDateManagerService } from '../services/monitoring/trigger-date-manager.service';
 import { warehouseMonitoringV2Service } from '../services/monitoring/warehouse-monitoring-v2.service';
-import { freeWarehouseService } from '../services/free-warehouse.service';
-import { closeApiService } from '../services/close-api.service';
+import { freeWarehouseService } from '../services';
+import { closeApiService } from '../services';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('TriggerDateUpdate');
