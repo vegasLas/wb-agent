@@ -12,8 +12,8 @@
 import { AutobookingRescheduleExecutorService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
 import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
 import { sharedErrorHandlingService } from '../../../services/monitoring/shared/error-handling.service';
-import { supplyService } from '../../../services/supply.service';
-import { bookingErrorService } from '../../../services/booking-error.service';
+import { wbCookieSupplyService } from '../../../services/external/wb-cookie/supply.service';
+import { bookingErrorService } from '../../../services/internal/booking-error.service';
 import {
   createMonitoringUser,
   getFutureDate,
@@ -34,7 +34,7 @@ jest.mock('../../../utils/logger', () => ({
 
 describe('AutobookingRescheduleExecutorService', () => {
   let service: AutobookingRescheduleExecutorService;
-  let mockSupplyService: jest.Mocked<typeof supplyService>;
+  let mockSupplyService: jest.Mocked<typeof wbCookieSupplyService>;
   let mockBookingErrorService: jest.Mocked<typeof bookingErrorService>;
 
   // Helper function to create a reschedule object
@@ -62,12 +62,12 @@ describe('AutobookingRescheduleExecutorService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service = new AutobookingRescheduleExecutorService();
-    mockSupplyService = supplyService as jest.Mocked<typeof supplyService>;
+    mockSupplyService = wbCookieSupplyService as jest.Mocked<typeof wbCookieSupplyService>;
     mockBookingErrorService = bookingErrorService as jest.Mocked<
       typeof bookingErrorService
     >;
 
-    // Mock supplyService
+    // Mock wbCookieSupplyService
     mockSupplyService.updateSupplyPlan.mockResolvedValue({
       success: true,
       data: { id: 'supply-123' },

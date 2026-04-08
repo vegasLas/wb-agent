@@ -15,8 +15,8 @@ import { sharedProcessingStateService } from '../../../services/monitoring/share
 import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
 import { autobookingSupplyIdCacheService } from '../../../services/monitoring/autobooking/autobooking-supply-id-cache.service';
 import { autobookingExecutorService } from '../../../services/monitoring/autobooking/autobooking-executor.service';
-import { bookingErrorService } from '../../../services/booking-error.service';
-import { supplyService } from '../../../services/supply.service';
+import { bookingErrorService } from '../../../services/internal/booking-error.service';
+import { wbCookieSupplyService } from '../../../services/external/wb-cookie/supply.service';
 import { prisma } from '../../../config/database';
 import {
   createAutobooking,
@@ -94,7 +94,7 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
   let service: AutobookingMonitoringService;
   let mockBookingErrorService: jest.Mocked<typeof bookingErrorService>;
   let mockPrisma: jest.Mocked<typeof prisma>;
-  let mockSupplyService: jest.Mocked<typeof supplyService>;
+  let mockSupplyService: jest.Mocked<typeof wbCookieSupplyService>;
   let mockAutobookingExecutor: jest.Mocked<typeof autobookingExecutorService>;
 
   // Spies for cache service methods
@@ -121,7 +121,7 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
       typeof bookingErrorService
     >;
     mockPrisma = prisma as jest.Mocked<typeof prisma>;
-    mockSupplyService = supplyService as jest.Mocked<typeof supplyService>;
+    mockSupplyService = wbCookieSupplyService as jest.Mocked<typeof wbCookieSupplyService>;
     mockAutobookingExecutor = autobookingExecutorService as jest.Mocked<
       typeof autobookingExecutorService
     >;
@@ -169,8 +169,8 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
           autobookingSupplyIdCacheService.isSupplyIdValid(booking);
 
         if (!isValid) {
-          // Create new supply (calls real supplyService mock)
-          const supply = await supplyService.createSupply({
+          // Create new supply (calls real wbCookieSupplyService mock)
+          const supply = await wbCookieSupplyService.createSupply({
             accountId: account.id,
             supplierId: booking.supplierId,
             userId: user.userId,
@@ -412,7 +412,7 @@ describe('AutobookingMonitoringService - Supply ID Cache', () => {
           const { booking, account, user } = params;
 
           // Create supply first
-          const supply = await supplyService.createSupply({
+          const supply = await wbCookieSupplyService.createSupply({
             accountId: account.id,
             supplierId: booking.supplierId,
             userId: user.userId,

@@ -16,8 +16,8 @@ import { sharedProcessingStateService } from '../../../services/monitoring/share
 import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
 import { autobookingSupplyIdCacheService } from '../../../services/monitoring/autobooking/autobooking-supply-id-cache.service';
 import { autobookingExecutorService } from '../../../services/monitoring/autobooking/autobooking-executor.service';
-import { supplyService } from '../../../services/supply.service';
-import { bookingErrorService } from '../../../services/booking-error.service';
+import { wbCookieSupplyService } from '../../../services/external/wb-cookie/supply.service';
+import { bookingErrorService } from '../../../services/internal/booking-error.service';
 import { prisma } from '../../../config/database';
 import {
   createAutobooking,
@@ -91,7 +91,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
   let mockBookingErrorService: jest.Mocked<typeof bookingErrorService>;
   let mockPrisma: jest.Mocked<typeof prisma>;
   let mockAutobookingExecutor: jest.Mocked<typeof autobookingExecutorService>;
-  let mockSupplyService: jest.Mocked<typeof supplyService>;
+  let mockSupplyService: jest.Mocked<typeof wbCookieSupplyService>;
 
   // Spies for cache service methods
   let cacheSupplyIdSpy: jest.SpyInstance;
@@ -108,7 +108,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
     mockAutobookingExecutor = autobookingExecutorService as jest.Mocked<
       typeof autobookingExecutorService
     >;
-    mockSupplyService = supplyService as jest.Mocked<typeof supplyService>;
+    mockSupplyService = wbCookieSupplyService as jest.Mocked<typeof wbCookieSupplyService>;
 
     // Setup spies on cache service methods
     cacheSupplyIdSpy = jest
@@ -207,7 +207,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
           if (!autobookingSupplyIdCacheService.isSupplyIdValid(booking)) {
             // Supply ID is expired - delete it
             if (booking.supplyId) {
-              await supplyService.deletePreorder({
+              await wbCookieSupplyService.deletePreorder({
                 accountId: account.id,
                 supplierId: booking.supplierId,
                 preorderId: parseInt(booking.supplyId),
@@ -217,7 +217,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
             }
 
             // Create new supply
-            const newSupply = await supplyService.createSupply({
+            const newSupply = await wbCookieSupplyService.createSupply({
               accountId: account.id,
               supplierId: booking.supplierId,
               userId: user.userId,
@@ -356,7 +356,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
             booking.supplyId
           ) {
             try {
-              await supplyService.deletePreorder({
+              await wbCookieSupplyService.deletePreorder({
                 accountId: account.id,
                 supplierId: booking.supplierId,
                 preorderId: parseInt(booking.supplyId),
@@ -373,7 +373,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
             }
 
             // Create new supply
-            const newSupply = await supplyService.createSupply({
+            const newSupply = await wbCookieSupplyService.createSupply({
               accountId: account.id,
               supplierId: booking.supplierId,
               userId: user.userId,
@@ -592,7 +592,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
             // Expired cache - delete and create new
             if (booking.supplyId) {
               deletePreorderCalls.push(parseInt(booking.supplyId));
-              await supplyService.deletePreorder({
+              await wbCookieSupplyService.deletePreorder({
                 accountId: account.id,
                 supplierId: booking.supplierId,
                 preorderId: parseInt(booking.supplyId),
@@ -601,7 +601,7 @@ describe('AutobookingMonitoringService - Preorder Errors and Supply Cache', () =
               });
             }
 
-            const newSupply = await supplyService.createSupply({
+            const newSupply = await wbCookieSupplyService.createSupply({
               accountId: account.id,
               supplierId: booking.supplierId,
               userId: user.userId,
