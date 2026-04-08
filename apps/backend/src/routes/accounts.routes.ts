@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import axios from 'axios';
-import { authenticate } from '../middleware/auth.middleware';
-import { accountService } from '../services';
-import { userService } from '../services';
-import { supplierApiKeyService } from '../services';
-import { ApiError } from '../utils/errors';
-import { prisma } from '../config/database';
-import { logger } from '../utils/logger';
+import { authenticate } from '@/middleware/auth.middleware';
+import { accountService } from '@/services';
+import { userService } from '@/services';
+import { supplierApiKeyService } from '@/services';
+import { ApiError } from '@/utils/errors';
+import { prisma } from '@/config/database';
+import { logger } from '@/utils/logger';
 
 const router = Router();
 

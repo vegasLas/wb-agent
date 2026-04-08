@@ -9,18 +9,18 @@
  * - Same test logic preserved
  */
 
-import { AutobookingRescheduleMonitoringService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { autobookingRescheduleExecutorService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
-import { autobookingRescheduleNotificationService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service';
-import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
-import { sharedTaskOrganizerService } from '../../../services/monitoring/shared/task-organizer.service';
-import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
-import { sharedProcessingStateService } from '../../../services/monitoring/shared/processing-state.service';
-import { sharedLatencyService } from '../../../services/monitoring/shared/latency.service';
+import { AutobookingRescheduleMonitoringService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
+import { autobookingRescheduleExecutorService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
+import { autobookingRescheduleNotificationService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedTaskOrganizerService } from '@/services/monitoring/shared/task-organizer.service';
+import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tracking.service';
+import { sharedProcessingStateService } from '@/services/monitoring/shared/processing-state.service';
+import { sharedLatencyService } from '@/services/monitoring/shared/latency.service';
 import type {
   MonitoringUser,
   WarehouseAvailability,
-} from '../../../services/monitoring/interfaces/reschedule.interfaces';
+} from '@/services/monitoring/interfaces/reschedule.interfaces';
 import type { AutobookingReschedule } from '@prisma/client';
 
 // Mock dependencies

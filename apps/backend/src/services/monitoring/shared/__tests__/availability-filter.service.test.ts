@@ -6,11 +6,11 @@
 import {
   SharedAvailabilityFilterService,
   sharedAvailabilityFilterService,
-} from '../availability-filter.service';
+} from '@/services/monitoring/shared/availability-filter.service';
 import type {
   SchedulableItem,
   WarehouseAvailability,
-} from '../interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock the ban service - Jest style
 jest.mock('../ban.service', () => ({
@@ -20,7 +20,7 @@ jest.mock('../ban.service', () => ({
 }));
 
 // Import after mock
-import { sharedBanService } from '../ban.service';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
 
 const mockedIsBanned = sharedBanService.isBanned as jest.MockedFunction<
   typeof sharedBanService.isBanned

@@ -10,15 +10,15 @@
  * - Uses Map<string, BookingTask[]> as expected by the service API
  */
 
-import { sharedTaskOrganizerService } from '../../../services/monitoring/shared/task-organizer.service';
+import { sharedTaskOrganizerService } from '@/services/monitoring/shared/task-organizer.service';
 import {
   createAutobooking,
   createMonitoringUser,
-} from '../../helpers/autobooking-helpers';
+} from '@/__tests__/helpers/autobooking-helpers';
 import type {
   BookingTask,
   MonitoringUser,
-} from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock minimal dependencies
 jest.mock('../../../utils/logger', () => ({

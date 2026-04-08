@@ -9,7 +9,7 @@
  */
 
 import { sharedBanService } from './ban.service';
-import { createLogger } from '../../../utils/logger';
+import { createLogger } from '@/utils/logger';
 const logger = createLogger('AvailabilityFilter');
 import type {
   SchedulableItem,

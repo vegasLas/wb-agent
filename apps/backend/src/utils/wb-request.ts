@@ -1,5 +1,5 @@
 import { Cookie } from 'playwright';
-import { prisma } from '../config/database';
+import { prisma } from '@/config/database';
 import { createLogger } from './logger';
 
 const logger = createLogger('WBRequest');

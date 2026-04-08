@@ -8,17 +8,17 @@
  * - Processing and delegating to specialized services
  */
 
-import { prisma } from '../../config/database';
-import { createLogger } from '../../utils/logger';
+import { prisma } from '@/config/database';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('WarehouseMonitoring');
-import { freeWarehouseService } from '../internal/free-warehouse.service';
-import { closeApiService } from '../internal/close-api.service';
+import { freeWarehouseService } from '@/services/internal/free-warehouse.service';
+import { closeApiService } from '@/services/internal/close-api.service';
 import { fakeDataDetectionService } from './fake-data-detection.service';
 import { supplyTriggerMonitoringService } from './supply-trigger-monitoring.service';
 import { autobookingMonitoringService } from './autobooking/autobooking-monitoring.service';
 import { autobookingRescheduleMonitoringService } from './autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { autobookingControlService } from '../internal/autobooking-control.service';
+import { autobookingControlService } from '@/services/internal/autobooking-control.service';
 import type {
   MonitoringUser,
   WarehouseMonitoring,

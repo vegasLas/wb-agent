@@ -8,7 +8,7 @@
  * NOTE: Uses regular local dates (NOT Moscow timezone) - same as deprecated project
  */
 
-import { prisma } from '../../../config/database';
+import { prisma } from '@/config/database';
 import type {
   ISharedStatusUpdateService,
   ItemWithDates,

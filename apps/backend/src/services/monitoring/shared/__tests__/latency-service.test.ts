@@ -8,7 +8,7 @@
  * - Same test logic preserved
  */
 
-import { SharedLatencyService, sharedLatencyService } from '../latency.service';
+import { SharedLatencyService, sharedLatencyService } from '@/services/monitoring/shared/latency.service';
 
 // Mock logger
 jest.mock('../../../../utils/logger', () => ({

@@ -12,17 +12,17 @@
 import {
   SharedTaskOrganizerService,
   sharedTaskOrganizerService,
-} from '../task-organizer.service';
-import { sharedAvailabilityFilterService } from '../availability-filter.service';
+} from '@/services/monitoring/shared/task-organizer.service';
+import { sharedAvailabilityFilterService } from '@/services/monitoring/shared/availability-filter.service';
 import {
   createAutobooking,
   createMonitoringUser,
   getFutureDate,
-} from '../../../../__tests__/helpers/autobooking-helpers';
+} from '@/__tests__/helpers/autobooking-helpers';
 import type {
   BookingTask,
   WarehouseAvailability,
-} from '../interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock logger
 jest.mock('../../../../utils/logger', () => ({

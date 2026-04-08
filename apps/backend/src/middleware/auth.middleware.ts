@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { ApiError } from '../utils/errors';
-import { parseInitData } from '../utils/parseInitData';
-import { prisma } from '../config/database';
-import { logger } from '../utils/logger';
+import { ApiError } from '@/utils/errors';
+import { parseInitData } from '@/utils/parseInitData';
+import { prisma } from '@/config/database';
+import { logger } from '@/utils/logger';
 
 export interface AuthUser {
   id: number;

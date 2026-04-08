@@ -8,11 +8,11 @@
  * - Same test logic preserved
  */
 
-import { SharedBanService, sharedBanService } from '../ban.service';
+import { SharedBanService, sharedBanService } from '@/services/monitoring/shared/ban.service';
 import type {
   BanSingleDateParams,
   BanAllDatesParams,
-} from '../interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock the telegram notification service
 jest.mock('../telegram-notification.service', () => ({

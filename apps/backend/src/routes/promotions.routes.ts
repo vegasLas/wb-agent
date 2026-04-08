@@ -9,7 +9,7 @@ import {
   fetchPromotionDetail,
   fetchPromotionExcel,
   promotionRecovery,
-} from '../controllers/promotions.controller';
+} from '@/controllers/promotions.controller';
 
 const router = Router();
 

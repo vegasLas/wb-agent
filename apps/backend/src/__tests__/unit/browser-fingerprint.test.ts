@@ -11,7 +11,7 @@
 import {
   BrowserFingerprintService,
   browserFingerprintService,
-} from '../../services/monitoring/browser-fingerprint.service';
+} from '@/services/monitoring/browser-fingerprint.service';
 
 // Mock logger
 jest.mock('../../utils/logger', () => ({

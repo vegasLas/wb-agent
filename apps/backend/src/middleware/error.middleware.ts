@@ -1,8 +1,8 @@
 import { ErrorRequestHandler, Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { ApiError } from '../utils/errors';
-import { logger } from '../utils/logger';
-import { env } from '../config/env';
+import { ApiError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
+import { env } from '@/config/env';
 
 /**
  * Global error handling middleware

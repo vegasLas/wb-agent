@@ -6,9 +6,9 @@
  * including success notifications for bookings and error notifications
  */
 
-import { TBOT } from '../../../utils/TBOT';
-import { prisma } from '../../../config/database';
-import { logger } from '../../../utils/logger';
+import { TBOT } from '@/utils/TBOT';
+import { prisma } from '@/config/database';
+import { logger } from '@/utils/logger';
 import type {
   TelegramError,
   ISharedTelegramNotificationService,

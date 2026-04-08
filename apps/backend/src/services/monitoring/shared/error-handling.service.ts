@@ -3,7 +3,7 @@
  * Categorizes errors and determines appropriate handling strategies.
  */
 
-import { bookingErrorService } from '../../internal/booking-error.service';
+import { bookingErrorService } from '@/services/internal/booking-error.service';
 import type {
   BookingError,
   ISharedErrorHandlingService,

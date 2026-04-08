@@ -1,8 +1,8 @@
-import { prisma } from '../../config/database';
-import { triggerService } from '../internal/trigger.service';
-import { TBOT } from '../../utils/TBOT';
-import { logger } from '../../utils/logger';
-import { SUPPLY_TYPES, BOX_TYPE_IDS } from '../../constants/triggers';
+import { prisma } from '@/config/database';
+import { triggerService } from '@/services/internal/trigger.service';
+import { TBOT } from '@/utils/TBOT';
+import { logger } from '@/utils/logger';
+import { SUPPLY_TYPES, BOX_TYPE_IDS } from '@/constants/triggers';
 import type {
   WarehouseAvailability,
   MonitoringUser,
