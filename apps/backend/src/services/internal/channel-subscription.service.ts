@@ -1,5 +1,5 @@
-import { TBOT } from '../utils/TBOT';
-import { logger } from '../utils/logger';
+import { TBOT } from "@/utils/TBOT";
+import { logger } from "@/utils/logger";
 
 /**
  * Service for checking channel subscription status

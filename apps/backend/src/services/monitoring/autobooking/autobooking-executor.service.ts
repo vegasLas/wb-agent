@@ -8,9 +8,9 @@
 
 import { sharedBanService } from '../shared/ban.service';
 import { sharedErrorHandlingService } from '../shared/error-handling.service';
-import { bookingErrorService } from '../../booking-error.service';
+import { bookingErrorService } from '../../internal/booking-error.service';
 import { autobookingSupplyIdCacheService } from './autobooking-supply-id-cache.service';
-import { supplyService } from '../../supply.service';
+import { wbCookieSupplyService } from '../../external/wb-cookie/supply.service';
 import { prisma } from '../../../config/database';
 import { createLogger } from '../../../utils/logger';
 
@@ -79,9 +79,9 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     // Step 2: Browser automation for date selection (Phase 6)
     logger.debug(
       `[BrowserAutomationCheck] Booking ${booking.id}: draftId=${booking.draftId ? 'present' : 'MISSING'}, ` +
-        `wbCookies=${account.wbCookies ? 'present' : 'MISSING'}`
+        `wbCookies=${account.wbCookies ? 'present' : 'MISSING'}`,
     );
-    
+
     if (booking.draftId && account.wbCookies) {
       await this.executeBrowserAutomation({
         booking,
@@ -394,7 +394,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
   ): Promise<void> {
     try {
       logger.debug(`Deleting preorder: ${preorderId}`);
-      await supplyService.deletePreorder({
+      await wbCookieSupplyService.deletePreorder({
         accountId: account.id,
         supplierId: booking.supplierId,
         preorderId,

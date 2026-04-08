@@ -1,6 +1,6 @@
-import { prisma } from './../config/database';
+import { prisma } from "@/config/database";
 import * as schedule from 'node-schedule';
-import { TBOT } from '../utils/TBOT';
+import { TBOT } from "@/utils/TBOT";
 
 interface SubscriptionNotification {
   userId: number;

@@ -1,6 +1,6 @@
-import { prisma } from '../config/database';
-import { safeDecrypt } from '../utils/encryption';
-import { logger } from '../utils/logger';
+import { prisma } from "@/config/database";
+import { safeDecrypt } from "@/utils/encryption";
+import { logger } from "@/utils/logger";
 
 interface ApiKeyUsage {
   userId: number;

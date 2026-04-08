@@ -38,6 +38,7 @@ model User {
   envInfo         Json?    // Stores the generated environment information
   createdAt           DateTime @default(now())
   envInfoUpdatedAt DateTime?
+  mpstatsToken    String?  // MPStats API token
   accounts Account[]
   bonuses Bonus[]
   autobookingReschedules AutobookingReschedule[]

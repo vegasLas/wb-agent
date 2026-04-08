@@ -1,5 +1,5 @@
-import { prisma } from '../config/database';
-import { encrypt, safeDecrypt } from '../utils/encryption';
+import { prisma } from "@/config/database";
+import { encrypt, safeDecrypt } from "@/utils/encryption";
 
 export interface SupplierApiKeyInput {
   userId: number;

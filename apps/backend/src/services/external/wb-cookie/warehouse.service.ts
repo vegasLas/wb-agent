@@ -1,26 +1,26 @@
 /**
- * WB Warehouse Service
- * Migrated from deprecated project server/services/wbWarehouse.ts
- * Handles all Wildberries warehouse-related API calls with multi-account support
+ * WB Cookie Warehouse Service
+ * Handles WB warehouse-related API calls using browser cookies
+ * Domain: seller-supply.wildberries.ru, seller.wildberries.ru
  */
 
-import { wbAccountRequest } from '../utils/wb-request';
-import type { ProxyConfig } from '../utils/wb-request';
+import { wbAccountRequest } from "@/utils/wb-request";
+import type { ProxyConfig } from "@/utils/wb-request";
 import {
   TransitResponse,
   WarehouseRecommendationsResponse,
   AcceptanceCoefficientsResponse,
   WarehousesRoot,
-} from '../types/wb';
-import { prisma } from '../config/database';
-import { getCookiesFromAccount } from '../utils/cookies';
-import { logger } from '../utils/logger';
+} from "@/types/wb";
+import { prisma } from "@/config/database";
+import { getCookiesFromAccount } from "@/utils/cookies";
+import { logger } from "@/utils/logger";
 
-export class WBWarehouseService {
+export class WBCookieWarehouseService {
   /**
    * Get transit offices for a warehouse
    */
-  async getTransitionsByAccount({
+  async getTransitTariffs({
     accountId,
     supplierId,
     warehouseId,
@@ -54,7 +54,7 @@ export class WBWarehouseService {
   /**
    * Get warehouse recommendations for a draft
    */
-  async getWarehouseRecommendationsByAccount({
+  async getWarehouseRecommendations({
     accountId,
     supplierId,
     draftId,
@@ -88,7 +88,7 @@ export class WBWarehouseService {
   /**
    * Get acceptance coefficients report (Close API)
    */
-  async getAcceptanceCoefficientsByAccount({
+  async getAcceptanceCoefficients({
     accountId,
     supplierId,
     userAgent,
@@ -145,7 +145,7 @@ export class WBWarehouseService {
   /**
    * Get all warehouses list
    */
-  async getAllWarehousesByAccount({
+  async getAllWarehouses({
     accountId,
     supplierId,
     userAgent,
@@ -165,7 +165,7 @@ export class WBWarehouseService {
       if (!account?.wbCookies) {
         throw {
           message: 'Failed to get account cookies',
-          method: 'getAllWarehousesByAccount',
+          method: 'getAllWarehouses',
         };
       }
 
@@ -175,7 +175,7 @@ export class WBWarehouseService {
       if (!wbTokenValue) {
         throw {
           message: 'Failed to get WBTokenV3 from account cookies',
-          method: 'getAllWarehousesByAccount',
+          method: 'getAllWarehouses',
         };
       }
 
@@ -199,11 +199,10 @@ export class WBWarehouseService {
       );
       throw {
         message: `Failed to get all warehouses by account: ${(error as Error).message}`,
-        method: 'getAllWarehousesByAccount',
+        method: 'getAllWarehouses',
       };
     }
   }
 }
 
-// Export singleton instance
-export const wbWarehouseService = new WBWarehouseService();
+export const wbCookieWarehouseService = new WBCookieWarehouseService();

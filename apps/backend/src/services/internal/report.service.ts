@@ -4,14 +4,14 @@
  * Migrated from deprecated project server/api/v1/report/index.get.ts
  */
 
-import { prisma } from '../config/database';
+import { prisma } from '@/config/database';
 import {
   parseExcelDataNode,
   FriendlyExcelData,
-} from '../utils/parseExcelDataNode';
-import * as ordersController from '../controllers/orders.controller';
-import { logger } from '../utils/logger';
-import type { ProxyConfig } from '../utils/wb-request';
+} from '@/utils/parseExcelDataNode';
+import * as ordersController from '@/controllers/orders.controller';
+import { logger } from '@/utils/logger';
+import type { ProxyConfig } from '@/utils/wb-request';
 
 export interface OrderSummary {
   id: string;

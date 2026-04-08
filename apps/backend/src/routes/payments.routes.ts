@@ -10,7 +10,7 @@ import {
   authenticate,
   AuthenticatedRequest,
 } from '../middleware/auth.middleware';
-import { yookassaService } from '../services/yookassa.service';
+import { yookassaService } from '../services';
 import { prisma } from '../config/database';
 import { TBOT } from '../utils/TBOT';
 import { ApiError } from '../utils/errors';

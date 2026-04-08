@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticate } from '../middleware/auth.middleware';
-import { userService } from '../services/user.service';
+import { userService } from '../services';
 import { ApiError } from '../utils/errors';
 
 const router = Router();
@@ -41,6 +41,7 @@ router.get('/', authenticate, async (req, res, next) => {
           (a: { createdAt: string }, b: { createdAt: string }) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         ),
+      mpstatsToken: user.mpstatsToken ? true : undefined,
       supplierApiKey: user.supplierApiKey
         ? {
             isExistAPIKey: true,
@@ -82,9 +83,10 @@ router.post(
   authenticate,
   body('agreeTerms').optional().isBoolean(),
   body('selectedAccountId').optional().isString(),
+  body('mpstatsToken').optional().isString(),
   async (req, res, next) => {
     try {
-      const { agreeTerms, selectedAccountId } = req.body;
+      const { agreeTerms, selectedAccountId, mpstatsToken } = req.body;
 
       if (agreeTerms !== undefined) {
         await userService.agreeToTerms(req.user!.id);
@@ -97,6 +99,12 @@ router.post(
           req.user!.id,
           selectedAccountId || null,
         );
+        res.json({ success: true });
+        return;
+      }
+
+      if (mpstatsToken !== undefined) {
+        await userService.updateMPStatsToken(req.user!.id, mpstatsToken || null);
         res.json({ success: true });
         return;
       }

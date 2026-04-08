@@ -12,7 +12,7 @@ import {
   SharedErrorHandlingService,
   sharedErrorHandlingService,
 } from '../error-handling.service';
-import { bookingErrorService } from '../../../booking-error.service';
+import { bookingErrorService } from '../../../internal/booking-error.service';
 import type { BookingError } from '../interfaces/sharedInterfaces';
 
 // Mock bookingErrorService

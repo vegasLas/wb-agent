@@ -1,5 +1,5 @@
-import { prisma } from '../config/database';
-import { UserEnvInfo } from '../types/wb';
+import { prisma } from "@/config/database";
+import { UserEnvInfo } from "@/types/wb";
 import { InputJsonValue } from '@prisma/client/runtime/library';
 
 export class UserService {
@@ -121,6 +121,13 @@ export class UserService {
     return prisma.user.update({
       where: { id: userId },
       data: { agreeTerms: true },
+    });
+  }
+
+  async updateMPStatsToken(userId: number, mpstatsToken: string | null) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { mpstatsToken },
     });
   }
 

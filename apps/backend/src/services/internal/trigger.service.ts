@@ -1,12 +1,12 @@
-import { prisma } from '../config/database';
+import { prisma } from "@/config/database";
 import type { SupplyTrigger } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import { apiKeyRateLimiterService } from './api-key-rate-limiter.service';
 import {
   DEFAULT_CHECK_INTERVAL,
   DEFAULT_SEARCH_MODE,
-} from '../constants/triggers';
-import type { Supply } from '../types/wb';
+} from "@/constants/triggers";
+import type { Supply } from "@/types/wb";
 
 export interface CreateTriggerDto {
   warehouseIds: number[];

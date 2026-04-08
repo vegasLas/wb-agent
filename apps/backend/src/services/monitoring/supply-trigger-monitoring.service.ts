@@ -1,5 +1,5 @@
 import { prisma } from '../../config/database';
-import { triggerService } from '../trigger.service';
+import { triggerService } from '../internal/trigger.service';
 import { TBOT } from '../../utils/TBOT';
 import { logger } from '../../utils/logger';
 import { SUPPLY_TYPES, BOX_TYPE_IDS } from '../../constants/triggers';

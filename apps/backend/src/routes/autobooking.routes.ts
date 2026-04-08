@@ -4,7 +4,7 @@ import { authenticate } from '../middleware/auth.middleware';
 import {
   autobookingService,
   AutobookingUpdateError,
-} from '../services/autobooking.service';
+} from '../services';
 import { ApiError } from '../utils/errors';
 
 const router = Router();

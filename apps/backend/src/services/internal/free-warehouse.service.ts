@@ -4,10 +4,10 @@
  * Handles fetching warehouses from free API with caching
  */
 
-import { Supply } from '../types/wb';
+import { Supply } from "@/types/wb";
 import { triggerService } from './trigger.service';
 import { apiKeyRateLimiterService } from './api-key-rate-limiter.service';
-import { logger } from '../utils/logger';
+import { logger } from "@/utils/logger";
 
 export class FreeWarehouseService {
   private static instance: FreeWarehouseService;

@@ -15,8 +15,8 @@ import { sharedProcessingStateService } from '../../../services/monitoring/share
 import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
 import { autobookingExecutorService } from '../../../services/monitoring/autobooking/autobooking-executor.service';
 import { autobookingNotificationService } from '../../../services/monitoring/autobooking/autobooking-notification.service';
-import { bookingErrorService } from '../../../services/booking-error.service';
-import { supplyService } from '../../../services/supply.service';
+import { bookingErrorService } from '../../../services/internal/booking-error.service';
+import { wbCookieSupplyService } from '../../../services/external/wb-cookie/supply.service';
 import { prisma } from '../../../config/database';
 import {
   createAutobooking,
@@ -89,7 +89,7 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
   let service: AutobookingMonitoringService;
   let mockBookingErrorService: jest.Mocked<typeof bookingErrorService>;
   let mockPrisma: jest.Mocked<typeof prisma>;
-  let mockSupplyService: jest.Mocked<typeof supplyService>;
+  let mockSupplyService: jest.Mocked<typeof wbCookieSupplyService>;
   let mockAutobookingExecutor: jest.Mocked<typeof autobookingExecutorService>;
   let mockNotificationService: jest.Mocked<
     typeof autobookingNotificationService
@@ -102,7 +102,7 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
       typeof bookingErrorService
     >;
     mockPrisma = prisma as jest.Mocked<typeof prisma>;
-    mockSupplyService = supplyService as jest.Mocked<typeof supplyService>;
+    mockSupplyService = wbCookieSupplyService as jest.Mocked<typeof wbCookieSupplyService>;
     mockAutobookingExecutor = autobookingExecutorService as jest.Mocked<
       typeof autobookingExecutorService
     >;
@@ -162,7 +162,7 @@ describe('AutobookingMonitoringService - CUSTOM_DATES_SINGLE Mode', () => {
         const { booking, account, user, effectiveDate } = params;
 
         // Simulate supply creation (this is what the real service does)
-        const result = await supplyService.createSupply({
+        const result = await wbCookieSupplyService.createSupply({
           accountId: account.id,
           supplierId: booking.supplierId,
           userId: user.userId,
