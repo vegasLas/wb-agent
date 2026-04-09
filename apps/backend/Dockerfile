@@ -31,6 +31,9 @@ RUN npx prisma generate --schema=prisma/schema.prisma
 # Build with tsc
 RUN npx tsc -p tsconfig.docker.json
 
+# Rewrite path aliases to relative paths
+RUN npx tsc-alias -p tsconfig.docker.json
+
 # ------------------------------------------
 # Stage 2: Production
 # Also uses Playwright image with browsers pre-installed
