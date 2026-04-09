@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { authService } from '@/services/auth.service';
-import { userService } from '@/services/user.service';
+import { authService, userService } from '@/services/user/';
 import { authenticate } from '@/middleware/auth.middleware';
 import { sendLogoutNotification } from '@/utils/TBOT';
 import { ApiError } from '@/utils/errors';

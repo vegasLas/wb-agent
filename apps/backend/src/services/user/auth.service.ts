@@ -1,7 +1,7 @@
 import { Browser, chromium, Page, BrowserContext, Cookie } from 'playwright';
 import { prisma } from '@/config/database';
-import { userService } from '@/services/user.service';
-import { accountService } from '@/services/account.service';
+import { userService } from './user.service';
+import { accountService } from './account.service';
 import { encodeCookies } from '@/utils/cookies';
 import { encodeLocalStorage } from '@/utils/localStorage';
 import { UserEnvInfo } from '@/types/wb';
@@ -654,7 +654,7 @@ export class AuthService {
         (cookie: Cookie) => cookie.name === 'x-supplier-id',
       );
       if (supplierId) {
-        const { checkIfShouldAddBonus } = await import('../utils/userBonus');
+        const { checkIfShouldAddBonus } = await import('../../utils/userBonus');
         const shouldAddBonus = await checkIfShouldAddBonus(
           session.userId,
           supplierId.value,
