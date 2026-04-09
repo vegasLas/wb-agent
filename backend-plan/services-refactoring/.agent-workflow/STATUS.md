@@ -20,7 +20,7 @@ Migration of backend services from flat `services/` structure to organized archi
 | 04 — Infrastructure Services | ✅ Merged | — | — |
 | 05 — Notification Services | ✅ Merged | #96 | `refactor/chunk-5-notification-services` |
 | 06 — Admin & Payment Services | ✅ Merged | #97 | `refactor/chunk-6-admin` |
-| 07 — External Analytics Services | 🔄 In Review | #98 | `refactor/chunk-7-external-analytics` |
+| 07 — External Analytics Services | ✅ Merged | #98 | `refactor/chunk-7-external-analytics` |
 
 ---
 
@@ -28,19 +28,16 @@ Migration of backend services from flat `services/` structure to organized archi
 
 ```
 main
-  └── refactor/services-architecture  ← HEAD at merge commit c314dec
-        └── refactor/chunk-7-external-analytics  ← PR #98 (open)
+  └── refactor/services-architecture  ← HEAD at merge commit 237641d
 ```
 
-**Parent branch commit:** `c314dec` — Merge pull request #97 from vegasLas/refactor/chunk-6-admin
-
-**Active chunk branch:** `refactor/chunk-7-external-analytics` — PR #98 (awaiting review)
+**Parent branch commit:** `237641d` — Merge pull request #98 from vegasLas/refactor/chunk-7-external-analytics
 
 ---
 
 ## Completed Work
 
-### Chunk 7: External Analytics Services (🔄 In Review)
+### Chunk 7: External Analytics Services (✅)
 
 **Plan:** `backend-plan/services-refactoring/07-CHUNK-EXTERNAL-ANALYTICS.md`
 
@@ -53,8 +50,9 @@ main
 
 **Commits:**
 - `58c2786` — refactor(chunk-7): move mpstats service to external/analytics directory
+- `8976923` — docs(status): update STATUS.md for chunk-7 progress
 
-**PR:** #98 — Chunk 7: External Analytics Services
+**Merge Commit:** `237641d` — Merge pull request #98 from vegasLas/refactor/chunk-7-external-analytics
 
 ### Chunk 6: Admin & Payment Services (✅)
 
