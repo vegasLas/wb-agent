@@ -15,9 +15,9 @@ Migration of backend services from flat `services/` structure to organized archi
 | Chunk | Status | PR | Branch |
 |-------|--------|-----|--------|
 | 01 — External WB API Services | ✅ Merged | #92 | `refactor/chunk-1-external-wb-api` |
-| 02 — (planned) | ⏳ Not started | — | — |
-| 03 — (planned) | ⏳ Not started | — | — |
-| 04 — (planned) | ⏳ Not started | — | — |
+| 02 — Domain Services | ⏳ Not started | — | — |
+| 03 — User & Account Services | ✅ Merged | #94 | `refactor/chunk-3-user-services` |
+| 04 — Infrastructure Services | ⏳ Not started | — | — |
 
 ---
 
@@ -25,14 +25,38 @@ Migration of backend services from flat `services/` structure to organized archi
 
 ```
 main
-  └── refactor/services-architecture  ← HEAD at merge commit dfef9d9
+  └── refactor/services-architecture  ← HEAD at merge commit baed65d
 ```
 
-**Parent branch commit:** `dfef9d9` — Merge pull request #92 from vegasLas/refactor/chunk-1-external-wb-api
+**Parent branch commit:** `baed65d` — Merge pull request #94 from vegasLas/refactor/chunk-3-user-services
 
 ---
 
 ## Completed Work
+
+### Chunk 3: User & Account Services (✅)
+
+**Plan:** `backend-plan/services-refactoring/03-CHUNK-USER-SERVICES.md`
+
+**Services moved to `services/user/`:**
+- `auth.service.ts` — WB authentication via Playwright
+- `user.service.ts` — User CRUD operations
+- `account.service.ts` — Account & supplier management
+- `supplier-api-key.service.ts` — API key management
+
+**New file:**
+- `services/user/index.ts` — Barrel export
+
+**Files updated:**
+- `routes/auth.routes.ts`
+- `routes/accounts.routes.ts`
+- `routes/suppliers.routes.ts`
+- `routes/supplies.routes.ts`
+- `routes/user.routes.ts`
+- `routes/warehouses.routes.ts`
+- `routes/supplier-api-keys.routes.ts`
+- `services/telegram.service.ts`
+- `tsconfig.json` — Fixed project references
 
 ### Chunk 1: External WB API Services (✅)
 
