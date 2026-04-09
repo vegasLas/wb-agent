@@ -11,7 +11,7 @@ import {
   enableAutobookingProcessing,
   disableAutobookingProcessing,
   isAutobookingProcessingActive,
-} from '@/services/autobooking-control.service';
+} from '@/services/infrastructure';
 import { env } from '@/config/env';
 import { createLogger } from '@/utils/logger';
 

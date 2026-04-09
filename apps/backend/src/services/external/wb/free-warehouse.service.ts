@@ -6,7 +6,7 @@
 
 import { Supply } from '@/types/wb';
 import { triggerService } from '@/services/external/wb/trigger.service';
-import { apiKeyRateLimiterService } from '@/services/api-key-rate-limiter.service';
+import { apiKeyRateLimiterService } from '@/services/infrastructure';
 import { logger } from '@/utils/logger';
 
 export class FreeWarehouseService {

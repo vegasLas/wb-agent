@@ -9,7 +9,7 @@
 import { sharedBanService } from '@/services/monitoring/shared/ban.service';
 import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
 import { sharedStatusUpdateService } from '@/services/monitoring/shared/status-update.service';
-import { bookingErrorService } from '@/services/booking-error.service';
+import { bookingErrorService } from '@/services/infrastructure';
 import { supplyService } from '@/services/domain/supply/supply.service';
 import { logger } from '@/utils/logger';
 import type {

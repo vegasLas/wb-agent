@@ -12,7 +12,7 @@
 import { AutobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
 import { sharedBanService } from '@/services/monitoring/shared/ban.service';
 import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
-import { bookingErrorService } from '@/services/booking-error.service';
+import { bookingErrorService } from '@/services/infrastructure';
 import { prisma } from '@/config/database';
 import {
   createAutobooking,

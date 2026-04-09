@@ -16,7 +16,7 @@ import { ApiError } from '@/utils/errors';
 import { convertWarehouseName } from '@/utils/warehouseNames';
 import { logger } from '@/utils/logger';
 import { GoodBalance, Warehouse } from '@/types/wb';
-import { cacheService } from '@/services/cache.service';
+import { cacheService } from '@/services/infrastructure';
 
 const router = Router();
 
