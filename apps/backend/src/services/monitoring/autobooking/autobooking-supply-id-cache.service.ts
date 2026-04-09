@@ -7,7 +7,7 @@
  */
 
 import { prisma } from '@/config/database';
-import { supplyService } from '@/services/supply.service';
+import { supplyService } from '@/services/domain/supply/supply.service';
 import { logger } from '@/utils/logger';
 import { SUPPLY_TYPES } from '@/constants/triggers';
 import type { IAutobookingSupplyIdCacheService } from '@/services/monitoring/autobooking/autobooking.interfaces';

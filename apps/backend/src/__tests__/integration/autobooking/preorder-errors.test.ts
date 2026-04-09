@@ -16,7 +16,7 @@ import { sharedProcessingStateService } from '@/services/monitoring/shared/proce
 import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tracking.service';
 import { autobookingSupplyIdCacheService } from '@/services/monitoring/autobooking/autobooking-supply-id-cache.service';
 import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
-import { supplyService } from '@/services/supply.service';
+import { supplyService } from '@/services/domain/supply/supply.service';
 import { bookingErrorService } from '@/services/booking-error.service';
 import { prisma } from '@/config/database';
 import {
