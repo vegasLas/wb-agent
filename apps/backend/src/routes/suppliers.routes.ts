@@ -11,8 +11,7 @@ import {
   AuthenticatedRequest,
 } from '@/middleware/auth.middleware';
 import { wbSupplierService } from '@/services/external/wb/wb-supplier.service';
-import { accountService } from '@/services/account.service';
-import { userService } from '@/services/user.service';
+import { accountService, userService } from '@/services/user/';
 import { ApiError } from '@/utils/errors';
 import { convertWarehouseName } from '@/utils/warehouseNames';
 import { logger } from '@/utils/logger';
