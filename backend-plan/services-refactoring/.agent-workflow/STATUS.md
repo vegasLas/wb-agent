@@ -19,7 +19,7 @@ Migration of backend services from flat `services/` structure to organized archi
 | 03 — User & Account Services | ✅ Merged | #94 | `refactor/chunk-3-user-services` |
 | 04 — Infrastructure Services | ✅ Merged | — | — |
 | 05 — Notification Services | ✅ Merged | #96 | `refactor/chunk-5-notification-services` |
-| 06 — Admin & Payment Services | ✅ Committed | — | `refactor/services-architecture` |
+| 06 — Admin & Payment Services | ✅ Merged | #97 | `refactor/chunk-6-admin` |
 
 ---
 
@@ -27,10 +27,10 @@ Migration of backend services from flat `services/` structure to organized archi
 
 ```
 main
-  └── refactor/services-architecture  ← HEAD at commit a25cdd7
+  └── refactor/services-architecture  ← HEAD at merge commit c314dec
 ```
 
-**Parent branch commit:** `a25cdd7` — refactor(chunk-6): update imports in routes and plugins for admin services
+**Parent branch commit:** `c314dec` — Merge pull request #97 from vegasLas/refactor/chunk-6-admin
 
 ---
 
@@ -55,6 +55,9 @@ main
 **Commits:**
 - `52ce1ed` — refactor(chunk-6): move admin and yookassa services to admin/ directory
 - `a25cdd7` — refactor(chunk-6): update imports in routes and plugins for admin services
+- `8ad60de` — docs(status): update STATUS.md for chunk-6 completion
+
+**Merge Commit:** `c314dec` — Merge pull request #97 from vegasLas/refactor/chunk-6-admin
 
 ### Chunk 5: Notification Services (✅)
 
