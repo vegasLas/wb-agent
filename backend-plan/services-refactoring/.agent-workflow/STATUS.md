@@ -15,9 +15,10 @@ Migration of backend services from flat `services/` structure to organized archi
 | Chunk | Status | PR | Branch |
 |-------|--------|-----|--------|
 | 01 — External WB API Services | ✅ Merged | #92 | `refactor/chunk-1-external-wb-api` |
-| 02 — Domain Services | ⏳ Not started | — | — |
+| 02 — Domain Services | ✅ Merged | — | — |
 | 03 — User & Account Services | ✅ Merged | #94 | `refactor/chunk-3-user-services` |
-| 04 — Infrastructure Services | ⏳ Not started | — | — |
+| 04 — Infrastructure Services | ✅ Merged | — | — |
+| 05 — Notification Services | ✅ Merged | #96 | `refactor/chunk-5-notification-services` |
 
 ---
 
@@ -25,14 +26,30 @@ Migration of backend services from flat `services/` structure to organized archi
 
 ```
 main
-  └── refactor/services-architecture  ← HEAD at merge commit baed65d
+  └── refactor/services-architecture  ← HEAD at merge commit b4dfc63
 ```
 
-**Parent branch commit:** `baed65d` — Merge pull request #94 from vegasLas/refactor/chunk-3-user-services
+**Parent branch commit:** `b4dfc63` — Merge pull request #96 from vegasLas/refactor/chunk-5-notification-services
 
 ---
 
 ## Completed Work
+
+### Chunk 5: Notification Services (✅)
+
+**Plan:** `backend-plan/services-refactoring/05-CHUNK-NOTIFICATION.md`
+
+**Services moved to `services/notification/`:**
+- `telegram.service.ts` — Telegram bot messages
+- `channel-subscription.service.ts` — Channel subscription check
+- `subscription-notification.service.ts` — Expiration notifications
+
+**New file:**
+- `services/notification/index.ts` — Barrel export
+
+**Files updated:**
+- `plugins/telegram.plugin.ts`
+- `__tests__/integration/subscription-notification.test.ts`
 
 ### Chunk 3: User & Account Services (✅)
 
