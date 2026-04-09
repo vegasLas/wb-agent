@@ -20,6 +20,7 @@ Migration of backend services from flat `services/` structure to organized archi
 | 04 — Infrastructure Services | ✅ Merged | — | — |
 | 05 — Notification Services | ✅ Merged | #96 | `refactor/chunk-5-notification-services` |
 | 06 — Admin & Payment Services | ✅ Merged | #97 | `refactor/chunk-6-admin` |
+| 07 — External Analytics Services | 🔄 In Review | #98 | `refactor/chunk-7-external-analytics` |
 
 ---
 
@@ -28,13 +29,32 @@ Migration of backend services from flat `services/` structure to organized archi
 ```
 main
   └── refactor/services-architecture  ← HEAD at merge commit c314dec
+        └── refactor/chunk-7-external-analytics  ← PR #98 (open)
 ```
 
 **Parent branch commit:** `c314dec` — Merge pull request #97 from vegasLas/refactor/chunk-6-admin
 
+**Active chunk branch:** `refactor/chunk-7-external-analytics` — PR #98 (awaiting review)
+
 ---
 
 ## Completed Work
+
+### Chunk 7: External Analytics Services (🔄 In Review)
+
+**Plan:** `backend-plan/services-refactoring/07-CHUNK-EXTERNAL-ANALYTICS.md`
+
+**Services moved to `services/external/analytics/`:**
+- `mpstats.service.ts` — MPStats.io API integration for Wildberries analytics
+
+**New files:**
+- `services/external/analytics/index.ts` — Barrel export for analytics services
+- `services/external/index.ts` — Master barrel for all external services
+
+**Commits:**
+- `58c2786` — refactor(chunk-7): move mpstats service to external/analytics directory
+
+**PR:** #98 — Chunk 7: External Analytics Services
 
 ### Chunk 6: Admin & Payment Services (✅)
 
