@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { authenticate } from '../middleware/auth.middleware';
-import { userService } from '../services/user.service';
-import { ApiError } from '../utils/errors';
+import { authenticate } from '@/middleware/auth.middleware';
+import { userService } from '@/services/user.service';
+import { ApiError } from '@/utils/errors';
 
 const router = Router();
 

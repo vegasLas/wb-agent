@@ -4,8 +4,8 @@
  * Handles caching and validation of warehouse data with blacklist support
  */
 
-import { Supply } from '../../types/wb';
-import { AcceptanceCoefficientsResponse, AcceptanceType } from '../../types/wb';
+import { Supply } from '@/types/wb';
+import { AcceptanceCoefficientsResponse, AcceptanceType } from '@/types/wb';
 
 interface CachedWarehouseData {
   warehouseID: number;
@@ -244,6 +244,6 @@ export class WarehouseDataCacheService {
 }
 
 // Import logger at the end to avoid circular dependencies
-import { logger } from '../../utils/logger';
+import { logger } from '@/utils/logger';
 
 export const warehouseDataCacheService = new WarehouseDataCacheService();

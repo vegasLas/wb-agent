@@ -12,7 +12,7 @@
 import {
   SharedUserTrackingService,
   sharedUserTrackingService,
-} from '../user-tracking.service';
+} from '@/services/monitoring/shared/user-tracking.service';
 
 // Mock logger
 jest.mock('../../../../utils/logger', () => ({

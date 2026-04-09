@@ -1,20 +1,20 @@
 import { Router } from 'express';
-import authRoutes from './auth.routes';
-import userRoutes from './user.routes';
-import accountRoutes from './accounts.routes';
-import supplierApiKeyRoutes from './supplier-api-keys.routes';
-import supplierRoutes from './suppliers.routes';
-import autobookingRoutes from './autobooking.routes';
-import rescheduleRoutes from './reschedule.routes';
-import triggerRoutes from './triggers.routes';
-import warehouseRoutes from './warehouses.routes';
-import suppliesRoutes from './supplies.routes';
-import paymentRoutes from './payments.routes';
-import webhookRoutes from './webhooks.routes';
-import coefficientsRoutes from './coefficients.routes';
-import reportsRoutes from './reports.routes';
-import promotionsRoutes from './promotions.routes';
-import { authenticate } from '../middleware/auth.middleware';
+import authRoutes from '@/routes/auth.routes';
+import userRoutes from '@/routes/user.routes';
+import accountRoutes from '@/routes/accounts.routes';
+import supplierApiKeyRoutes from '@/routes/supplier-api-keys.routes';
+import supplierRoutes from '@/routes/suppliers.routes';
+import autobookingRoutes from '@/routes/autobooking.routes';
+import rescheduleRoutes from '@/routes/reschedule.routes';
+import triggerRoutes from '@/routes/triggers.routes';
+import warehouseRoutes from '@/routes/warehouses.routes';
+import suppliesRoutes from '@/routes/supplies.routes';
+import paymentRoutes from '@/routes/payments.routes';
+import webhookRoutes from '@/routes/webhooks.routes';
+import coefficientsRoutes from '@/routes/coefficients.routes';
+import reportsRoutes from '@/routes/reports.routes';
+import promotionsRoutes from '@/routes/promotions.routes';
+import { authenticate } from '@/middleware/auth.middleware';
 
 const router = Router();
 

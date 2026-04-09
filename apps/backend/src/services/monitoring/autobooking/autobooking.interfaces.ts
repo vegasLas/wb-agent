@@ -11,7 +11,7 @@ import type {
   WarehouseAvailability,
   SchedulableItem,
   BookingError,
-} from '../shared/interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // ============== Core Types ==============
 

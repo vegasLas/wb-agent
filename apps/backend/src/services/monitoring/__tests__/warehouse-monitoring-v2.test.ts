@@ -12,15 +12,15 @@
 import {
   WarehouseMonitoringV2Service,
   warehouseMonitoringV2Service,
-} from '../warehouse-monitoring-v2.service';
-import { freeWarehouseService } from '../../free-warehouse.service';
-import { closeApiService } from '../../close-api.service';
-import { fakeDataDetectionService } from '../fake-data-detection.service';
-import { supplyTriggerMonitoringService } from '../supply-trigger-monitoring.service';
-import { autobookingMonitoringService } from '../autobooking/autobooking-monitoring.service';
-import { autobookingRescheduleMonitoringService } from '../autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { isAutobookingProcessingActive } from '../../autobooking-control.service';
-import { prisma } from '../../../config/database';
+} from '@/services/monitoring/warehouse-monitoring-v2.service';
+import { freeWarehouseService } from '@/services/free-warehouse.service';
+import { closeApiService } from '@/services/close-api.service';
+import { fakeDataDetectionService } from '@/services/monitoring/fake-data-detection.service';
+import { supplyTriggerMonitoringService } from '@/services/monitoring/supply-trigger-monitoring.service';
+import { autobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
+import { autobookingRescheduleMonitoringService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
+import { isAutobookingProcessingActive } from '@/services/autobooking-control.service';
+import { prisma } from '@/config/database';
 
 // Mock dependencies
 jest.mock('../../free-warehouse.service', () => ({

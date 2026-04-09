@@ -1,4 +1,4 @@
-import { prisma } from '../config/database';
+import { prisma } from '@/config/database';
 
 /**
  * Checks if a new user should receive the welcome bonus

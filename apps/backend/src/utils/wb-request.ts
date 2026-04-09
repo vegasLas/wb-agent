@@ -1,9 +1,9 @@
 import { Cookie } from 'playwright';
-import { prisma } from '../config/database';
-import { createLogger } from './logger';
+import { prisma } from '@/config/database';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('WBRequest');
-import { getCookiesFromAccount } from './cookies';
+import { getCookiesFromAccount } from '@/utils/cookies';
 import * as pkg from 'https-proxy-agent';
 const { HttpsProxyAgent } = pkg;
 

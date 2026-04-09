@@ -3,9 +3,9 @@
  * Provides admin-only functionality like broadcasting messages to all users
  */
 
-import { TBOT } from '../utils/TBOT';
-import { prisma } from '../config/database';
-import { logger } from '../utils/logger';
+import { TBOT } from '@/utils/TBOT';
+import { prisma } from '@/config/database';
+import { logger } from '@/utils/logger';
 
 /**
  * Admin service for broadcast and administrative functions

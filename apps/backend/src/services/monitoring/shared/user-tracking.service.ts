@@ -3,7 +3,7 @@
  * Tracks which users are currently being processed and maintains blacklist.
  */
 
-import type { ISharedUserTrackingService } from './interfaces/sharedInterfaces';
+import type { ISharedUserTrackingService } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Constants
 const USER_TRACKING_CLEAR_INTERVAL_MS = 5 * 1000; // 5 seconds

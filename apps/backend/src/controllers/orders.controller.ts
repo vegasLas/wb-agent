@@ -4,9 +4,9 @@
  * Handles order report operations
  */
 
-import { wbAccountRequest } from '../utils/wb-request';
-import { ProxyConfig } from '../utils/wb-request';
-import { logger } from '../utils/logger';
+import { wbAccountRequest } from '@/utils/wb-request';
+import { ProxyConfig } from '@/utils/wb-request';
+import { logger } from '@/utils/logger';
 
 interface NewOrderResponse {
   data: {

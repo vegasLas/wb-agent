@@ -8,24 +8,24 @@
  * - Processing and delegating to specialized services
  */
 
-import { prisma } from '../../config/database';
-import { createLogger } from '../../utils/logger';
+import { prisma } from '@/config/database';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('WarehouseMonitoring');
-import { freeWarehouseService } from '../free-warehouse.service';
-import { closeApiService } from '../close-api.service';
-import { fakeDataDetectionService } from './fake-data-detection.service';
-import { supplyTriggerMonitoringService } from './supply-trigger-monitoring.service';
-import { autobookingMonitoringService } from './autobooking/autobooking-monitoring.service';
-import { autobookingRescheduleMonitoringService } from './autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { isAutobookingProcessingActive } from '../autobooking-control.service';
+import { freeWarehouseService } from '@/services/free-warehouse.service';
+import { closeApiService } from '@/services/close-api.service';
+import { fakeDataDetectionService } from '@/services/monitoring/fake-data-detection.service';
+import { supplyTriggerMonitoringService } from '@/services/monitoring/supply-trigger-monitoring.service';
+import { autobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
+import { autobookingRescheduleMonitoringService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
+import { isAutobookingProcessingActive } from '@/services/autobooking-control.service';
 import type {
   MonitoringUser,
   WarehouseMonitoring,
   WarehouseAvailability,
   Proxy,
   Supply,
-} from './shared/interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 import type {
   Autobooking,
   AutobookingReschedule,

@@ -1,6 +1,6 @@
 import { Account, PrismaClient } from '@prisma/client';
-import { BaseRepository, FindManyParams } from './base.repository';
-import { prisma } from '../config/database';
+import { BaseRepository, FindManyParams } from '@/repositories/base.repository';
+import { prisma } from '@/config/database';
 
 export interface CreateAccountInput {
   userId: number;

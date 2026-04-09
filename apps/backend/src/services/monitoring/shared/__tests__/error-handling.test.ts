@@ -11,9 +11,9 @@
 import {
   SharedErrorHandlingService,
   sharedErrorHandlingService,
-} from '../error-handling.service';
-import { bookingErrorService } from '../../../booking-error.service';
-import type { BookingError } from '../interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/error-handling.service';
+import { bookingErrorService } from '@/services/booking-error.service';
+import type { BookingError } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock bookingErrorService
 jest.mock('../../../booking-error.service', () => ({

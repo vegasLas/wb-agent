@@ -10,7 +10,12 @@
     "declaration": false,
     "declarationMap": false,
     "emitDeclarationOnly": false,
-
+    "baseUrl": ".",
+    "paths": {
+      "@wb-monorepo/shared": ["./libs/shared/src/index.ts"],
+      "@wb-monorepo/shared/*": ["./libs/shared/src/*"],
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "jest.config.ts",

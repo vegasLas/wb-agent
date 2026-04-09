@@ -6,27 +6,27 @@
  * Processes warehouse availabilities and matches them with user autobookings.
  */
 
-import { sharedBanService } from '../shared/ban.service';
-import { sharedTaskOrganizerService } from '../shared/task-organizer.service';
-import { sharedUserTrackingService } from '../shared/user-tracking.service';
-import { sharedProcessingStateService } from '../shared/processing-state.service';
-import { sharedErrorHandlingService } from '../shared/error-handling.service';
-import { sharedLatencyService } from '../shared/latency.service';
-import { autobookingExecutorService } from './autobooking-executor.service';
-import { autobookingNotificationService } from './autobooking-notification.service';
-import { createLogger } from '../../../utils/logger';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedTaskOrganizerService } from '@/services/monitoring/shared/task-organizer.service';
+import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tracking.service';
+import { sharedProcessingStateService } from '@/services/monitoring/shared/processing-state.service';
+import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
+import { sharedLatencyService } from '@/services/monitoring/shared/latency.service';
+import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
+import { autobookingNotificationService } from '@/services/monitoring/autobooking/autobooking-notification.service';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('AutobookingMonitoring');
 import type {
   IAutobookingMonitoringService,
   BookingTask,
   SuccessfulBooking,
-} from './autobooking.interfaces';
+} from '@/services/monitoring/autobooking/autobooking.interfaces';
 import type {
   MonitoringUser,
   WarehouseAvailability,
   BookingError,
-} from '../shared/interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 export class AutobookingMonitoringService
   implements IAutobookingMonitoringService

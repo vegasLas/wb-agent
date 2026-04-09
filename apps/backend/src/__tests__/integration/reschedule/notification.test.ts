@@ -9,10 +9,10 @@
  * - Same test logic preserved
  */
 
-import { AutobookingRescheduleNotificationService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service';
-import { sharedTelegramNotificationService } from '../../../services/monitoring/shared/telegram-notification.service';
-import { sharedStatusUpdateService } from '../../../services/monitoring/shared/status-update.service';
-import { prisma } from '../../../config/database';
+import { AutobookingRescheduleNotificationService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service';
+import { sharedTelegramNotificationService } from '@/services/monitoring/shared/telegram-notification.service';
+import { sharedStatusUpdateService } from '@/services/monitoring/shared/status-update.service';
+import { prisma } from '@/config/database';
 import type { AutobookingReschedule } from '@prisma/client';
 
 // Mock dependencies

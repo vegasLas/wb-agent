@@ -9,15 +9,15 @@
  * - Same test logic preserved
  */
 
-import { AutobookingRescheduleExecutorService } from '../../../services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
-import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
-import { sharedErrorHandlingService } from '../../../services/monitoring/shared/error-handling.service';
-import { supplyService } from '../../../services/supply.service';
-import { bookingErrorService } from '../../../services/booking-error.service';
+import { AutobookingRescheduleExecutorService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
+import { supplyService } from '@/services/supply.service';
+import { bookingErrorService } from '@/services/booking-error.service';
 import {
   createMonitoringUser,
   getFutureDate,
-} from '../../helpers/autobooking-helpers';
+} from '@/__tests__/helpers/autobooking-helpers';
 import type { AutobookingReschedule } from '@prisma/client';
 
 // Mock dependencies

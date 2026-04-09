@@ -5,17 +5,17 @@
  */
 
 import axios from 'axios';
-import { prisma } from '../config/database';
-import { ICreatePayment, ICreatePaymentResponse } from '../types/payments';
-import { TBOT } from '../utils/TBOT';
+import { prisma } from '@/config/database';
+import { ICreatePayment, ICreatePaymentResponse } from '@/types/payments';
+import { TBOT } from '@/utils/TBOT';
 import {
   PAYMENT_TARIFFS,
   SubscriptionTariff,
   BookingTariff,
-} from '../constants/payments';
+} from '@/constants/payments';
 
 type Tariff = SubscriptionTariff | BookingTariff;
-import { logger } from '../utils/logger';
+import { logger } from '@/utils/logger';
 
 const YOOKASSA_API_URL = 'https://api.yookassa.ru/v3';
 

@@ -8,14 +8,14 @@
  * NOTE: Uses Moscow timezone (UTC+3) for date calculations to match WB business hours
  */
 
-import { prisma } from '../../config/database';
+import { prisma } from '@/config/database';
 import type { SupplyTrigger } from '@prisma/client';
-import { TBOT } from '../../utils/TBOT';
-import { createLogger } from '../../utils/logger';
+import { TBOT } from '@/utils/TBOT';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('TriggerDateManager');
-import { cacheService } from '../cache.service';
-import type { Warehouse } from '../../types/wb';
+import { cacheService } from '@/services/cache.service';
+import type { Warehouse } from '@/types/wb';
 
 /**
  * Service for managing trigger dates and expiration

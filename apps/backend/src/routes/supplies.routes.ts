@@ -9,13 +9,13 @@ import { body, query } from 'express-validator';
 import {
   authenticate,
   AuthenticatedRequest,
-} from '../middleware/auth.middleware';
-import { wbSupplierService } from '../services/wb-supplier.service';
-import { accountService } from '../services/account.service';
-import { userService } from '../services/user.service';
-import { ApiError } from '../utils/errors';
-import { prisma } from '../config/database';
-import type { UserEnvInfo } from '../types/wb';
+} from '@/middleware/auth.middleware';
+import { wbSupplierService } from '@/services/wb-supplier.service';
+import { accountService } from '@/services/account.service';
+import { userService } from '@/services/user.service';
+import { ApiError } from '@/utils/errors';
+import { prisma } from '@/config/database';
+import type { UserEnvInfo } from '@/types/wb';
 
 const router = Router();
 

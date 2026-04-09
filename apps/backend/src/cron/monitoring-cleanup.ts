@@ -9,12 +9,12 @@
  */
 
 import { scheduleJob } from 'node-schedule';
-import { autobookingDateManagerService } from '../services/monitoring/autobooking-date-manager.service';
-import { triggerDateManagerService } from '../services/monitoring/trigger-date-manager.service';
-import { createLogger } from '../utils/logger';
+import { autobookingDateManagerService } from '@/services/monitoring/autobooking-date-manager.service';
+import { triggerDateManagerService } from '@/services/monitoring/trigger-date-manager.service';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MonitoringCleanup');
-import { env } from '../config/env';
+import { env } from '@/config/env';
 
 // Flag to prevent concurrent executions
 let isCleaning = false;

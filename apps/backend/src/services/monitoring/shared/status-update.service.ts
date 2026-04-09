@@ -8,12 +8,12 @@
  * NOTE: Uses regular local dates (NOT Moscow timezone) - same as deprecated project
  */
 
-import { prisma } from '../../../config/database';
+import { prisma } from '@/config/database';
 import type {
   ISharedStatusUpdateService,
   ItemWithDates,
   StatusUpdateResult,
-} from './interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 /**
  * Service for updating autobooking and reschedule statuses in the database

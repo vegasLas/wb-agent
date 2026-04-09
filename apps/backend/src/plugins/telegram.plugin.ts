@@ -4,16 +4,16 @@
  * Replaces the Nuxt server/plugins/telegram.ts functionality
  */
 
-import { TBOT } from '../utils/TBOT';
-import { telegramService } from '../services/telegram.service';
-import { adminService } from '../services/admin.service';
+import { TBOT } from '@/utils/TBOT';
+import { telegramService } from '@/services/telegram.service';
+import { adminService } from '@/services/admin.service';
 import {
   enableAutobookingProcessing,
   disableAutobookingProcessing,
   isAutobookingProcessingActive,
-} from '../services/autobooking-control.service';
-import { env } from '../config/env';
-import { createLogger } from '../utils/logger';
+} from '@/services/autobooking-control.service';
+import { env } from '@/config/env';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('TelegramPlugin');
 

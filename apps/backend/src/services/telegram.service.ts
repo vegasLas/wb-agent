@@ -1,9 +1,9 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { TBOT } from '../utils/TBOT';
-import { logger } from '../utils/logger';
-import { channelSubscriptionService } from './channel-subscription.service';
-import { userService } from './user.service';
-import { generateUserEnvInfo } from '../utils/userEnvInfo';
+import { TBOT } from '@/utils/TBOT';
+import { logger } from '@/utils/logger';
+import { channelSubscriptionService } from '@/services/channel-subscription.service';
+import { userService } from '@/services/user.service';
+import { generateUserEnvInfo } from '@/utils/userEnvInfo';
 
 const URL = process.env.FRONTEND_URL || process.env.URL || '';
 

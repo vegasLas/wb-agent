@@ -1,3 +1,3 @@
-export * from './base.repository';
-export * from './account.repository';
-export * from './user.repository';
+export * from '@/repositories/base.repository';
+export * from '@/repositories/account.repository';
+export * from '@/repositories/user.repository';

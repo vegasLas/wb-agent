@@ -9,9 +9,9 @@
  * - Same test logic preserved
  */
 
-import { autobookingDateManagerService } from '../autobooking-date-manager.service';
-import { prisma } from '../../../config/database';
-import { TBOT } from '../../../utils/TBOT';
+import { autobookingDateManagerService } from '@/services/monitoring/autobooking-date-manager.service';
+import { prisma } from '@/config/database';
+import { TBOT } from '@/utils/TBOT';
 import type { Autobooking, User } from '@prisma/client';
 
 // Mock dependencies

@@ -10,9 +10,9 @@ import type {
   BanAllDatesParams,
   BanSingleDateParams,
   BookingError,
-} from './interfaces/sharedInterfaces';
-import { sharedTelegramNotificationService } from './telegram-notification.service';
-import { prisma } from '../../../config/database';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
+import { sharedTelegramNotificationService } from '@/services/monitoring/shared/telegram-notification.service';
+import { prisma } from '@/config/database';
 
 // Constants
 const BANNED_DATES_CLEAR_INTERVAL_MS = 5 * 1000; // 5 seconds

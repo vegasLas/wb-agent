@@ -3,24 +3,24 @@
  * Handles WB promotions calendar API operations
  */
 
-import { prisma } from '../config/database';
-import { wbAccountRequest } from '../utils/wb-request';
-import type { ProxyConfig } from '../utils/wb-request';
-import { createLogger } from '../utils/logger';
+import { prisma } from '@/config/database';
+import { wbAccountRequest } from '@/utils/wb-request';
+import type { ProxyConfig } from '@/utils/wb-request';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('Promotions');
 import {
   parseExcelFromBase64,
   filterExcelRows,
   buildFilteredExcel,
-} from '../utils/excel';
+} from '@/utils/excel';
 import type {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
   PromotionExcelGetResponse,
   PromotionRecoveryResponse,
   PromotionRecoveryInitResponse,
-} from '../types/wb';
+} from '@/types/wb';
 
 // Promotion Excel column mapping: English header -> Russian field name
 const promotionExcelColumnMap: Record<string, string> = {

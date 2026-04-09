@@ -4,11 +4,11 @@
  */
 
 import { Router } from 'express';
-import { yookassaService } from '../services/yookassa.service';
-import { prisma } from '../config/database';
-import { logger } from '../utils/logger';
-import { PAYMENT_TARIFFS } from '../constants/payments';
-import { YooKassaWebhookPayload } from '../types/payments';
+import { yookassaService } from '@/services/yookassa.service';
+import { prisma } from '@/config/database';
+import { logger } from '@/utils/logger';
+import { PAYMENT_TARIFFS } from '@/constants/payments';
+import { YooKassaWebhookPayload } from '@/types/payments';
 import { isIPv4, isIPv6 } from 'net';
 
 const router = Router();

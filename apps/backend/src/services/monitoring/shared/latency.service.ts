@@ -6,7 +6,7 @@
  * detection patterns and rate limiting
  */
 
-import type { ISharedLatencyService } from './interfaces/sharedInterfaces';
+import type { ISharedLatencyService } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Constants for latency calculation (in milliseconds)
 const LATENCY_MIN_MS = 8.1 * 1000; // 8.1 seconds minimum

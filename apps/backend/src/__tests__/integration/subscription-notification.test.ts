@@ -8,10 +8,10 @@
  * - Same test logic preserved
  */
 
-import { SubscriptionNotificationService } from '../../services/subscription-notification.service';
-import { prisma } from '../../config/database';
+import { SubscriptionNotificationService } from '@/services/subscription-notification.service';
+import { prisma } from '@/config/database';
 import * as schedule from 'node-schedule';
-import { TBOT } from '../../utils/TBOT';
+import { TBOT } from '@/utils/TBOT';
 
 // Mock dependencies
 jest.mock('../../config/database', () => ({

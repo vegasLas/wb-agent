@@ -6,10 +6,10 @@
  * - Routes (Controllers) → Services → Prisma → Database
  */
 
-import { startServer } from './app';
-import { setupTelegramPlugin } from './plugins/telegram.plugin';
-import { setupTriggerDateUpdatePlugin } from './plugins/trigger-date-update.plugin';
-import { logger } from './utils/logger';
+import { startServer } from '@/app';
+import { setupTelegramPlugin } from '@/plugins/telegram.plugin';
+import { setupTriggerDateUpdatePlugin } from '@/plugins/trigger-date-update.plugin';
+import { logger } from '@/utils/logger';
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {

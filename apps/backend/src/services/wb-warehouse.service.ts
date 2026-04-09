@@ -4,17 +4,17 @@
  * Handles all Wildberries warehouse-related API calls with multi-account support
  */
 
-import { wbAccountRequest } from '../utils/wb-request';
-import type { ProxyConfig } from '../utils/wb-request';
+import { wbAccountRequest } from '@/utils/wb-request';
+import type { ProxyConfig } from '@/utils/wb-request';
 import {
   TransitResponse,
   WarehouseRecommendationsResponse,
   AcceptanceCoefficientsResponse,
   WarehousesRoot,
-} from '../types/wb';
-import { prisma } from '../config/database';
-import { getCookiesFromAccount } from '../utils/cookies';
-import { logger } from '../utils/logger';
+} from '@/types/wb';
+import { prisma } from '@/config/database';
+import { getCookiesFromAccount } from '@/utils/cookies';
+import { logger } from '@/utils/logger';
 
 export class WBWarehouseService {
   /**

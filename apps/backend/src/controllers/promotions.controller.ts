@@ -9,8 +9,8 @@ import {
   getPromotionDetail,
   getPromotionExcel,
   applyPromotionRecovery,
-} from '../services/promotions.service';
-import { logger } from '../utils/logger';
+} from '@/services/promotions.service';
+import { logger } from '@/utils/logger';
 
 /**
  * GET /api/v1/promotions/timeline

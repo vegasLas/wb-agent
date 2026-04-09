@@ -1,5 +1,5 @@
-import { prisma } from '../config/database';
-import { UserEnvInfo } from '../types/wb';
+import { prisma } from '@/config/database';
+import { UserEnvInfo } from '@/types/wb';
 import { InputJsonValue } from '@prisma/client/runtime/library';
 
 export class UserService {

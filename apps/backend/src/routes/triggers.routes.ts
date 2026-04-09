@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
-import { authenticate } from '../middleware/auth.middleware';
-import { triggerService } from '../services/trigger.service';
-import { ApiError } from '../utils/errors';
+import { authenticate } from '@/middleware/auth.middleware';
+import { triggerService } from '@/services/trigger.service';
+import { ApiError } from '@/utils/errors';
 import {
   TRIGGER_INTERVALS,
   MAX_WAREHOUSES_PER_TRIGGER,
-} from '../constants/triggers';
+} from '@/constants/triggers';
 
 const router = Router();
 

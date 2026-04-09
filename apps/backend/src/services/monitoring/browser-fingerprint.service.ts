@@ -8,8 +8,8 @@
 
 import type { Page } from 'playwright';
 import crypto from 'crypto';
-import { prisma } from '../../config/database';
-import type { UserEnvInfo } from '../../types/wb';
+import { prisma } from '@/config/database';
+import type { UserEnvInfo } from '@/types/wb';
 
 /**
  * Fingerprint data structure containing all properties needed for browser spoofing

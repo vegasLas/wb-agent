@@ -6,7 +6,7 @@
  * within a single monitoring cycle. Tracks console log counts for debugging.
  */
 
-import type { ISharedProcessingStateService } from './interfaces/sharedInterfaces';
+import type { ISharedProcessingStateService } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 interface ProcessingState {
   processedIds: Set<string>;

@@ -6,25 +6,25 @@
  * Processes warehouse availabilities and matches them with user reschedule requests.
  */
 
-import { sharedBanService } from '../shared/ban.service';
-import { sharedTaskOrganizerService } from '../shared/task-organizer.service';
-import { sharedUserTrackingService } from '../shared/user-tracking.service';
-import { sharedProcessingStateService } from '../shared/processing-state.service';
-import { sharedErrorHandlingService } from '../shared/error-handling.service';
-import { sharedLatencyService } from '../shared/latency.service';
-import { autobookingRescheduleExecutorService } from './autobooking-reschedule-executor.service';
-import { autobookingRescheduleNotificationService } from './autobooking-reschedule-notification.service';
-import { logger } from '../../../utils/logger';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedTaskOrganizerService } from '@/services/monitoring/shared/task-organizer.service';
+import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tracking.service';
+import { sharedProcessingStateService } from '@/services/monitoring/shared/processing-state.service';
+import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
+import { sharedLatencyService } from '@/services/monitoring/shared/latency.service';
+import { autobookingRescheduleExecutorService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
+import { autobookingRescheduleNotificationService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-notification.service';
+import { logger } from '@/utils/logger';
 import type {
   IRescheduleMonitoringService,
   RescheduleBookingTask,
   SuccessfulReschedule,
   RescheduleBookingError,
-} from '../interfaces/reschedule.interfaces';
+} from '@/services/monitoring/interfaces/reschedule.interfaces';
 import type {
   MonitoringUser,
   WarehouseAvailability,
-} from '../interfaces/reschedule.interfaces';
+} from '@/services/monitoring/interfaces/reschedule.interfaces';
 
 export class AutobookingRescheduleMonitoringService
   implements IRescheduleMonitoringService

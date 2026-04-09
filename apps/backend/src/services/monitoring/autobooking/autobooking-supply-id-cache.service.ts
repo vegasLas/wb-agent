@@ -6,15 +6,15 @@
  * within the 24-hour window. Supply IDs are cached in the database.
  */
 
-import { prisma } from '../../../config/database';
-import { supplyService } from '../../supply.service';
-import { logger } from '../../../utils/logger';
-import { SUPPLY_TYPES } from '../../../constants/triggers';
-import type { IAutobookingSupplyIdCacheService } from './autobooking.interfaces';
+import { prisma } from '@/config/database';
+import { supplyService } from '@/services/supply.service';
+import { logger } from '@/utils/logger';
+import { SUPPLY_TYPES } from '@/constants/triggers';
+import type { IAutobookingSupplyIdCacheService } from '@/services/monitoring/autobooking/autobooking.interfaces';
 import type {
   MonitoringUser,
   SchedulableItem,
-} from '../shared/interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Get constants from interface
 const SUPPLY_ID_CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours

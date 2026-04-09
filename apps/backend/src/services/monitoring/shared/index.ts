@@ -6,40 +6,40 @@
  */
 
 // Export interfaces
-export * from './interfaces/sharedInterfaces';
+export * from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Export services - Phase 1: Foundation
-export { SharedLatencyService, sharedLatencyService } from './latency.service';
+export { SharedLatencyService, sharedLatencyService } from '@/services/monitoring/shared/latency.service';
 export {
   SharedProcessingStateService,
   sharedProcessingStateService,
-} from './processing-state.service';
+} from '@/services/monitoring/shared/processing-state.service';
 export {
   SharedTelegramNotificationService,
   sharedTelegramNotificationService,
-} from './telegram-notification.service';
+} from '@/services/monitoring/shared/telegram-notification.service';
 export {
   SharedStatusUpdateService,
   sharedStatusUpdateService,
-} from './status-update.service';
+} from '@/services/monitoring/shared/status-update.service';
 
 // Phase 2: Ban & Error Handling
-export { SharedBanService, sharedBanService } from './ban.service';
+export { SharedBanService, sharedBanService } from '@/services/monitoring/shared/ban.service';
 export {
   SharedErrorHandlingService,
   sharedErrorHandlingService,
-} from './error-handling.service';
+} from '@/services/monitoring/shared/error-handling.service';
 export {
   SharedUserTrackingService,
   sharedUserTrackingService,
-} from './user-tracking.service';
+} from '@/services/monitoring/shared/user-tracking.service';
 export {
   SharedTaskOrganizerService,
   sharedTaskOrganizerService,
-} from './task-organizer.service';
+} from '@/services/monitoring/shared/task-organizer.service';
 
 // Phase 3: Availability Filter
 export {
   SharedAvailabilityFilterService,
   sharedAvailabilityFilterService,
-} from './availability-filter.service';
+} from '@/services/monitoring/shared/availability-filter.service';

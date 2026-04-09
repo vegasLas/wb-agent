@@ -9,20 +9,20 @@
  * - Same test logic preserved with proper service call assertions
  */
 
-import { AutobookingMonitoringService } from '../../../services/monitoring/autobooking/autobooking-monitoring.service';
-import { sharedBanService } from '../../../services/monitoring/shared/ban.service';
-import { sharedProcessingStateService } from '../../../services/monitoring/shared/processing-state.service';
-import { sharedUserTrackingService } from '../../../services/monitoring/shared/user-tracking.service';
-import { autobookingSupplyIdCacheService } from '../../../services/monitoring/autobooking/autobooking-supply-id-cache.service';
-import { autobookingExecutorService } from '../../../services/monitoring/autobooking/autobooking-executor.service';
-import { bookingErrorService } from '../../../services/booking-error.service';
-import { supplyService } from '../../../services/supply.service';
-import { prisma } from '../../../config/database';
+import { AutobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedProcessingStateService } from '@/services/monitoring/shared/processing-state.service';
+import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tracking.service';
+import { autobookingSupplyIdCacheService } from '@/services/monitoring/autobooking/autobooking-supply-id-cache.service';
+import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
+import { bookingErrorService } from '@/services/booking-error.service';
+import { supplyService } from '@/services/supply.service';
+import { prisma } from '@/config/database';
 import {
   createAutobooking,
   createMonitoringUser,
-} from '../../helpers/autobooking-helpers';
-import type { MonitoringUser } from '../../../services/monitoring/shared/interfaces/sharedInterfaces';
+} from '@/__tests__/helpers/autobooking-helpers';
+import type { MonitoringUser } from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock dependencies
 jest.mock('../../../services/booking-error.service');

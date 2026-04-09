@@ -5,7 +5,7 @@
  */
 
 import * as XLSX from 'xlsx';
-import { logger } from './logger';
+import { logger } from '@/utils/logger';
 
 export interface ParseOptions {
   header?: boolean;

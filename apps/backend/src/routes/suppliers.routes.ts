@@ -9,15 +9,15 @@ import { body, query } from 'express-validator';
 import {
   authenticate,
   AuthenticatedRequest,
-} from '../middleware/auth.middleware';
-import { wbSupplierService } from '../services/wb-supplier.service';
-import { accountService } from '../services/account.service';
-import { userService } from '../services/user.service';
-import { ApiError } from '../utils/errors';
-import { convertWarehouseName } from '../utils/warehouseNames';
-import { logger } from '../utils/logger';
-import { GoodBalance, Warehouse } from '../types/wb';
-import { cacheService } from '../services/cache.service';
+} from '@/middleware/auth.middleware';
+import { wbSupplierService } from '@/services/wb-supplier.service';
+import { accountService } from '@/services/account.service';
+import { userService } from '@/services/user.service';
+import { ApiError } from '@/utils/errors';
+import { convertWarehouseName } from '@/utils/warehouseNames';
+import { logger } from '@/utils/logger';
+import { GoodBalance, Warehouse } from '@/types/wb';
+import { cacheService } from '@/services/cache.service';
 
 const router = Router();
 

@@ -4,8 +4,8 @@
  * Detects fake warehouse patterns based on BOX counts
  */
 
-import { Supply } from '../../types/wb';
-import { logger } from '../../utils/logger';
+import { Supply } from '@/types/wb';
+import { logger } from '@/utils/logger';
 
 // Problematic warehouse IDs that should be monitored
 const PROBLEMATIC_WAREHOUSE_IDS = [

@@ -7,7 +7,7 @@ import type { Autobooking } from '@prisma/client';
 import type {
   SchedulableItem,
   WarehouseAvailability,
-} from '../../services/monitoring/shared/interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Supply type constants matching the app
 export const SUPPLY_TYPES = {

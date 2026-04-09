@@ -1,8 +1,8 @@
-import { prisma } from '../config/database';
-import { UserEnvInfo, SupplierResponse } from '../types/wb';
-import { logger } from '../utils/logger';
-import { wbAccountRequest } from '../utils/wb-request';
-import { getCookiesFromAccount } from '../utils/cookies';
+import { prisma } from '@/config/database';
+import { UserEnvInfo, SupplierResponse } from '@/types/wb';
+import { logger } from '@/utils/logger';
+import { wbAccountRequest } from '@/utils/wb-request';
+import { getCookiesFromAccount } from '@/utils/cookies';
 import type { Cookie } from 'playwright';
 
 export interface CreateAccountInput {

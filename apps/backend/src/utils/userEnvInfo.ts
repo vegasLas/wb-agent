@@ -1,7 +1,7 @@
 import crypto from 'crypto';
-import { UserEnvInfo } from '../types/wb';
-import { prisma } from '../config/database';
-import { logger } from './logger';
+import { UserEnvInfo } from '@/types/wb';
+import { prisma } from '@/config/database';
+import { logger } from '@/utils/logger';
 import { Prisma } from '@prisma/client';
 
 export interface Proxy {

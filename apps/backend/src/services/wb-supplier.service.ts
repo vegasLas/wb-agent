@@ -4,8 +4,8 @@
  * Handles all Wildberries supplier-related API calls with multi-account support
  */
 
-import { wbAccountRequest } from '../utils/wb-request';
-import type { ProxyConfig } from '../utils/wb-request';
+import { wbAccountRequest } from '@/utils/wb-request';
+import type { ProxyConfig } from '@/utils/wb-request';
 import {
   ListGoodsParams,
   ListDraftsParams,
@@ -22,7 +22,7 @@ import {
   SupplyDetailsResponse,
   BalancesResponse,
   SupplierResponse,
-} from '../types/wb';
+} from '@/types/wb';
 
 export class WBSupplierService {
   /**

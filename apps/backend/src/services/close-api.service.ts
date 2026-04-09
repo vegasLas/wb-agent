@@ -4,14 +4,14 @@
  * Handles fetching acceptance coefficients with account rotation and caching
  */
 
-import { prisma } from '../config/database';
-import { Supply } from '../types/wb';
-import { AcceptanceType } from '../types/wb';
-import { wbWarehouseService } from './wb-warehouse.service';
-import { createLogger } from '../utils/logger';
+import { prisma } from '@/config/database';
+import { Supply } from '@/types/wb';
+import { AcceptanceType } from '@/types/wb';
+import { wbWarehouseService } from '@/services/wb-warehouse.service';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('CloseApi');
-import { ProxyConfig } from '../utils/wb-request';
+import { ProxyConfig } from '@/utils/wb-request';
 
 interface CloseApiWarehouse {
   warehouseID: number;

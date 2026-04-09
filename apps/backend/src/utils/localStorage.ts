@@ -1,5 +1,5 @@
-import { encrypt, decrypt } from './encryption';
-import { prisma } from '../config/database';
+import { encrypt, decrypt } from '@/utils/encryption';
+import { prisma } from '@/config/database';
 
 export interface LocalStorageData {
   [key: string]: string;

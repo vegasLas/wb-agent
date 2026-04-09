@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { env } from '../config/env';
+import { env } from '@/config/env';
 
 const ENCRYPTION_KEY = env.COOKIE_ENCRYPTION_KEY
   ? Buffer.from(env.COOKIE_ENCRYPTION_KEY, 'hex')

@@ -12,14 +12,14 @@
 import {
   SharedTelegramNotificationService,
   sharedTelegramNotificationService,
-} from '../telegram-notification.service';
-import { TBOT } from '../../../../utils/TBOT';
-import { prisma } from '../../../../config/database';
-import { logger } from '../../../../utils/logger';
+} from '@/services/monitoring/shared/telegram-notification.service';
+import { TBOT } from '@/utils/TBOT';
+import { prisma } from '@/config/database';
+import { logger } from '@/utils/logger';
 import type {
   TelegramError,
   TelegramNotificationOptions,
-} from '../interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Mock TBOT
 jest.mock('../../../../utils/TBOT', () => ({

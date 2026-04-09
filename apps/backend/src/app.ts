@@ -2,10 +2,10 @@ import express, { Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
-import { env } from './config/env';
-import { logger } from './utils/logger';
-import { errorHandler, notFoundHandler } from './middleware/error.middleware';
-import routes from './routes';
+import { env } from '@/config/env';
+import { logger } from '@/utils/logger';
+import { errorHandler, notFoundHandler } from '@/middleware/error.middleware';
+import routes from '@/routes';
 
 /**
  * Create and configure the Express application

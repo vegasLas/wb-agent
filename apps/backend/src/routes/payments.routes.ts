@@ -9,13 +9,13 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   authenticate,
   AuthenticatedRequest,
-} from '../middleware/auth.middleware';
-import { yookassaService } from '../services/yookassa.service';
-import { prisma } from '../config/database';
-import { TBOT } from '../utils/TBOT';
-import { ApiError } from '../utils/errors';
-import { logger } from '../utils/logger';
-import { PAYMENT_TARIFFS } from '../constants/payments';
+} from '@/middleware/auth.middleware';
+import { yookassaService } from '@/services/yookassa.service';
+import { prisma } from '@/config/database';
+import { TBOT } from '@/utils/TBOT';
+import { ApiError } from '@/utils/errors';
+import { logger } from '@/utils/logger';
+import { PAYMENT_TARIFFS } from '@/constants/payments';
 
 const router = Router();
 

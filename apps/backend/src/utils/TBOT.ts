@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { env } from '../config/env';
-import { createLogger } from './logger';
+import { env } from '@/config/env';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('TBOT');
 

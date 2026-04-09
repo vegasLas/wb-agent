@@ -6,9 +6,9 @@
  * Uses account-based authentication with WB cookies.
  */
 
-import { prisma } from '../config/database';
-import { wbAccountRequest, ProxyConfig } from '../utils/wb-request';
-import { createLogger } from '../utils/logger';
+import { prisma } from '@/config/database';
+import { wbAccountRequest, ProxyConfig } from '@/utils/wb-request';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('SupplyService');
 

@@ -14,21 +14,21 @@ import {
   Cookie,
   type BrowserContextOptions,
 } from 'playwright';
-import type { Proxy } from '../../utils/userEnvInfo';
+import type { Proxy } from '@/utils/userEnvInfo';
 import {
   browserFingerprintService,
   type Fingerprint,
-} from './browser-fingerprint.service';
+} from '@/services/monitoring/browser-fingerprint.service';
 import {
   decodeCookies,
   getCookiesFromAccount,
   saveCookiesToAccount,
-} from '../../utils/cookies';
+} from '@/utils/cookies';
 import {
   getLocalStorageFromAccount,
   mergeLocalStorageToAccount,
-} from '../../utils/localStorage';
-import { createLogger } from '../../utils/logger';
+} from '@/utils/localStorage';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('PlaywrightBrowser');
 

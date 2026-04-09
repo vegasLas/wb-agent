@@ -6,30 +6,30 @@
  * Integrates with Playwright browser automation for date selection.
  */
 
-import { sharedBanService } from '../shared/ban.service';
-import { sharedErrorHandlingService } from '../shared/error-handling.service';
-import { bookingErrorService } from '../../booking-error.service';
-import { autobookingSupplyIdCacheService } from './autobooking-supply-id-cache.service';
-import { supplyService } from '../../supply.service';
-import { prisma } from '../../../config/database';
-import { createLogger } from '../../../utils/logger';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
+import { bookingErrorService } from '@/services/booking-error.service';
+import { autobookingSupplyIdCacheService } from '@/services/monitoring/autobooking/autobooking-supply-id-cache.service';
+import { supplyService } from '@/services/supply.service';
+import { prisma } from '@/config/database';
+import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('AutobookingExecutor');
-import type { Proxy } from '../../../utils/userEnvInfo';
+import type { Proxy } from '@/utils/userEnvInfo';
 import {
   playwrightBrowserService,
   BrowserErrorCode,
-} from '../playwright-browser.service';
-import { browserFingerprintService } from '../browser-fingerprint.service';
+} from '@/services/monitoring/playwright-browser.service';
+import { browserFingerprintService } from '@/services/monitoring/browser-fingerprint.service';
 import type {
   IAutobookingExecutorService,
   SuccessfulBooking,
-} from './autobooking.interfaces';
+} from '@/services/monitoring/autobooking/autobooking.interfaces';
 import type {
   MonitoringUser,
   SchedulableItem,
   BookingError,
-} from '../shared/interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // ============== Constants ==============
 

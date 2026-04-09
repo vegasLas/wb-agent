@@ -8,8 +8,8 @@
  * NOTE: Uses regular local dates (NOT Moscow timezone) - same as deprecated project
  */
 
-import { sharedBanService } from './ban.service';
-import { createLogger } from '../../../utils/logger';
+import { sharedBanService } from '@/services/monitoring/shared/ban.service';
+import { createLogger } from '@/utils/logger';
 const logger = createLogger('AvailabilityFilter');
 import type {
   SchedulableItem,
@@ -18,7 +18,7 @@ import type {
   DateType,
   WarehouseAvailability,
   FilteredMatch,
-} from './interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Constants
 const WEEK_DURATION_DAYS = 7;

@@ -8,10 +8,10 @@
  * NOTE: Uses Moscow timezone (UTC+3) for date calculations to match WB business hours
  */
 
-import { prisma } from '../../config/database';
+import { prisma } from '@/config/database';
 import type { Autobooking } from '@prisma/client';
-import { TBOT } from '../../utils/TBOT';
-import { logger } from '../../utils/logger';
+import { TBOT } from '@/utils/TBOT';
+import { logger } from '@/utils/logger';
 
 /**
  * Service for managing autobooking dates and archiving expired items

@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { validate } from '@telegram-apps/init-data-node';
-import { env } from '../config/env';
-import { ApiError } from './errors';
+import { env } from '@/config/env';
+import { ApiError } from '@/utils/errors';
 
 interface TelegramUser {
   id: number;

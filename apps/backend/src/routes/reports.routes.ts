@@ -7,7 +7,7 @@ import { Router } from 'express';
 import {
   fetchSalesReport,
   fetchReport,
-} from '../controllers/reports.controller';
+} from '@/controllers/reports.controller';
 
 const router = Router();
 

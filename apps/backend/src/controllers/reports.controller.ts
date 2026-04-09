@@ -4,8 +4,8 @@
  */
 
 import { Request, Response } from 'express';
-import { getSalesReport } from '../services/report.service';
-import { logger } from '../utils/logger';
+import { getSalesReport } from '@/services/report.service';
+import { logger } from '@/utils/logger';
 
 /**
  * GET /api/v1/reports/sales

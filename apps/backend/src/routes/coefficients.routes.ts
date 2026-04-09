@@ -4,9 +4,9 @@
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticate } from '../middleware/auth.middleware';
-import { triggerService } from '../services/trigger.service';
-import { ApiError } from '../utils/errors';
+import { authenticate } from '@/middleware/auth.middleware';
+import { triggerService } from '@/services/trigger.service';
+import { ApiError } from '@/utils/errors';
 
 const router = Router();
 

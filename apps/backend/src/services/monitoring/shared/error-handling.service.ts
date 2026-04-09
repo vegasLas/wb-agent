@@ -3,12 +3,12 @@
  * Categorizes errors and determines appropriate handling strategies.
  */
 
-import { bookingErrorService } from '../../booking-error.service';
+import { bookingErrorService } from '@/services/booking-error.service';
 import type {
   BookingError,
   ISharedErrorHandlingService,
   CategorizedError,
-} from './interfaces/sharedInterfaces';
+} from '@/services/monitoring/shared/interfaces/sharedInterfaces';
 
 // Constants
 const DATE_UNAVAILABLE_BAN_DURATION_MS = 2 * 1000; // 2 seconds

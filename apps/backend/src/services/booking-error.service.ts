@@ -1,6 +1,6 @@
-import { prisma } from '../config/database';
+import { prisma } from '@/config/database';
 import type { Autobooking, AutobookingReschedule, User } from '@prisma/client';
-import { TBOT } from '../utils/TBOT';
+import { TBOT } from '@/utils/TBOT';
 
 /**
  * Error configuration with status and message
