@@ -7,7 +7,7 @@
 import { prisma } from '@/config/database';
 import { Supply } from '@/types/wb';
 import { AcceptanceType } from '@/types/wb';
-import { wbWarehouseService } from '@/services/wb-warehouse.service';
+import { wbWarehouseService } from '@/services/external/wb/wb-warehouse.service';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('CloseApi');

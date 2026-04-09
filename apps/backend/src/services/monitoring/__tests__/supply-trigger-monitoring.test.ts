@@ -10,7 +10,7 @@
  */
 
 import { SupplyTriggerMonitoringService } from '@/services/monitoring/supply-trigger-monitoring.service';
-import { triggerService } from '@/services/trigger.service';
+import { triggerService } from '@/services/external/wb/trigger.service';
 import { TBOT } from '@/utils/TBOT';
 import { SUPPLY_TYPES } from '@/constants/triggers';
 import type {
@@ -20,7 +20,7 @@ import type {
 import type { SupplyTrigger } from '@prisma/client';
 
 // Mock dependencies
-jest.mock('../../trigger.service', () => ({
+jest.mock('../../external/wb/trigger.service', () => ({
   triggerService: {
     updateTriggerStatus: jest.fn().mockResolvedValue(undefined),
     updateLastNotificationTime: jest.fn().mockResolvedValue(undefined),
