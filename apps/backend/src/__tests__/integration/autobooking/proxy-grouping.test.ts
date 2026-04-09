@@ -16,7 +16,7 @@ import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tra
 import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
 import { autobookingNotificationService } from '@/services/monitoring/autobooking/autobooking-notification.service';
 import { bookingErrorService } from '@/services/booking-error.service';
-import { supplyService } from '@/services/supply.service';
+import { supplyService } from '@/services/domain/supply/supply.service';
 import { prisma } from '@/config/database';
 import {
   createAutobooking,
