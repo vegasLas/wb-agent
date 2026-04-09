@@ -1,7 +1,7 @@
 import { prisma } from '@/config/database';
 import type { SupplyTrigger } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
-import { apiKeyRateLimiterService } from '@/services/api-key-rate-limiter.service';
+import { apiKeyRateLimiterService } from '@/services/infrastructure';
 import {
   DEFAULT_CHECK_INTERVAL,
   DEFAULT_SEARCH_MODE,

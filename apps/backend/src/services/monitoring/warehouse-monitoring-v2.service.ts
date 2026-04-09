@@ -12,13 +12,13 @@ import { prisma } from '@/config/database';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('WarehouseMonitoring');
-import { freeWarehouseService } from '@/services/free-warehouse.service';
-import { closeApiService } from '@/services/close-api.service';
+import { freeWarehouseService } from '@/services/external/wb/free-warehouse.service';
+import { closeApiService } from '@/services/external/wb/close-api.service';
 import { fakeDataDetectionService } from '@/services/monitoring/fake-data-detection.service';
 import { supplyTriggerMonitoringService } from '@/services/monitoring/supply-trigger-monitoring.service';
 import { autobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
 import { autobookingRescheduleMonitoringService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { isAutobookingProcessingActive } from '@/services/autobooking-control.service';
+import { isAutobookingProcessingActive } from '@/services/infrastructure';
 import type {
   MonitoringUser,
   WarehouseMonitoring,

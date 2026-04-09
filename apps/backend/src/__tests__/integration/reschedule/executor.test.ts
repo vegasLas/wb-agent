@@ -12,8 +12,8 @@
 import { AutobookingRescheduleExecutorService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-executor.service';
 import { sharedBanService } from '@/services/monitoring/shared/ban.service';
 import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
-import { supplyService } from '@/services/supply.service';
-import { bookingErrorService } from '@/services/booking-error.service';
+import { supplyService } from '@/services/domain/supply/supply.service';
+import { bookingErrorService } from '@/services/infrastructure';
 import {
   createMonitoringUser,
   getFutureDate,

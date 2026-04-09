@@ -5,13 +5,13 @@
  */
 
 import { TBOT } from '@/utils/TBOT';
-import { telegramService } from '@/services/telegram.service';
-import { adminService } from '@/services/admin.service';
+import { telegramService } from '@/services/notification/';
+import { adminService } from '@/services/admin/';
 import {
   enableAutobookingProcessing,
   disableAutobookingProcessing,
   isAutobookingProcessingActive,
-} from '@/services/autobooking-control.service';
+} from '@/services/infrastructure';
 import { env } from '@/config/env';
 import { createLogger } from '@/utils/logger';
 
