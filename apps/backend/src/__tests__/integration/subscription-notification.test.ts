@@ -8,13 +8,13 @@
  * - Same test logic preserved
  */
 
-import { SubscriptionNotificationService } from '@/services/subscription-notification.service';
+import { SubscriptionNotificationService } from '@/services/notification/';
 import { prisma } from '@/config/database';
 import * as schedule from 'node-schedule';
 import { TBOT } from '@/utils/TBOT';
 
 // Mock dependencies
-jest.mock('../../config/database', () => ({
+jest.mock('@/config/database', () => ({
   prisma: {
     user: {
       findMany: jest.fn(),
@@ -22,7 +22,7 @@ jest.mock('../../config/database', () => ({
   },
 }));
 
-jest.mock('../../utils/TBOT', () => ({
+jest.mock('@/utils/TBOT', () => ({
   TBOT: {
     sendMessage: jest.fn(),
   },
@@ -32,13 +32,19 @@ jest.mock('node-schedule', () => ({
   scheduleJob: jest.fn(),
 }));
 
-jest.mock('../../utils/logger', () => ({
+jest.mock('@/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
   },
+  createLogger: jest.fn(() => ({
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  })),
 }));
 
 describe('SubscriptionNotificationService', () => {
