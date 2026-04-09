@@ -10,7 +10,7 @@ import { authenticate } from '@/middleware/auth.middleware';
 import { wbWarehouseService } from '@/services/external/wb/wb-warehouse.service';
 import { wbSupplierService } from '@/services/external/wb/wb-supplier.service';
 import { accountService, userService } from '@/services/user/';
-import { cacheService } from '@/services/cache.service';
+import { cacheService } from '@/services/infrastructure';
 import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 import { UserEnvInfo } from '@/types/wb';
