@@ -10,7 +10,7 @@ import {
   authenticate,
   AuthenticatedRequest,
 } from '@/middleware/auth.middleware';
-import { wbSupplierService } from '@/services/wb-supplier.service';
+import { wbSupplierService } from '@/services/external/wb/wb-supplier.service';
 import { accountService } from '@/services/account.service';
 import { userService } from '@/services/user.service';
 import { ApiError } from '@/utils/errors';

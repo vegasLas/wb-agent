@@ -5,7 +5,7 @@
  */
 
 import { Supply } from '@/types/wb';
-import { triggerService } from '@/services/trigger.service';
+import { triggerService } from '@/services/external/wb/trigger.service';
 import { apiKeyRateLimiterService } from '@/services/api-key-rate-limiter.service';
 import { logger } from '@/utils/logger';
 
