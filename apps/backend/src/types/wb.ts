@@ -662,3 +662,144 @@ export interface PromotionRecoveryBody {
   selectedItems: string[];
   isRecovery: boolean; // true = recover only selected items, false = exclude selected items (keep the rest)
 }
+
+// ============ Measurement Penalties Types ============
+
+export interface MeasurementPenaltyResponse {
+  data: MeasurementPenaltyData;
+  error: boolean;
+  additionalErrors: unknown;
+  errorText: string;
+}
+
+export interface MeasurementPenaltyData {
+  reports: MeasurementPenaltyReport[];
+  totalCount: number;
+}
+
+export interface MeasurementPenaltyReport {
+  nmId: number;
+  subject: string;
+  dimId: number;
+  prcOver: number;
+  volume: number;
+  width: number;
+  length: number;
+  height: number;
+  volumeSup: number;
+  widthSup: number;
+  lengthSup: number;
+  heightSup: number;
+  photoUrls: string[];
+  bonusType: number;
+  bonusSumm: number;
+  supplierId: number;
+  dtBonus: string;
+  isValid: boolean;
+  isValidDt: string;
+  reversalAmount: number;
+  penaltyAmount: number;
+}
+
+// ============ Adverts Types ============
+
+export interface AdvertsResponse {
+  http_status: number;
+  error: string;
+  code: number;
+  counts: AdvertsCounts;
+  content: AdvertContent[];
+}
+
+export interface AdvertsCounts {
+  totalCount: number;
+  pauseCount: number;
+}
+
+export interface AdvertContent {
+  id: number;
+  type: number;
+  bid_type: number;
+  status_id: number;
+  campaign_name: string;
+  create_date: string;
+  payment_model: string;
+  active_targets: number[];
+  products_count: number;
+  top_nm: number;
+  budget: number;
+  autofill: AdvertAutofill;
+}
+
+export interface AdvertAutofill {
+  is_enable: boolean;
+  error: unknown;
+}
+
+// ============ Advert Preset Info Types ============
+
+export interface AdvertPresetInfoResponse {
+  items: AdvertPresetItem[];
+  total: AdvertPresetTotal;
+  count: number;
+}
+
+export interface AdvertPresetItem {
+  name: string;
+  views: number;
+  clicks: number;
+  baskets: number;
+  orders: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  avg_pos: number;
+  shks: number;
+  is_excluded: boolean;
+  spend: number;
+  currency: string;
+}
+
+export interface AdvertPresetTotal {
+  name: string;
+  views: number;
+  clicks: number;
+  baskets: number;
+  orders: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  avg_pos: number;
+  shks: number;
+  is_excluded: boolean;
+  spend: number;
+  currency: string;
+}
+
+// ============ MPStats Types ============
+
+export interface MpstatsSalesItem {
+  no_data: number;
+  data: string;
+  balance: string;
+  sales: number;
+  rating: number;
+  price: number;
+  final_price: number;
+  is_new: number;
+  comments: number;
+  discount: number;
+  basic_sale: number;
+  basic_price: number;
+  promo_sale: number;
+  client_sale: number;
+  client_price: number;
+  categories_cnt: string;
+  visibility: number;
+  position: number;
+}
+
+export interface MpstatsSalesByRegionItem {
+  store: string;
+  sales: number;
+}
