@@ -9,7 +9,7 @@ import {
   getPromotionDetail,
   getPromotionExcel,
   applyPromotionRecovery,
-} from '@/services/promotions.service';
+} from '@/services/domain/promotion/promotions.service';
 import { logger } from '@/utils/logger';
 
 /**

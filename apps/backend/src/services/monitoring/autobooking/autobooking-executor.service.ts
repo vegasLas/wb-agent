@@ -10,7 +10,7 @@ import { sharedBanService } from '@/services/monitoring/shared/ban.service';
 import { sharedErrorHandlingService } from '@/services/monitoring/shared/error-handling.service';
 import { bookingErrorService } from '@/services/booking-error.service';
 import { autobookingSupplyIdCacheService } from '@/services/monitoring/autobooking/autobooking-supply-id-cache.service';
-import { supplyService } from '@/services/supply.service';
+import { supplyService } from '@/services/domain/supply/supply.service';
 import { prisma } from '@/config/database';
 import { createLogger } from '@/utils/logger';
 
