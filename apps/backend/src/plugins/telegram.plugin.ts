@@ -6,7 +6,7 @@
 
 import { TBOT } from '@/utils/TBOT';
 import { telegramService } from '@/services/notification/';
-import { adminService } from '@/services/admin.service';
+import { adminService } from '@/services/admin/';
 import {
   enableAutobookingProcessing,
   disableAutobookingProcessing,

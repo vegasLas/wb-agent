@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { yookassaService } from '@/services/yookassa.service';
+import { yookassaService } from '@/services/admin/';
 import { prisma } from '@/config/database';
 import { logger } from '@/utils/logger';
 import { PAYMENT_TARIFFS } from '@/constants/payments';
