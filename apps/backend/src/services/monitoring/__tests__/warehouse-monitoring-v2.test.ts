@@ -19,7 +19,7 @@ import { fakeDataDetectionService } from '@/services/monitoring/fake-data-detect
 import { supplyTriggerMonitoringService } from '@/services/monitoring/supply-trigger-monitoring.service';
 import { autobookingMonitoringService } from '@/services/monitoring/autobooking/autobooking-monitoring.service';
 import { autobookingRescheduleMonitoringService } from '@/services/monitoring/autobooking-reschedule/autobooking-reschedule-monitoring.service';
-import { isAutobookingProcessingActive } from '@/services/autobooking-control.service';
+import { isAutobookingProcessingActive } from '@/services/infrastructure';
 import { prisma } from '@/config/database';
 
 // Mock dependencies

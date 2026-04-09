@@ -14,7 +14,7 @@ import { sharedBanService } from '@/services/monitoring/shared/ban.service';
 import { sharedProcessingStateService } from '@/services/monitoring/shared/processing-state.service';
 import { sharedUserTrackingService } from '@/services/monitoring/shared/user-tracking.service';
 import { autobookingExecutorService } from '@/services/monitoring/autobooking/autobooking-executor.service';
-import { bookingErrorService } from '@/services/booking-error.service';
+import { bookingErrorService } from '@/services/infrastructure';
 import { prisma } from '@/config/database';
 import {
   createAutobooking,
