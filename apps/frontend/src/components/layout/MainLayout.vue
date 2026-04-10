@@ -2,16 +2,9 @@
   <div
     class="min-h-screen bg-white dark:bg-[#171819] flex flex-col lg:flex-row"
   >
-    <!-- App Header/Navigation -->
-    <AppHeader
-      class="lg:w-64 lg:flex-shrink-0"
-      @show-help="showHelpModal = true"
-      @show-accounts="accountModalStore.showModal = true"
-    />
-
     <!-- Main Content -->
     <main
-      class="flex-1 container mx-auto px-2 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative"
+      class="flex-1 container mx-auto px-4 py-6 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative pb-24"
     >
       <!-- Content skeleton overlay during view loading/navigation -->
       <div
@@ -23,6 +16,9 @@
 
       <RouterView />
     </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <BottomNavigation class="lg:hidden" />
 
     <!-- Global Modals -->
     <MainHelpModal v-model="showHelpModal" />
@@ -36,7 +32,7 @@ import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal'
 import { MainHelpModal } from '../help';
 import { AccountManagementView } from '../account-management';
 import { useSkeleton } from '../../composables/useSkeleton';
-import AppHeader from './AppHeader.vue';
+import BottomNavigation from '../BottomNavigation.vue';
 
 const accountModalStore = useAccountSupplierModalStore();
 const showHelpModal = ref(false);

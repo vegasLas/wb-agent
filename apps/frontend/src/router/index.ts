@@ -1,18 +1,17 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
 import MainLayout from '../components/layout/MainLayout.vue';
-import {
-  AutobookingListView,
-  AutobookingCreateView,
-  AutobookingUpdateView,
-} from '../views/autobooking';
+import { AutobookingListView } from '../views/autobooking';
 import {
   ReschedulesListView,
   ReschedulesCreateView,
   ReschedulesUpdateView,
 } from '../views/reschedules';
-import { TriggersListView, TriggersCreateView } from '../views/triggers';
+import { TriggersListView } from '../views/triggers';
 import { PromotionsView } from '../views/promotions';
+import WBView from '../views/WBView.vue';
+import HomeView from '../views/HomeView.vue';
+import TasksView from '../views/TasksView.vue';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
@@ -55,10 +54,42 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
+        name: 'Home',
+        component: HomeView,
+        meta: {
+          title: 'Главная',
+        },
+      },
+      {
+        path: 'account',
         name: 'Account',
         component: () => import('../views/AccountView.vue'),
         meta: {
-          title: 'Account',
+          title: 'Профиль',
+        },
+      },
+      {
+        path: 'tasks',
+        name: 'Tasks',
+        component: TasksView,
+        meta: {
+          title: 'Задачи',
+        },
+      },
+      {
+        path: 'wb',
+        name: 'WB',
+        component: WBView,
+        meta: {
+          title: 'Wildberries',
+        },
+      },
+      {
+        path: 'mpstats',
+        name: 'MPStats',
+        component: () => import('../views/MPStatsView.vue'),
+        meta: {
+          title: 'MPStats',
         },
       },
       // Autobooking Routes (flat structure - each view is standalone)
@@ -68,22 +99,6 @@ const routes: RouteRecordRaw[] = [
         component: AutobookingListView,
         meta: {
           title: 'Автобронирования',
-        },
-      },
-      {
-        path: 'autobooking/create',
-        name: 'AutobookingCreate',
-        component: AutobookingCreateView,
-        meta: {
-          title: 'Создание автобронирования',
-        },
-      },
-      {
-        path: 'autobooking/update/:id',
-        name: 'AutobookingUpdate',
-        component: AutobookingUpdateView,
-        meta: {
-          title: 'Редактирование',
         },
       },
       // Reschedules Routes (flat structure - each view is standalone)
@@ -118,14 +133,6 @@ const routes: RouteRecordRaw[] = [
         component: TriggersListView,
         meta: {
           title: 'Таймслоты',
-        },
-      },
-      {
-        path: 'triggers/create',
-        name: 'TriggerCreate',
-        component: TriggersCreateView,
-        meta: {
-          title: 'Создание таймслота',
         },
       },
       {

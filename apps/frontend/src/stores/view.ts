@@ -13,10 +13,7 @@ import type { ViewType } from '../types';
  *
  * Navigation:
  * - router.push({ name: 'Autobooking' }) - for autobooking list
- * - router.push({ name: 'AutobookingCreate' }) - for creating autobooking
- * - router.push({ name: 'AutobookingUpdate', params: { id } }) - for updating autobooking
  * - router.push({ name: 'Triggers' }) - for triggers list
- * - router.push({ name: 'TriggerCreate' }) - for creating trigger
  * - router.push({ name: 'Reschedules' }) - for reschedules list
  * - router.push({ name: 'ReschedulesCreate' }) - for creating reschedule
  * - router.push({ name: 'ReschedulesUpdate', params: { id } }) - for updating reschedule
@@ -50,11 +47,8 @@ export const useViewStore = defineStore('view', () => {
     // Map route names to view types
     if (routeName === 'Autobooking' || routeName === 'AutobookingList')
       return 'autobookings-main';
-    if (routeName === 'AutobookingCreate') return 'autobookings-form';
-    if (routeName === 'AutobookingUpdate') return 'autobookings-update';
     if (routeName === 'Triggers' || routeName === 'TriggersList')
       return 'triggers-main';
-    if (routeName === 'TriggerCreate') return 'triggers-form';
     if (routeName === 'Reschedules' || routeName === 'ReschedulesList')
       return 'reschedules-main';
     if (routeName === 'ReschedulesCreate') return 'reschedules-form';
@@ -89,10 +83,7 @@ export const useViewStore = defineStore('view', () => {
     // Map view type to route
     const routeMap: Record<string, string> = {
       'autobookings-main': 'Autobooking',
-      'autobookings-form': 'AutobookingCreate',
-      'autobookings-update': 'AutobookingUpdate',
       'triggers-main': 'Triggers',
-      'triggers-form': 'TriggerCreate',
       'reschedules-main': 'Reschedules',
       'reschedules-form': 'ReschedulesCreate',
       'reschedules-update': 'ReschedulesUpdate',
@@ -135,9 +126,6 @@ export const useViewStore = defineStore('view', () => {
    */
   const isForm = computed(() => {
     const formRoutes = [
-      'AutobookingCreate',
-      'AutobookingUpdate',
-      'TriggerCreate',
       'ReschedulesCreate',
       'ReschedulesUpdate',
     ];
