@@ -87,8 +87,8 @@ export interface UsePromotionDetailEnhancedReturn {
   progressPercentage: ComputedRef<number>;
 
   // Advantages
-  advantages: ComputedRef<string[]>;
-  advantagesTranslated: ComputedRef<string[]>;
+  advantages: ComputedRef<readonly string[]>;
+  advantagesTranslated: ComputedRef<readonly string[]>;
 
   // Raw access
   raw: ComputedRef<PromotionDetail | null>;

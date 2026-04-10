@@ -1,10 +1,16 @@
 <template>
   <div class="space-y-3">
     <!-- Autobooking List -->
-    <TaskBookingList v-if="activeTab === 'autobooking'" v-model:active-tab="activeTab" />
+    <TaskBookingList
+      v-if="activeTab === 'autobooking'"
+      v-model:active-tab="activeTab"
+    />
 
     <!-- Triggers List -->
-    <TaskTriggerList v-if="activeTab === 'triggers'" v-model:active-tab="activeTab" />
+    <TaskTriggerList
+      v-if="activeTab === 'triggers'"
+      v-model:active-tab="activeTab"
+    />
   </div>
 </template>
 

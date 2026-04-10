@@ -13,8 +13,8 @@
     <template
       v-if="
         userStore.selectedAccount &&
-        userStore.hasValidSupplier &&
-        userStore.subscriptionActive
+          userStore.hasValidSupplier &&
+          userStore.subscriptionActive
       "
     >
       <Message
@@ -23,7 +23,9 @@
         :closable="false"
         class="w-full"
       >
-        <div class="font-medium">Достигнут лимит активных таймслотов</div>
+        <div class="font-medium">
+          Достигнут лимит активных таймслотов
+        </div>
         <div class="text-sm">
           У вас уже активировано максимальное количество таймслотов (30).
           Отключите некоторые таймслоты, чтобы активировать новые.
@@ -129,21 +131,21 @@
                 <Tag
                   v-if="
                     ['RANGE', 'WEEK'].includes(trigger.searchMode) &&
-                    trigger.startDate &&
-                    trigger.endDate
+                      trigger.startDate &&
+                      trigger.endDate
                   "
                   severity="warn"
                   :value="
                     formatDate(trigger.startDate) +
-                    ' - ' +
-                    formatDate(trigger.endDate)
+                      ' - ' +
+                      formatDate(trigger.endDate)
                   "
                   class="text-xs"
                 />
                 <div
                   v-else-if="
                     trigger.searchMode !== 'UNTIL_FOUND' &&
-                    trigger.selectedDates?.length
+                      trigger.selectedDates?.length
                   "
                   class="flex flex-wrap gap-1"
                 >
@@ -226,8 +228,8 @@
               :loading="triggerStore.togglingId === trigger.id"
               :disabled="
                 triggerStore.togglingId === trigger.id ||
-                trigger.status !== 'RELEVANT' ||
-                (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
+                  trigger.status !== 'RELEVANT' ||
+                  (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
               "
               size="small"
               @click="triggerStore.toggleTrigger(trigger.id)"

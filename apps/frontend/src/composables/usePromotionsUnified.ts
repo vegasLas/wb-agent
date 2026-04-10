@@ -34,7 +34,7 @@
  * />
  */
 
-import { computed, type ComputedRef } from 'vue';
+import { computed, type ComputedRef, type Ref } from 'vue';
 import {
   usePromotions,
   type PromotionFilter,
@@ -69,28 +69,28 @@ export interface UsePromotionsUnifiedReturn {
   // ==================== STATE ====================
 
   // Promotions data
-  promotions: ComputedRef<readonly PromotionItem[]>;
-  loading: ComputedRef<boolean>;
-  error: ComputedRef<string | null>;
-  hasPromotions: ComputedRef<boolean>;
+  promotions: Ref<readonly PromotionItem[]>;
+  loading: Ref<boolean>;
+  error: Ref<string | null>;
+  hasPromotions: Ref<boolean>;
 
   // Detail data
-  promotionDetail: ComputedRef<PromotionDetail | null>;
-  detailLoading: ComputedRef<boolean>;
-  detailError: ComputedRef<string | null>;
+  promotionDetail: Ref<PromotionDetail | null>;
+  detailLoading: Ref<boolean>;
+  detailError: Ref<string | null>;
 
   // Excel data
-  excelItems: ComputedRef<readonly Record<string, unknown>[]>;
-  excelLoading: ComputedRef<boolean>;
-  excelError: ComputedRef<string | null>;
-  reportPending: ComputedRef<boolean>;
-  estimatedWaitTime: ComputedRef<number | null>;
+  excelItems: Ref<readonly Record<string, unknown>[]>;
+  excelLoading: Ref<boolean>;
+  excelError: Ref<string | null>;
+  reportPending: Ref<boolean>;
+  estimatedWaitTime: Ref<number | null>;
 
   // ==================== FILTERING ====================
 
-  currentFilter: ComputedRef<PromotionFilter>;
+  currentFilter: Ref<PromotionFilter>;
   filterTabs: FilterTab[];
-  participationCounts: ComputedRef<Record<PromotionFilter, number>>;
+  participationCounts: Ref<Record<PromotionFilter, number>>;
   emptyState: ComputedRef<EmptyStateConfig>;
 
   // ==================== CALENDAR ====================
@@ -114,10 +114,10 @@ export interface UsePromotionsUnifiedReturn {
 
   // ==================== DIALOGS ====================
 
-  showDetailDialog: ComputedRef<boolean>;
-  showParticipantsDialog: ComputedRef<boolean>;
-  selectedPromotionId: ComputedRef<number | null>;
-  selectedPromotion: ComputedRef<PromotionItem | null>;
+  showDetailDialog: Ref<boolean>;
+  showParticipantsDialog: Ref<boolean>;
+  selectedPromotionId: Ref<number | null>;
+  selectedPromotion: Ref<PromotionItem | null>;
   selectedPromotionDisplay: ComputedRef<UsePromotionItemReturn | null>;
   selectedPromotionDetailDisplay: ComputedRef<UsePromotionDetailReturn | null>;
 

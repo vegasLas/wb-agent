@@ -160,11 +160,12 @@ import Tag from 'primevue/tag';
 import { computed } from 'vue';
 import { usePromotionItem } from '../../composables';
 import type { PromotionItem } from '../../types';
+import type { PromotionPosition } from '../../composables/usePromotionsTimeline';
 
 interface Props {
   promotion: PromotionItem;
   isExpanded: boolean;
-  style: Record<string, string>;
+  style: PromotionPosition;
   detailLoading?: boolean;
   excelLoading?: boolean;
 }

@@ -15,11 +15,11 @@ export const useAutobookingStore = defineStore('autobooking', () => {
 
   // Getters
   const activeAutobookings = computed(() =>
-    autobookings.value.filter((a) => a.enabled),
+    autobookings.value.filter((a) => a.status === 'ACTIVE'),
   );
 
   const inactiveAutobookings = computed(() =>
-    autobookings.value.filter((a) => !a.enabled),
+    autobookings.value.filter((a) => a.status !== 'ACTIVE'),
   );
 
   const autobookingCount = computed(() => autobookings.value.length);
@@ -34,7 +34,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
       loading.value = true;
       error.value = null;
       const data = await autobookingAPI.fetchAutobookings();
-      autobookings.value = data;
+      autobookings.value = (data as unknown as Autobooking[]);
       return data;
     } catch (err: unknown) {
       const errorMsg =

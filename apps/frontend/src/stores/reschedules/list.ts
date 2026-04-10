@@ -122,7 +122,7 @@ export const useRescheduleListStore = defineStore('rescheduleList', () => {
       }
       // Numbers compare directly without modification
 
-      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      const comparison = (aValue as string | number) < (bValue as string | number) ? -1 : (aValue as string | number) > (bValue as string | number) ? 1 : 0;
       return sortOrder.value === 'desc' ? -comparison : comparison;
     });
 

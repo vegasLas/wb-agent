@@ -56,13 +56,18 @@ export const useRescheduleUpdateFormStore = defineStore(
       return {
         dateType: reschedule.value.dateType,
         startDate: reschedule.value.startDate
-          ? reschedule.value.startDate.split('T')[0]
+          ? typeof reschedule.value.startDate === 'string'
+            ? reschedule.value.startDate.split('T')[0]
+            : formatDateToYYYYMMDD(reschedule.value.startDate)
           : '',
         endDate: reschedule.value.endDate
-          ? reschedule.value.endDate.split('T')[0]
+          ? typeof reschedule.value.endDate === 'string'
+            ? reschedule.value.endDate.split('T')[0]
+            : formatDateToYYYYMMDD(reschedule.value.endDate)
           : '',
         customDates: [...(reschedule.value.customDates || [])].map(
-          (date) => date.split('T')[0],
+          (date) =>
+            typeof date === 'string' ? date.split('T')[0] : formatDateToYYYYMMDD(date),
         ),
         maxCoefficient: reschedule.value.maxCoefficient,
       };
@@ -240,17 +245,23 @@ export const useRescheduleUpdateFormStore = defineStore(
         formData.value.selectedDateType = reschedule.value.dateType;
         if (reschedule.value.startDate) {
           formData.value.startDateInput =
-            reschedule.value.startDate.split('T')[0];
+            typeof reschedule.value.startDate === 'string'
+              ? reschedule.value.startDate.split('T')[0]
+              : formatDateToYYYYMMDD(reschedule.value.startDate);
         }
         if (reschedule.value.endDate) {
-          formData.value.endDateInput = reschedule.value.endDate.split('T')[0];
+          formData.value.endDateInput =
+            typeof reschedule.value.endDate === 'string'
+              ? reschedule.value.endDate.split('T')[0]
+              : formatDateToYYYYMMDD(reschedule.value.endDate);
         }
         if (
           reschedule.value.customDates &&
           reschedule.value.customDates.length > 0
         ) {
           formData.value.customDates = reschedule.value.customDates.map(
-            (date) => date.split('T')[0],
+            (date) =>
+              typeof date === 'string' ? date.split('T')[0] : formatDateToYYYYMMDD(date),
           );
         }
       }

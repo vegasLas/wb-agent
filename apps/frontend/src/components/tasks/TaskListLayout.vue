@@ -68,7 +68,10 @@
     <slot name="header-extra" />
 
     <!-- List Content -->
-    <div ref="scrollContainer" class="space-y-3">
+    <div
+      ref="scrollContainer"
+      class="space-y-3"
+    >
       <slot />
     </div>
 
@@ -114,7 +117,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:activeTab', value: TabType): void;
   (e: 'update:selectedStatus', value: string): void;
-  (e: 'update:searchQuery', value: string): void;
+  (e: 'update:searchQuery', value: string | undefined): void;
   (e: 'add'): void;
 }>();
 

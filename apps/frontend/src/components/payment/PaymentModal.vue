@@ -160,9 +160,9 @@ async function initializePayment() {
     });
 
     paymentInitiated.value = true;
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Error initializing payment:', e);
-    error.value = e?.message || 'Ошибка при создании платежа';
+    error.value = e instanceof Error ? e.message : 'Ошибка при создании платежа';
     emit('fail');
   }
 }

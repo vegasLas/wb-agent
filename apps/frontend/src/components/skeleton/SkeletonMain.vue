@@ -38,6 +38,10 @@
       </div>
     </div>
 
+    <SkeletonHome v-if="view === 'home'" />
+    <SkeletonTasks v-if="view === 'tasks'" />
+    <SkeletonWB v-if="view === 'wb'" />
+    <SkeletonMPStats v-if="view === 'mpstats'" />
     <SkeletonTriggers v-if="view === 'triggers-main'" />
     <!-- <SkeletonWarehouses v-if="view === 'warehouses'" /> -->
     <SkeletonAccount v-if="view === 'account'" />
@@ -51,6 +55,10 @@
 
 <script setup lang="ts">
 import Skeleton from 'primevue/skeleton';
+import SkeletonHome from './SkeletonHome.vue';
+import SkeletonTasks from './SkeletonTasks.vue';
+import SkeletonWB from './SkeletonWB.vue';
+import SkeletonMPStats from './SkeletonMPStats.vue';
 import SkeletonTriggers from './SkeletonTriggers.vue';
 import SkeletonAccount from './SkeletonAccount.vue';
 import SkeletonStore from './SkeletonStore.vue';
@@ -58,6 +66,7 @@ import SkeletonAutobookings from './SkeletonAutobookings.vue';
 import SkeletonReport from './SkeletonReport.vue';
 import SkeletonPayments from './SkeletonPayments.vue';
 import SkeletonReschedules from './SkeletonReschedules.vue';
+import type { ViewType } from '../../types';
 
 defineProps<{
   view: ViewType;

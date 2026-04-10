@@ -32,7 +32,7 @@
  * } = usePromotions();
  */
 
-import { ref, computed, watch, type Ref } from 'vue';
+import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
 import { usePromotionsStore } from '../stores/promotions';
 import { useUserStore } from '../stores/user';
 import type { PromotionItem, PromotionDetail } from '../types';
@@ -53,33 +53,33 @@ export interface UsePromotionsOptions {
 
 export interface UsePromotionsReturn {
   // State
-  promotions: Ref<readonly PromotionItem[]>;
-  loading: Ref<boolean>;
-  error: Ref<string | null>;
+  promotions: ComputedRef<readonly PromotionItem[]>;
+  loading: ComputedRef<boolean>;
+  error: ComputedRef<string | null>;
   currentFilter: Ref<PromotionFilter>;
   filterTabs: FilterTab[];
 
   // Detail state
-  promotionDetail: Ref<PromotionDetail | null>;
-  detailLoading: Ref<boolean>;
-  detailError: Ref<string | null>;
+  promotionDetail: ComputedRef<PromotionDetail | null>;
+  detailLoading: ComputedRef<boolean>;
+  detailError: ComputedRef<string | null>;
 
   // Excel/Participants state
-  excelItems: Ref<readonly Record<string, unknown>[]>;
-  excelLoading: Ref<boolean>;
-  excelError: Ref<string | null>;
-  reportPending: Ref<boolean>;
-  estimatedWaitTime: Ref<number | null>;
+  excelItems: ComputedRef<readonly Record<string, unknown>[]>;
+  excelLoading: ComputedRef<boolean>;
+  excelError: ComputedRef<string | null>;
+  reportPending: ComputedRef<boolean>;
+  estimatedWaitTime: ComputedRef<number | null>;
 
   // Dialogs
   showDetailDialog: Ref<boolean>;
   showParticipantsDialog: Ref<boolean>;
   selectedPromotionId: Ref<number | null>;
-  selectedPromotion: Ref<PromotionItem | null>;
+  selectedPromotion: ComputedRef<PromotionItem | null>;
 
   // Stats
-  participationCounts: Ref<Record<PromotionFilter, number>>;
-  hasPromotions: Ref<boolean>;
+  participationCounts: ComputedRef<Record<PromotionFilter, number>>;
+  hasPromotions: ComputedRef<boolean>;
 
   // Actions
   setFilter: (filter: PromotionFilter) => Promise<void>;

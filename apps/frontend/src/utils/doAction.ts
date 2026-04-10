@@ -8,7 +8,7 @@ export const doAction = async (options: {
   return new Promise((resolve) => {
     const { showPopup, onPopupClosed } = useWebAppPopup();
     const popupClosed = onPopupClosed(
-      (e: { button_id?: string }) => {
+      (e: { button_id: string | null }) => {
         popupClosed.off();
         if (e.button_id !== 'cancel') {
           resolve(false);

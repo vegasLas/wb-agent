@@ -37,7 +37,7 @@ export interface DeleteRescheduleResponse {
   returnedCredits: number;
 }
 
-export interface SupplyDetailsResponse {
+export interface RescheduleSupplyDetailsResponse {
   success: boolean;
   data?: {
     goods: SupplyGood[];
@@ -105,8 +105,8 @@ export const reschedulesAPI = {
    */
   async getSupplyDetails(
     supplyId: string | number,
-  ): Promise<SupplyDetailsResponse> {
-    const response = await apiClient.get<SupplyDetailsResponse>(
+  ): Promise<RescheduleSupplyDetailsResponse> {
+    const response = await apiClient.get<RescheduleSupplyDetailsResponse>(
       '/supplies/supply-details',
       { params: { supplyId } },
     );

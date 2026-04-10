@@ -10,8 +10,6 @@ import type {
   Supply,
 } from '../../types';
 
-export * from './types';
-
 export const useRescheduleStore = defineStore('reschedule', () => {
   const userStore = useUserStore();
 
@@ -114,9 +112,9 @@ export const useRescheduleStore = defineStore('reschedule', () => {
 
     try {
       const response = await reschedulesAPI.updateReschedule(data);
-      if (response.success) {
+      if (response) {
         await fetchReschedules(currentPage.value); // Refresh list
-        return response.data;
+        return response;
       }
       throw new Error('Failed to update reschedule');
     } catch (err: any) {
@@ -186,12 +184,12 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         id,
         status: 'ARCHIVED',
       });
-      if (response.success) {
+      if (response) {
         await fetchReschedules(currentPage.value); // Refresh list
         console.log(
           'Успешно архивировано: Перепланирование перемещено в архив',
         );
-        return response.data;
+        return response;
       }
       throw new Error('Failed to archive reschedule');
     } catch (err: any) {
@@ -224,12 +222,12 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         id,
         status: 'ACTIVE',
       });
-      if (response.success) {
+      if (response) {
         await fetchReschedules(currentPage.value); // Refresh list
         console.log(
           'Успешно активировано: Перепланирование активировано и будет выполнено',
         );
-        return response.data;
+        return response;
       }
       throw new Error('Failed to activate reschedule');
     } catch (err: any) {

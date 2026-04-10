@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { autobookingAPI } from '../api';
 import { useWarehousesStore } from './warehouses';
 import { AUTOBOOKING_STATUSES } from '../constants';
-import type { Autobooking } from '../types';
+import type { Autobooking, AutobookingReschedule } from '../types';
 
 type BadgeColor =
   | 'gray'
@@ -119,12 +119,12 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     )
       return [];
 
-    const completedDates = booking.completedDates || [];
+    const completedDates = (booking as unknown as AutobookingReschedule).completedDates || [];
     return booking.customDates.filter((date) => {
       const dateToCheck = new Date(date);
       dateToCheck.setHours(0, 0, 0, 0);
 
-      return !completedDates.some((completedDate) => {
+      return !completedDates.some((completedDate: string | Date) => {
         const completed = new Date(completedDate);
         completed.setHours(0, 0, 0, 0);
         return completed.getTime() === dateToCheck.getTime();

@@ -133,12 +133,12 @@ export const useRescheduleCreateFormStore = defineStore(
     function toApiFormat(): CreateAutobookingRescheduleRequest {
       return {
         warehouseId: form.value.warehouseId!,
-        dateType: form.value.dateType,
+        dateType: form.value.dateType as 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE',
         startDate: form.value.startDate || undefined,
         endDate: form.value.endDate || undefined,
         customDates: form.value.customDates,
         maxCoefficient: form.value.maxCoefficient,
-        supplyType: form.value.supplyType,
+        supplyType: form.value.supplyType as 'BOX' | 'MONOPALLETE' | 'SUPERSAFE',
         supplyId: form.value.supplyId as string,
         currentDate: form.value.currentDate as string,
       };

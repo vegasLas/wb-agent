@@ -10,8 +10,12 @@
             <i class="pi pi-home text-white text-xl" />
           </div>
           <div>
-            <h1 class="text-lg font-semibold">Главная</h1>
-            <p class="text-sm text-gray-500">Добро пожаловать в WB Agent</p>
+            <h1 class="text-lg font-semibold">
+              Главная
+            </h1>
+            <p class="text-sm text-gray-500">
+              Добро пожаловать в WB Agent
+            </p>
           </div>
         </div>
       </template>
@@ -24,7 +28,9 @@
           <div class="text-2xl font-bold text-blue-600">
             {{ userStore.user.autobookingCount || 0 }}
           </div>
-          <div class="text-xs text-gray-500">Кредитов</div>
+          <div class="text-xs text-gray-500">
+            Кредитов
+          </div>
         </template>
       </Card>
       <Card class="text-center">
@@ -32,7 +38,9 @@
           <div class="text-2xl font-bold text-green-600">
             {{ subscriptionDays }}
           </div>
-          <div class="text-xs text-gray-500">Дней подписки</div>
+          <div class="text-xs text-gray-500">
+            Дней подписки
+          </div>
         </template>
       </Card>
     </div>
@@ -94,8 +102,12 @@
           >
             <i :class="[item.icon, 'text-lg', item.iconColor]" />
             <div class="flex-1">
-              <div class="text-sm font-medium">{{ item.title }}</div>
-              <div class="text-xs text-gray-500">{{ item.time }}</div>
+              <div class="text-sm font-medium">
+                {{ item.title }}
+              </div>
+              <div class="text-xs text-gray-500">
+                {{ item.time }}
+              </div>
             </div>
           </div>
         </div>
@@ -107,12 +119,15 @@
       <template #content>
         <div class="text-center py-8 text-gray-500">
           <i class="pi pi-inbox text-4xl mb-3 block" />
-          <p class="text-sm">Пока нет активности</p>
-          <p class="text-xs mt-1">Создайте первое автобронирование или таймслот</p>
+          <p class="text-sm">
+            Пока нет активности
+          </p>
+          <p class="text-xs mt-1">
+            Создайте первое автобронирование или таймслот
+          </p>
         </div>
       </template>
     </Card>
-
   </div>
 </template>
 

@@ -136,7 +136,7 @@ export interface UsePromotionDetailReturn {
   currentLevelIndex: ComputedRef<number>;
 
   // Advantages
-  advantages: ComputedRef<string[]>;
+  advantages: ComputedRef<readonly string[]>;
 
   // Status helpers
   participationPercentageClass: ComputedRef<string>;

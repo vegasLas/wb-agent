@@ -231,15 +231,15 @@ export const useAutobookingUpdateStore = defineStore(
       form.value = {
         draftId: autobooking.draftId,
         warehouseId: autobooking.warehouseId,
-        transitWarehouseId: autobooking.transitWarehouseId,
-        transitWarehouseName: autobooking.transitWarehouseName,
+        transitWarehouseId: autobooking.transitWarehouseId ?? null,
+        transitWarehouseName: autobooking.transitWarehouseName ?? null,
         supplyType: autobooking.supplyType,
         dateType: autobooking.dateType,
         startDate: normalizeDate(autobooking.startDate),
         endDate: normalizeDate(autobooking.endDate),
         customDates: normalizeCustomDates(autobooking.customDates),
         maxCoefficient: autobooking.maxCoefficient,
-        monopalletCount: autobooking.monopalletCount,
+        monopalletCount: autobooking.monopalletCount ?? null,
       };
       useTransit.value = !!autobooking.transitWarehouseId;
       isFetched.value = true;
@@ -324,7 +324,7 @@ export const useAutobookingUpdateStore = defineStore(
           supplierId,
           draftID: form.value.draftId,
           warehouseId: form.value.warehouseId,
-          transitWarehouseId: form.value.transitWarehouseId,
+          transitWarehouseId: form.value.transitWarehouseId ?? null,
         });
 
         if (response.data?.result) {
@@ -373,16 +373,16 @@ export const useAutobookingUpdateStore = defineStore(
 
         const updateData: AutobookingUpdateData = {
           draftId: form.value.draftId,
-          warehouseId: form.value.warehouseId,
-          transitWarehouseId: form.value.transitWarehouseId,
-          transitWarehouseName: form.value.transitWarehouseName,
-          supplyType: form.value.supplyType,
-          dateType: form.value.dateType,
+          warehouseId: form.value.warehouseId ?? undefined,
+          transitWarehouseId: form.value.transitWarehouseId ?? null,
+          transitWarehouseName: form.value.transitWarehouseName ?? null,
+          supplyType: form.value.supplyType as 'BOX' | 'MONOPALLETE' | 'SUPERSAFE',
+          dateType: form.value.dateType as 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE',
           startDate: form.value.startDate || null,
           endDate: form.value.endDate || null,
-          customDates: form.value.customDates,
+          customDates: form.value.customDates as string[],
           maxCoefficient: form.value.maxCoefficient,
-          monopalletCount: form.value.monopalletCount,
+          monopalletCount: form.value.monopalletCount ?? null,
         };
 
         const autobooking = await autobookingAPI.updateAutobooking(

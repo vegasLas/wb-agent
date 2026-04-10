@@ -1,7 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { useReportStore } from './report';
-import type { ReportRequestParams, ReportTab } from '../types';
+import type { ReportRequestParams } from '../types';
 
 export type ReportViewType = 'charts' | 'suggestions' | 'daily-sales';
 
@@ -9,7 +9,7 @@ export const useReportViewStore = defineStore('reportView', () => {
   const reportStore = useReportStore();
 
   // State
-  const activeTab = ref<ReportTab>('charts');
+  const activeTab = ref<ReportViewType>('charts');
   const chartType = ref<'line' | 'bar' | 'polar'>('line');
   const showHelp = ref(false);
 
@@ -77,7 +77,7 @@ export const useReportViewStore = defineStore('reportView', () => {
     activeView.value = view;
   }
 
-  function setActiveTab(tab: ReportTab) {
+  function setActiveTab(tab: ReportViewType) {
     activeTab.value = tab;
   }
 

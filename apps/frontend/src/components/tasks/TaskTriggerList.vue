@@ -18,7 +18,7 @@
       :empty-message="getEmptyStateMessage()"
       :show-empty="triggerStore.filteredTriggers.length === 0"
       @update:active-tab="handleTabChange"
-      @update:selected-status="triggerStore.selectedStatus = $event"
+      @update:selected-status="triggerStore.selectedStatus = $event as 'COMPLETED' | 'RELEVANT' | 'EXPIRED'"
       @update:search-query="triggerStore.searchQuery = $event"
       @add="openCreateDialog"
     >
@@ -30,7 +30,9 @@
           :closable="false"
           class="mb-4"
         >
-          <div class="font-medium">Достигнут лимит активных таймслотов</div>
+          <div class="font-medium">
+            Достигнут лимит активных таймслотов
+          </div>
           <div class="text-sm">
             У вас уже активировано максимальное количество таймслотов (30).
             Отключите некоторые таймслоты, чтобы активировать новые.

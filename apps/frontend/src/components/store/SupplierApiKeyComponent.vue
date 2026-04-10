@@ -199,8 +199,8 @@ async function saveApiKey() {
     alert(
       'API ключ успешно сохранен. Ваш API ключ прошел проверку и был сохранен в системе.',
     );
-  } catch (error: any) {
-    formError.value = error.message || 'Не удалось сохранить API ключ';
+  } catch (error: unknown) {
+    formError.value = error instanceof Error ? error.message : 'Не удалось сохранить API ключ';
   }
 }
 

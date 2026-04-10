@@ -18,12 +18,7 @@ import router from './router';
 const MyPreset = definePreset(Aura, {
   components: {
     card: {
-      colorScheme: {
-        dark: {
-          background: 'rgb(31, 31, 32)', // Lighter than default (was ~#0f172a)
-          color: '{surface.0}',
-        },
-      },
+      // Custom card styling via CSS instead of preset
     },
   },
 });

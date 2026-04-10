@@ -1,7 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { supplierAPI } from '../api';
-import type { ApiKeyStatus } from '../types';
+import { supplierApiKeysAPI } from '../api';
+import type { ApiKeyStatus } from '../api/supplier-api-keys';
 
 export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
   // State
@@ -12,16 +12,16 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
   const saving = ref(false);
 
   // Getters
-  const isValid = computed(() => status.value?.valid || false);
+  const isValid = computed(() => status.value?.success || false);
 
-  const statusMessage = computed(() => status.value?.message || '');
+  const statusMessage = computed(() => status.value?.hasApiKey ? 'API key is configured' : 'No API key configured');
 
   // Actions
   async function checkStatus() {
     try {
       loading.value = true;
       error.value = null;
-      const data = await supplierAPI.checkApiKeyStatus();
+      const data = await supplierApiKeysAPI.getApiKeyStatus();
       status.value = data;
       isFetched.value = true;
       return data;
@@ -29,7 +29,7 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to check API key status';
       error.value = errorMsg;
-      status.value = { valid: false, message: 'Failed to check status' };
+      status.value = null;
       throw err;
     } finally {
       loading.value = false;
@@ -40,7 +40,7 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
     try {
       saving.value = true;
       error.value = null;
-      await supplierAPI.updateSupplierApiKey(apiKey);
+      await supplierApiKeysAPI.createOrUpdateApiKey(apiKey);
       // Re-check status after update
       await checkStatus();
     } catch (err: unknown) {
@@ -57,7 +57,7 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
     try {
       loading.value = true;
       error.value = null;
-      await supplierAPI.deleteSupplierApiKey();
+      await supplierApiKeysAPI.deleteApiKey();
       // Clear status after delete
       status.value = null;
       isFetched.value = false;

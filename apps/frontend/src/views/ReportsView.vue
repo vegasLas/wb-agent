@@ -194,7 +194,7 @@
       <ReportCharts
         v-if="reportViewStore.activeView === 'charts'"
         :items-by-warehouse="reportStore.itemsByWarehouse"
-        :data="reportStore.data"
+        :data="reportDataTyped"
         :error="reportStore.error"
         :loading="reportStore.loading"
         :report-pending="reportStore.reportPending"
@@ -220,11 +220,16 @@ import Button from 'primevue/button';
 import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import type { ReportItem } from '../types';
+import type { ReportItem, ReportParsedData } from '../types';
 
 const reportStore = useReportStore();
 const userStore = useUserStore();
 const reportViewStore = useReportViewStore();
+
+// Typed report data for template (avoid type assertion with | in template)
+const reportDataTyped = computed<ReportParsedData | null>(() => {
+  return reportStore.data as ReportParsedData | null;
+});
 
 // Yesterday for max date
 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
@@ -369,7 +374,7 @@ const topProducts = computed((): TopProduct[] => {
     )
     .slice(0, 10)
     .map((item: TopProduct) => {
-      const formattedItem: any = { ...item };
+      const formattedItem: Record<string, string | number> = { ...item };
 
       // Format numeric fields
       numericFields.forEach((field) => {
@@ -381,7 +386,7 @@ const topProducts = computed((): TopProduct[] => {
         }
       });
 
-      return formattedItem as TopProduct;
+      return formattedItem as unknown as TopProduct;
     });
 });
 

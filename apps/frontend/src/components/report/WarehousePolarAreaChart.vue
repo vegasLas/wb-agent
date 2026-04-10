@@ -79,6 +79,7 @@ import {
   Legend,
   Title,
 } from 'chart.js';
+import type { TooltipItem } from 'chart.js';
 import type { ReportItem } from '../../types';
 import { useUserStore } from '../../stores/user';
 import Card from 'primevue/card';
@@ -215,9 +216,9 @@ const chartOptions = computed(() => {
         padding: 12,
         cornerRadius: 8,
         callbacks: {
-          label: (context: any) => {
+          label: (context: TooltipItem<'polarArea'>) => {
             const label = context.label || '';
-            const value = context.raw || 0;
+            const value = (context.raw as number) || 0;
             const total = context.dataset.data.reduce(
               (a: number, b: number) => a + b,
               0,

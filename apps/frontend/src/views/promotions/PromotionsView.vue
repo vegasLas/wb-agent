@@ -332,7 +332,7 @@
     <PromotionParticipantsDialog
       v-model:show="p.showParticipantsDialog.value"
       :promotion-name="p.selectedPromotion.value?.name"
-      :excel-items="p.excelItems.value"
+      :excel-items="p.excelItems.value as PromotionExcelItem[]"
       :excel-loading="p.excelLoading.value"
       :excel-error="p.excelError.value"
       :report-pending="p.reportPending.value"
@@ -355,7 +355,7 @@ import {
 import PromotionDetailDialog from './PromotionDetailDialog.vue';
 import PromotionParticipantsDialog from './PromotionParticipantsDialog.vue';
 import PromotionTimelineCard from './PromotionTimelineCard.vue';
-import type { PromotionItem } from '../../types';
+import type { PromotionItem, PromotionExcelItem } from '../../types';
 
 const { viewReady } = useViewReady();
 

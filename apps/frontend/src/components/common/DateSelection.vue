@@ -118,6 +118,11 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   mode: 'autobooking',
+  dateType: undefined,
+  startDate: undefined,
+  endDate: null,
+  customDates: undefined,
+  supplyDate: null,
 });
 
 const emit = defineEmits<{
