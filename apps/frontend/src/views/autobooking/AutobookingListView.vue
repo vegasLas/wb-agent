@@ -3,6 +3,19 @@
     <!-- User Alerts -->
     <UserAlerts />
 
+    <!-- Create Dialog -->
+    <AutobookingCreateDialog
+      v-model:show="showCreateDialog"
+      @created="handleCreated"
+    />
+
+    <!-- Update Dialog -->
+    <AutobookingUpdateDialog
+      v-model:show="showUpdateDialog"
+      :autobooking="selectedAutobooking"
+      @updated="handleUpdated"
+    />
+
     <!-- Display content only if user has selected account, valid supplier and subscription is active -->
     <template
       v-if="
@@ -76,7 +89,7 @@
           </Tag>
           <Button
             severity="primary leading-none"
-            @click="navigateToCreate"
+            @click="openCreateDialog"
           >
             добавить
           </Button>
@@ -93,6 +106,7 @@
           :key="booking.id"
           :booking="booking"
           @view-goods="handleViewGoods"
+          @edit="openUpdateDialog"
         />
 
         <div
@@ -131,11 +145,19 @@ import Message from 'primevue/message';
 import UserAlerts from '../../components/global/UserAlerts.vue';
 import AutobookingBookingCard from '../../components/autobooking/BookingCard.vue';
 import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsModal.vue';
+import AutobookingCreateDialog from '../../components/autobooking/CreateDialog.vue';
+import AutobookingUpdateDialog from '../../components/autobooking/UpdateDialog.vue';
+import type { Autobooking } from '../../types';
 
 const router = useRouter();
 const userStore = useUserStore();
 const listStore = useAutobookingListStore();
 const { viewReady } = useViewReady();
+
+// Dialog state
+const showCreateDialog = ref(false);
+const showUpdateDialog = ref(false);
+const selectedAutobooking = ref<Autobooking | null>(null);
 
 // Goods modal state
 const showGoodsModal = ref(false);
@@ -174,9 +196,24 @@ function handleStatusClick(status: string) {
   listStore.selectedStatus = status;
 }
 
-// Navigation functions
-function navigateToCreate() {
-  router.push({ name: 'AutobookingCreate' });
+// Dialog functions
+function openCreateDialog() {
+  showCreateDialog.value = true;
+}
+
+function openUpdateDialog(autobooking: Autobooking) {
+  selectedAutobooking.value = autobooking;
+  showUpdateDialog.value = true;
+}
+
+function handleCreated() {
+  // Refresh the list after creation
+  listStore.fetchData();
+}
+
+function handleUpdated() {
+  // Refresh the list after update
+  listStore.fetchData();
 }
 
 function navigateToStoreBookings() {

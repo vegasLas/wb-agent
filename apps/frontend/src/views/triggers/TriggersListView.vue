@@ -3,12 +3,18 @@
     <!-- User Alerts -->
     <UserAlerts />
 
+    <!-- Create Dialog -->
+    <TriggerCreateDialog
+      v-model:show="showCreateDialog"
+      @created="handleCreated"
+    />
+
     <!-- Display content only if user has selected account, valid supplier and subscription is active -->
     <template
       v-if="
         userStore.selectedAccount &&
-          userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+        userStore.hasValidSupplier &&
+        userStore.subscriptionActive
       "
     >
       <Message
@@ -17,9 +23,7 @@
         :closable="false"
         class="w-full"
       >
-        <div class="font-medium">
-          Достигнут лимит активных таймслотов
-        </div>
+        <div class="font-medium">Достигнут лимит активных таймслотов</div>
         <div class="text-sm">
           У вас уже активировано максимальное количество таймслотов (30).
           Отключите некоторые таймслоты, чтобы активировать новые.
@@ -70,7 +74,7 @@
         <Button
           severity="primary"
           :disabled="triggerStore.activeTriggersCount >= 30"
-          @click="navigateToCreate"
+          @click="openCreateDialog"
         >
           добавить
         </Button>
@@ -125,21 +129,21 @@
                 <Tag
                   v-if="
                     ['RANGE', 'WEEK'].includes(trigger.searchMode) &&
-                      trigger.startDate &&
-                      trigger.endDate
+                    trigger.startDate &&
+                    trigger.endDate
                   "
                   severity="warn"
                   :value="
                     formatDate(trigger.startDate) +
-                      ' - ' +
-                      formatDate(trigger.endDate)
+                    ' - ' +
+                    formatDate(trigger.endDate)
                   "
                   class="text-xs"
                 />
                 <div
                   v-else-if="
                     trigger.searchMode !== 'UNTIL_FOUND' &&
-                      trigger.selectedDates?.length
+                    trigger.selectedDates?.length
                   "
                   class="flex flex-wrap gap-1"
                 >
@@ -222,8 +226,8 @@
               :loading="triggerStore.togglingId === trigger.id"
               :disabled="
                 triggerStore.togglingId === trigger.id ||
-                  trigger.status !== 'RELEVANT' ||
-                  (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
+                trigger.status !== 'RELEVANT' ||
+                (!trigger.isActive && triggerStore.activeTriggersCount >= 30)
               "
               size="small"
               @click="triggerStore.toggleTrigger(trigger.id)"
@@ -257,8 +261,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Card from 'primevue/card';
@@ -270,16 +273,24 @@ import { useUserStore } from '../../stores/user';
 import { useViewReady } from '../../composables/useSkeleton';
 import UserAlerts from '../../components/global/UserAlerts.vue';
 import CoefficientHistoryAlert from '../../components/triggers/CoefficientHistoryAlert.vue';
+import TriggerCreateDialog from '../../components/triggers/CreateDialog.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
 
-const router = useRouter();
 const triggerStore = useTriggerStore();
 const warehouseStore = useWarehousesStore();
 const userStore = useUserStore();
 const { viewReady } = useViewReady();
 
-function navigateToCreate() {
-  router.push({ name: 'TriggerCreate' });
+// Dialog state
+const showCreateDialog = ref(false);
+
+function openCreateDialog() {
+  showCreateDialog.value = true;
+}
+
+function handleCreated() {
+  // Refresh the list after creation
+  triggerStore.fetchTriggers();
 }
 
 async function confirmDeleteTrigger(id: string) {
@@ -344,7 +355,7 @@ function formatDateTime(date: string | Date | null): string {
 function getStatusLabel(status: string): string {
   switch (status) {
     case 'RELEVANT':
-      return 'актуальные';
+      return 'активные';
     case 'COMPLETED':
       return 'завершенные';
     case 'EXPIRED':
