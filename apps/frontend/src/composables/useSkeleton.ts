@@ -12,7 +12,10 @@ const showSkeletonState = computed(
 
 // Map paths to route names (used when router is not ready yet)
 const pathToRouteNameMap = [
-  { pattern: /^\/$/, routeName: 'Account' },
+  { pattern: /^\/$/, routeName: 'Home' },
+  { pattern: /^\/account(\/|$)/, routeName: 'Account' },
+  { pattern: /^\/tasks(\/|$)/, routeName: 'Tasks' },
+  { pattern: /^\/wb(\/|$)/, routeName: 'WB' },
   { pattern: /^\/autobooking(\/|$)/, routeName: 'Autobooking' },
   { pattern: /^\/reschedules(\/|$)/, routeName: 'Reschedules' },
   { pattern: /^\/triggers(\/|$)/, routeName: 'Triggers' },
@@ -20,6 +23,7 @@ const pathToRouteNameMap = [
   { pattern: /^\/reports(\/|$)/, routeName: 'Reports' },
   { pattern: /^\/store(\/|$)/, routeName: 'Store' },
   { pattern: /^\/payments(\/|$)/, routeName: 'Payments' },
+  { pattern: /^\/mpstats(\/|$)/, routeName: 'MPStats' },
 ];
 
 /**
@@ -32,7 +36,7 @@ function getRouteNameByPath(path: string): string {
       return routeName;
     }
   }
-  return 'Account';
+  return 'Home';
 }
 
 /**

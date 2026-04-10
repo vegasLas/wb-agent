@@ -6,6 +6,10 @@
 // View Types
 // -----------------------------------------------------------------------------
 export type ViewType =
+  | 'home'
+  | 'tasks'
+  | 'wb'
+  | 'mpstats'
   | 'triggers-main'
   | 'triggers-form'
   | 'autobookings-form'
