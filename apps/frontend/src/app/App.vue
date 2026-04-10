@@ -40,6 +40,7 @@ import {
   SkeletonPayments,
   SkeletonReschedules,
   SkeletonPromotions,
+  SkeletonTasks,
 } from '../components/skeleton';
 
 // Initialize color mode with proper configuration for class-based dark mode
@@ -78,21 +79,19 @@ const routeSkeletonMap: Record<string, any> = {
   Account: SkeletonAccount,
   Autobooking: SkeletonAutobookings,
   AutobookingList: SkeletonAutobookings,
-  AutobookingCreate: SkeletonAutobookings,
-  AutobookingUpdate: SkeletonAutobookings,
   Reschedules: SkeletonReschedules,
   ReschedulesList: SkeletonReschedules,
   ReschedulesCreate: SkeletonReschedules,
   ReschedulesUpdate: SkeletonReschedules,
   Triggers: SkeletonTriggers,
   TriggersList: SkeletonTriggers,
-  TriggerCreate: SkeletonTriggers,
   Promotions: SkeletonPromotions,
   Reports: SkeletonReport,
   Store: SkeletonStore,
   StoreSubscription: SkeletonStore,
   StoreBookings: SkeletonStore,
   Payments: SkeletonPayments,
+  Tasks: SkeletonTasks,
   default: SkeletonAccount,
 };
 
@@ -108,11 +107,8 @@ provide('currentRouteSkeleton', currentRouteSkeleton);
 
 // Form routes that should not show skeleton during navigation
 const formRouteNames = [
-  'AutobookingCreate',
-  'AutobookingUpdate',
   'ReschedulesCreate',
   'ReschedulesUpdate',
-  'TriggerCreate',
 ];
 
 // Setup router hooks to handle navigation loading state
