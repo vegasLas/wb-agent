@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-white dark:bg-[#171819] flex flex-col lg:flex-row py-6 px-4"
+    class="min-h-screen bg-deep-bg flex flex-col lg:flex-row py-6 px-4"
   >
     <!-- Main Content Area -->
     <main

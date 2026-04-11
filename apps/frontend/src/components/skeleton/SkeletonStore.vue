@@ -10,7 +10,7 @@
     </div>
 
     <!-- Subscription Status Card -->
-    <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+    <div class="p-4 bg-deep-card">
       <div class="space-y-3">
         <Skeleton width="40%" height="1.25rem" border-radius="0.25rem" />
         <div class="flex items-center gap-2">
@@ -22,7 +22,7 @@
 
     <!-- Tariff Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <Skeleton width="40%" height="1.25rem" border-radius="0.25rem" />
@@ -36,7 +36,7 @@
         </div>
       </div>
 
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <Skeleton width="35%" height="1.25rem" border-radius="0.25rem" />
@@ -50,7 +50,7 @@
         </div>
       </div>
 
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="space-y-4">
           <Skeleton width="50%" height="1.25rem" border-radius="0.25rem" />
           <Skeleton width="4rem" height="2rem" border-radius="0.25rem" />
@@ -58,7 +58,7 @@
         </div>
       </div>
 
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="space-y-4">
           <Skeleton width="45%" height="1.25rem" border-radius="0.25rem" />
           <div class="flex items-center gap-2">

@@ -2,19 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-/* PrimeIcons font display fix */
-.pi {
-  font-family: 'primeicons', sans-serif !important;
-  speak: none;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  text-transform: none;
-  line-height: 1;
-  display: inline-block;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ============================================
+   Crypto Finance Theme - CSS Variables
+   Deep Dark + Purple Accents
+   ============================================ */
+
+:root {
+  /* Dark Theme - Crypto Finance */
+  --color-bg: #0A0A0F;
+  --color-card: #15151C;
+  --color-elevated: #1E1E28;
+  --color-border: #2A2A35;
+  
+  --color-text: #FFFFFF;
+  --text-secondary: #6B7280;
+  --text-muted: #4B5563;
+  
+  /* Purple Accent */
+  --color-primary: #6A39F4;
+  --color-primary-hover: #8B69F6;
+  --color-primary-active: #A855F7;
+  
+  /* Semantic Colors */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+  
+  /* Shadows */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-dialog: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
+
+.dark {
+  /* Same colors - this is a dark-first theme */
+  --color-bg: #0A0A0F;
+  --color-card: #15151C;
+  --color-elevated: #1E1E28;
+  --color-border: #2A2A35;
+  
+  --color-text: #FFFFFF;
+  --text-secondary: #6B7280;
+  --text-muted: #4B5563;
+  
+  --color-primary: #6A39F4;
+  --color-primary-hover: #8B69F6;
+  --color-primary-active: #A855F7;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -37,17 +76,26 @@ html {
   tab-size: 4;
   scroll-behavior: smooth;
 }
+
 body {
   font-family: inherit;
   line-height: inherit;
   margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
+
 h1,
 h2,
+h3,
+h4,
+h5,
+h6,
 p,
 pre {
   margin: 0;
 }
+
 *,
 ::before,
 ::after {
@@ -56,28 +104,669 @@ pre {
   border-style: solid;
   border-color: currentColor;
 }
+
 h1,
-h2 {
+h2,
+h3 {
   font-size: inherit;
   font-weight: inherit;
 }
+
 a {
   color: inherit;
   text-decoration: inherit;
 }
+
 pre {
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
 }
 
-/* Skeleton Card - Matches PrimeVue Card styling (no border/shadow as Card component provides these) */
-.skeleton-card {
-  @apply p-4 bg-white dark:bg-[rgb(31,31,32)];
+/* ============================================
+   PrimeIcons Font Display Fix
+   ============================================ */
+
+.pi {
+  font-family: 'primeicons', sans-serif !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Toast styling - prevent text overflow */
+/* ============================================
+   Crypto Finance Components
+   ============================================ */
+
+/* Main background */
+.app-background {
+  background-color: #0A0A0F;
+  min-height: 100vh;
+}
+
+/* Card */
+.crypto-card {
+  background-color: #15151C;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  padding: 1.5rem;
+}
+
+/* Portfolio Card (Purple accent) */
+.portfolio-card {
+  background: linear-gradient(135deg, #6A39F4 0%, #6D28D9 100%);
+  border-radius: 20px;
+  padding: 1.5rem;
+  color: #FFFFFF;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  background-color: #15151C;
+  border-top: 1px solid #2A2A35;
+}
+
+/* Bottom nav item */
+.nav-item {
+  color: #6B7280;
+  transition: all 0.2s ease;
+}
+
+.nav-item.active {
+  color: #6A39F4;
+}
+
+.nav-item:hover {
+  color: #8B69F6;
+}
+
+/* Skeleton Card */
+.skeleton-card {
+  background-color: #15151C;
+  border-radius: 20px;
+  padding: 1.5rem;
+}
+
+/* Toast styling */
 .p-toast .p-toast-summary,
 .p-toast .p-toast-detail {
   overflow-wrap: break-word;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+@layer utilities {
+  /* Background utilities */
+  .bg-theme {
+    background-color: var(--color-bg);
+  }
+  
+  .bg-card {
+    background-color: var(--color-card);
+  }
+  
+  .bg-elevated {
+    background-color: var(--color-elevated);
+  }
+  
+  /* Text utilities */
+  .text-theme {
+    color: var(--color-text);
+  }
+  
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+  
+  .text-muted {
+    color: var(--text-muted);
+  }
+  
+  /* Purple accent */
+  .text-purple {
+    color: var(--color-primary);
+  }
+  
+  .bg-purple {
+    background-color: var(--color-primary);
+  }
+  
+  .bg-purple-hover {
+    background-color: var(--color-primary-hover);
+  }
+  
+  /* Shadows */
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-dialog {
+    box-shadow: var(--shadow-dialog);
+  }
+  
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+/* ============================================
+   PrimeVue Component Overrides
+   ============================================ */
+
+/* Card overrides */
+.p-card {
+  background-color: #15151C !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  color: #FFFFFF !important;
+}
+
+.p-card .p-card-content {
+  color: #FFFFFF;
+}
+
+/* Button overrides - Purple primary */
+.p-button {
+  border-radius: 14px !important;
+}
+
+.p-button.p-button-primary {
+  background: linear-gradient(135deg, #6A39F4 0%, #6D28D9 100%) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(106, 57, 244, 0.4) !important;
+}
+
+.p-button.p-button-primary:hover {
+  background: linear-gradient(135deg, #8B69F6 0%, #6A39F4 100%) !important;
+  box-shadow: 0 6px 20px rgba(106, 57, 244, 0.5) !important;
+}
+
+.p-button.p-button-secondary {
+  background: #1E1E28 !important;
+  border: 1px solid #2A2A35 !important;
+  color: #FFFFFF !important;
+}
+
+.p-button.p-button-secondary:hover {
+  background: #2A2A35 !important;
+  border-color: #3D3D4D !important;
+}
+
+/* Input overrides */
+.p-inputtext {
+  background-color: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  color: #FFFFFF !important;
+  border-radius: 14px !important;
+}
+
+.p-inputtext:focus {
+  border-color: #6A39F4 !important;
+  box-shadow: 0 0 0 3px rgba(106, 57, 244, 0.2) !important;
+}
+
+.p-inputtext::placeholder {
+  color: #6B7280 !important;
+}
+
+/* Select overrides */
+.p-select {
+  background-color: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  border-radius: 14px !important;
+}
+
+.p-select .p-select-label {
+  color: #FFFFFF !important;
+}
+
+/* Select Dropdown Panel - Dark Theme */
+.p-select-overlay {
+  background: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-select-overlay .p-select-header {
+  background: #15151C !important;
+  border-bottom: 1px solid #2A2A35 !important;
+  color: #FFFFFF !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.p-select-overlay .p-select-list {
+  background: #15151C !important;
+  padding: 0.5rem !important;
+}
+
+.p-select-overlay .p-select-option {
+  background: transparent !important;
+  color: #FFFFFF !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1rem !important;
+  margin: 2px 0 !important;
+}
+
+.p-select-overlay .p-select-option:hover {
+  background: #1E1E28 !important;
+  color: #FFFFFF !important;
+}
+
+.p-select-overlay .p-select-option.p-select-option-selected {
+  background: rgba(106, 57, 244, 0.2) !important;
+  color: #6A39F4 !important;
+}
+
+.p-select-overlay .p-select-option.p-select-option-selected:hover {
+  background: rgba(106, 57, 244, 0.3) !important;
+}
+
+.p-select-overlay .p-select-option-check-icon {
+  color: #6A39F4 !important;
+}
+
+.p-select-overlay .p-select-empty-message {
+  color: #6B7280 !important;
+  padding: 1rem !important;
+}
+
+/* Dialog overrides - completely borderless */
+.p-dialog,
+.p-dialog .p-dialog-header,
+.p-dialog .p-dialog-content,
+.p-dialog .p-dialog-footer {
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline: none !important;
+}
+
+.p-dialog {
+  border-radius: 24px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.p-dialog .p-dialog-header {
+  background: #15151C !important;
+  color: #FFFFFF !important;
+  border-radius: 24px 24px 0 0 !important;
+}
+
+.p-dialog .p-dialog-content {
+  background: #15151C !important;
+  color: #FFFFFF !important;
+}
+
+.p-dialog .p-dialog-footer {
+  background: #15151C !important;
+  border-radius: 0 0 24px 24px !important;
+}
+
+/* Tag overrides */
+.p-tag {
+  border-radius: 8px !important;
+}
+
+.p-tag.p-tag-secondary {
+  background: #1E1E28 !important;
+  color: #6B7280 !important;
+}
+
+.p-tag.p-tag-success {
+  background: rgba(34, 197, 94, 0.15) !important;
+  color: #22C55E !important;
+}
+
+.p-tag.p-tag-danger {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #EF4444 !important;
+}
+
+/* Toast overrides */
+.p-toast .p-toast-message {
+  border-radius: 16px !important;
+}
+
+/* Toggle button overrides */
+.p-togglebutton {
+  background: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  border-radius: 14px !important;
+}
+
+.p-togglebutton.p-highlight {
+  background: #6A39F4 !important;
+  border-color: #6A39F4 !important;
+  color: #FFFFFF !important;
+}
+
+/* ============================================
+   Other Overlay Components - Dark Theme
+   ============================================ */
+
+/* Calendar/DatePicker overlay */
+.p-datepicker {
+  background: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-datepicker .p-datepicker-header {
+  background: #15151C !important;
+  border-bottom: 1px solid #2A2A35 !important;
+  color: #FFFFFF !important;
+}
+
+.p-datepicker .p-datepicker-calendar th {
+  color: #6B7280 !important;
+}
+
+.p-datepicker .p-datepicker-calendar td > span {
+  color: #FFFFFF !important;
+}
+
+.p-datepicker .p-datepicker-calendar td > span:hover {
+  background: #1E1E28 !important;
+}
+
+.p-datepicker .p-datepicker-calendar td.p-datepicker-today > span {
+  background: rgba(106, 57, 244, 0.2) !important;
+  color: #6A39F4 !important;
+}
+
+.p-datepicker .p-datepicker-calendar td.p-highlight > span {
+  background: #6A39F4 !important;
+  color: #FFFFFF !important;
+}
+
+.p-datepicker .p-timepicker {
+  border-top: 1px solid #2A2A35 !important;
+  color: #FFFFFF !important;
+}
+
+.p-datepicker .p-timepicker button {
+  color: #6B7280 !important;
+}
+
+.p-datepicker .p-timepicker button:hover {
+  color: #FFFFFF !important;
+}
+
+/* Menu overlay */
+.p-menu {
+  background: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-menu .p-menu-list {
+  background: #15151C !important;
+  padding: 0.5rem !important;
+}
+
+.p-menu .p-menuitem {
+  background: transparent !important;
+}
+
+.p-menu .p-menuitem-link {
+  color: #FFFFFF !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.p-menu .p-menuitem-link:hover {
+  background: #1E1E28 !important;
+}
+
+.p-menu .p-menuitem-link .p-menuitem-icon {
+  color: #6B7280 !important;
+}
+
+.p-menu .p-menuitem-link:hover .p-menuitem-icon {
+  color: #FFFFFF !important;
+}
+
+.p-menu .p-submenu-header {
+  background: transparent !important;
+  color: #6B7280 !important;
+  font-weight: 600;
+  padding: 0.75rem 1rem !important;
+}
+
+/* AutoComplete dropdown */
+.p-autocomplete-panel {
+  background: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-items {
+  background: #15151C !important;
+  padding: 0.5rem !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-item {
+  color: #FFFFFF !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-item:hover {
+  background: #1E1E28 !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-item.p-highlight {
+  background: rgba(106, 57, 244, 0.2) !important;
+  color: #6A39F4 !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-empty-message {
+  color: #6B7280 !important;
+  padding: 1rem !important;
+}
+
+/* MultiSelect dropdown */
+.p-multiselect-panel {
+  background: #15151C !important;
+  border: 1px solid #2A2A35 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-multiselect-panel .p-multiselect-header {
+  background: #15151C !important;
+  border-bottom: 1px solid #2A2A35 !important;
+  color: #FFFFFF !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.p-multiselect-panel .p-multiselect-items {
+  background: #15151C !important;
+  padding: 0.5rem !important;
+}
+
+.p-multiselect-panel .p-multiselect-item {
+  color: #FFFFFF !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.p-multiselect-panel .p-multiselect-item:hover {
+  background: #1E1E28 !important;
+}
+
+.p-multiselect-panel .p-multiselect-item.p-highlight {
+  background: rgba(106, 57, 244, 0.2) !important;
+  color: #6A39F4 !important;
+}
+
+.p-multiselect-panel .p-checkbox-box {
+  border-color: #2A2A35 !important;
+  background: #0A0A0F !important;
+}
+
+.p-multiselect-panel .p-checkbox-box.p-highlight {
+  background: #6A39F4 !important;
+  border-color: #6A39F4 !important;
+}
+
+/* DataTable */
+.p-datatable {
+  background: transparent !important;
+}
+
+.p-datatable .p-datatable-header {
+  background: #15151C !important;
+  border-color: #2A2A35 !important;
+  color: #FFFFFF !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: #15151C !important;
+  border-color: #2A2A35 !important;
+  color: #6B7280 !important;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  background: transparent !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: #2A2A35 !important;
+  color: #FFFFFF !important;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: #1E1E28 !important;
+}
+
+/* Paginator */
+.p-paginator {
+  background: #15151C !important;
+  border-color: #2A2A35 !important;
+}
+
+.p-paginator .p-paginator-page.p-highlight {
+  background: #6A39F4 !important;
+  color: #FFFFFF !important;
+}
+
+.p-paginator .p-paginator-page:not(.p-highlight):hover {
+  background: #1E1E28 !important;
+  color: #FFFFFF !important;
+}
+
+/* TabView */
+.p-tabview .p-tabview-nav {
+  background: transparent !important;
+  border-color: #2A2A35 !important;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: #6B7280 !important;
+}
+
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: transparent !important;
+  border-color: #6A39F4 !important;
+  color: #6A39F4 !important;
+}
+
+.p-tabview .p-tabview-nav li:not(.p-highlight):hover .p-tabview-nav-link {
+  color: #FFFFFF !important;
+}
+
+.p-tabview .p-tabview-panels {
+  background: transparent !important;
+  color: #FFFFFF !important;
+}
+
+/* Accordion */
+.p-accordion .p-accordion-header .p-accordion-header-link {
+  background: #15151C !important;
+  border-color: #2A2A35 !important;
+  color: #FFFFFF !important;
+}
+
+.p-accordion .p-accordion-content {
+  background: #0A0A0F !important;
+  border-color: #2A2A35 !important;
+  color: #FFFFFF !important;
+}
+
+/* Sidebar */
+.p-sidebar {
+  background: #15151C !important;
+  color: #FFFFFF !important;
+}
+
+.p-sidebar .p-sidebar-header {
+  border-bottom: 1px solid #2A2A35 !important;
+}
+
+.p-sidebar .p-sidebar-content {
+  color: #FFFFFF !important;
+}
+
+/* Tooltip */
+.p-tooltip .p-tooltip-text {
+  background: #1E1E28 !important;
+  color: #FFFFFF !important;
+  border-radius: 8px !important;
+}
+
+.p-tooltip.p-tooltip-right .p-tooltip-arrow {
+  border-right-color: #1E1E28 !important;
+}
+
+.p-tooltip.p-tooltip-left .p-tooltip-arrow {
+  border-left-color: #1E1E28 !important;
+}
+
+.p-tooltip.p-tooltip-top .p-tooltip-arrow {
+  border-top-color: #1E1E28 !important;
+}
+
+.p-tooltip.p-tooltip-bottom .p-tooltip-arrow {
+  border-bottom-color: #1E1E28 !important;
+}
+
+/* ScrollPanel */
+.p-scrollpanel .p-scrollpanel-bar {
+  background: #2A2A35 !important;
+  border-radius: 4px !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A35;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3D3D4D;
 }

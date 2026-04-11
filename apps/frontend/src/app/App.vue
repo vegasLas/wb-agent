@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-[#171819]">
+  <div class="min-h-screen bg-deep-bg">
     <!--
       Route-based Skeleton Loading
       - Shown during: router guard initialization (Telegram + user data)
@@ -144,6 +144,6 @@ onMounted(async () => {
 
 <style>
 body {
-  @apply bg-white dark:bg-[#171819];
+  @apply bg-deep-bg;
 }
 </style>

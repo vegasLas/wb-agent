@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <!-- Current Account & Supplier Info Card -->
-    <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+    <div class="p-4 bg-deep-card">
       <div class="space-y-3">
         <div class="flex items-center justify-between">
           <Skeleton width="40%" height="1.5rem" border-radius="0.25rem" />
@@ -21,7 +21,7 @@
     </div>
 
     <!-- Subscription Status Card -->
-    <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+    <div class="p-4 bg-deep-card">
       <div class="flex items-center justify-between">
         <Skeleton width="35%" height="1.5rem" border-radius="0.25rem" />
         <Skeleton width="6rem" height="1.5rem" border-radius="0.25rem" />
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Autobooking Count Card -->
-    <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+    <div class="p-4 bg-deep-card">
       <div class="flex items-center justify-between">
         <Skeleton width="30%" height="1.5rem" border-radius="0.25rem" />
         <Skeleton width="3rem" height="1.5rem" border-radius="0.25rem" />
@@ -37,7 +37,7 @@
     </div>
 
     <!-- Supplier API Key Card -->
-    <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+    <div class="p-4 bg-deep-card">
       <div class="space-y-3">
         <Skeleton width="45%" height="1.25rem" border-radius="0.25rem" />
         <Skeleton width="8rem" height="1.5rem" border-radius="0.25rem" />
@@ -49,11 +49,11 @@
     </div>
 
     <!-- Payment History Card -->
-    <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+    <div class="p-4 bg-deep-card">
       <div class="space-y-4">
         <Skeleton width="40%" height="1.25rem" border-radius="0.25rem" />
         <!-- Table Header -->
-        <div class="flex gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex gap-2 pb-2 border-b border-deep-border">
           <Skeleton width="25%" height="2rem" border-radius="0.25rem" />
           <Skeleton width="25%" height="2rem" border-radius="0.25rem" />
           <Skeleton width="25%" height="2rem" border-radius="0.25rem" />
