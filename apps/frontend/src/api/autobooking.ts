@@ -65,7 +65,12 @@ export const autobookingAPI = {
       '/autobooking',
       data,
     );
-    return response.data.data;
+    // Handle both response structures: { success, data } or direct Autobooking
+    const result = response.data?.data ?? response.data;
+    if (!result || typeof result !== 'object') {
+      throw new Error('Invalid response from server');
+    }
+    return result as Autobooking;
   },
 
   /**
@@ -80,7 +85,12 @@ export const autobookingAPI = {
       '/autobooking',
       { id, ...data },
     );
-    return response.data.data;
+    // Handle both response structures: { success, data } or direct Autobooking
+    const result = response.data?.data ?? response.data;
+    if (!result || typeof result !== 'object') {
+      throw new Error('Invalid response from server');
+    }
+    return result as Autobooking;
   },
 
   /**
