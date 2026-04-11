@@ -52,7 +52,7 @@
           class="mb-6"
         >
           <div
-            class="grid grid-cols-1 gap-3 p-4 rounded-lg text-sm bg-gray-50 dark:bg-gray-700"
+            class="grid grid-cols-1 gap-3 p-4 rounded-lg text-sm bg-elevated"
           >
             <div
               class="flex items-center gap-2 text-gray-700 dark:text-gray-300"

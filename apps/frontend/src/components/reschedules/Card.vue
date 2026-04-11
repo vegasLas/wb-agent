@@ -32,7 +32,7 @@
               :severity="isSupplierActive ? 'info' : 'danger'"
               :class="
                 isSupplierActive
-                  ? 'bg-blue-500 dark:bg-blue-600 text-white'
+                  ? 'bg-blue-500 dark:bg-blue-600 text-theme'
                   : ''
               "
             >
