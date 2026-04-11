@@ -2,9 +2,11 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI, warehousesAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
+import { useAutobookingListStore } from './autobookingList';
 import { useUserStore } from './user';
 import { useWarehousesStore } from './warehouses';
 import { useDraftStore } from './draft';
+import { toastHelpers } from '../utils/toast';
 import type { ValidationResult } from './autobookingForm';
 import type { Autobooking, AutobookingUpdateData } from '../types';
 
@@ -366,6 +368,7 @@ export const useAutobookingUpdateStore = defineStore(
       }
 
       const autobookingStore = useAutobookingStore();
+      const listStore = useAutobookingListStore();
 
       try {
         loading.value = true;
@@ -390,7 +393,18 @@ export const useAutobookingUpdateStore = defineStore(
           updateData,
         );
 
+        // Update both stores
         autobookingStore.updateAutobookingInList(autobooking.id, autobooking);
+
+        // Update in list store as well
+        const listIndex = listStore.autobookings.findIndex((a) => a.id === autobooking.id);
+        if (listIndex !== -1) {
+          listStore.autobookings[listIndex] = autobooking;
+        }
+
+        // Show success toast
+        const warehouseName = warehouseStore.getWarehouseName(autobooking.warehouseId);
+        toastHelpers.success('Автобронирование обновлено', `Склад: ${warehouseName}`);
 
         resetForm();
 
@@ -399,6 +413,7 @@ export const useAutobookingUpdateStore = defineStore(
         const errorMsg =
           err instanceof Error ? err.message : 'Failed to update autobooking';
         error.value = errorMsg;
+        toastHelpers.error('Ошибка обновления', errorMsg);
         throw err;
       } finally {
         loading.value = false;

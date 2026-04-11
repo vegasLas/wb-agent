@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { triggersAPI } from '../api';
 import { useWarehousesStore } from './warehouses';
+import { toastHelpers } from '../utils/toast';
 import type { SupplyTrigger, CreateTriggerRequest } from '../types';
 
 export const useTriggerStore = defineStore('triggers', () => {
@@ -70,15 +71,28 @@ export const useTriggerStore = defineStore('triggers', () => {
 
   // Actions
   async function create(data: CreateTriggerRequest) {
+    const warehouseStore = useWarehousesStore();
+
     try {
       isCreating.value = true;
       const trigger = await triggersAPI.createTrigger(data);
       if (trigger) {
         triggers.value.unshift(trigger);
+
+        // Show success toast with warehouse names
+        const warehouseNames = trigger.warehouseIds
+          .map((id) => warehouseStore.getWarehouseName(id))
+          .filter(Boolean)
+          .join(', ');
+        toastHelpers.success(
+          'Триггер создан',
+          warehouseNames ? `Склады: ${warehouseNames}` : undefined
+        );
       }
       return trigger;
     } catch (err) {
       error.value = 'Failed to create trigger';
+      toastHelpers.error('Ошибка создания', 'Не удалось создать триггер');
       throw err;
     } finally {
       isCreating.value = false;
@@ -86,6 +100,8 @@ export const useTriggerStore = defineStore('triggers', () => {
   }
 
   async function updateTrigger(data: Partial<SupplyTrigger> & { id: string }) {
+    const warehouseStore = useWarehousesStore();
+
     try {
       isUpdating.value = true;
       const trigger = await triggersAPI.updateTrigger(data.id, data);
@@ -94,10 +110,21 @@ export const useTriggerStore = defineStore('triggers', () => {
         if (index !== -1) {
           triggers.value[index] = trigger;
         }
+
+        // Show success toast
+        const warehouseNames = trigger.warehouseIds
+          .map((id) => warehouseStore.getWarehouseName(id))
+          .filter(Boolean)
+          .join(', ');
+        toastHelpers.success(
+          'Триггер обновлен',
+          warehouseNames ? `Склады: ${warehouseNames}` : undefined
+        );
       }
       return trigger;
     } catch (err) {
       error.value = 'Failed to update trigger';
+      toastHelpers.error('Ошибка обновления', 'Не удалось обновить триггер');
       throw err;
     } finally {
       isUpdating.value = false;
@@ -122,14 +149,30 @@ export const useTriggerStore = defineStore('triggers', () => {
   }
 
   async function deleteTrigger(triggerId: string) {
+    const warehouseStore = useWarehousesStore();
+
     try {
       deletingId.value = triggerId;
       isDeleting.value = true;
 
+      // Get trigger info before deletion for toast
+      const trigger = triggers.value.find((t) => t.id === triggerId);
+
       await triggersAPI.deleteTrigger(triggerId);
       triggers.value = triggers.value.filter((t) => t.id !== triggerId);
+
+      // Show success toast
+      const warehouseNames = trigger?.warehouseIds
+        .map((id) => warehouseStore.getWarehouseName(id))
+        .filter(Boolean)
+        .join(', ');
+      toastHelpers.success(
+        'Триггер удален',
+        warehouseNames ? `Склады: ${warehouseNames}` : undefined
+      );
     } catch (err) {
       error.value = 'Failed to delete trigger';
+      toastHelpers.error('Ошибка удаления', 'Не удалось удалить триггер');
       throw err;
     } finally {
       isDeleting.value = false;
@@ -138,16 +181,30 @@ export const useTriggerStore = defineStore('triggers', () => {
   }
 
   async function toggleTrigger(triggerId: string): Promise<void> {
+    const warehouseStore = useWarehousesStore();
+
     try {
       togglingId.value = triggerId;
       const updatedTrigger = await triggersAPI.toggleTrigger(triggerId);
       const index = triggers.value.findIndex((t) => t.id === triggerId);
       if (index !== -1 && updatedTrigger) {
         triggers.value[index] = updatedTrigger;
+
+        // Show success toast with activation status
+        const warehouseNames = updatedTrigger.warehouseIds
+          .map((id) => warehouseStore.getWarehouseName(id))
+          .filter(Boolean)
+          .join(', ');
+        const statusText = updatedTrigger.isActive ? 'активирован' : 'деактивирован';
+        toastHelpers.success(
+          `Триггер ${statusText}`,
+          warehouseNames ? `Склады: ${warehouseNames}` : undefined
+        );
       }
     } catch (err: unknown) {
       console.error('Failed to toggle trigger:', err);
       error.value = 'Failed to toggle trigger';
+      toastHelpers.error('Ошибка', 'Не удалось изменить статус триггера');
       throw err;
     } finally {
       togglingId.value = null;

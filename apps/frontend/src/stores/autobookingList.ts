@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI } from '../api';
 import { useWarehousesStore } from './warehouses';
+import { toastHelpers } from '../utils/toast';
 import { AUTOBOOKING_STATUSES } from '../constants';
 import type { Autobooking, AutobookingReschedule } from '../types';
 
@@ -178,6 +179,8 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   }
 
   async function activateAutobooking(booking: Autobooking) {
+    const warehouseStore = useWarehousesStore();
+
     try {
       loading.value = true;
       const updated = await autobookingAPI.updateAutobooking(booking.id, {
@@ -199,8 +202,13 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
         }
         statusCounts.value['ACTIVE'] = (statusCounts.value['ACTIVE'] || 0) + 1;
       }
+
+      // Show success toast
+      const warehouseName = warehouseStore.getWarehouseName(updated.warehouseId);
+      toastHelpers.success('Автобронирование активировано', `Склад: ${warehouseName}`);
     } catch (err) {
       error.value = 'Failed to activate autobooking';
+      toastHelpers.error('Ошибка активации', 'Не удалось активировать автобронирование');
       throw err;
     } finally {
       loading.value = false;

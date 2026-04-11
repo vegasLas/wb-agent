@@ -2,8 +2,11 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI, warehousesAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
+import { useAutobookingListStore } from './autobookingList';
 import { useUserStore } from './user';
 import { useDraftStore } from './draft';
+import { useWarehousesStore } from './warehouses';
+import { toastHelpers } from '../utils/toast';
 import type { AutobookingCreateData } from '../types';
 
 // Form field types
@@ -192,6 +195,9 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
     const autobookingStore = useAutobookingStore();
     const userStore = useUserStore();
 
+    const listStore = useAutobookingListStore();
+    const warehouseStore = useWarehousesStore();
+
     try {
       loading.value = true;
       error.value = null;
@@ -215,18 +221,39 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
       };
 
       const autobooking = await autobookingAPI.createAutobooking(createData);
+      
+      // Validate response
+      if (!autobooking || !autobooking.id) {
+        throw new Error('Invalid response from server');
+      }
+      
       autobookingStore.addAutobooking(autobooking);
+
+      // Also add to list store so it appears immediately
+      listStore.autobookings.unshift(autobooking);
+      listStore.statusCounts['ACTIVE'] = (listStore.statusCounts['ACTIVE'] || 0) + 1;
 
       // Decrease user's autobooking count
       userStore.decreaseAutobookingCount();
+
+      // Show success toast with warehouse name
+      const warehouseName = autobooking.warehouseId 
+        ? warehouseStore.getWarehouseName(autobooking.warehouseId)
+        : '';
+      toastHelpers.success(
+        'Автобронирование создано',
+        warehouseName ? `Склад: ${warehouseName}` : undefined
+      );
 
       resetForm();
 
       return true;
     } catch (err: unknown) {
+      console.error('Create autobooking error:', err);
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to create autobooking';
       error.value = errorMsg;
+      toastHelpers.error('Ошибка создания', errorMsg);
       return false;
     } finally {
       loading.value = false;
