@@ -90,7 +90,7 @@
               :key="index"
               :value="advantage"
               severity="secondary"
-              class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-0"
+              class="text-xs bg-elevated text-secondary border-0"
             />
           </div>
         </div>
@@ -155,7 +155,7 @@
             <div class="relative">
               <!-- Progress Bar Container -->
               <div
-                class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-6"
+                class="relative h-2 bg-border rounded-full mb-6"
               >
                 <!-- Progress Fill -->
                 <div

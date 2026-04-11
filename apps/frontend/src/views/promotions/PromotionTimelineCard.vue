@@ -12,10 +12,12 @@
       class="mx-1 rounded-lg border shadow-sm hover:shadow-md transition-all cursor-pointer hover:z-20 relative overflow-hidden"
       :class="[
         display.isExpired.value
-          ? 'border-[#2A2A35] bg-gradient-to-r from-[#1E1E28] to-[#15151C]'
-          : 'border-[#6A39F4]/30 hover:border-[#6A39F4] bg-gradient-to-r from-[#6A39F4]/10 to-[#15151C]',
+          ? 'border-deep-border bg-gradient-to-r from-deep-elevated to-deep-card'
+          : display.isNotStarted.value
+            ? 'border-emerald-500/30 hover:border-emerald-500 bg-gradient-to-r from-emerald-500/10 to-deep-card'
+            : 'border-[#6A39F4]/30 hover:border-[#6A39F4] bg-gradient-to-r from-[#6A39F4]/10 to-deep-card',
         isExpanded
-          ? 'p-3 bg-[#15151C]'
+          ? 'p-3 bg-deep-card'
           : 'p-2',
       ]"
     >
@@ -38,7 +40,7 @@
             <span
               class="text-xs font-medium flex-shrink-0"
               :class="display.isExpired.value
-                ? 'text-gray-400'
+                ? 'text-[var(--text-muted)]'
                 : 'text-[#6A39F4]'"
             >
               {{ display.typeLabel.value }}
@@ -48,8 +50,8 @@
             <span
               class="text-xs font-medium truncate"
               :class="display.isExpired.value
-                ? 'text-gray-400'
-                : 'text-white'"
+                ? 'text-[var(--text-muted)]'
+                : 'text-[var(--color-text)]'"
             >
               {{ display.name.value }}
             </span>
@@ -63,7 +65,7 @@
                 promotion.participation.counts.participating
               }}</strong>
             </span>
-            <span class="text-[10px] text-gray-400">
+            <span class="text-[10px] text-[var(--text-muted)]">
               Не участвуют:
               <strong>{{
                 promotion.participation.counts.available +
@@ -77,7 +79,7 @@
       <!-- Expanded Content -->
       <div
         v-if="isExpanded"
-        class="mt-3 pt-3 border-t border-[#6A39F4]/30"
+        class="mt-3 pt-3 border-t border-[#6A39F4]/30 dark:border-[#6A39F4]/30 border-[#6A39F4]/20"
       >
         <!-- Status Badge -->
         <div class="mb-2">
@@ -91,7 +93,7 @@
         <!-- Stats Row -->
         <div class="flex items-center gap-2 mb-3 flex-wrap">
           <span
-            class="text-xs text-gray-400 flex items-center gap-0.5"
+            class="text-xs text-[var(--text-muted)] flex items-center gap-0.5"
           >
             <i class="pi pi-arrow-up-right text-[10px]" />
             {{ display.participationText.value }}
@@ -108,14 +110,14 @@
         <div
           class="text-xs space-y-1 mb-3"
           :class="display.isExpired.value
-            ? 'text-gray-500'
-            : 'text-gray-400'"
+            ? 'text-[var(--text-secondary)]'
+            : 'text-[var(--text-muted)]'"
         >
           <div>
             {{ dateRangeText }}
             <span
               v-if="display.isExpired.value"
-              class="ml-1 text-gray-400 font-medium"
+              class="ml-1 text-[var(--text-muted)] font-medium"
             >(завершена)</span>
           </div>
           <div>{{ display.productCountText.value }}</div>
@@ -125,7 +127,7 @@
         <div
           class="flex items-center justify-start gap-2 pt-2 border-t"
           :class="display.isExpired.value
-            ? 'border-[#2A2A35]'
+            ? 'border-deep-border'
             : 'border-[#6A39F4]/20'"
         >
           <Button
