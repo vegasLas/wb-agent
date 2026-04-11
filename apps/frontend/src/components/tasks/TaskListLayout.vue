@@ -8,7 +8,6 @@
       <Button
         :variant="localActiveTab === 'autobooking' ? 'filled' : 'outlined'"
         severity="primary"
-        size="small"
         class="flex-1 text-xs py-1 px-2"
         @click="handleTabChange('autobooking')"
       >
@@ -18,7 +17,6 @@
       <Button
         :variant="localActiveTab === 'triggers' ? 'filled' : 'outlined'"
         severity="primary"
-        size="small"
         class="flex-1 text-xs py-1 px-2"
         @click="handleTabChange('triggers')"
       >
@@ -68,10 +66,7 @@
     <slot name="header-extra" />
 
     <!-- List Content -->
-    <div
-      ref="scrollContainer"
-      class="space-y-3"
-    >
+    <div ref="scrollContainer" class="space-y-3">
       <slot />
     </div>
 
