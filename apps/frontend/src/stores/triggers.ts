@@ -21,6 +21,11 @@ export const useTriggerStore = defineStore('triggers', () => {
   const isDeleting = ref(false);
   const togglingId = ref<string | null>(null);
 
+  // Status-based cache: stores fetched data per status
+  const statusCache = ref<Record<string, SupplyTrigger[]>>({});
+  // Track which statuses have been fetched
+  const fetchedStatuses = ref<Set<string>>(new Set());
+
   // Getters
   const getTriggerById = computed(() => {
     return (triggerId: string) =>
@@ -79,6 +84,9 @@ export const useTriggerStore = defineStore('triggers', () => {
       if (trigger) {
         triggers.value.unshift(trigger);
 
+        // Clear cache since data has changed
+        clearStatusCache();
+
         // Show success toast with warehouse names
         const warehouseNames = trigger.warehouseIds
           .map((id) => warehouseStore.getWarehouseName(id))
@@ -111,6 +119,9 @@ export const useTriggerStore = defineStore('triggers', () => {
           triggers.value[index] = trigger;
         }
 
+        // Clear cache since data has changed
+        clearStatusCache();
+
         // Show success toast
         const warehouseNames = trigger.warehouseIds
           .map((id) => warehouseStore.getWarehouseName(id))
@@ -138,14 +149,55 @@ export const useTriggerStore = defineStore('triggers', () => {
       const data = await triggersAPI.fetchTriggers();
       console.log('await triggersAPI.fetchTriggers(): ', data);
       triggers.value = data;
+      
+      // Store in status cache for the current status
+      const currentStatus = selectedStatus.value;
+      statusCache.value[currentStatus] = [...triggers.value];
+      fetchedStatuses.value.add(currentStatus);
+      
       return triggers.value;
     } catch (err) {
       error.value = 'Failed to fetch triggers';
+      clearStatusCache();
       throw err;
     } finally {
       isFetched.value = true;
       loading.value = false;
     }
+  }
+
+  /**
+   * Check if data for a specific status has already been fetched
+   */
+  function isStatusFetched(status: string): boolean {
+    return fetchedStatuses.value.has(status);
+  }
+
+  /**
+   * Fetch data only if not already fetched for the current status
+   * Returns true if fetch was performed, false if data was already cached
+   */
+  async function fetchDataIfNeeded(): Promise<boolean> {
+    const currentStatus = selectedStatus.value;
+    
+    // If we already have data for this status, don't fetch again
+    if (isStatusFetched(currentStatus) && statusCache.value[currentStatus]?.length > 0) {
+      // Use cached data for this status
+      triggers.value = statusCache.value[currentStatus];
+      return false;
+    }
+    
+    // Fetch new data
+    await fetchTriggers();
+    return true;
+  }
+
+  /**
+   * Clear the status cache (useful when data might be stale)
+   */
+  function clearStatusCache() {
+    statusCache.value = {};
+    fetchedStatuses.value.clear();
   }
 
   async function deleteTrigger(triggerId: string) {
@@ -160,6 +212,9 @@ export const useTriggerStore = defineStore('triggers', () => {
 
       await triggersAPI.deleteTrigger(triggerId);
       triggers.value = triggers.value.filter((t) => t.id !== triggerId);
+
+      // Clear cache since data has changed
+      clearStatusCache();
 
       // Show success toast
       const warehouseNames = trigger?.warehouseIds
@@ -189,6 +244,9 @@ export const useTriggerStore = defineStore('triggers', () => {
       const index = triggers.value.findIndex((t) => t.id === triggerId);
       if (index !== -1 && updatedTrigger) {
         triggers.value[index] = updatedTrigger;
+
+        // Clear cache since data has changed
+        clearStatusCache();
 
         // Show success toast with activation status
         const warehouseNames = updatedTrigger.warehouseIds
@@ -231,6 +289,9 @@ export const useTriggerStore = defineStore('triggers', () => {
     isUpdating,
     isDeleting,
     togglingId,
+    // Status cache
+    statusCache,
+    fetchedStatuses,
     // Getters
     getTriggerById,
     isLoading,
@@ -246,6 +307,9 @@ export const useTriggerStore = defineStore('triggers', () => {
     create,
     updateTrigger,
     fetchTriggers,
+    fetchDataIfNeeded,
+    isStatusFetched,
+    clearStatusCache,
     deleteTrigger,
     toggleTrigger,
     setSelectedStatus,
