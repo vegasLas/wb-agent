@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-deep-bg">
+  <div id="app" class="min-h-screen bg-deep-bg" :class="{ 'phone-device': isPhone }">
     <!--
       Route-based Skeleton Loading
       - Shown during: router guard initialization (Telegram + user data)
@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch, provide } from 'vue';
+import { computed, onMounted, watch, provide, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Toast from 'primevue/toast';
@@ -127,11 +127,30 @@ router.afterEach(() => {
   onNavigationEnd();
 });
 
+// Phone device detection
+const isPhone = ref(false);
+
 // Initialize toast for global use
 const toast = useToast();
 
+// Request fullscreen on phones using Telegram Mini Apps API
+const requestFullscreen = () => {
+  const tg = window.Telegram?.WebApp;
+  if (tg?.requestFullscreen) {
+    tg.requestFullscreen();
+  }
+};
+
 // Wait for router to resolve initial navigation
 onMounted(async () => {
+  // Detect if device is a phone
+  isPhone.value = /iPhone|iPad|Android|webOS|BlackBerry/i.test(navigator.userAgent);
+
+  // Request fullscreen on phones
+  if (isPhone.value) {
+    requestFullscreen();
+  }
+
   // Initialize toast for stores
   const { initToast } = await import('../utils/toast');
   initToast(toast);
@@ -145,5 +164,14 @@ onMounted(async () => {
 <style>
 body {
   @apply bg-deep-bg;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+#app.phone-device {
+  padding-top: 100px;
 }
 </style>

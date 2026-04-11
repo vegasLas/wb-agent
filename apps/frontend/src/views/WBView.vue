@@ -67,15 +67,6 @@
       v-if="showPromotions"
       class="space-y-4"
     >
-      <div class="flex items-center gap-2">
-        <Button
-          icon="pi pi-arrow-left"
-          text
-          severity="secondary"
-          @click="showPromotions = false"
-        />
-        <span class="font-medium">Акции Wildberries</span>
-      </div>
       <PromotionsView />
     </div>
 
@@ -113,7 +104,7 @@ const { viewReady } = useViewReady();
 const userStore = useUserStore();
 
 // Navigation state
-const showPromotions = ref(false);
+const showPromotions = ref(true);
 const showBalances = ref(false);
 
 // Mock data - replace with actual API calls
