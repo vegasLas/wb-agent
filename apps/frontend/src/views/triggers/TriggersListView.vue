@@ -43,15 +43,15 @@
           severity="primary"
           size="small"
           class="flex-1 justify-between"
-          @click="triggerStore.setSelectedStatus(status)"
+          @click="handleStatusChange(status)"
         >
           <span class="truncate">{{ getStatusLabel(status) }}</span>
           <span
             :class="[
               'ml-2 px-2 py-0.5 rounded text-xs font-medium',
               triggerStore.selectedStatus === status
-                ? 'bg-white text-blue-600 dark:text-blue-400'
-                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+                ? 'bg-theme text-blue-600 dark:text-blue-400'
+                : 'bg-elevated text-secondary',
             ]"
           >
             {{ getStatusCount(status) }}
@@ -291,8 +291,19 @@ function openCreateDialog() {
 }
 
 function handleCreated() {
-  // Refresh the list after creation
+  // Refresh the list after creation - clear cache and fetch fresh
+  triggerStore.clearStatusCache();
   triggerStore.fetchTriggers();
+}
+
+async function handleStatusChange(status: 'RELEVANT' | 'COMPLETED' | 'EXPIRED') {
+  const previousStatus = triggerStore.selectedStatus;
+  triggerStore.setSelectedStatus(status);
+  
+  // Check if we need to fetch data for this status
+  if (previousStatus !== status) {
+    await triggerStore.fetchDataIfNeeded();
+  }
 }
 
 async function confirmDeleteTrigger(id: string) {
@@ -452,9 +463,8 @@ function getEmptyStateMessage(): string {
 
 onMounted(async () => {
   try {
-    if (triggerStore.triggers.length === 0) {
-      await triggerStore.fetchTriggers();
-    }
+    // Fetch data only if not already cached for the current status
+    await triggerStore.fetchDataIfNeeded();
   } finally {
     viewReady();
   }

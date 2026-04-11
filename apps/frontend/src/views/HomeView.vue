@@ -7,7 +7,7 @@
       <template #content>
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
-            <i class="pi pi-home text-white text-xl" />
+            <i class="pi pi-home text-theme text-xl" />
           </div>
           <div>
             <h1 class="text-lg font-semibold">
