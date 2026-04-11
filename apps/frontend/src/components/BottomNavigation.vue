@@ -18,7 +18,9 @@
         <button
           :class="[
             'flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg transition-colors',
-            isActive('/tasks') ? 'text-white' : 'text-gray-400 hover:text-gray-200',
+            isActive('/tasks')
+              ? 'text-white'
+              : 'text-gray-400 hover:text-gray-200',
           ]"
           @click="navigate('/tasks')"
         >
@@ -30,7 +32,9 @@
         <button
           :class="[
             'flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg transition-colors',
-            isActive('/wb') ? 'text-white' : 'text-gray-400 hover:text-gray-200',
+            isActive('/wb')
+              ? 'text-white'
+              : 'text-gray-400 hover:text-gray-200',
           ]"
           @click="navigate('/wb')"
         >
@@ -42,19 +46,23 @@
         <button
           :class="[
             'flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-colors',
-            isActive('/mpstats') ? 'text-white' : 'text-gray-400 hover:text-gray-200',
+            isActive('/mpstats')
+              ? 'text-white'
+              : 'text-gray-400 hover:text-gray-200',
           ]"
           @click="navigate('/mpstats')"
         >
           <i class="pi pi-chart-bar text-lg" />
-          <span class="text-[10px]">Стат</span>
+          <span class="text-[10px]">MPStats</span>
         </button>
 
         <!-- Account -->
         <button
           :class="[
             'flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg transition-colors',
-            isActive('/account') ? 'text-white' : 'text-gray-400 hover:text-gray-200',
+            isActive('/account')
+              ? 'text-white'
+              : 'text-gray-400 hover:text-gray-200',
           ]"
           @click="navigate('/account')"
         >
