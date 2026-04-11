@@ -20,7 +20,7 @@
 
     <!-- List Content Cards -->
     <div class="space-y-3">
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="flex flex-col gap-3">
           <!-- Header row -->
           <div class="flex items-start justify-between">
@@ -48,7 +48,7 @@
         </div>
       </div>
 
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-2">
@@ -68,7 +68,7 @@
         </div>
       </div>
 
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-2">

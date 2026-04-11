@@ -5,15 +5,15 @@
 
     <!-- Status Filter Buttons (3 buttons with counts) -->
     <div class="flex gap-2">
-      <div class="flex-1 flex items-center justify-between p-2 bg-white dark:bg-[rgb(31,31,32)] rounded">
+      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded">
         <Skeleton width="4rem" height="1.25rem" border-radius="0.25rem" />
         <Skeleton width="1.5rem" height="1.25rem" border-radius="50%" />
       </div>
-      <div class="flex-1 flex items-center justify-between p-2 bg-white dark:bg-[rgb(31,31,32)] rounded">
+      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded">
         <Skeleton width="5rem" height="1.25rem" border-radius="0.25rem" />
         <Skeleton width="1.5rem" height="1.25rem" border-radius="50%" />
       </div>
-      <div class="flex-1 flex items-center justify-between p-2 bg-white dark:bg-[rgb(31,31,32)] rounded">
+      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded">
         <Skeleton width="4rem" height="1.25rem" border-radius="0.25rem" />
         <Skeleton width="1.5rem" height="1.25rem" border-radius="50%" />
       </div>
@@ -30,7 +30,7 @@
 
     <!-- Reschedule Cards -->
     <div class="space-y-3">
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="flex flex-col gap-3">
           <!-- Header with warehouse/supply and supplier -->
           <div class="flex items-start justify-between">
@@ -93,7 +93,7 @@
         </div>
       </div>
 
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-2 flex-1">
@@ -140,7 +140,7 @@
         </div>
       </div>
 
-      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+      <div class="p-4 bg-deep-card">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-2 flex-1">

@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-[#171819]">
+  <div class="min-h-screen bg-deep-bg">
     <!-- Header with Date Navigation -->
-    <div class="sticky top-0 z-30 bg-white dark:bg-[#171819] border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+    <div class="sticky top-0 z-30 bg-deep-bg border-b border-deep-border px-4 py-3">
       <div class="flex items-center justify-between">
         <!-- Date Navigation -->
         <div class="hidden sm:flex items-center gap-2">
@@ -20,14 +20,14 @@
     </div>
 
     <!-- Mobile Date Navigation -->
-    <div class="sm:hidden flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+    <div class="sm:hidden flex items-center justify-between px-4 py-2 border-b border-deep-border">
       <Skeleton width="28px" height="28px" border-radius="6px" />
       <Skeleton width="120px" height="20px" />
       <Skeleton width="28px" height="28px" border-radius="6px" />
     </div>
 
     <!-- Mobile Filter Buttons -->
-    <div class="sm:hidden flex items-center justify-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+    <div class="sm:hidden flex items-center justify-center gap-2 px-4 py-2 border-b border-deep-border bg-deep-card">
       <Skeleton width="70px" height="24px" border-radius="6px" />
       <Skeleton width="70px" height="24px" border-radius="6px" />
       <Skeleton width="70px" height="24px" border-radius="6px" />
@@ -49,13 +49,13 @@
           </div>
 
           <!-- Dates Row -->
-          <div class="flex mb-1 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex mb-1 border-b border-deep-border">
             <!-- Current Month Dates -->
-            <div v-for="n in 31" :key="`date-c-${n}`" class="w-10 flex-shrink-0 py-2 border-r border-gray-100 dark:border-gray-800">
+            <div v-for="n in 31" :key="`date-c-${n}`" class="w-10 flex-shrink-0 py-2 border-r border-deep-border">
               <Skeleton width="20px" height="14px" class="mx-auto" />
             </div>
             <!-- Next Month Dates -->
-            <div v-for="n in 31" :key="`date-n-${n}`" class="w-10 flex-shrink-0 py-2 border-r border-gray-100 dark:border-gray-800 last:border-r-0">
+            <div v-for="n in 31" :key="`date-n-${n}`" class="w-10 flex-shrink-0 py-2 border-r border-deep-border last:border-r-0">
               <Skeleton width="20px" height="14px" class="mx-auto" />
             </div>
           </div>
@@ -65,7 +65,7 @@
             <!-- Row 1 -->
             <div class="relative h-[90px]">
               <div class="absolute h-[85px]" style="left: 40px; width: 280px">
-                <div class="h-full mx-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center gap-3">
+                <div class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3">
                   <div class="flex-1 min-w-0">
                     <Skeleton width="85%" height="16px" class="mb-2" />
                     <div class="flex items-center gap-2 mb-2">
@@ -78,7 +78,7 @@
                 </div>
               </div>
               <div class="absolute h-[85px]" style="left: 400px; width: 320px">
-                <div class="h-full mx-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center gap-3">
+                <div class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3">
                   <div class="flex-1 min-w-0">
                     <Skeleton width="80%" height="16px" class="mb-2" />
                     <div class="flex items-center gap-2 mb-2">
@@ -95,7 +95,7 @@
             <!-- Row 2 -->
             <div class="relative h-[90px]">
               <div class="absolute h-[85px]" style="left: 120px; width: 200px">
-                <div class="h-full mx-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center gap-3">
+                <div class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3">
                   <div class="flex-1 min-w-0">
                     <Skeleton width="70%" height="16px" class="mb-2" />
                     <div class="flex items-center gap-2 mb-2">
@@ -108,7 +108,7 @@
                 </div>
               </div>
               <div class="absolute h-[85px]" style="left: 550px; width: 380px">
-                <div class="h-full mx-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center gap-3">
+                <div class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3">
                   <div class="flex-1 min-w-0">
                     <Skeleton width="90%" height="16px" class="mb-2" />
                     <div class="flex items-center gap-2 mb-2">
@@ -125,7 +125,7 @@
             <!-- Row 3 -->
             <div class="relative h-[90px]">
               <div class="absolute h-[85px]" style="left: 0px; width: 300px">
-                <div class="h-full mx-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center gap-3">
+                <div class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3">
                   <div class="flex-1 min-w-0">
                     <Skeleton width="80%" height="16px" class="mb-2" />
                     <div class="flex items-center gap-2 mb-2">
