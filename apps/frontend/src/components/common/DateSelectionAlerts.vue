@@ -99,6 +99,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   isUpdateMode: false,
+  dateType: undefined,
+  customDates: undefined,
 });
 
 const router = useRouter();

@@ -29,13 +29,8 @@ interface ThemeParams {
   secondary_bg_color?: string;
 }
 
-// Extended Window interface
-declare global {
-  interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Telegram?: any;
-  }
-}
+// Window interface is already declared by vue-tg
+// We use type assertions when accessing window.Telegram
 
 // Return type for useTelegram
 interface UseTelegramReturn {
@@ -81,7 +76,7 @@ export function useTelegram(): UseTelegramReturn {
 
       // Store values
       initData = tg.initData || '';
-      initDataUnsafe = tg.initDataUnsafe;
+      initDataUnsafe = tg.initDataUnsafe as unknown as WebAppInitData;
       version = tg.version;
       platform = tg.platform;
       colorScheme.value = tg.colorScheme;
@@ -108,7 +103,8 @@ export function useTelegram(): UseTelegramReturn {
     return new Promise((resolve) => {
       const tg = window.Telegram?.WebApp;
       if (tg?.showAlert) {
-        tg.showAlert(message, resolve);
+        // Telegram WebApp showAlert returns a Promise, not using callback
+        tg.showAlert(message).then(() => resolve());
       } else {
         alert(message);
         resolve();
@@ -121,7 +117,8 @@ export function useTelegram(): UseTelegramReturn {
     return new Promise((resolve) => {
       const tg = window.Telegram?.WebApp;
       if (tg?.showConfirm) {
-        tg.showConfirm(message, (confirmed: boolean) => {
+        // Telegram WebApp showConfirm returns a Promise<boolean>, not using callback
+        tg.showConfirm(message).then((confirmed: boolean) => {
           resolve(confirmed);
         });
       } else {
@@ -135,10 +132,13 @@ export function useTelegram(): UseTelegramReturn {
   const hapticFeedback = (
     type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light',
   ) => {
-    const tg = window.Telegram?.WebApp;
-    if (!tg?.HapticFeedback) return;
+    const tg = (window as unknown as { Telegram?: { WebApp?: { HapticFeedback?: {
+      impactOccurred: (style: 'light' | 'medium' | 'heavy') => void;
+      notificationOccurred: (type: 'success' | 'error' | 'warning') => void;
+    } } } }).Telegram?.WebApp;
+    const haptic = tg?.HapticFeedback;
 
-    const haptic = tg.HapticFeedback;
+    if (!haptic) return;
 
     switch (type) {
       case 'light':
@@ -227,9 +227,9 @@ export function useMainButton(): UseMainButtonReturn {
     if (!btn) return;
 
     if (params.text !== undefined) btn.setText(params.text);
-    if (params.color !== undefined) btn.setParams({ color: params.color });
-    if (params.textColor !== undefined)
-      btn.setParams({ text_color: params.textColor });
+    // MainButton uses direct property assignment, not setParams
+    if (params.color !== undefined) btn.color = params.color;
+    if (params.textColor !== undefined) btn.textColor = params.textColor;
     if (params.isVisible !== undefined) {
       if (params.isVisible) {
         btn.show();

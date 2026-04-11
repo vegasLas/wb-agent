@@ -3,6 +3,12 @@
     <!-- User Alerts -->
     <UserAlerts />
 
+    <!-- Create Dialog -->
+    <TriggerCreateDialog
+      v-model:show="showCreateDialog"
+      @created="handleCreated"
+    />
+
     <!-- Display content only if user has selected account, valid supplier and subscription is active -->
     <template
       v-if="
@@ -37,15 +43,15 @@
           severity="primary"
           size="small"
           class="flex-1 justify-between"
-          @click="triggerStore.setSelectedStatus(status)"
+          @click="handleStatusChange(status)"
         >
           <span class="truncate">{{ getStatusLabel(status) }}</span>
           <span
             :class="[
               'ml-2 px-2 py-0.5 rounded text-xs font-medium',
               triggerStore.selectedStatus === status
-                ? 'bg-white text-blue-600 dark:text-blue-400'
-                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+                ? 'bg-theme text-blue-600 dark:text-blue-400'
+                : 'bg-elevated text-secondary',
             ]"
           >
             {{ getStatusCount(status) }}
@@ -70,7 +76,7 @@
         <Button
           severity="primary"
           :disabled="triggerStore.activeTriggersCount >= 30"
-          @click="navigateToCreate"
+          @click="openCreateDialog"
         >
           добавить
         </Button>
@@ -257,8 +263,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Card from 'primevue/card';
@@ -270,16 +275,35 @@ import { useUserStore } from '../../stores/user';
 import { useViewReady } from '../../composables/useSkeleton';
 import UserAlerts from '../../components/global/UserAlerts.vue';
 import CoefficientHistoryAlert from '../../components/triggers/CoefficientHistoryAlert.vue';
+import TriggerCreateDialog from '../../components/triggers/CreateDialog.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
 
-const router = useRouter();
 const triggerStore = useTriggerStore();
 const warehouseStore = useWarehousesStore();
 const userStore = useUserStore();
 const { viewReady } = useViewReady();
 
-function navigateToCreate() {
-  router.push({ name: 'TriggerCreate' });
+// Dialog state
+const showCreateDialog = ref(false);
+
+function openCreateDialog() {
+  showCreateDialog.value = true;
+}
+
+function handleCreated() {
+  // Refresh the list after creation - clear cache and fetch fresh
+  triggerStore.clearStatusCache();
+  triggerStore.fetchTriggers();
+}
+
+async function handleStatusChange(status: 'RELEVANT' | 'COMPLETED' | 'EXPIRED') {
+  const previousStatus = triggerStore.selectedStatus;
+  triggerStore.setSelectedStatus(status);
+  
+  // Check if we need to fetch data for this status
+  if (previousStatus !== status) {
+    await triggerStore.fetchDataIfNeeded();
+  }
 }
 
 async function confirmDeleteTrigger(id: string) {
@@ -344,7 +368,7 @@ function formatDateTime(date: string | Date | null): string {
 function getStatusLabel(status: string): string {
   switch (status) {
     case 'RELEVANT':
-      return 'актуальные';
+      return 'активные';
     case 'COMPLETED':
       return 'завершенные';
     case 'EXPIRED':
@@ -439,9 +463,8 @@ function getEmptyStateMessage(): string {
 
 onMounted(async () => {
   try {
-    if (triggerStore.triggers.length === 0) {
-      await triggerStore.fetchTriggers();
-    }
+    // Fetch data only if not already cached for the current status
+    await triggerStore.fetchDataIfNeeded();
   } finally {
     viewReady();
   }

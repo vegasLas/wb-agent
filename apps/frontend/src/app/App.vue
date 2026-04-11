@@ -1,5 +1,9 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-[#171819]">
+  <div
+    id="app"
+    class="min-h-screen bg-deep-bg text-theme"
+    :class="{ 'phone-device': isPhone }"
+  >
     <!--
       Route-based Skeleton Loading
       - Shown during: router guard initialization (Telegram + user data)
@@ -17,17 +21,24 @@
     <RouterView />
 
     <!-- Global Components -->
-    <Toast position="top-right" />
+    <Toast
+      position="top-center"
+      :pt="{
+        root: { style: { maxWidth: '280px' } },
+        message: { style: { width: '100%' } },
+      }"
+    />
     <ConfirmDialog />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch, provide } from 'vue';
+import { computed, onMounted, watch, provide, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { useToast } from 'primevue/usetoast';
 import LoadingLayout from '../components/layout/LoadingLayout.vue';
 import { useSkeleton } from '../composables/useSkeleton';
 import { useTelegram } from '../composables/useTelegram';
@@ -40,6 +51,7 @@ import {
   SkeletonPayments,
   SkeletonReschedules,
   SkeletonPromotions,
+  SkeletonTasks,
 } from '../components/skeleton';
 
 // Initialize color mode with proper configuration for class-based dark mode
@@ -78,21 +90,19 @@ const routeSkeletonMap: Record<string, any> = {
   Account: SkeletonAccount,
   Autobooking: SkeletonAutobookings,
   AutobookingList: SkeletonAutobookings,
-  AutobookingCreate: SkeletonAutobookings,
-  AutobookingUpdate: SkeletonAutobookings,
   Reschedules: SkeletonReschedules,
   ReschedulesList: SkeletonReschedules,
   ReschedulesCreate: SkeletonReschedules,
   ReschedulesUpdate: SkeletonReschedules,
   Triggers: SkeletonTriggers,
   TriggersList: SkeletonTriggers,
-  TriggerCreate: SkeletonTriggers,
   Promotions: SkeletonPromotions,
   Reports: SkeletonReport,
   Store: SkeletonStore,
   StoreSubscription: SkeletonStore,
   StoreBookings: SkeletonStore,
   Payments: SkeletonPayments,
+  Tasks: SkeletonTasks,
   default: SkeletonAccount,
 };
 
@@ -107,13 +117,7 @@ const currentRouteSkeleton = computed(() => {
 provide('currentRouteSkeleton', currentRouteSkeleton);
 
 // Form routes that should not show skeleton during navigation
-const formRouteNames = [
-  'AutobookingCreate',
-  'AutobookingUpdate',
-  'ReschedulesCreate',
-  'ReschedulesUpdate',
-  'TriggerCreate',
-];
+const formRouteNames = ['ReschedulesCreate', 'ReschedulesUpdate'];
 
 // Setup router hooks to handle navigation loading state
 router.beforeEach((to) => {
@@ -127,8 +131,25 @@ router.afterEach(() => {
   onNavigationEnd();
 });
 
+// Phone device detection
+const isPhone = ref(false);
+
+// Initialize toast for global use
+const toast = useToast();
+
 // Wait for router to resolve initial navigation
 onMounted(async () => {
+  // Detect if device is a phone
+  isPhone.value = /iPhone|iPad|Android|webOS|BlackBerry/i.test(
+    navigator.userAgent,
+  );
+
+  // Request fullscreen on phones
+
+  // Initialize toast for stores
+  const { initToast } = await import('../utils/toast');
+  initToast(toast);
+
   await router.isReady();
   markRouterReady();
   // View remains in loading state until component calls viewReady()
@@ -137,6 +158,15 @@ onMounted(async () => {
 
 <style>
 body {
-  @apply bg-white dark:bg-[#171819];
+  background-color: var(--color-bg);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+#app.phone-device {
+  padding-top: 100px;
 }
 </style>

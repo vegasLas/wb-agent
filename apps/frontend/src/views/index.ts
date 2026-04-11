@@ -7,8 +7,6 @@ export { default as StoreView } from './StoreView.vue';
 // Autobooking Views
 export {
   AutobookingListView,
-  AutobookingCreateView,
-  AutobookingUpdateView,
 } from './autobooking';
 
 // Reschedules Views
@@ -19,4 +17,4 @@ export {
 } from './reschedules';
 
 // Triggers Views
-export { TriggersListView, TriggersCreateView } from './triggers';
+export { TriggersListView } from './triggers';

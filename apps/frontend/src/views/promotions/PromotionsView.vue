@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-[#171819]">
+  <div class="min-h-screen bg-deep-bg">
     <!-- Header with Date Navigation -->
     <div
-      class="sticky top-0 z-30 bg-white dark:bg-[#171819] border-b border-gray-200 dark:border-gray-700 px-4 py-3"
+      class="hidden sm:block sticky top-0 z-30 bg-deep-bg border-b border-deep-border px-4 py-3"
     >
       <div class="flex items-center justify-between">
         <!-- Date Navigation -->
@@ -15,7 +15,7 @@
             @click="p.navigateMonth(-1)"
           />
           <span
-            class="text-sm text-gray-700 dark:text-gray-300 min-w-[140px] text-center"
+            class="text-sm text-[var(--color-text)] min-w-[140px] text-center"
           >
             {{ p.currentMonthLabel.value }}
           </span>
@@ -26,7 +26,7 @@
             size="small"
             @click="p.navigateMonth(1)"
           />
-          <div class="text-sm text-gray-500 dark:text-gray-400 ml-4">
+          <div class="text-sm text-[var(--text-secondary)] ml-4">
             Сегодня: {{ p.todayLabel.value }}
           </div>
         </div>
@@ -48,8 +48,8 @@
               class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full"
               :class="
                 p.currentFilter.value === tab.value
-                  ? 'bg-white/20 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  ? 'bg-theme/20 text-theme'
+                  : 'bg-elevated text-muted'
               "
             >
               {{ p.participationCounts.value[tab.value] }}
@@ -61,7 +61,7 @@
 
     <!-- Mobile Date Navigation -->
     <div
-      class="sm:hidden flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700"
+      class="sm:hidden flex items-center justify-between px-4 py-2 border-b border-deep-border"
     >
       <Button
         icon="pi pi-chevron-left"
@@ -70,7 +70,7 @@
         size="small"
         @click="p.navigateMonth(-1)"
       />
-      <span class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="text-sm text-[var(--color-text)]">
         {{ p.currentMonthLabel.value }}
       </span>
       <Button
@@ -84,31 +84,28 @@
 
     <!-- Filter Buttons (Mobile) -->
     <div
-      class="sm:hidden flex items-center justify-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+      class="sm:hidden flex items-center justify-center gap-3 px-4 py-2 border-b border-deep-border bg-deep-card"
     >
-      <Button
+      <OverlayBadge
         v-for="tab in p.filterTabs"
         :key="tab.value"
+        :value="p.participationCounts.value[tab.value]"
         :severity="
           p.currentFilter.value === tab.value ? 'primary' : 'secondary'
         "
-        :text="p.currentFilter.value !== tab.value"
         size="small"
-        class="text-xs"
-        @click="p.setFilter(tab.value)"
       >
-        <span>{{ tab.label }}</span>
-        <span
-          class="ml-1 px-1 py-0 text-[10px] rounded-full"
-          :class="
-            p.currentFilter.value === tab.value
-              ? 'bg-white/20 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+        <Button
+          :severity="
+            p.currentFilter.value === tab.value ? 'primary' : 'secondary'
           "
-        >
-          {{ p.participationCounts.value[tab.value] }}
-        </span>
-      </Button>
+          :text="p.currentFilter.value !== tab.value"
+          size="small"
+          :label="tab.label"
+          class="text-xs"
+          @click="p.setFilter(tab.value)"
+        />
+      </OverlayBadge>
     </div>
 
     <!-- Main Content -->
@@ -118,17 +115,12 @@
         v-if="p.loading.value"
         class="flex flex-col items-center justify-center py-20"
       >
-        <i class="pi pi-refresh animate-spin text-5xl text-orange-500 mb-4" />
-        <p class="text-gray-600 dark:text-gray-400">
-          Загрузка акций...
-        </p>
+        <i class="pi pi-refresh animate-spin text-5xl text-[#6A39F4] mb-4" />
+        <p class="text-[var(--text-muted)]">Загрузка акций...</p>
       </div>
 
       <!-- Error State -->
-      <div
-        v-else-if="p.error.value"
-        class="text-center py-16 px-4"
-      >
+      <div v-else-if="p.error.value" class="text-center py-16 px-4">
         <div
           class="p-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 max-w-md mx-auto"
         >
@@ -136,11 +128,7 @@
           <p class="text-red-600 dark:text-red-400">
             {{ p.error.value }}
           </p>
-          <Button
-            class="mt-4"
-            severity="primary"
-            @click="p.refreshData"
-          >
+          <Button class="mt-4" severity="primary" @click="p.refreshData">
             <i class="pi pi-refresh mr-2" />
             Повторить
           </Button>
@@ -148,10 +136,7 @@
       </div>
 
       <!-- Promotions Timeline -->
-      <div
-        v-else
-        class="promotions-timeline -mx-4"
-      >
+      <div v-else class="promotions-timeline -mx-4">
         <!-- Horizontal Scrollable Container -->
         <div class="overflow-x-auto pb-4">
           <div class="min-w-[1200px] px-4">
@@ -164,7 +149,7 @@
                 }"
               >
                 <h2
-                  class="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize"
+                  class="text-base font-semibold text-[var(--color-text)] capitalize"
                 >
                   {{ timeline.visibleMonthsInfo.value[0]?.label }}
                 </h2>
@@ -176,7 +161,7 @@
                 }"
               >
                 <h2
-                  class="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize"
+                  class="text-base font-semibold text-[var(--color-text)] capitalize"
                 >
                   {{ timeline.visibleMonthsInfo.value[1]?.label }}
                 </h2>
@@ -184,16 +169,14 @@
             </div>
 
             <!-- Dates Row -->
-            <div
-              class="flex mb-1 border-b border-gray-200 dark:border-gray-700"
-            >
+            <div class="flex mb-1 border-b border-deep-border">
               <!-- Current Month Dates -->
               <div
                 v-for="day in timeline.currentMonthDaysList.value"
                 :key="`date-c-${day}`"
-                class="w-10 flex-shrink-0 text-center py-2 border-r border-gray-100 dark:border-gray-800"
+                class="w-10 flex-shrink-0 text-center py-2 border-r border-deep-border"
                 :class="{
-                  'bg-orange-50/50 dark:bg-orange-900/10': timeline.isToday(
+                  'bg-[#6A39F4]/10': timeline.isToday(
                     timeline.currentMonthInfo.value.date,
                     day,
                   ),
@@ -203,8 +186,8 @@
                   class="text-xs"
                   :class="
                     timeline.isToday(timeline.currentMonthInfo.value.date, day)
-                      ? 'text-orange-600 dark:text-orange-400 font-semibold'
-                      : 'text-gray-600 dark:text-gray-400'
+                      ? 'text-[#6A39F4] font-semibold'
+                      : 'text-[var(--text-muted)]'
                   "
                 >
                   {{ day }}
@@ -214,9 +197,9 @@
               <div
                 v-for="day in timeline.nextMonthDaysList.value"
                 :key="`date-n-${day}`"
-                class="w-10 flex-shrink-0 text-center py-2 border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+                class="w-10 flex-shrink-0 text-center py-2 border-r border-deep-border last:border-r-0"
                 :class="{
-                  'bg-orange-50/50 dark:bg-orange-900/10': timeline.isToday(
+                  'bg-[#6A39F4]/10': timeline.isToday(
                     timeline.nextMonthInfo.value.date,
                     day,
                   ),
@@ -226,8 +209,8 @@
                   class="text-xs"
                   :class="
                     timeline.isToday(timeline.nextMonthInfo.value.date, day)
-                      ? 'text-orange-600 dark:text-orange-400 font-semibold'
-                      : 'text-gray-600 dark:text-gray-400'
+                      ? 'text-[#6A39F4] font-semibold'
+                      : 'text-[var(--text-muted)]'
                   "
                 >
                   {{ day }}
@@ -243,9 +226,9 @@
                 <div
                   v-for="day in timeline.currentMonthDaysList.value"
                   :key="`col-c-${day}`"
-                  class="w-10 flex-shrink-0 border-r border-gray-100 dark:border-gray-800"
+                  class="w-10 flex-shrink-0 border-r border-deep-border"
                   :class="{
-                    'bg-orange-50/20 dark:bg-orange-900/5': timeline.isToday(
+                    'bg-[#6A39F4]/5': timeline.isToday(
                       timeline.currentMonthInfo.value.date,
                       day,
                     ),
@@ -255,9 +238,9 @@
                 <div
                   v-for="day in timeline.nextMonthDaysList.value"
                   :key="`col-n-${day}`"
-                  class="w-10 flex-shrink-0 border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+                  class="w-10 flex-shrink-0 border-r border-deep-border last:border-r-0"
                   :class="{
-                    'bg-orange-50/20 dark:bg-orange-900/5': timeline.isToday(
+                    'bg-[#6A39F4]/5': timeline.isToday(
                       timeline.nextMonthInfo.value.date,
                       day,
                     ),
@@ -281,11 +264,11 @@
                     :style="timeline.getPromotionStyle(promotion)"
                     :detail-loading="
                       p.detailLoading.value &&
-                        p.selectedPromotionId.value === promotion.promoID
+                      p.selectedPromotionId.value === promotion.promoID
                     "
                     :excel-loading="
                       p.excelLoading.value &&
-                        p.selectedPromotionId.value === promotion.promoID
+                      p.selectedPromotionId.value === promotion.promoID
                     "
                     @toggle-expand="toggleExpand(promotion.promoID)"
                     @show-details="p.handleShowDetails(promotion.promoID)"
@@ -304,10 +287,10 @@
                     <i
                       :class="
                         p.emptyState.value.icon +
-                          ' text-5xl text-gray-300 dark:text-gray-600 mb-3'
+                        ' text-5xl text-[var(--text-secondary)] mb-3'
                       "
                     />
-                    <p class="text-gray-500 dark:text-gray-400">
+                    <p class="text-[var(--text-muted)]">
                       {{ p.emptyState.value.message }}
                     </p>
                   </div>
@@ -332,7 +315,7 @@
     <PromotionParticipantsDialog
       v-model:show="p.showParticipantsDialog.value"
       :promotion-name="p.selectedPromotion.value?.name"
-      :excel-items="p.excelItems.value"
+      :excel-items="p.excelItems.value as PromotionExcelItem[]"
       :excel-loading="p.excelLoading.value"
       :excel-error="p.excelError.value"
       :report-pending="p.reportPending.value"
@@ -347,6 +330,7 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue';
 import Button from 'primevue/button';
+import OverlayBadge from 'primevue/overlaybadge';
 import {
   usePromotionsUnified,
   useViewReady,
@@ -355,7 +339,7 @@ import {
 import PromotionDetailDialog from './PromotionDetailDialog.vue';
 import PromotionParticipantsDialog from './PromotionParticipantsDialog.vue';
 import PromotionTimelineCard from './PromotionTimelineCard.vue';
-import type { PromotionItem } from '../../types';
+import type { PromotionItem, PromotionExcelItem } from '../../types';
 
 const { viewReady } = useViewReady();
 

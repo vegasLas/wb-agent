@@ -424,8 +424,8 @@ async function submitForm() {
     formErrors.value = {};
     await triggerFormStore.createTrigger();
     goBack();
-  } catch (err: any) {
-    if (err.message) {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message) {
       formErrors.value.general = err.message;
     }
   }

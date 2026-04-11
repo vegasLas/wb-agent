@@ -7,7 +7,7 @@ export interface Warehouse {
   ID: number;
   name: string;
   address?: string;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export interface TransitItem {

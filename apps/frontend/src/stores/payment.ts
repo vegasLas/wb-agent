@@ -1,12 +1,13 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { paymentsAPI } from '../api';
-import type { Tariff, Payment } from '../types';
+import type { Payment } from '../types';
+import type { PaymentTariff } from '../api/payments';
 
 export const usePaymentStore = defineStore('payment', () => {
   // State
-  const tariffs = ref<Tariff[]>([]);
-  const selectedTariff = ref<Tariff | null>(null);
+  const tariffs = ref<PaymentTariff[]>([]);
+  const selectedTariff = ref<PaymentTariff | null>(null);
   const payments = ref<Payment[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -26,7 +27,7 @@ export const usePaymentStore = defineStore('payment', () => {
     try {
       loading.value = true;
       error.value = null;
-      const data = await paymentsAPI.fetchTariffs();
+      const data = await paymentsAPI.getTariffs();
       tariffs.value = data;
       isFetched.value = true;
       return data;
@@ -40,7 +41,7 @@ export const usePaymentStore = defineStore('payment', () => {
     }
   }
 
-  function selectTariff(tariff: Tariff | null) {
+  function selectTariff(tariff: PaymentTariff | null) {
     selectedTariff.value = tariff;
   }
 
@@ -53,9 +54,9 @@ export const usePaymentStore = defineStore('payment', () => {
     try {
       loading.value = true;
       error.value = null;
-      const payment = await paymentsAPI.createPayment(tariffId);
-      payments.value.unshift(payment);
-      return payment;
+      const payment = await paymentsAPI.createPayment(tariffId, '');
+      payments.value.unshift(payment as Payment);
+      return payment as Payment;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to create payment';

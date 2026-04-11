@@ -1,5 +1,11 @@
 <template>
   <div class="space-y-4">
+    <!-- Create Dialog -->
+    <TriggerCreateDialog
+      v-model:show="showCreateDialog"
+      @created="handleCreated"
+    />
+
     <Message
       v-if="triggerStore.activeTriggersCount >= 30"
       severity="warn"
@@ -33,8 +39,8 @@
           :class="[
             'ml-2 px-2 py-0.5 rounded text-xs font-medium',
             triggerStore.selectedStatus === status
-              ? 'bg-white text-blue-600 dark:text-blue-400'
-              : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+              ? 'bg-theme text-blue-600 dark:text-blue-400'
+              : 'bg-elevated text-secondary',
           ]"
         >
           {{ getStatusCount(status) }}
@@ -60,7 +66,7 @@
         severity="primary"
         size="small"
         :disabled="triggerStore.activeTriggersCount >= 30"
-        @click="navigateToCreate"
+        @click="openCreateDialog"
       >
         <i class="pi pi-plus mr-1 text-xs" />
         добавить
@@ -266,12 +272,19 @@ import Message from 'primevue/message';
 import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
 
-const router = useRouter();
 const triggerStore = useTriggerStore();
 const warehouseStore = useWarehousesStore();
 
-function navigateToCreate() {
-  router.push({ name: 'TriggerCreate' });
+// Dialog state
+const showCreateDialog = ref(false);
+
+function openCreateDialog() {
+  showCreateDialog.value = true;
+}
+
+function handleCreated() {
+  // Refresh the list after creation
+  triggerStore.fetchTriggers();
 }
 
 async function confirmDeleteTrigger(id: string) {
@@ -336,7 +349,7 @@ function formatDateTime(date: string | Date | null): string {
 function getStatusLabel(status: string): string {
   switch (status) {
     case 'RELEVANT':
-      return 'актуальные';
+      return 'активные';
     case 'COMPLETED':
       return 'завершенные';
     case 'EXPIRED':

@@ -32,12 +32,10 @@
  * } = usePromotions();
  */
 
-import { ref, computed, watch, type Ref } from 'vue';
+import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
 import { usePromotionsStore } from '../stores/promotions';
 import { useUserStore } from '../stores/user';
-import type { PromotionItem, PromotionDetail } from '../types';
-
-export type PromotionFilter = 'AVAILABLE' | 'PARTICIPATING' | 'SKIPPING';
+import type { PromotionItem, PromotionDetail, PromotionFilter } from '../types';
 
 export interface FilterTab {
   label: string;
@@ -53,33 +51,33 @@ export interface UsePromotionsOptions {
 
 export interface UsePromotionsReturn {
   // State
-  promotions: Ref<readonly PromotionItem[]>;
-  loading: Ref<boolean>;
-  error: Ref<string | null>;
+  promotions: ComputedRef<readonly PromotionItem[]>;
+  loading: ComputedRef<boolean>;
+  error: ComputedRef<string | null>;
   currentFilter: Ref<PromotionFilter>;
   filterTabs: FilterTab[];
 
   // Detail state
-  promotionDetail: Ref<PromotionDetail | null>;
-  detailLoading: Ref<boolean>;
-  detailError: Ref<string | null>;
+  promotionDetail: ComputedRef<PromotionDetail | null>;
+  detailLoading: ComputedRef<boolean>;
+  detailError: ComputedRef<string | null>;
 
   // Excel/Participants state
-  excelItems: Ref<readonly Record<string, unknown>[]>;
-  excelLoading: Ref<boolean>;
-  excelError: Ref<string | null>;
-  reportPending: Ref<boolean>;
-  estimatedWaitTime: Ref<number | null>;
+  excelItems: ComputedRef<readonly Record<string, unknown>[]>;
+  excelLoading: ComputedRef<boolean>;
+  excelError: ComputedRef<string | null>;
+  reportPending: ComputedRef<boolean>;
+  estimatedWaitTime: ComputedRef<number | null>;
 
   // Dialogs
   showDetailDialog: Ref<boolean>;
   showParticipantsDialog: Ref<boolean>;
   selectedPromotionId: Ref<number | null>;
-  selectedPromotion: Ref<PromotionItem | null>;
+  selectedPromotion: ComputedRef<PromotionItem | null>;
 
   // Stats
-  participationCounts: Ref<Record<PromotionFilter, number>>;
-  hasPromotions: Ref<boolean>;
+  participationCounts: ComputedRef<Record<PromotionFilter, number>>;
+  hasPromotions: ComputedRef<boolean>;
 
   // Actions
   setFilter: (filter: PromotionFilter) => Promise<void>;
@@ -140,24 +138,17 @@ export function usePromotions(
     );
   });
 
-  // Participation counts by filter
+  // Participation counts from API response
   const participationCounts = computed(() => {
-    const counts: Record<PromotionFilter, number> = {
-      AVAILABLE: promotions.value.length,
-      PARTICIPATING: 0,
-      SKIPPING: 0,
-    };
-
-    for (const promotion of promotions.value) {
-      const status = promotion.participation?.status;
-      if (status === 'PARTICIPATING' || status === 'WILL_PARTICIPATE') {
-        counts.PARTICIPATING++;
-      } else if (status === 'SKIPPED') {
-        counts.SKIPPING++;
-      }
+    const counts = promotionsStore.participationCounts;
+    if (!counts) {
+      return { AVAILABLE: 0, PARTICIPATING: 0, SKIPPING: 0 };
     }
-
-    return counts;
+    return {
+      AVAILABLE: counts.available,
+      PARTICIPATING: counts.participating,
+      SKIPPING: counts.skipped,
+    };
   });
 
   /**

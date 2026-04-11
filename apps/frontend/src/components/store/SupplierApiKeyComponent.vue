@@ -34,7 +34,7 @@
           class="space-y-3"
         >
           <div
-            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+            class="flex items-center justify-between p-3 bg-elevated rounded-lg"
           >
             <div class="flex-1">
               <div class="flex items-center justify-between">
@@ -199,8 +199,8 @@ async function saveApiKey() {
     alert(
       'API ключ успешно сохранен. Ваш API ключ прошел проверку и был сохранен в системе.',
     );
-  } catch (error: any) {
-    formError.value = error.message || 'Не удалось сохранить API ключ';
+  } catch (error: unknown) {
+    formError.value = error instanceof Error ? error.message : 'Не удалось сохранить API ключ';
   }
 }
 

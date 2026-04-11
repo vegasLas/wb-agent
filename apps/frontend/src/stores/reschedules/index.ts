@@ -2,6 +2,8 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { reschedulesAPI } from '../../api';
 import { useUserStore } from '../user';
+import { useWarehousesStore } from '../warehouses';
+import { toastHelpers } from '../../utils/toast';
 import { doAction } from '../../utils/doAction';
 import type {
   AutobookingReschedule,
@@ -9,8 +11,6 @@ import type {
   UpdateAutobookingRescheduleRequest,
   Supply,
 } from '../../types';
-
-export * from './types';
 
 export const useRescheduleStore = defineStore('reschedule', () => {
   const userStore = useUserStore();
@@ -30,6 +30,13 @@ export const useRescheduleStore = defineStore('reschedule', () => {
   const supplies = ref<Supply[]>([]);
   const loadingSupplies = ref(false);
   const suppliesError = ref<string | null>(null);
+
+  // Status-based cache: stores fetched data per status
+  const statusCache = ref<Record<string, AutobookingReschedule[]>>({});
+  // Track which statuses have been fetched
+  const fetchedStatuses = ref<Set<string>>(new Set());
+  // Current selected status for caching
+  const selectedStatus = ref<string>('ACTIVE');
 
   // Computed
   const activeReschedules = computed(() =>
@@ -63,6 +70,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         counts.value = response.counts || {};
         currentPage.value = response.currentPage || 1;
         hasNextPage.value = !!response.nextPage;
+        
+        // Store in status cache for the current status
+        const currentStatus = selectedStatus.value;
+        statusCache.value[currentStatus] = [...reschedules.value];
+        fetchedStatuses.value.add(currentStatus);
       } else {
         console.warn('[RescheduleStore] API returned success: false');
         error.value = 'API returned unsuccessful response';
@@ -71,6 +83,7 @@ export const useRescheduleStore = defineStore('reschedule', () => {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to fetch reschedules';
       error.value = errorMessage;
+      clearStatusCache();
 
       console.error(
         'Ошибка загрузки: Не удалось загрузить перепланирования. Попробуйте обновить страницу.',
@@ -80,19 +93,62 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     }
   }
 
+  /**
+   * Check if data for a specific status has already been fetched
+   */
+  function isStatusFetched(status: string): boolean {
+    return fetchedStatuses.value.has(status);
+  }
+
+  /**
+   * Fetch data only if not already fetched for the current status
+   * Returns true if fetch was performed, false if data was already cached
+   */
+  async function fetchDataIfNeeded(): Promise<boolean> {
+    const currentStatus = selectedStatus.value;
+    
+    // If we already have data for this status, don't fetch again
+    if (isStatusFetched(currentStatus) && statusCache.value[currentStatus]?.length > 0) {
+      // Use cached data for this status
+      reschedules.value = statusCache.value[currentStatus];
+      return false;
+    }
+    
+    // Fetch new data
+    await fetchReschedules();
+    return true;
+  }
+
+  /**
+   * Clear the status cache (useful when data might be stale)
+   */
+  function clearStatusCache() {
+    statusCache.value = {};
+    fetchedStatuses.value.clear();
+  }
+
   async function createReschedule(data: CreateAutobookingRescheduleRequest) {
+    const warehouseStore = useWarehousesStore();
+
     loading.value = true;
     error.value = null;
 
     try {
       const response = await reschedulesAPI.createReschedule(data);
       if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
         // Decrease user's autobooking count as 1 credit was consumed
         userStore.decreaseAutobookingCount();
-        console.log(
-          'Перепланирование создано: Автоматическое перепланирование успешно настроено',
+
+        // Show success toast
+        const warehouseName = warehouseStore.getWarehouseName(response.warehouseId);
+        toastHelpers.success(
+          'Перепланирование создано',
+          `Склад: ${warehouseName}`
         );
+
         return response;
       }
       throw new Error('Failed to create reschedule');
@@ -100,8 +156,7 @@ export const useRescheduleStore = defineStore('reschedule', () => {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to create reschedule';
       error.value = errorMsg;
-      console.error('Failed to create reschedule:', err);
-      console.error(errorMsg || 'Не удалось создать перепланирование');
+      toastHelpers.error('Ошибка создания', errorMsg);
       throw err;
     } finally {
       loading.value = false;
@@ -109,19 +164,31 @@ export const useRescheduleStore = defineStore('reschedule', () => {
   }
 
   async function updateReschedule(data: UpdateAutobookingRescheduleRequest) {
+    const warehouseStore = useWarehousesStore();
+
     loading.value = true;
     error.value = null;
 
     try {
       const response = await reschedulesAPI.updateReschedule(data);
-      if (response.success) {
+      if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
-        return response.data;
+
+        // Show success toast
+        const warehouseName = warehouseStore.getWarehouseName(response.warehouseId);
+        toastHelpers.success(
+          'Перепланирование обновлено',
+          `Склад: ${warehouseName}`
+        );
+
+        return response;
       }
       throw new Error('Failed to update reschedule');
     } catch (err: any) {
       error.value = err.message || 'Failed to update reschedule';
-      console.error('Failed to update reschedule:', err);
+      toastHelpers.error('Ошибка обновления', err.message);
       throw err;
     } finally {
       loading.value = false;
@@ -129,6 +196,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
   }
 
   async function deleteReschedule(id: string) {
+    const warehouseStore = useWarehousesStore();
+
     // Show confirmation dialog
     const confirmed = await doAction({
       title: 'Удаление перепланирования',
@@ -140,26 +209,36 @@ export const useRescheduleStore = defineStore('reschedule', () => {
       return false;
     }
 
+    // Get reschedule info before deletion for toast
+    const reschedule = reschedules.value.find((r) => r.id === id);
+
     loading.value = true;
     error.value = null;
 
     try {
       const response = await reschedulesAPI.deleteReschedule(id);
       if (response.success) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
         // Increase user's autobooking count as 1 credit was returned
         userStore.increaseAutobookingCount();
-        console.log(
-          'Успешно удалено:',
-          response.message || 'Перепланирование успешно удалено',
+
+        // Show success toast
+        const warehouseName = reschedule
+          ? warehouseStore.getWarehouseName(reschedule.warehouseId)
+          : '';
+        toastHelpers.success(
+          'Перепланирование удалено',
+          warehouseName ? `Склад: ${warehouseName}` : undefined
         );
+
         return true;
       }
       throw new Error('Failed to delete reschedule');
     } catch (err: any) {
       error.value = err.message || 'Failed to delete reschedule';
-      console.error('Failed to delete reschedule:', err);
-      console.error(err.message || 'Не удалось удалить перепланирование');
+      toastHelpers.error('Ошибка удаления', err.message);
       throw err;
     } finally {
       loading.value = false;
@@ -167,6 +246,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
   }
 
   async function archiveReschedule(id: string) {
+    const warehouseStore = useWarehousesStore();
+
     // Show confirmation dialog
     const confirmed = await doAction({
       title: 'Архивирование перепланирования',
@@ -186,18 +267,24 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         id,
         status: 'ARCHIVED',
       });
-      if (response.success) {
+      if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
-        console.log(
-          'Успешно архивировано: Перепланирование перемещено в архив',
+
+        // Show success toast
+        const warehouseName = warehouseStore.getWarehouseName(response.warehouseId);
+        toastHelpers.success(
+          'Перепланирование в архиве',
+          `Склад: ${warehouseName}`
         );
-        return response.data;
+
+        return response;
       }
       throw new Error('Failed to archive reschedule');
     } catch (err: any) {
       error.value = err.message || 'Failed to archive reschedule';
-      console.error('Failed to archive reschedule:', err);
-      console.error(err.message || 'Не удалось архивировать перепланирование');
+      toastHelpers.error('Ошибка архивирования', err.message);
       throw err;
     } finally {
       loading.value = false;
@@ -205,6 +292,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
   }
 
   async function activateReschedule(id: string) {
+    const warehouseStore = useWarehousesStore();
+
     // Show confirmation dialog
     const confirmed = await doAction({
       title: 'Активация перепланирования',
@@ -224,18 +313,24 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         id,
         status: 'ACTIVE',
       });
-      if (response.success) {
+      if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
-        console.log(
-          'Успешно активировано: Перепланирование активировано и будет выполнено',
+
+        // Show success toast
+        const warehouseName = warehouseStore.getWarehouseName(response.warehouseId);
+        toastHelpers.success(
+          'Перепланирование активировано',
+          `Склад: ${warehouseName}`
         );
-        return response.data;
+
+        return response;
       }
       throw new Error('Failed to activate reschedule');
     } catch (err: any) {
       error.value = err.message || 'Failed to activate reschedule';
-      console.error('Failed to activate reschedule:', err);
-      console.error(err.message || 'Не удалось активировать перепланирование');
+      toastHelpers.error('Ошибка активации', err.message);
       throw err;
     } finally {
       loading.value = false;
@@ -293,6 +388,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     loading: readonly(loading),
     error: readonly(error),
     selectedReschedule: readonly(selectedReschedule),
+    selectedStatus,
+    
+    // Status cache
+    statusCache,
+    fetchedStatuses,
 
     // Computed
     activeReschedules,
@@ -302,6 +402,9 @@ export const useRescheduleStore = defineStore('reschedule', () => {
 
     // Actions
     fetchReschedules,
+    fetchDataIfNeeded,
+    isStatusFetched,
+    clearStatusCache,
     createReschedule,
     updateReschedule,
     deleteReschedule,

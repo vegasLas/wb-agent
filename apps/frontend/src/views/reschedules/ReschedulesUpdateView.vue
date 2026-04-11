@@ -24,7 +24,7 @@
         </h4>
 
         <!-- Supply Information (read-only) -->
-        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div class="p-3 bg-elevated rounded-lg">
           <div class="flex items-center justify-between">
             <div class="text-sm text-gray-700 dark:text-gray-300">
               <div>

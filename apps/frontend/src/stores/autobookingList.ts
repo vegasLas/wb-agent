@@ -2,8 +2,9 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI } from '../api';
 import { useWarehousesStore } from './warehouses';
+import { toastHelpers } from '../utils/toast';
 import { AUTOBOOKING_STATUSES } from '../constants';
-import type { Autobooking } from '../types';
+import type { Autobooking, AutobookingReschedule } from '../types';
 
 type BadgeColor =
   | 'gray'
@@ -38,9 +39,15 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   const currentPage = ref(1);
   const nextPage = ref<number | null>(null);
 
+  // Status-based cache: stores fetched data per status
+  const statusCache = ref<Record<string, Autobooking[]>>({});
+  // Track which statuses have been fetched
+  const fetchedStatuses = ref<Set<string>>(new Set());
+
   const warehouseStore = useWarehousesStore();
 
   const filteredBookings = computed(() => {
+    // Use cached data for the current status if available
     let filtered = [...autobookings.value];
 
     // Filter by status
@@ -76,6 +83,32 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     );
     return filtered;
   });
+
+  /**
+   * Check if data for a specific status has already been fetched
+   */
+  function isStatusFetched(status: string): boolean {
+    return fetchedStatuses.value.has(status);
+  }
+
+  /**
+   * Fetch data only if not already fetched for the current status
+   * Returns true if fetch was performed, false if data was already cached
+   */
+  async function fetchDataIfNeeded(): Promise<boolean> {
+    const currentStatus = selectedStatus.value;
+    
+    // If we already have data for this status, don't fetch again
+    if (isStatusFetched(currentStatus) && statusCache.value[currentStatus]?.length > 0) {
+      // Use cached data for this status
+      autobookings.value = statusCache.value[currentStatus];
+      return false;
+    }
+    
+    // Fetch new data
+    await fetchData();
+    return true;
+  }
 
   function getStatusColor(status: string): BadgeColor {
     const colorMap: Record<string, BadgeColor> = {
@@ -119,12 +152,12 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     )
       return [];
 
-    const completedDates = booking.completedDates || [];
+    const completedDates = (booking as unknown as AutobookingReschedule).completedDates || [];
     return booking.customDates.filter((date) => {
       const dateToCheck = new Date(date);
       dateToCheck.setHours(0, 0, 0, 0);
 
-      return !completedDates.some((completedDate) => {
+      return !completedDates.some((completedDate: string | Date) => {
         const completed = new Date(completedDate);
         completed.setHours(0, 0, 0, 0);
         return completed.getTime() === dateToCheck.getTime();
@@ -178,6 +211,8 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   }
 
   async function activateAutobooking(booking: Autobooking) {
+    const warehouseStore = useWarehousesStore();
+
     try {
       loading.value = true;
       const updated = await autobookingAPI.updateAutobooking(booking.id, {
@@ -199,8 +234,16 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
         }
         statusCounts.value['ACTIVE'] = (statusCounts.value['ACTIVE'] || 0) + 1;
       }
+
+      // Clear cache for the old status since data has changed
+      clearStatusCache();
+
+      // Show success toast
+      const warehouseName = warehouseStore.getWarehouseName(updated.warehouseId);
+      toastHelpers.success('Автобронирование активировано', `Склад: ${warehouseName}`);
     } catch (err) {
       error.value = 'Failed to activate autobooking';
+      toastHelpers.error('Ошибка активации', 'Не удалось активировать автобронирование');
       throw err;
     } finally {
       loading.value = false;
@@ -227,12 +270,18 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
         autobookings.value = [...autobookings.value, ...data.items];
       }
 
+      // Store in status cache
+      const currentStatus = selectedStatus.value;
+      statusCache.value[currentStatus] = [...autobookings.value];
+      fetchedStatuses.value.add(currentStatus);
+
       currentPage.value = data.currentPage;
       nextPage.value = data.nextPage;
 
       return data;
     } catch (err) {
       error.value = 'Failed to fetch autobookings';
+      clearStatusCache();
       throw err;
     } finally {
       loading.value = false;
@@ -245,6 +294,14 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     await fetchData(nextPage.value);
   }
 
+  /**
+   * Clear the status cache (useful when data might be stale)
+   */
+  function clearStatusCache() {
+    statusCache.value = {};
+    fetchedStatuses.value.clear();
+  }
+
   return {
     searchQuery,
     selectedStatus,
@@ -254,7 +311,12 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     error,
     autobookings,
     statusCounts,
+    statusCache,
+    fetchedStatuses,
     fetchData,
+    fetchDataIfNeeded,
+    isStatusFetched,
+    clearStatusCache,
     getStatusColor,
     getStatusText,
     getDateTypeText,

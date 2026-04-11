@@ -2,9 +2,11 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI, warehousesAPI } from '../api';
 import { useAutobookingStore } from './autobooking';
+import { useAutobookingListStore } from './autobookingList';
 import { useUserStore } from './user';
 import { useWarehousesStore } from './warehouses';
 import { useDraftStore } from './draft';
+import { toastHelpers } from '../utils/toast';
 import type { ValidationResult } from './autobookingForm';
 import type { Autobooking, AutobookingUpdateData } from '../types';
 
@@ -231,15 +233,15 @@ export const useAutobookingUpdateStore = defineStore(
       form.value = {
         draftId: autobooking.draftId,
         warehouseId: autobooking.warehouseId,
-        transitWarehouseId: autobooking.transitWarehouseId,
-        transitWarehouseName: autobooking.transitWarehouseName,
+        transitWarehouseId: autobooking.transitWarehouseId ?? null,
+        transitWarehouseName: autobooking.transitWarehouseName ?? null,
         supplyType: autobooking.supplyType,
         dateType: autobooking.dateType,
         startDate: normalizeDate(autobooking.startDate),
         endDate: normalizeDate(autobooking.endDate),
         customDates: normalizeCustomDates(autobooking.customDates),
         maxCoefficient: autobooking.maxCoefficient,
-        monopalletCount: autobooking.monopalletCount,
+        monopalletCount: autobooking.monopalletCount ?? null,
       };
       useTransit.value = !!autobooking.transitWarehouseId;
       isFetched.value = true;
@@ -324,7 +326,7 @@ export const useAutobookingUpdateStore = defineStore(
           supplierId,
           draftID: form.value.draftId,
           warehouseId: form.value.warehouseId,
-          transitWarehouseId: form.value.transitWarehouseId,
+          transitWarehouseId: form.value.transitWarehouseId ?? null,
         });
 
         if (response.data?.result) {
@@ -366,6 +368,7 @@ export const useAutobookingUpdateStore = defineStore(
       }
 
       const autobookingStore = useAutobookingStore();
+      const listStore = useAutobookingListStore();
 
       try {
         loading.value = true;
@@ -373,16 +376,16 @@ export const useAutobookingUpdateStore = defineStore(
 
         const updateData: AutobookingUpdateData = {
           draftId: form.value.draftId,
-          warehouseId: form.value.warehouseId,
-          transitWarehouseId: form.value.transitWarehouseId,
-          transitWarehouseName: form.value.transitWarehouseName,
-          supplyType: form.value.supplyType,
-          dateType: form.value.dateType,
+          warehouseId: form.value.warehouseId ?? undefined,
+          transitWarehouseId: form.value.transitWarehouseId ?? null,
+          transitWarehouseName: form.value.transitWarehouseName ?? null,
+          supplyType: form.value.supplyType as 'BOX' | 'MONOPALLETE' | 'SUPERSAFE',
+          dateType: form.value.dateType as 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE',
           startDate: form.value.startDate || null,
           endDate: form.value.endDate || null,
-          customDates: form.value.customDates,
+          customDates: form.value.customDates as string[],
           maxCoefficient: form.value.maxCoefficient,
-          monopalletCount: form.value.monopalletCount,
+          monopalletCount: form.value.monopalletCount ?? null,
         };
 
         const autobooking = await autobookingAPI.updateAutobooking(
@@ -390,7 +393,18 @@ export const useAutobookingUpdateStore = defineStore(
           updateData,
         );
 
+        // Update both stores
         autobookingStore.updateAutobookingInList(autobooking.id, autobooking);
+
+        // Update in list store as well
+        const listIndex = listStore.autobookings.findIndex((a) => a.id === autobooking.id);
+        if (listIndex !== -1) {
+          listStore.autobookings[listIndex] = autobooking;
+        }
+
+        // Show success toast
+        const warehouseName = warehouseStore.getWarehouseName(autobooking.warehouseId);
+        toastHelpers.success('Автобронирование обновлено', `Склад: ${warehouseName}`);
 
         resetForm();
 
@@ -399,6 +413,7 @@ export const useAutobookingUpdateStore = defineStore(
         const errorMsg =
           err instanceof Error ? err.message : 'Failed to update autobooking';
         error.value = errorMsg;
+        toastHelpers.error('Ошибка обновления', errorMsg);
         throw err;
       } finally {
         loading.value = false;

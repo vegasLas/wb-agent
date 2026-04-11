@@ -16,7 +16,7 @@
       <template #value>
         <div class="flex items-center gap-1">
           <span class="text-lg">{{ selectedCountry.flag }}</span>
-          <span class="text-gray-900 dark:text-white text-sm font-medium">{{
+          <span class="text-theme text-sm font-medium">{{
             selectedCountry.dialCode
           }}</span>
         </div>
@@ -24,8 +24,8 @@
       <template #option="{ option }">
         <div class="flex items-center gap-2 w-full">
           <span class="text-lg">{{ option.flag }}</span>
-          <span class="text-gray-900 dark:text-white">{{ option.name }}</span>
-          <span class="text-gray-500 dark:text-gray-400 text-sm ml-auto">{{
+          <span class="text-theme">{{ option.name }}</span>
+          <span class="text-secondary text-sm ml-auto">{{
             option.dialCode
           }}</span>
         </div>
@@ -42,7 +42,7 @@
         root: { class: 'flex-1' },
         input: {
           class:
-            'w-full rounded-r-lg rounded-l-none border-l-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3 border',
+            'w-full rounded-r-lg rounded-l-none border-l-0 border-deep-border bg-deep-card text-theme shadow-sm focus:ring-purple-700 focus:border-purple-700 disabled:opacity-50 disabled:cursor-not-allowed py-2 px-3 border',
         },
       }"
       @input="handlePhoneInput"

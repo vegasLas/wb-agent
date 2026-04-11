@@ -6,6 +6,10 @@
 // View Types
 // -----------------------------------------------------------------------------
 export type ViewType =
+  | 'home'
+  | 'tasks'
+  | 'wb'
+  | 'mpstats'
   | 'triggers-main'
   | 'triggers-form'
   | 'autobookings-form'
@@ -254,7 +258,7 @@ export interface AutobookingReschedule {
   userId: number;
   supplierId: string;
   warehouseId: number;
-  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES_SINGLE';
+  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
   startDate: Date | string | null;
   endDate: Date | string | null;
   currentDate: Date | string;
@@ -291,7 +295,7 @@ export type RescheduleUpdateData = Partial<RescheduleCreateData>;
 // Create/Update API request types
 export interface CreateAutobookingRescheduleRequest {
   warehouseId: number;
-  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES_SINGLE';
+  dateType: 'WEEK' | 'MONTH' | 'CUSTOM_PERIOD' | 'CUSTOM_DATES' | 'CUSTOM_DATES_SINGLE';
   startDate?: Date | string | null;
   endDate?: Date | string | null;
   currentDate: Date | string;
@@ -594,12 +598,7 @@ export type AuthStep =
 // -----------------------------------------------------------------------------
 // Promotions Calendar Types
 // -----------------------------------------------------------------------------
-export interface PromotionsTimelineResponse {
-  data: {
-    promotions: PromotionItem[];
-    participationCounts: ParticipationCounts;
-  };
-}
+export type PromotionFilter = 'AVAILABLE' | 'PARTICIPATING' | 'SKIPPING';
 
 export interface ParticipationCounts {
   available: number;
@@ -608,13 +607,20 @@ export interface ParticipationCounts {
   all: number;
 }
 
+export interface PromotionsTimelineResponse {
+  data: {
+    promotions: PromotionItem[];
+    participationCounts: ParticipationCounts;
+  };
+}
+
 export interface PromotionItem {
   promoID: number;
   name: string;
   type: string;
   startDate: string;
   endDate: string;
-  advantages: string[];
+  advantages: readonly string[];
   promotion: string;
   participation: PromotionParticipation;
 }
@@ -643,7 +649,7 @@ export interface PromotionDetail {
   name: string;
   description: string;
   formattedDescription: string;
-  advantages: string[];
+  advantages: readonly string[];
   startDt: string;
   endDt: string;
   status: number;
@@ -674,7 +680,7 @@ export interface PromotionDetail {
 }
 
 export interface PromotionRanging {
-  levels: PromotionLevel[];
+  levels: readonly PromotionLevel[];
   boost: string;
   currentCoefficient: number;
   isMaxLevel: boolean;

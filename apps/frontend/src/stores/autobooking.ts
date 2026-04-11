@@ -2,6 +2,8 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI } from '../api';
 import { useAutobookingListStore } from './autobookingList';
+import { useWarehousesStore } from './warehouses';
+import { toastHelpers } from '../utils/toast';
 import type { Autobooking } from '../types';
 
 export const useAutobookingStore = defineStore('autobooking', () => {
@@ -15,11 +17,11 @@ export const useAutobookingStore = defineStore('autobooking', () => {
 
   // Getters
   const activeAutobookings = computed(() =>
-    autobookings.value.filter((a) => a.enabled),
+    autobookings.value.filter((a) => a.status === 'ACTIVE'),
   );
 
   const inactiveAutobookings = computed(() =>
-    autobookings.value.filter((a) => !a.enabled),
+    autobookings.value.filter((a) => a.status !== 'ACTIVE'),
   );
 
   const autobookingCount = computed(() => autobookings.value.length);
@@ -34,7 +36,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
       loading.value = true;
       error.value = null;
       const data = await autobookingAPI.fetchAutobookings();
-      autobookings.value = data;
+      autobookings.value = (data as unknown as Autobooking[]);
       return data;
     } catch (err: unknown) {
       const errorMsg =
@@ -48,6 +50,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
 
   async function deleteAutobooking(id: string) {
     const listStore = useAutobookingListStore();
+    const warehouseStore = useWarehousesStore();
 
     try {
       deletingId.value = id;
@@ -68,10 +71,15 @@ export const useAutobookingStore = defineStore('autobooking', () => {
       if (status && listStore.statusCounts[status] > 0) {
         listStore.statusCounts[status]--;
       }
+
+      // Show success toast
+      const warehouseName = booking ? warehouseStore.getWarehouseName(booking.warehouseId) : '';
+      toastHelpers.success('Автобронирование удалено', warehouseName ? `Склад: ${warehouseName}` : undefined);
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to delete autobooking';
       error.value = errorMsg;
+      toastHelpers.error('Ошибка удаления', errorMsg);
       throw err;
     } finally {
       deletingId.value = null;
@@ -80,6 +88,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
 
   async function archiveAutobooking(id: string) {
     const listStore = useAutobookingListStore();
+    const warehouseStore = useWarehousesStore();
 
     try {
       togglingId.value = id;
@@ -113,11 +122,16 @@ export const useAutobookingStore = defineStore('autobooking', () => {
           (listStore.statusCounts['ARCHIVED'] || 0) + 1;
       }
 
+      // Show success toast
+      const warehouseName = warehouseStore.getWarehouseName(updated.warehouseId);
+      toastHelpers.success('Автобронирование в архиве', `Склад: ${warehouseName}`);
+
       return updated;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to archive autobooking';
       error.value = errorMsg;
+      toastHelpers.error('Ошибка архивирования', errorMsg);
       throw err;
     } finally {
       togglingId.value = null;
@@ -125,6 +139,8 @@ export const useAutobookingStore = defineStore('autobooking', () => {
   }
 
   async function updateBookingCoefficient(id: string, maxCoefficient: number) {
+    const warehouseStore = useWarehousesStore();
+
     try {
       updatingId.value = id;
       const updated = await autobookingAPI.updateBookingCoefficient(
@@ -138,11 +154,17 @@ export const useAutobookingStore = defineStore('autobooking', () => {
           ...updated,
         };
       }
+
+      // Show success toast
+      const warehouseName = warehouseStore.getWarehouseName(updated.warehouseId);
+      toastHelpers.success('Коэффициент обновлен', `Склад: ${warehouseName}`);
+
       return updated;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to update coefficient';
       error.value = errorMsg;
+      toastHelpers.error('Ошибка обновления', errorMsg);
       throw err;
     } finally {
       updatingId.value = null;

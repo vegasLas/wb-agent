@@ -5,7 +5,7 @@
   >
     <div class="flex items-center gap-3">
       <div
-        class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+        class="w-10 h-10 rounded-full bg-elevated flex items-center justify-center"
       >
         <i class="pi pi-plus text-gray-500 dark:text-gray-400" />
       </div>

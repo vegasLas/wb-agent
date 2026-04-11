@@ -12,7 +12,7 @@
       <div
         class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center"
       >
-        <i class="pi pi-shop text-white" />
+        <i class="pi pi-shop text-theme" />
       </div>
       <div>
         <div class="font-medium">

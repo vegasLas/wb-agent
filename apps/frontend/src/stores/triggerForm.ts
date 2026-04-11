@@ -50,16 +50,16 @@ export const useTriggerFormStore = defineStore('triggerForm', () => {
   });
 
   // Computed
-  const showDatePicker = computed(() => form.value.searchMode === 'RANGE');
-  const showRangePicker = computed(
+  const showDatePicker = computed(
     () => form.value.searchMode === 'CUSTOM_DATES',
   );
+  const showRangePicker = computed(() => form.value.searchMode === 'WEEK');
 
   const isValid = computed(() => {
     return (
       form.value.warehouseIds.length > 0 &&
       form.value.supplyTypes.length > 0 &&
-      form.value.checkInterval > 0 &&
+      (form.value.checkInterval ?? 0) > 0 &&
       form.value.searchMode !== undefined
     );
   });

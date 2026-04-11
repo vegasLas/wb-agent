@@ -1,17 +1,10 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { userAPI } from '../api';
+import type { User as TypesUser, Account as TypesAccount } from '../types';
 
-export interface User {
-  name: string;
-  autobookingCount: number;
-  subscriptionExpiresAt: string | null;
-  payments: Payment[];
-  agreeTerms: boolean;
-  supplierApiKey?: string;
-  selectedAccountId?: string;
-  accounts: Account[];
-}
+// Store-specific interfaces aligned with types but preserving backward compatibility
+export type User = TypesUser
 
 export interface Payment {
   id: string;
@@ -20,11 +13,8 @@ export interface Payment {
   createdAt: string;
 }
 
-export interface Account {
-  id: string;
-  phoneWb: string;
-  suppliers: Supplier[];
-  selectedSupplierId?: string;
+// Store Account extends TypesAccount with backward compatible properties
+export interface Account extends TypesAccount {
   wbCookies?: boolean;
 }
 
@@ -137,8 +127,8 @@ export const useUserStore = defineStore('user', () => {
     notFound.value = false;
     try {
       const data = await userAPI.fetchUser();
-      user.value = data;
-      return data;
+      user.value = data as User;
+      return data as User;
     } catch (err) {
       error.value = 'Failed to fetch user data';
       notFound.value = true;

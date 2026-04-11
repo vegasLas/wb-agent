@@ -3,6 +3,19 @@
     <!-- User Alerts -->
     <UserAlerts />
 
+    <!-- Create Dialog -->
+    <AutobookingCreateDialog
+      v-model:show="showCreateDialog"
+      @created="handleCreated"
+    />
+
+    <!-- Update Dialog -->
+    <AutobookingUpdateDialog
+      v-model:show="showUpdateDialog"
+      :autobooking="selectedAutobooking"
+      @updated="handleUpdated"
+    />
+
     <!-- Display content only if user has selected account, valid supplier and subscription is active -->
     <template
       v-if="
@@ -29,8 +42,8 @@
             :class="[
               'ml-2 px-2 py-0.5 rounded text-xs font-medium',
               listStore.selectedStatus === stat.status
-                ? 'bg-white text-blue-600 dark:text-blue-400'
-                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+                ? 'bg-theme text-blue-600 dark:text-blue-400'
+                : 'bg-elevated text-secondary',
             ]"
           >
             {{ stat.count }}
@@ -76,7 +89,7 @@
           </Tag>
           <Button
             severity="primary leading-none"
-            @click="navigateToCreate"
+            @click="openCreateDialog"
           >
             добавить
           </Button>
@@ -93,6 +106,7 @@
           :key="booking.id"
           :booking="booking"
           @view-goods="handleViewGoods"
+          @edit="openUpdateDialog"
         />
 
         <div
@@ -131,11 +145,19 @@ import Message from 'primevue/message';
 import UserAlerts from '../../components/global/UserAlerts.vue';
 import AutobookingBookingCard from '../../components/autobooking/BookingCard.vue';
 import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsModal.vue';
+import AutobookingCreateDialog from '../../components/autobooking/CreateDialog.vue';
+import AutobookingUpdateDialog from '../../components/autobooking/UpdateDialog.vue';
+import type { Autobooking } from '../../types';
 
 const router = useRouter();
 const userStore = useUserStore();
 const listStore = useAutobookingListStore();
 const { viewReady } = useViewReady();
+
+// Dialog state
+const showCreateDialog = ref(false);
+const showUpdateDialog = ref(false);
+const selectedAutobooking = ref<Autobooking | null>(null);
 
 // Goods modal state
 const showGoodsModal = ref(false);
@@ -170,13 +192,42 @@ const statsData = computed(() => [
 ]);
 
 // Handle status click from StatsCards
-function handleStatusClick(status: string) {
+async function handleStatusClick(status: string) {
+  const previousStatus = listStore.selectedStatus;
   listStore.selectedStatus = status;
+  
+  // Check if we need to fetch data for this status
+  if (previousStatus !== status) {
+    // Use cached data if available, otherwise fetch
+    const didFetch = await listStore.fetchDataIfNeeded();
+    // If we used cached data, we may want to refresh in background
+    if (!didFetch) {
+      // Optionally: silently refresh in background
+      // listStore.fetchData();
+    }
+  }
 }
 
-// Navigation functions
-function navigateToCreate() {
-  router.push({ name: 'AutobookingCreate' });
+// Dialog functions
+function openCreateDialog() {
+  showCreateDialog.value = true;
+}
+
+function openUpdateDialog(autobooking: Autobooking) {
+  selectedAutobooking.value = autobooking;
+  showUpdateDialog.value = true;
+}
+
+function handleCreated() {
+  // Clear cache and refresh the list after creation
+  listStore.clearStatusCache();
+  listStore.fetchData();
+}
+
+function handleUpdated() {
+  // Clear cache and refresh the list after update
+  listStore.clearStatusCache();
+  listStore.fetchData();
 }
 
 function navigateToStoreBookings() {
@@ -266,10 +317,8 @@ useInfiniteScroll(
 // ============================================
 onMounted(async () => {
   try {
-    // Fetch data if not already loaded
-    if (listStore.autobookings.length === 0 && !listStore.isFetched) {
-      await listStore.fetchData();
-    }
+    // Fetch data only if not already cached for the current status
+    await listStore.fetchDataIfNeeded();
   } finally {
     // ALWAYS signal view ready, even if fetch failed
     viewReady();

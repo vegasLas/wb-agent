@@ -253,6 +253,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'view-goods': [draftId: string, supplierId: string];
+  edit: [autobooking: Autobooking];
 }>();
 
 const router = useRouter();
@@ -298,11 +299,8 @@ function viewGoods() {
 }
 
 function openUpdateForm() {
-  // Create deep copy of booking to avoid mutations
-  const bookingCopy = JSON.parse(JSON.stringify(props.booking));
-  updateStore.loadAutobooking(bookingCopy);
-  // Navigate to update view
-  router.push({ name: 'AutobookingUpdate', params: { id: props.booking.id } });
+  // Emit edit event to parent to open update dialog
+  emit('edit', props.booking);
 }
 
 async function updateCoefficient() {

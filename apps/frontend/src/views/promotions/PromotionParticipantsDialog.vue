@@ -4,7 +4,6 @@
     position="bottom"
     :style="{ width: '95vw', maxWidth: '1400px' }"
     :modal="true"
-    :maximizable="true"
   >
     <template #header>
       <span class="text-base md:text-lg font-semibold">{{ dialogHeader }}</span>
@@ -16,16 +15,11 @@
         class="flex flex-col items-center justify-center py-16"
       >
         <i class="pi pi-refresh animate-spin text-4xl text-orange-500 mb-4" />
-        <p class="text-gray-600 dark:text-gray-400">
-          Загрузка данных...
-        </p>
+        <p class="text-gray-600 dark:text-gray-400">Загрузка данных...</p>
       </div>
 
       <!-- Error State -->
-      <div
-        v-else-if="excelError"
-        class="text-center py-12 px-4"
-      >
+      <div v-else-if="excelError" class="text-center py-12 px-4">
         <div
           class="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
         >
@@ -91,22 +85,29 @@
                 </span>
               </div>
               <div>
-                <span class="text-gray-500 dark:text-gray-400">Всего товаров:</span>
+                <span class="text-gray-500 dark:text-gray-400"
+                  >Всего товаров:</span
+                >
                 <span
                   class="ml-1 font-medium text-gray-900 dark:text-gray-100"
-                >{{ excelItems.length }}</span>
+                  >{{ excelItems.length }}</span
+                >
               </div>
               <div v-if="participatingCount > 0">
                 <span class="text-gray-500 dark:text-gray-400">Участвует:</span>
                 <span
                   class="ml-1 font-medium text-green-600 dark:text-green-400"
-                >{{ participatingCount }}</span>
+                  >{{ participatingCount }}</span
+                >
               </div>
               <div v-if="notParticipatingCount > 0">
-                <span class="text-gray-500 dark:text-gray-400">Не участвует:</span>
+                <span class="text-gray-500 dark:text-gray-400"
+                  >Не участвует:</span
+                >
                 <span
                   class="ml-1 font-medium text-gray-600 dark:text-gray-400"
-                >{{ notParticipatingCount }}</span>
+                  >{{ notParticipatingCount }}</span
+                >
               </div>
             </div>
             <div class="min-w-[200px]">
@@ -398,10 +399,7 @@
       </div>
 
       <!-- Empty State (only shown when not loading, no error, and no data) -->
-      <div
-        v-else
-        class="text-center py-16 text-gray-500 dark:text-gray-400"
-      >
+      <div v-else class="text-center py-16 text-gray-500 dark:text-gray-400">
         <i class="pi pi-inbox text-4xl mb-4" />
         <p>Нет данных для отображения</p>
       </div>

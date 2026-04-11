@@ -12,10 +12,12 @@
       class="mx-1 rounded-lg border shadow-sm hover:shadow-md transition-all cursor-pointer hover:z-20 relative overflow-hidden"
       :class="[
         display.isExpired.value
-          ? 'border-gray-300 dark:border-gray-600 bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900'
-          : 'border-orange-200 dark:border-orange-800 hover:border-orange-400 dark:hover:border-orange-600 bg-gradient-to-r from-orange-50 to-white dark:from-orange-900/20 dark:to-gray-800/50',
+          ? 'border-deep-border bg-gradient-to-r from-deep-elevated to-deep-card'
+          : display.isNotStarted.value
+            ? 'border-emerald-500/30 hover:border-emerald-500 bg-gradient-to-r from-emerald-500/10 to-deep-card'
+            : 'border-[#6A39F4]/30 hover:border-[#6A39F4] bg-gradient-to-r from-[#6A39F4]/10 to-deep-card',
         isExpanded
-          ? 'p-3 bg-white dark:bg-gray-800'
+          ? 'p-3 bg-deep-card'
           : 'p-2',
       ]"
     >
@@ -38,8 +40,8 @@
             <span
               class="text-xs font-medium flex-shrink-0"
               :class="display.isExpired.value
-                ? 'text-gray-500 dark:text-gray-400'
-                : 'text-orange-600 dark:text-orange-400'"
+                ? 'text-[var(--text-muted)]'
+                : 'text-[#6A39F4]'"
             >
               {{ display.typeLabel.value }}
             </span>
@@ -48,8 +50,8 @@
             <span
               class="text-xs font-medium truncate"
               :class="display.isExpired.value
-                ? 'text-gray-600 dark:text-gray-400'
-                : 'text-gray-900 dark:text-gray-100'"
+                ? 'text-[var(--text-muted)]'
+                : 'text-[var(--color-text)]'"
             >
               {{ display.name.value }}
             </span>
@@ -57,13 +59,13 @@
 
           <!-- Participation Counts (Always visible, below name) -->
           <div class="flex items-center gap-3 mt-0.5">
-            <span class="text-[10px] text-green-600 dark:text-green-400">
+            <span class="text-[10px] text-green-400">
               Участвуют:
               <strong>{{
                 promotion.participation.counts.participating
               }}</strong>
             </span>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400">
+            <span class="text-[10px] text-[var(--text-muted)]">
               Не участвуют:
               <strong>{{
                 promotion.participation.counts.available +
@@ -77,7 +79,7 @@
       <!-- Expanded Content -->
       <div
         v-if="isExpanded"
-        class="mt-3 pt-3 border-t border-orange-200 dark:border-orange-800"
+        class="mt-3 pt-3 border-t border-[#6A39F4]/30 dark:border-[#6A39F4]/30 border-[#6A39F4]/20"
       >
         <!-- Status Badge -->
         <div class="mb-2">
@@ -91,14 +93,14 @@
         <!-- Stats Row -->
         <div class="flex items-center gap-2 mb-3 flex-wrap">
           <span
-            class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5"
+            class="text-xs text-[var(--text-muted)] flex items-center gap-0.5"
           >
             <i class="pi pi-arrow-up-right text-[10px]" />
             {{ display.participationText.value }}
           </span>
           <span
             v-if="display.hasBoost.value"
-            class="text-xs text-orange-600 dark:text-orange-400 font-medium"
+            class="text-xs text-[#6A39F4] font-medium"
           >
             {{ display.boostText.value }}
           </span>
@@ -108,14 +110,14 @@
         <div
           class="text-xs space-y-1 mb-3"
           :class="display.isExpired.value
-            ? 'text-gray-400 dark:text-gray-500'
-            : 'text-gray-500 dark:text-gray-400'"
+            ? 'text-[var(--text-secondary)]'
+            : 'text-[var(--text-muted)]'"
         >
           <div>
             {{ dateRangeText }}
             <span
               v-if="display.isExpired.value"
-              class="ml-1 text-gray-500 dark:text-gray-400 font-medium"
+              class="ml-1 text-[var(--text-muted)] font-medium"
             >(завершена)</span>
           </div>
           <div>{{ display.productCountText.value }}</div>
@@ -125,8 +127,8 @@
         <div
           class="flex items-center justify-start gap-2 pt-2 border-t"
           :class="display.isExpired.value
-            ? 'border-gray-200 dark:border-gray-700'
-            : 'border-orange-100 dark:border-orange-900/30'"
+            ? 'border-deep-border'
+            : 'border-[#6A39F4]/20'"
         >
           <Button
             v-if="!display.isExpired.value"
@@ -160,11 +162,12 @@ import Tag from 'primevue/tag';
 import { computed } from 'vue';
 import { usePromotionItem } from '../../composables';
 import type { PromotionItem } from '../../types';
+import type { PromotionPosition } from '../../composables/usePromotionsTimeline';
 
 interface Props {
   promotion: PromotionItem;
   isExpanded: boolean;
-  style: Record<string, string>;
+  style: PromotionPosition;
   detailLoading?: boolean;
   excelLoading?: boolean;
 }

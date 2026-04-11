@@ -70,7 +70,7 @@ export const useAccountsStore = defineStore('accounts', () => {
 
   async function refreshAccountSuppliers(accountId: string) {
     try {
-      const result = await accountsAPI.refreshAccountSuppliers(accountId);
+      const result = await accountsAPI.syncAccountSuppliers(accountId);
 
       if (result.success) {
         // Refresh user data to get updated suppliers from server
@@ -78,6 +78,8 @@ export const useAccountsStore = defineStore('accounts', () => {
 
         return result.suppliers;
       }
+
+      return [];
     } catch (error) {
       console.error('Error refreshing suppliers:', error);
       throw error;
@@ -114,12 +116,6 @@ export const useAccountsStore = defineStore('accounts', () => {
     return account?.suppliers.find((sup) => sup.supplierId === supplierId);
   }
 
-  // Check if account has any cookies
-  function hasAccountCookies(accountId: string): boolean {
-    const account = accounts.value.find((acc) => acc.id === accountId);
-    return Boolean(account?.wbCookies);
-  }
-
   // Get current active supplier for account
   function getActiveSupplier(accountId: string): Supplier | undefined {
     const account = accounts.value.find((acc) => acc.id === accountId);
@@ -149,7 +145,6 @@ export const useAccountsStore = defineStore('accounts', () => {
     getSuppliersByAccount,
     findAccountBySupplierId,
     getAccountSupplier,
-    hasAccountCookies,
     getActiveSupplier,
   };
 });

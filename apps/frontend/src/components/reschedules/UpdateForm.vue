@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <div class="bg-card rounded-lg shadow-card p-4">
       <div class="flex items-center justify-end mb-6">
         <h3 class="text-xl text-center font-semibold flex-1">
           Редактировать перепланирование
@@ -25,7 +25,7 @@
           </h4>
 
           <!-- Supply Information (read-only) -->
-          <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div class="p-3 bg-elevated rounded-lg">
             <div class="flex items-center justify-between">
               <div class="text-sm text-gray-700 dark:text-gray-300">
                 <div>
@@ -90,14 +90,14 @@
             <input
               v-model="formData.maxCoefficientInput"
               type="range"
-              class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              class="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer"
               :step="1"
               :min="0"
               :max="20"
             >
             <div class="min-w-[4rem] text-center">
               <span
-                class="px-2 py-1 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                class="px-2 py-1 text-sm rounded-full bg-elevated text-theme"
               >
                 {{ formData.maxCoefficientInput }}
               </span>

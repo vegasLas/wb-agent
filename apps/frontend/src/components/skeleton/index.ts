@@ -6,4 +6,5 @@ export { default as SkeletonPromotions } from './SkeletonPromotions.vue';
 export { default as SkeletonReport } from './SkeletonReport.vue';
 export { default as SkeletonReschedules } from './SkeletonReschedules.vue';
 export { default as SkeletonStore } from './SkeletonStore.vue';
+export { default as SkeletonTasks } from './SkeletonTasks.vue';
 export { default as SkeletonTriggers } from './SkeletonTriggers.vue';
