@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
     <div
       class="bg-deep-card border border-deep-border rounded-full px-4 py-2 shadow-lg"
     >
@@ -58,20 +58,6 @@
         >
           <i class="pi pi-chart-bar text-lg" />
           <span class="text-[10px]">MPStats</span>
-        </button>
-
-        <!-- Account -->
-        <button
-          :class="[
-            'flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg transition-colors',
-            isActive('/account')
-              ? 'text-purple-700'
-              : 'text-gray-500 hover:text-gray-300',
-          ]"
-          @click="navigate('/account')"
-        >
-          <i class="pi pi-user text-lg" />
-          <span class="text-[10px]">Профиль</span>
         </button>
       </div>
     </div>
