@@ -1,64 +1,62 @@
 <template>
-  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
-    <div
-      class="bg-deep-card border border-deep-border rounded-full px-5 py-3 shadow-lg"
-    >
-      <div class="flex items-center">
-        <!-- Home -->
-        <button
-          :class="[
-            'flex flex-col items-center gap-1 px-5 py-3 rounded-xl transition-colors',
-            isActive('/')
-              ? 'text-purple-700'
-              : 'text-gray-500 hover:text-gray-300',
-          ]"
-          @click="navigate('/')"
-        >
-          <i class="pi pi-home text-xl" />
-          <span class="text-xs">Главная</span>
-        </button>
+  <div class="fixed bottom-10 z-50 pointer-events-none" style="width: 100vw; left: 0;">
+    <div class="flex justify-center">
+      <div
+        class="bg-deep-card border border-deep-border rounded-full px-4 py-3 shadow-lg pointer-events-auto"
+      >
+        <div class="flex items-center gap-2">
+          <!-- Home -->
+          <button
+            :class="[
+              'flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-200/80 dark:bg-gray-700/80 transition-colors',
+              isActive('/')
+                ? 'text-purple-700 dark:text-purple-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600',
+            ]"
+            @click="navigate('/')"
+          >
+            <i class="pi pi-home text-xl" />
+          </button>
 
-        <!-- Tasks -->
-        <button
-          :class="[
-            'flex flex-col items-center gap-1 px-5 py-3 rounded-xl transition-colors',
-            isActive('/tasks')
-              ? 'text-purple-700'
-              : 'text-gray-500 hover:text-gray-300',
-          ]"
-          @click="navigate('/tasks')"
-        >
-          <i class="pi pi-check-square text-xl" />
-          <span class="text-xs">Задачи</span>
-        </button>
+          <!-- Tasks -->
+          <button
+            :class="[
+              'flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-200/80 dark:bg-gray-700/80 transition-colors',
+              isActive('/tasks')
+                ? 'text-purple-700 dark:text-purple-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600',
+            ]"
+            @click="navigate('/tasks')"
+          >
+            <i class="pi pi-check-square text-xl" />
+          </button>
 
-        <!-- WB -->
-        <button
-          :class="[
-            'flex flex-col items-center gap-1 px-5 py-3 rounded-xl transition-colors',
-            isActive('/wb')
-              ? 'text-purple-700'
-              : 'text-gray-500 hover:text-gray-300',
-          ]"
-          @click="navigate('/wb')"
-        >
-          <i class="pi pi-shopping-bag text-xl" />
-          <span class="text-xs">WB</span>
-        </button>
+          <!-- WB -->
+          <button
+            :class="[
+              'flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-200/80 dark:bg-gray-700/80 transition-colors font-semibold text-sm',
+              isActive('/wb')
+                ? 'text-purple-700 dark:text-purple-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600',
+            ]"
+            @click="navigate('/wb')"
+          >
+            wb
+          </button>
 
-        <!-- MPStats -->
-        <button
-          :class="[
-            'flex flex-col items-center gap-1 px-4 py-3 rounded-xl transition-colors',
-            isActive('/mpstats')
-              ? 'text-purple-700'
-              : 'text-gray-500 hover:text-gray-300',
-          ]"
-          @click="navigate('/mpstats')"
-        >
-          <i class="pi pi-chart-bar text-xl" />
-          <span class="text-xs">MPStats</span>
-        </button>
+          <!-- MPStats -->
+          <button
+            :class="[
+              'flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-200/80 dark:bg-gray-700/80 transition-colors',
+              isActive('/mpstats')
+                ? 'text-purple-700 dark:text-purple-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600',
+            ]"
+            @click="navigate('/mpstats')"
+          >
+            <i class="pi pi-chart-bar text-xl" />
+          </button>
+        </div>
       </div>
     </div>
   </div>

@@ -24,7 +24,7 @@
     <Toast
       position="top-center"
       :pt="{
-        root: { style: { maxWidth: '380px' } },
+        root: { style: { maxWidth: '280px' } },
         message: { style: { width: '100%' } },
       }"
     />

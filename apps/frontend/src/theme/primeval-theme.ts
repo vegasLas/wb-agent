@@ -135,6 +135,14 @@ export const PrimevalPreset = definePreset(Aura, {
     // Semantic colors
     colorScheme: {
       light: {
+        color: {
+          bg: '#F9FAFB',
+          card: '#FFFFFF',
+          elevated: '#F3F4F6',
+          border: '#E5E7EB',
+          text: '#111827',
+          secondary: '#6B7280',
+        },
         surface: {
           0: '#FFFFFF',
           50: '#F9FAFB',
@@ -230,6 +238,14 @@ export const PrimevalPreset = definePreset(Aura, {
         },
       },
       dark: {
+        color: {
+          bg: '#0A0A0F',
+          card: '#15151C',
+          elevated: '#1E1E28',
+          border: '#2A2A35',
+          text: '#FFFFFF',
+          secondary: '#6B7280',
+        },
         surface: {
           0: '#0A0A0F',
           50: '#15151C',
@@ -447,11 +463,11 @@ export const PrimevalPreset = definePreset(Aura, {
         hoverBorderColor: '#8B69F6',
       },
     },
-    // MultiSelect styling
+    // MultiSelect styling - using semantic tokens for light/dark mode support
     multiselect: {
-      background: '#15151C',
-      borderColor: '#2A2A35',
-      color: '#FFFFFF',
+      background: '{color.card}',
+      borderColor: '{color.border}',
+      color: '{color.text}',
       borderRadius: '14px',
       chip: {
         background: 'rgba(106, 57, 244, 0.15)',
@@ -459,17 +475,17 @@ export const PrimevalPreset = definePreset(Aura, {
         borderRadius: '8px',
       },
       overlay: {
-        background: '#15151C',
-        borderColor: '#2A2A35',
+        background: '{color.card}',
+        borderColor: '{color.border}',
         borderRadius: '14px',
         shadow: 'none',
       },
       option: {
-        focusBackground: '#1E1E28',
+        focusBackground: '{color.elevated}',
         selectedBackground: 'rgba(106, 57, 244, 0.2)',
         selectedFocusBackground: 'rgba(106, 57, 244, 0.3)',
-        color: '#FFFFFF',
-        focusColor: '#FFFFFF',
+        color: '{color.text}',
+        focusColor: '{color.text}',
         selectedColor: '#6A39F4',
         selectedFocusColor: '#8B69F6',
         padding: '0.75rem 1rem',
@@ -477,12 +493,12 @@ export const PrimevalPreset = definePreset(Aura, {
       },
       optionGroup: {
         background: 'transparent',
-        color: '#6B7280',
+        color: '{color.secondary}',
         fontWeight: 600,
       },
       checkbox: {
-        borderColor: '#2A2A35',
-        background: '#0A0A0F',
+        borderColor: '{color.border}',
+        background: '{color.bg}',
         checked: {
           background: '#6A39F4',
           borderColor: '#6A39F4',

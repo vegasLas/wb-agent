@@ -5,6 +5,7 @@
       class="flex-1 container mx-auto px-4 py-6 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative pb-24"
     >
       <!-- Top Bar with Account (left) and Plus (right) buttons -->
+      <!-- This is always visible once router is ready - not part of skeleton -->
       <div class="flex items-center justify-between mb-4 lg:hidden">
         <!-- Account Button and Supplier Name (Left) -->
         <div class="flex items-center gap-2">
@@ -41,12 +42,19 @@
         <Menu ref="addMenu" :model="addMenuItems" :popup="true" />
       </div>
 
-      <!-- Content skeleton overlay during view loading/navigation -->
-      <div v-if="showContentSkeleton" class="absolute inset-0 bg-deep-bg text-theme z-10">
-        <component :is="currentRouteSkeleton" />
-      </div>
+      <!-- Content Area -->
+      <div class="relative">
+        <!-- Content skeleton overlay during view loading/navigation -->
+        <!-- Positioned to only cover content below the header -->
+        <div 
+          v-if="showContentSkeleton" 
+          class="absolute inset-0 bg-deep-bg text-theme z-10"
+        >
+          <component :is="currentRouteSkeleton" />
+        </div>
 
-      <RouterView />
+        <RouterView />
+      </div>
     </main>
 
     <!-- Bottom Navigation (Mobile) -->
