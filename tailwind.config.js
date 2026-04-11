@@ -8,12 +8,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Deep Dark - Backgrounds
+        // Deep Dark - Backgrounds (use CSS variables for theme support)
         deep: {
-          bg: '#0A0A0F',
-          card: '#15151C',
-          elevated: '#1E1E28',
-          border: '#2A2A35',
+          bg: 'var(--color-bg)',
+          card: 'var(--color-card)',
+          elevated: 'var(--color-elevated)',
+          border: 'var(--color-border)',
         },
         // Purple - Primary accent
         purple: {
