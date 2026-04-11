@@ -1,21 +1,33 @@
 <template>
-  <div class="min-h-screen bg-deep-bg flex flex-col lg:flex-row">
+  <div class="min-h-screen bg-deep-bg text-theme flex flex-col lg:flex-row">
     <!-- Main Content -->
     <main
       class="flex-1 container mx-auto px-4 py-6 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative pb-24"
     >
       <!-- Top Bar with Account (left) and Plus (right) buttons -->
       <div class="flex items-center justify-between mb-4 lg:hidden">
-        <!-- Account Button (Left) -->
-        <Button
-          :severity="isAccountRoute ? 'primary' : 'secondary'"
-          variant="outlined"
-          class="rounded"
-          aria-label="Профиль"
-          @click="navigateToAccount"
-        >
-          <i class="pi pi-user" />
-        </Button>
+        <!-- Account Button and Supplier Name (Left) -->
+        <div class="flex items-center gap-2">
+          <Button
+            :severity="isAccountRoute ? 'primary' : 'secondary'"
+            variant="outlined"
+            class="rounded"
+            aria-label="Профиль"
+            @click="navigateToAccount"
+          >
+            <i class="pi pi-user" />
+          </Button>
+          <Button
+            v-if="currentSupplierName"
+            severity="secondary"
+            variant="text"
+            class="rounded max-w-[140px]"
+            :title="currentSupplierName"
+            @click="accountModalStore.showModal = true"
+          >
+            <span class="truncate">{{ currentSupplierName }}</span>
+          </Button>
+        </div>
 
         <!-- Plus Button with Entity Selection (Right) -->
         <Button
@@ -30,7 +42,7 @@
       </div>
 
       <!-- Content skeleton overlay during view loading/navigation -->
-      <div v-if="showContentSkeleton" class="absolute inset-0 bg-deep-bg z-10">
+      <div v-if="showContentSkeleton" class="absolute inset-0 bg-deep-bg text-theme z-10">
         <component :is="currentRouteSkeleton" />
       </div>
 
@@ -62,6 +74,7 @@ import { useRoute, useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
+import { useUserStore } from '../../stores/user';
 import { MainHelpModal } from '../help';
 import { AccountManagementView } from '../account-management';
 import { useSkeleton } from '../../composables/useSkeleton';
@@ -73,7 +86,13 @@ import { useAutobookingListStore } from '../../stores/autobookingList';
 import { useTriggerStore } from '../../stores/triggers';
 
 const accountModalStore = useAccountSupplierModalStore();
+const userStore = useUserStore();
 const showHelpModal = ref(false);
+
+// Computed property to get current supplier name
+const currentSupplierName = computed(() => {
+  return userStore.activeSupplier?.supplierName || '';
+});
 
 const currentRouteSkeleton = inject('currentRouteSkeleton');
 const { showSkeleton, isRouterInitializing } = useSkeleton();

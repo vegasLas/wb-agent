@@ -94,6 +94,9 @@ export interface UsePromotionItemReturn {
   // Expiration
   isExpired: ComputedRef<boolean>;
 
+  // Not started (start date in future - can exclude items)
+  isNotStarted: ComputedRef<boolean>;
+
   // Raw access
   raw: ComputedRef<PromotionItem>;
 }
@@ -309,6 +312,17 @@ export function usePromotionItem(
     return now > end;
   });
 
+  // Not started check - promotion hasn't started yet (start date is in the future)
+  // This means items can still be excluded from the promotion
+  const isNotStarted = computed(() => {
+    if (!startDate.value) return false;
+    const now = new Date();
+    // Set time to start of day for accurate date comparison
+    const start = new Date(startDate.value);
+    start.setHours(0, 0, 0, 0);
+    return now < start;
+  });
+
   return {
     // Basic
     id,
@@ -346,6 +360,9 @@ export function usePromotionItem(
 
     // Expiration
     isExpired,
+
+    // Not started
+    isNotStarted,
 
     // Raw
     raw: computed(() => item()),

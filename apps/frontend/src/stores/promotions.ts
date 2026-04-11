@@ -6,6 +6,7 @@ import type {
   PromotionItem,
   PromotionDetail,
   PromotionExcelItem,
+  ParticipationCounts,
 } from '../types';
 
 export const usePromotionsStore = defineStore('promotions', () => {
@@ -24,6 +25,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
   const excelError = ref<string | null>(null);
   const reportPending = ref(false);
   const estimatedWaitTime = ref<number | null>(null);
+  const participationCounts = ref<ParticipationCounts | null>(null);
 
   // Getters
   const hasPromotions = computed(() => promotions.value.length > 0);
@@ -59,6 +61,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
         filter,
       });
       promotions.value = response.data?.promotions || [];
+      participationCounts.value = response.data?.participationCounts || null;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error
@@ -240,6 +243,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
     excelError.value = null;
     reportPending.value = false;
     estimatedWaitTime.value = null;
+    participationCounts.value = null;
   }
 
   function clearExcelData() {
@@ -263,6 +267,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
     excelError: readonly(excelError),
     reportPending: readonly(reportPending),
     estimatedWaitTime: readonly(estimatedWaitTime),
+    participationCounts: readonly(participationCounts),
 
     // Getters
     hasPromotions,

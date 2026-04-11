@@ -28,7 +28,7 @@
       class="flex flex-col items-center justify-center h-96 text-gray-400"
     >
       <div class="w-16 h-16 rounded-lg bg-purple-600 flex items-center justify-center mb-4">
-        <span class="text-white font-bold text-2xl">WB</span>
+        <span class="text-theme font-bold text-2xl">WB</span>
       </div>
       <p class="text-lg font-medium">
         Wildberries

@@ -31,6 +31,13 @@ export const useRescheduleStore = defineStore('reschedule', () => {
   const loadingSupplies = ref(false);
   const suppliesError = ref<string | null>(null);
 
+  // Status-based cache: stores fetched data per status
+  const statusCache = ref<Record<string, AutobookingReschedule[]>>({});
+  // Track which statuses have been fetched
+  const fetchedStatuses = ref<Set<string>>(new Set());
+  // Current selected status for caching
+  const selectedStatus = ref<string>('ACTIVE');
+
   // Computed
   const activeReschedules = computed(() =>
     reschedules.value.filter((reschedule) => reschedule.status === 'ACTIVE'),
@@ -63,6 +70,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         counts.value = response.counts || {};
         currentPage.value = response.currentPage || 1;
         hasNextPage.value = !!response.nextPage;
+        
+        // Store in status cache for the current status
+        const currentStatus = selectedStatus.value;
+        statusCache.value[currentStatus] = [...reschedules.value];
+        fetchedStatuses.value.add(currentStatus);
       } else {
         console.warn('[RescheduleStore] API returned success: false');
         error.value = 'API returned unsuccessful response';
@@ -71,6 +83,7 @@ export const useRescheduleStore = defineStore('reschedule', () => {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to fetch reschedules';
       error.value = errorMessage;
+      clearStatusCache();
 
       console.error(
         'Ошибка загрузки: Не удалось загрузить перепланирования. Попробуйте обновить страницу.',
@@ -78,6 +91,40 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     } finally {
       loading.value = false;
     }
+  }
+
+  /**
+   * Check if data for a specific status has already been fetched
+   */
+  function isStatusFetched(status: string): boolean {
+    return fetchedStatuses.value.has(status);
+  }
+
+  /**
+   * Fetch data only if not already fetched for the current status
+   * Returns true if fetch was performed, false if data was already cached
+   */
+  async function fetchDataIfNeeded(): Promise<boolean> {
+    const currentStatus = selectedStatus.value;
+    
+    // If we already have data for this status, don't fetch again
+    if (isStatusFetched(currentStatus) && statusCache.value[currentStatus]?.length > 0) {
+      // Use cached data for this status
+      reschedules.value = statusCache.value[currentStatus];
+      return false;
+    }
+    
+    // Fetch new data
+    await fetchReschedules();
+    return true;
+  }
+
+  /**
+   * Clear the status cache (useful when data might be stale)
+   */
+  function clearStatusCache() {
+    statusCache.value = {};
+    fetchedStatuses.value.clear();
   }
 
   async function createReschedule(data: CreateAutobookingRescheduleRequest) {
@@ -89,6 +136,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     try {
       const response = await reschedulesAPI.createReschedule(data);
       if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
         // Decrease user's autobooking count as 1 credit was consumed
         userStore.decreaseAutobookingCount();
@@ -123,6 +172,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     try {
       const response = await reschedulesAPI.updateReschedule(data);
       if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
 
         // Show success toast
@@ -167,6 +218,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     try {
       const response = await reschedulesAPI.deleteReschedule(id);
       if (response.success) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
         // Increase user's autobooking count as 1 credit was returned
         userStore.increaseAutobookingCount();
@@ -215,6 +268,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         status: 'ARCHIVED',
       });
       if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
 
         // Show success toast
@@ -259,6 +314,8 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         status: 'ACTIVE',
       });
       if (response) {
+        // Clear cache since data has changed
+        clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
 
         // Show success toast
@@ -331,6 +388,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     loading: readonly(loading),
     error: readonly(error),
     selectedReschedule: readonly(selectedReschedule),
+    selectedStatus,
+    
+    // Status cache
+    statusCache,
+    fetchedStatuses,
 
     // Computed
     activeReschedules,
@@ -340,6 +402,9 @@ export const useRescheduleStore = defineStore('reschedule', () => {
 
     // Actions
     fetchReschedules,
+    fetchDataIfNeeded,
+    isStatusFetched,
+    clearStatusCache,
     createReschedule,
     updateReschedule,
     deleteReschedule,

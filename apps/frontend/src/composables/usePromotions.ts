@@ -35,9 +35,7 @@
 import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
 import { usePromotionsStore } from '../stores/promotions';
 import { useUserStore } from '../stores/user';
-import type { PromotionItem, PromotionDetail } from '../types';
-
-export type PromotionFilter = 'AVAILABLE' | 'PARTICIPATING' | 'SKIPPING';
+import type { PromotionItem, PromotionDetail, PromotionFilter } from '../types';
 
 export interface FilterTab {
   label: string;
@@ -140,24 +138,17 @@ export function usePromotions(
     );
   });
 
-  // Participation counts by filter
+  // Participation counts from API response
   const participationCounts = computed(() => {
-    const counts: Record<PromotionFilter, number> = {
-      AVAILABLE: promotions.value.length,
-      PARTICIPATING: 0,
-      SKIPPING: 0,
-    };
-
-    for (const promotion of promotions.value) {
-      const status = promotion.participation?.status;
-      if (status === 'PARTICIPATING' || status === 'WILL_PARTICIPATE') {
-        counts.PARTICIPATING++;
-      } else if (status === 'SKIPPED') {
-        counts.SKIPPING++;
-      }
+    const counts = promotionsStore.participationCounts;
+    if (!counts) {
+      return { AVAILABLE: 0, PARTICIPATING: 0, SKIPPING: 0 };
     }
-
-    return counts;
+    return {
+      AVAILABLE: counts.available,
+      PARTICIPATING: counts.participating,
+      SKIPPING: counts.skipped,
+    };
   });
 
   /**

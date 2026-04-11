@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <div class="bg-card rounded-lg shadow-card p-4">
       <div class="flex items-center justify-end mb-6">
         <h3 class="text-xl text-center font-semibold flex-1">
           Создание перепланирования
@@ -100,7 +100,7 @@
           <div class="flex items-center gap-4">
             <input
               type="range"
-              class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              class="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer"
               :value="maxCoefficientInput"
               :step="1"
               :min="0"
