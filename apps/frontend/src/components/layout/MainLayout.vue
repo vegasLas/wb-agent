@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-white dark:bg-[#171819] flex flex-col lg:flex-row"
+    class="min-h-screen bg-deep-bg flex flex-col lg:flex-row"
   >
     <!-- Main Content -->
     <main
@@ -9,7 +9,7 @@
       <!-- Content skeleton overlay during view loading/navigation -->
       <div
         v-if="showContentSkeleton"
-        class="absolute inset-0 bg-white dark:bg-[#171819] z-10"
+        class="absolute inset-0 bg-deep-bg z-10"
       >
         <component :is="currentRouteSkeleton" />
       </div>
