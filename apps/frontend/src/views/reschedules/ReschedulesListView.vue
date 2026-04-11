@@ -29,8 +29,8 @@
             :class="[
               'ml-2 px-2 py-0.5 rounded text-xs font-medium',
               listStore.selectedStatus === stat.status
-                ? 'bg-white text-blue-600 dark:text-blue-400'
-                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+                ? 'bg-theme text-blue-600 dark:text-blue-400'
+                : 'bg-elevated text-secondary',
             ]"
           >
             {{ stat.count }}
@@ -159,9 +159,18 @@ const statsData = computed(() => [
 ]);
 
 // Handle status click from StatsCards
-function handleStatusClick(status: RescheduleStatus) {
+async function handleStatusClick(status: RescheduleStatus) {
+  const previousStatus = listStore.selectedStatus;
   listStore.selectedStatus = status;
   listStore.updateFilter('status', [status]);
+  
+  // Update the store's selected status for caching
+  rescheduleStore.selectedStatus = status;
+  
+  // Check if we need to fetch data for this status
+  if (previousStatus !== status) {
+    await rescheduleStore.fetchDataIfNeeded();
+  }
 }
 
 // Navigation functions
@@ -208,6 +217,9 @@ onMounted(async () => {
     if (listStore.selectedStatus) {
       listStore.updateFilter('status', [listStore.selectedStatus]);
     }
+    
+    // Fetch reschedules data only if not already cached for current status
+    await rescheduleStore.fetchDataIfNeeded();
   } catch (err) {
     console.error('ReschedulesListView fetch error:', err);
   } finally {
