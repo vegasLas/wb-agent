@@ -16,7 +16,7 @@
           Пожалуйста, подождите около {{ estimatedWaitTime || 30 }} секунд и
           обновите страницу
         </p>
-        <div class="w-64 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div class="w-64 bg-border rounded-full h-2">
           <div
             class="bg-blue-500 dark:bg-blue-600 h-2 rounded-full animate-pulse"
             style="width: 60%"

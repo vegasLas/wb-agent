@@ -1,6 +1,6 @@
 <template>
   <header
-    class="lg:sticky lg:top-0 lg:h-screen bg-white dark:bg-[#171819] lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700"
+    class="lg:sticky lg:top-0 lg:h-screen bg-card lg:border-b-0 lg:border-r border-deep-border"
   >
     <div
       class="container mx-auto px-2 py-4 lg:mx-0 lg:max-w-none lg:px-4 lg:py-6 lg:h-full"
@@ -73,6 +73,20 @@
           >
             <i class="pi pi-shopping-bag" />
             <span class="hidden lg:inline ml-2">Магазин</span>
+          </Button>
+
+          <!-- Supplier Name Button (when active supplier exists) -->
+          <Button
+            v-if="userStore.activeSupplier?.supplierName"
+            severity="secondary"
+            variant="outlined"
+            class="rounded lg:justify-start w-[100px] lg:w-full"
+            aria-label="Текущий поставщик"
+            @click="$emit('show-accounts')"
+          >
+            <span class="text-sm truncate whitespace-nowrap">
+              {{ userStore.activeSupplier.supplierName }}
+            </span>
           </Button>
 
           <!-- Accounts Button -->

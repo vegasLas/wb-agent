@@ -12,7 +12,7 @@
       <div
         class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
       >
-        <i class="pi pi-mobile text-white" />
+        <i class="pi pi-mobile text-theme" />
       </div>
       <div>
         <div class="font-medium">

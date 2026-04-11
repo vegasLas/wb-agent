@@ -34,7 +34,7 @@
           class="space-y-3"
         >
           <div
-            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+            class="flex items-center justify-between p-3 bg-elevated rounded-lg"
           >
             <div class="flex-1">
               <div class="flex items-center justify-between">

@@ -5,7 +5,7 @@
       <div
         class="w-16 h-16 bg-blue-600 dark:bg-blue-700 rounded-xl flex items-center justify-center shadow-lg"
       >
-        <i class="pi pi-box text-white text-3xl" />
+        <i class="pi pi-box text-theme text-3xl" />
       </div>
     </div>
 

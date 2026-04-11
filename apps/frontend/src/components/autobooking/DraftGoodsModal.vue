@@ -27,7 +27,7 @@
             >
             <div
               v-else
-              class="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 dark:text-gray-500"
+              class="h-12 w-12 bg-elevated rounded flex items-center justify-center text-secondary"
             >
               <i class="pi pi-image text-xl" />
             </div>
