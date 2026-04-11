@@ -6,7 +6,7 @@
     :draggable="false"
     header="Создание автобронирования"
     class="autobooking-dialog"
-    :style="{ width: '100%', maxWidth: '600px' }"
+    :style="{ width: '95%', maxWidth: '700px' }"
     @hide="handleClose"
   >
     <div class="max-h-[60vh] overflow-auto p-2">

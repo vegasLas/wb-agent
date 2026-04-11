@@ -1,109 +1,91 @@
 <template>
   <div class="space-y-3">
-    <!-- Status Filter Buttons -->
-    <div class="flex gap-2">
-      <Skeleton
-        v-for="i in 4"
-        :key="i"
-        height="2.5rem"
-        class="flex-1"
-      />
+    <!-- Tab Switcher Buttons -->
+    <div class="flex gap-1">
+      <Skeleton width="100%" height="2rem" border-radius="0.25rem" />
+      <Skeleton width="100%" height="2rem" border-radius="0.25rem" />
     </div>
 
-    <!-- Search -->
-    <Skeleton height="2.5rem" />
-
-    <!-- Add Button Row -->
-    <div class="flex justify-between items-center">
-      <Skeleton
-        width="8rem"
-        height="1rem"
-      />
-      <Skeleton
-        width="6rem"
-        height="2rem"
-      />
+    <!-- Search Input with Status Selector -->
+    <div class="flex gap-2 items-center">
+      <Skeleton width="100%" height="2.5rem" border-radius="0.25rem" class="flex-1" />
+      <Skeleton width="8rem" height="2.5rem" border-radius="0.25rem" />
     </div>
 
-    <!-- Task Cards -->
+    <!-- Header with title and create button -->
+    <div class="flex items-center justify-between gap-4">
+      <Skeleton width="10rem" height="1.25rem" border-radius="0.25rem" />
+      <Skeleton width="6rem" height="2rem" border-radius="0.25rem" />
+    </div>
+
+    <!-- List Content Cards -->
     <div class="space-y-3">
-      <div
-        v-for="i in 3"
-        :key="i"
-        class="p-4 border rounded-lg bg-white dark:bg-gray-800"
-      >
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex items-center gap-2 flex-1">
-            <Skeleton
-              shape="circle"
-              size="1rem"
-            />
-            <Skeleton
-              width="70%"
-              height="1rem"
-            />
+      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+        <div class="flex flex-col gap-3">
+          <!-- Header row -->
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <Skeleton width="1rem" height="1rem" border-radius="50%" />
+              <Skeleton width="8rem" height="1.25rem" border-radius="0.25rem" />
+            </div>
+            <Skeleton width="5rem" height="1.5rem" border-radius="0.25rem" />
           </div>
-          <div class="flex gap-1 ml-2">
-            <Skeleton
-              width="4rem"
-              height="1.25rem"
-            />
-            <Skeleton
-              width="4rem"
-              height="1.25rem"
-            />
+          <!-- Content rows -->
+          <div class="flex items-center gap-2">
+            <Skeleton width="1rem" height="1rem" border-radius="50%" />
+            <Skeleton width="6rem" height="1.25rem" border-radius="0.25rem" />
+          </div>
+          <div class="flex items-center gap-2">
+            <Skeleton width="1rem" height="1rem" border-radius="50%" />
+            <Skeleton width="10rem" height="1rem" border-radius="0.25rem" />
+          </div>
+          <!-- Action buttons -->
+          <div class="flex justify-end gap-2 mt-2">
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
           </div>
         </div>
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <Skeleton
-              shape="circle"
-              size="0.875rem"
-            />
-            <Skeleton
-              width="5rem"
-              height="0.875rem"
-            />
+      </div>
+
+      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <Skeleton width="1rem" height="1rem" border-radius="50%" />
+              <Skeleton width="7rem" height="1.25rem" border-radius="0.25rem" />
+            </div>
+            <Skeleton width="6rem" height="1.5rem" border-radius="0.25rem" />
           </div>
           <div class="flex items-center gap-2">
-            <Skeleton
-              shape="circle"
-              size="0.875rem"
-            />
-            <Skeleton
-              width="8rem"
-              height="0.875rem"
-            />
+            <Skeleton width="1rem" height="1rem" border-radius="50%" />
+            <Skeleton width="5rem" height="1.25rem" border-radius="0.25rem" />
           </div>
-          <div class="flex items-center gap-2">
-            <Skeleton
-              shape="circle"
-              size="0.875rem"
-            />
-            <Skeleton
-              width="60%"
-              height="0.5rem"
-              class="flex-1"
-            />
-            <Skeleton
-              width="2rem"
-              height="0.75rem"
-            />
+          <div class="flex justify-end gap-2 mt-2">
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
           </div>
         </div>
-        <div class="flex justify-end gap-2 mt-4">
-          <Skeleton
-            width="2.5rem"
-            height="2rem"
-          />
-          <Skeleton
-            width="6rem"
-            height="2rem"
-          />
-          <Skeleton
-            width="2.5rem"
-            height="2rem"
-          />
+      </div>
+
+      <div class="p-4 bg-white dark:bg-[rgb(31,31,32)]">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <Skeleton width="1rem" height="1rem" border-radius="50%" />
+              <Skeleton width="9rem" height="1.25rem" border-radius="0.25rem" />
+            </div>
+            <Skeleton width="5rem" height="1.5rem" border-radius="0.25rem" />
+          </div>
+          <div class="flex items-center gap-2">
+            <Skeleton width="1rem" height="1rem" border-radius="50%" />
+            <Skeleton width="8rem" height="1.25rem" border-radius="0.25rem" />
+          </div>
+          <div class="flex justify-end gap-2 mt-2">
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
+            <Skeleton width="2.5rem" height="2rem" border-radius="0.25rem" />
+          </div>
         </div>
       </div>
     </div>

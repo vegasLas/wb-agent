@@ -17,7 +17,13 @@
     <RouterView />
 
     <!-- Global Components -->
-    <Toast position="top-right" />
+    <Toast
+      position="top-center"
+      :pt="{
+        root: { style: { maxWidth: '380px' } },
+        message: { style: { width: '100%' } },
+      }"
+    />
     <ConfirmDialog />
   </div>
 </template>
@@ -28,6 +34,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { useToast } from 'primevue/usetoast';
 import LoadingLayout from '../components/layout/LoadingLayout.vue';
 import { useSkeleton } from '../composables/useSkeleton';
 import { useTelegram } from '../composables/useTelegram';
@@ -106,10 +113,7 @@ const currentRouteSkeleton = computed(() => {
 provide('currentRouteSkeleton', currentRouteSkeleton);
 
 // Form routes that should not show skeleton during navigation
-const formRouteNames = [
-  'ReschedulesCreate',
-  'ReschedulesUpdate',
-];
+const formRouteNames = ['ReschedulesCreate', 'ReschedulesUpdate'];
 
 // Setup router hooks to handle navigation loading state
 router.beforeEach((to) => {
@@ -123,8 +127,15 @@ router.afterEach(() => {
   onNavigationEnd();
 });
 
+// Initialize toast for global use
+const toast = useToast();
+
 // Wait for router to resolve initial navigation
 onMounted(async () => {
+  // Initialize toast for stores
+  const { initToast } = await import('../utils/toast');
+  initToast(toast);
+
   await router.isReady();
   markRouterReady();
   // View remains in loading state until component calls viewReady()

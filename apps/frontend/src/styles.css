@@ -75,3 +75,9 @@ pre {
 .skeleton-card {
   @apply p-4 bg-white dark:bg-[rgb(31,31,32)];
 }
+
+/* Toast styling - prevent text overflow */
+.p-toast .p-toast-summary,
+.p-toast .p-toast-detail {
+  overflow-wrap: break-word;
+}
