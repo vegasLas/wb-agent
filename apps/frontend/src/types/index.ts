@@ -598,18 +598,20 @@ export type AuthStep =
 // -----------------------------------------------------------------------------
 // Promotions Calendar Types
 // -----------------------------------------------------------------------------
-export interface PromotionsTimelineResponse {
-  data: {
-    promotions: PromotionItem[];
-    participationCounts: ParticipationCounts;
-  };
-}
+export type PromotionFilter = 'AVAILABLE' | 'PARTICIPATING' | 'SKIPPING';
 
 export interface ParticipationCounts {
   available: number;
   participating: number;
   skipped: number;
   all: number;
+}
+
+export interface PromotionsTimelineResponse {
+  data: {
+    promotions: PromotionItem[];
+    participationCounts: ParticipationCounts;
+  };
 }
 
 export interface PromotionItem {
