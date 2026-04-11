@@ -3,49 +3,49 @@
     <!-- Warning/Alert Slot -->
     <slot name="warning" />
 
-    <!-- View Switcher Buttons and Status Selector -->
+    <!-- View Switcher Buttons -->
+    <div class="flex gap-1">
+      <Button
+        :variant="localActiveTab === 'autobooking' ? 'filled' : 'outlined'"
+        severity="primary"
+        size="small"
+        class="flex-1 text-xs py-1 px-2"
+        @click="handleTabChange('autobooking')"
+      >
+        <i class="pi pi-calendar mr-1 text-xs" />
+        <span class="truncate">автобронирования</span>
+      </Button>
+      <Button
+        :variant="localActiveTab === 'triggers' ? 'filled' : 'outlined'"
+        severity="primary"
+        size="small"
+        class="flex-1 text-xs py-1 px-2"
+        @click="handleTabChange('triggers')"
+      >
+        <i class="pi pi-clock mr-1 text-xs" />
+        <span class="truncate">таймслоты</span>
+      </Button>
+    </div>
+
+    <!-- Search Input with Status Selector -->
     <div class="flex gap-2 items-center">
-      <div class="flex gap-1 flex-1 min-w-0">
-        <Button
-          :variant="localActiveTab === 'autobooking' ? 'filled' : 'outlined'"
-          severity="primary"
-          size="small"
-          class="flex-1 text-xs py-1 px-2"
-          @click="handleTabChange('autobooking')"
-        >
-          <i class="pi pi-calendar mr-1 text-xs" />
-          <span class="truncate">автобронирования</span>
-        </Button>
-        <Button
-          :variant="localActiveTab === 'triggers' ? 'filled' : 'outlined'"
-          severity="primary"
-          size="small"
-          class="flex-1 text-xs py-1 px-2"
-          @click="handleTabChange('triggers')"
-        >
-          <i class="pi pi-clock mr-1 text-xs" />
-          <span class="truncate">таймслоты</span>
-        </Button>
-      </div>
+      <InputText
+        :model-value="searchQuery"
+        type="text"
+        :placeholder="searchPlaceholder"
+        class="flex-1 min-w-0"
+        @update:model-value="$emit('update:searchQuery', $event)"
+      />
       <Select
         :model-value="selectedStatus as string"
         :options="statusOptions"
         option-label="label"
         option-value="value"
         size="small"
-        class="w-28 shrink-0"
+        class="w-32 shrink-0"
         @update:model-value="$emit('update:selectedStatus', $event)"
       />
     </div>
-
-    <!-- Search Input -->
-    <InputText
-      :model-value="searchQuery"
-      type="text"
-      :placeholder="searchPlaceholder"
-      class="w-full"
-      @update:model-value="$emit('update:searchQuery', $event)"
-    />
 
     <!-- Header with title and create button -->
     <div class="flex items-center justify-between gap-4">
