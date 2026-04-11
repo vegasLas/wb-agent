@@ -123,6 +123,15 @@ export const PrimevalPreset = definePreset(Aura, {
       900: colors.purple[900],
       950: colors.purple[950],
     },
+    // Custom colors for theme support
+    color: {
+      bg: '#0A0A0F',
+      card: '#15151C',
+      elevated: '#1E1E28',
+      border: '#2A2A35',
+      text: '#FFFFFF',
+      secondary: '#6B7280',
+    },
     // Semantic colors
     colorScheme: {
       light: {
@@ -348,24 +357,24 @@ export const PrimevalPreset = definePreset(Aura, {
         y: '0.875rem',
       },
     },
-    // Select styling
+    // Select styling - uses CSS variables for theme support
     select: {
-      background: '#15151C',
-      borderColor: '#2A2A35',
-      color: '#FFFFFF',
+      background: '{color.card}',
+      borderColor: '{color.border}',
+      color: '{color.text}',
       borderRadius: '14px',
       overlay: {
-        background: '#15151C',
-        borderColor: '#2A2A35',
+        background: '{color.card}',
+        borderColor: '{color.border}',
         borderRadius: '14px',
-        shadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+        shadow: 'none',
       },
       option: {
-        focusBackground: '#1E1E28',
+        focusBackground: '{color.elevated}',
         selectedBackground: 'rgba(106, 57, 244, 0.2)',
         selectedFocusBackground: 'rgba(106, 57, 244, 0.3)',
-        color: '#FFFFFF',
-        focusColor: '#FFFFFF',
+        color: '{color.text}',
+        focusColor: '{color.text}',
         selectedColor: '#6A39F4',
         selectedFocusColor: '#8B69F6',
         padding: '0.75rem 1rem',
@@ -373,7 +382,7 @@ export const PrimevalPreset = definePreset(Aura, {
       },
       optionGroup: {
         background: 'transparent',
-        color: '#6B7280',
+        color: '{color.secondary}',
         fontWeight: 600,
         padding: '0.75rem 1rem',
       },
@@ -405,6 +414,80 @@ export const PrimevalPreset = definePreset(Aura, {
     toast: {
       borderRadius: '16px',
       shadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
+    },
+    // Menu styling - popup menus
+    menu: {
+      background: '#15151C',
+      borderColor: '#2A2A35',
+      color: '#FFFFFF',
+      borderRadius: '14px',
+      shadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+      item: {
+        focusBackground: '#1E1E28',
+        focusColor: '#FFFFFF',
+        activeBackground: 'rgba(106, 57, 244, 0.15)',
+        activeColor: '#6A39F4',
+        icon: {
+          color: '#6B7280',
+          focusColor: '#FFFFFF',
+          activeColor: '#6A39F4',
+        },
+      },
+    },
+    // Checkbox styling
+    checkbox: {
+      borderRadius: '6px',
+      width: '20px',
+      height: '20px',
+      borderColor: '#D1D5DB',
+      checked: {
+        background: '#6A39F4',
+        borderColor: '#6A39F4',
+        hoverBackground: '#8B69F6',
+        hoverBorderColor: '#8B69F6',
+      },
+    },
+    // MultiSelect styling
+    multiselect: {
+      background: '#15151C',
+      borderColor: '#2A2A35',
+      color: '#FFFFFF',
+      borderRadius: '14px',
+      chip: {
+        background: 'rgba(106, 57, 244, 0.15)',
+        color: '#6A39F4',
+        borderRadius: '8px',
+      },
+      overlay: {
+        background: '#15151C',
+        borderColor: '#2A2A35',
+        borderRadius: '14px',
+        shadow: 'none',
+      },
+      option: {
+        focusBackground: '#1E1E28',
+        selectedBackground: 'rgba(106, 57, 244, 0.2)',
+        selectedFocusBackground: 'rgba(106, 57, 244, 0.3)',
+        color: '#FFFFFF',
+        focusColor: '#FFFFFF',
+        selectedColor: '#6A39F4',
+        selectedFocusColor: '#8B69F6',
+        padding: '0.75rem 1rem',
+        borderRadius: '10px',
+      },
+      optionGroup: {
+        background: 'transparent',
+        color: '#6B7280',
+        fontWeight: 600,
+      },
+      checkbox: {
+        borderColor: '#2A2A35',
+        background: '#0A0A0F',
+        checked: {
+          background: '#6A39F4',
+          borderColor: '#6A39F4',
+        },
+      },
     },
   },
 });
