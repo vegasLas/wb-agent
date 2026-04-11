@@ -4,8 +4,6 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { vMaska } from 'maska/vue';
 import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
-import { definePreset } from '@primeuix/themes';
 import ConfirmationService from 'primevue/confirmationservice';
 import DialogService from 'primevue/dialogservice';
 import ToastService from 'primevue/toastservice';
@@ -13,15 +11,7 @@ import Tooltip from 'primevue/tooltip';
 
 import App from './app/App.vue';
 import router from './router';
-
-// Custom preset with lighter Card background for dark mode
-const MyPreset = definePreset(Aura, {
-  components: {
-    card: {
-      // Custom card styling via CSS instead of preset
-    },
-  },
-});
+import { PrimevalPreset } from './theme/primeval-theme';
 
 const app = createApp(App);
 
@@ -29,10 +19,10 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
-// PrimeVue Configuration
+// PrimeVue Configuration with Primeval Theme
 app.use(PrimeVue, {
   theme: {
-    preset: MyPreset,
+    preset: PrimevalPreset,
     options: {
       prefix: 'p',
       darkModeSelector: '.dark',
