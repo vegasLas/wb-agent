@@ -61,11 +61,21 @@ export class BotCommandsService {
           },
         });
 
-        // Send credentials to user
+        // Send credentials to user with copy buttons
         await TBOT.sendMessage(
           chatId,
           this.formatCredentialsMessage(login, password, true),
-          { parse_mode: 'HTML' }
+          { 
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: '📋 Копировать логин', copy_text: { text: login } },
+                  { text: '🔑 Копировать пароль', copy_text: { text: password } }
+                ]
+              ]
+            }
+          }
         );
         
         logger.info(`New user created with credentials: ${login}`, { telegramId });
@@ -90,7 +100,17 @@ export class BotCommandsService {
           await TBOT.sendMessage(
             chatId,
             this.formatCredentialsMessage(login, password, false),
-            { parse_mode: 'HTML' }
+            { 
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    { text: '📋 Копировать логин', copy_text: { text: login } },
+                    { text: '🔑 Копировать пароль', copy_text: { text: password } }
+                  ]
+                ]
+              }
+            }
           );
           
           logger.info(`Credentials generated for existing user: ${login}`, { telegramId });
@@ -139,7 +159,17 @@ export class BotCommandsService {
       await TBOT.sendMessage(
         msg.chat.id,
         this.formatCredentialsMessage(login, password, false, true),
-        { parse_mode: 'HTML' }
+        { 
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '📋 Копировать логин', copy_text: { text: login } },
+                { text: '🔑 Копировать пароль', copy_text: { text: password } }
+              ]
+            ]
+          }
+        }
       );
       
       logger.info(`Credentials reset for user: ${login}`, { telegramId });
