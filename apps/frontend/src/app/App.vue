@@ -39,6 +39,7 @@ import { useColorMode } from '@vueuse/core';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import LoadingLayout from '../components/layout/LoadingLayout.vue';
 import { useSkeleton } from '../composables/useSkeleton';
 import { useTelegram } from '../composables/useTelegram';
@@ -149,6 +150,10 @@ onMounted(async () => {
   // Initialize toast for stores
   const { initToast } = await import('../utils/toast');
   initToast(toast);
+  
+  // Initialize confirm for stores
+  const { setConfirmInstance } = await import('../utils/confirm');
+  setConfirmInstance(useConfirm());
 
   await router.isReady();
   markRouterReady();

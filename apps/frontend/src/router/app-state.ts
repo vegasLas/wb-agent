@@ -3,6 +3,7 @@ import { useUserStore } from '../stores/user';
 import { useWarehousesStore } from '../stores/warehouses';
 import { useRescheduleStore } from '../stores/reschedules';
 import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
+import { isTelegramMode, isBrowserMode } from '../composables/useTelegramSafe';
 import router from './index';
 
 // Reactive state for components that need it
@@ -20,16 +21,46 @@ export function useAppState() {
     isTgClient: boolean;
     colorScheme: string;
   }> {
-    const vueTg = await import('vue-tg');
-    const { colorScheme } = vueTg.useWebAppTheme();
-    const initData = vueTg.useWebApp().initData;
+    // Check auth mode early
+    const isTg = isTelegramMode();
+    const isBrowser = isBrowserMode();
+    
+    if (isBrowser) {
+      // Browser mode - use system color scheme
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const scheme = prefersDark ? 'dark' : 'light';
+      telegramColorScheme.value = scheme;
+      
+      return {
+        isTgClient: false,
+        colorScheme: scheme,
+      };
+    }
+    
+    // Telegram mode - use vue-tg
+    try {
+      const vueTg = await import('vue-tg');
+      const { colorScheme } = vueTg.useWebAppTheme();
+      const initData = vueTg.useWebApp().initData;
 
-    telegramColorScheme.value = colorScheme.value;
+      telegramColorScheme.value = colorScheme.value;
 
-    return {
-      isTgClient: Boolean(initData),
-      colorScheme: colorScheme.value,
-    };
+      return {
+        isTgClient: Boolean(initData),
+        colorScheme: colorScheme.value,
+      };
+    } catch (error) {
+      console.error('[AppState] Failed to initialize Telegram:', error);
+      // Fallback to browser mode
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const scheme = prefersDark ? 'dark' : 'light';
+      telegramColorScheme.value = scheme;
+      
+      return {
+        isTgClient: false,
+        colorScheme: scheme,
+      };
+    }
   }
 
   // Initialize user data
