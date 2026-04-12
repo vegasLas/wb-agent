@@ -2,7 +2,9 @@
   <div
     id="app"
     class="min-h-screen bg-deep-bg text-theme"
-    :class="{ 'phone-device': isPhone }"
+    :class="{
+      'telegram-phone': isPhone && hasInitData,
+    }"
   >
     <!--
       Route-based Skeleton Loading
@@ -53,7 +55,11 @@ import {
   SkeletonPromotions,
   SkeletonTasks,
 } from '../components/skeleton';
-import { getTelegramColorScheme, isTelegramWebApp } from '../utils/telegramWebApp';
+import {
+  getTelegramColorScheme,
+  isTelegramWebApp,
+  getInitData,
+} from '../utils/telegramWebApp';
 
 // Initialize color mode with proper configuration for class-based dark mode
 const colorMode = useColorMode({
@@ -144,6 +150,9 @@ router.afterEach(() => {
 // Phone device detection
 const isPhone = ref(false);
 
+// Telegram initData detection (computed from utils)
+const hasInitData = computed(() => !!getInitData());
+
 // Initialize toast for global use
 const toast = useToast();
 
@@ -162,7 +171,7 @@ onMounted(async () => {
   // Initialize toast for stores
   const { initToast } = await import('../utils/toast');
   initToast(toast);
-  
+
   // Initialize confirm for stores
   const { setConfirmInstance } = await import('../utils/confirm');
   setConfirmInstance(confirm);
@@ -183,7 +192,7 @@ body {
   flex-direction: column;
 }
 
-#app.phone-device {
+#app.telegram-phone {
   padding-top: 100px;
 }
 </style>
