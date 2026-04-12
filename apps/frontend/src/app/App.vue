@@ -59,7 +59,7 @@ import {
   getTelegramColorScheme,
   isTelegramWebApp,
   getInitData,
-} from '../utils/telegramWebApp';
+} from '../utils/telegram';
 
 // Initialize color mode with proper configuration for class-based dark mode
 const colorMode = useColorMode({
@@ -169,11 +169,11 @@ onMounted(async () => {
   // Request fullscreen on phones
 
   // Initialize toast for stores
-  const { initToast } = await import('../utils/toast');
+  const { initToast } = await import('../utils/ui');
   initToast(toast);
 
   // Initialize confirm for stores
-  const { setConfirmInstance } = await import('../utils/confirm');
+  const { setConfirmInstance } = await import('../utils/ui');
   setConfirmInstance(confirm);
 
   await router.isReady();

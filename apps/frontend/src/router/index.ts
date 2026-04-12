@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
-import { isTelegramWebApp, getInitData } from '../utils/telegramWebApp';
+import { isTelegramWebApp, getInitData } from '../utils/telegram';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
 import {
