@@ -213,16 +213,6 @@
       </Button>
     </div>
 
-    <!-- Telegram Buttons -->
-    <MainButton
-      v-if="isFormValid"
-      :disabled="triggerStore.isCreating"
-      :progress="triggerStore.isCreating"
-      text="Создать"
-      @click="submitForm"
-    />
-    <BackButton @click="goBack" />
-
     <!-- Hints Modal -->
     <TriggerHints
       :show="showHintsModal"
@@ -235,7 +225,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import DatePicker from 'primevue/datepicker';
-import { BackButton, MainButton } from 'vue-tg';
+
 import { useTriggerFormStore } from '../../stores/triggerForm';
 import { useTriggerStore } from '../../stores/triggers';
 import { TRIGGER_INTERVALS } from '../../constants';

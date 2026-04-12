@@ -22,7 +22,7 @@ export function createApp(): Application {
       origin: env.FRONTEND_URL,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'x-init-data'],
     }),
   );
 

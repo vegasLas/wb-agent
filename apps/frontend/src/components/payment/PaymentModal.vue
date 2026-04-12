@@ -99,7 +99,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import Tag from 'primevue/tag';
-import { useMiniApp } from 'vue-tg';
+import { useMiniApp } from '../../composables/useTelegramVue';
 
 const props = defineProps<{
   modelValue: boolean;
