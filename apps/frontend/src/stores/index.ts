@@ -1,16 +1,27 @@
-export * from './view';
-export * from './user';
-export * from './browserAuth';
-export * from './unifiedAuth';
-export * from './accounts';
+// Main barrel export for all stores
+// Organized by domain for better maintainability
+
+// UI Stores (view, modal)
+export * from './ui';
+
+// Auth & User
 export * from './auth';
+export * from './user';
+
+// Core Data
+export * from './accounts';
 export * from './warehouses';
-export * from './autobookingList';
-export * from './triggers';
+export * from './suppliers';
+
+// Feature Stores
+export * from './drafts';
 export * from './coefficients';
-export * from './accountSupplierModal';
-export * from './reschedules';
-export * from './reschedules/list';
-export * from './reschedules/createForm';
-export * from './reschedules/updateForm';
+export * from './payments';
+export * from './reports';
 export * from './promotions';
+
+// Complex Features
+export * from './triggers';
+export * from './autobooking';
+export * from './reschedules';
+export * from './supplies';
