@@ -224,6 +224,7 @@ const router = createRouter({
 // Global app state
 let isAppInitialized = false;
 let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
+let isBrowserAuthInitialized = false;
 
 /**
  * Check if current auth mode is browser
@@ -293,9 +294,15 @@ router.beforeEach(async (to, from, next) => {
     const { useBrowserAuthStore } = await import('../stores/browserAuth');
     const browserAuth = useBrowserAuthStore();
     
-    // Always try to init auth first (this will set up the token and fetch user if token exists)
-    // Don't rely on isAuthenticated check before initAuth - user might be null even with valid token
-    await browserAuth.initAuth();
+    // Only init auth once per session - skip if already initialized and we have a valid auth
+    // This prevents repeated API calls when switching between screens
+    if (!isBrowserAuthInitialized || !browserAuth.isAuthenticated) {
+      console.log('[Router] Initializing browser auth...');
+      await browserAuth.initAuth();
+      isBrowserAuthInitialized = true;
+    } else {
+      console.log('[Router] Browser auth already initialized, skipping re-fetch');
+    }
     
     // After initAuth, check if authenticated
     if (!browserAuth.isAuthenticated) {
@@ -381,6 +388,7 @@ function errorToRouteName(error: string): string {
 export function resetAppState() {
   isAppInitialized = false;
   initError = null;
+  isBrowserAuthInitialized = false;
 }
 
 // Check if app is initialized

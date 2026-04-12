@@ -33,39 +33,14 @@ export const useUnifiedAuthStore = defineStore('unifiedAuth', () => {
   });
 
   /**
-   * Get current user
-   * Works for both Telegram and Browser modes
-   */
-  const currentUser = computed(() => {
-    if (isTelegramMode.value) {
-      const user = telegramStore.user;
-      return {
-        id: user.id,
-        name: user.name,
-        login: user.username || '',
-        authType: 'telegram' as const,
-      };
-    } else {
-      const user = browserStore.user;
-      return user ? {
-        id: user.id,
-        name: user.name,
-        login: user.login,
-        authType: 'browser' as const,
-      } : null;
-    }
-  });
-
-  /**
    * Check if subscription is active
    */
   const isSubscriptionActive = computed(() => {
     if (isTelegramMode.value) {
       return telegramStore.subscriptionActive;
     }
-    // For browser mode, this is checked server-side
-    // We assume authenticated browser users have valid subscriptions
-    return browserStore.isAuthenticated;
+    // For browser mode, use userStore subscription data
+    return telegramStore.subscriptionActive;
   });
 
   /**
@@ -126,7 +101,6 @@ export const useUnifiedAuthStore = defineStore('unifiedAuth', () => {
     isTelegramMode,
     isBrowserMode,
     isAuthenticated,
-    currentUser,
     isSubscriptionActive,
     
     // Actions
