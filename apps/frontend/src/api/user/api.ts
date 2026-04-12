@@ -1,18 +1,12 @@
-import apiClient from './client';
-import type { User } from '../types';
-
-export type UserResponse = User;
-
-export interface UpdateUserResponse {
-  success: boolean;
-}
+import apiClient from '../client';
+import type { UserResponse, UpdateUserResponse } from './types';
 
 export const userAPI = {
   /**
    * GET /api/v1/user
    * Get current user data
    */
-  async fetchUser(): Promise<User> {
+  async fetchUser(): Promise<UserResponse> {
     const response = await apiClient.get<UserResponse>('/user');
     return response.data;
   },

@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { Report, ReportApiPayload, ReportRequestParams } from '../types';
+import apiClient from '../client';
+import type { Report, ReportApiPayload, ReportRequestParams } from './types';
 
 /**
  * Reports API

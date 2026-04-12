@@ -1,22 +1,53 @@
-import apiClient from './client';
-import type { SupplierInfo } from '../types';
-import { supplierApiKeysAPI } from './supplier-api-keys';
-import type { ApiKeyStatus } from './supplier-api-keys';
+import apiClient from '../client';
+import type {
+  SupplierInfo,
+  WarehouseBalance,
+  ApiKeyStatus,
+  CreateApiKeyResponse,
+} from './types';
 
-export interface GoodBalance {
-  goodName: string;
-  brand: string;
-  subject: string;
-  supplierArticle: string;
-  quantity: number;
-}
+/**
+ * Suppliers API
+ * Merged from supplier.ts and supplier-api-keys.ts
+ */
 
-export interface WarehouseBalance {
-  warehouseId: number;
-  goods: GoodBalance[];
-}
+// Private helper for API key operations
+const supplierApiKeysAPI = {
+  /**
+   * GET /api/v1/supplier-api-keys
+   * Get user's API key info
+   */
+  async getApiKeyStatus(): Promise<ApiKeyStatus> {
+    const response = await apiClient.get<ApiKeyStatus>('/supplier-api-keys');
+    return response.data;
+  },
 
-export const supplierAPI = {
+  /**
+   * POST /api/v1/supplier-api-keys
+   * Create or update API key
+   */
+  async createOrUpdateApiKey(apiKey: string): Promise<CreateApiKeyResponse> {
+    const response = await apiClient.post<CreateApiKeyResponse>(
+      '/supplier-api-keys',
+      { apiKey },
+    );
+    return response.data;
+  },
+
+  /**
+   * DELETE /api/v1/supplier-api-keys
+   * Delete API key
+   */
+  async deleteApiKey(): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.delete<{
+      success: boolean;
+      message: string;
+    }>('/supplier-api-keys');
+    return response.data;
+  },
+};
+
+export const suppliersAPI = {
   /**
    * GET /api/v1/suppliers/info
    * Get supplier info for the selected account

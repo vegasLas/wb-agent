@@ -1,5 +1,25 @@
-import apiClient from './client';
+export interface Supply {
+  supplyId: number;
+  supplyDate: string;
+  warehouseId: number;
+  warehouseName: string;
+  boxTypeName: string;
+  statusId: number;
+  statusName: string;
+}
 
+export interface SuppliesResponse {
+  success: boolean;
+  data: Supply[];
+  totalCount: number;
+}
+
+export interface ListSuppliesRequest {
+  accountId: string;
+  supplierId: string;
+}
+
+// From supplyDetails.ts (merged)
 export interface SupplyDetails {
   id: number;
   supplyId: number;
@@ -30,21 +50,3 @@ export interface SupplyDetailsResponse {
   };
   error?: string;
 }
-
-export const supplyDetailsAPI = {
-  /**
-   * GET /api/v1/supplies/supply-details
-   * Get details for a specific supply
-   */
-  async fetchSupplyDetails(
-    supplyId: string | number,
-  ): Promise<SupplyDetailsResponse> {
-    const response = await apiClient.get<SupplyDetailsResponse>(
-      '/supplies/supply-details',
-      {
-        params: { supplyId },
-      },
-    );
-    return response.data;
-  },
-};

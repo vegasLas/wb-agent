@@ -1,15 +1,11 @@
-import apiClient from './client';
-import type { Draft, DraftGood } from '../types';
-
-export interface DraftsResponse {
-  success: boolean;
-  data: Draft[];
-}
-
-export interface DraftGoodsResponse {
-  success: boolean;
-  data: DraftGood[];
-}
+import apiClient from '../client';
+import type {
+  Draft,
+  DraftGood,
+  DraftsResponse,
+  DraftGoodsResponse,
+  FetchDraftGoodsOptions,
+} from './types';
 
 export const draftsAPI = {
   /**
@@ -35,13 +31,7 @@ export const draftsAPI = {
     draftID: string,
     accountId?: string,
     supplierId?: string,
-    options?: {
-      search?: string;
-      brands?: string[];
-      subjects?: string[];
-      limit?: number;
-      offset?: number;
-    },
+    options?: FetchDraftGoodsOptions,
   ): Promise<DraftGood[]> {
     const response = await apiClient.post<DraftGoodsResponse>(
       '/suppliers/goods/draft',
