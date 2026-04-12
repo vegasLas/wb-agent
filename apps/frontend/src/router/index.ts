@@ -15,6 +15,17 @@ import TasksView from '../views/TasksView.vue';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
+  // Public Routes (no layout)
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/LoginView.vue'),
+    meta: {
+      title: 'Вход',
+      public: true,
+    },
+  },
+
   // Error Routes (public, no layout)
   {
     path: '/error/session-expired',
@@ -213,12 +224,27 @@ const router = createRouter({
 let isAppInitialized = false;
 let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
 
+/**
+ * Check if current auth mode is browser
+ */
+function isBrowserMode(): boolean {
+  return typeof window !== 'undefined' && window.__AUTH_MODE__ === 'browser';
+}
+
+/**
+ * Check if current auth mode is Telegram
+ */
+function isTelegramMode(): boolean {
+  return typeof window !== 'undefined' && window.__AUTH_MODE__ === 'telegram';
+}
+
 // Navigation guard for app initialization
 router.beforeEach(async (to, from, next) => {
   console.log('[Router] Navigation started:', {
     from: from.name,
     to: to.name,
     path: to.path,
+    authMode: typeof window !== 'undefined' ? window.__AUTH_MODE__ : 'unknown',
   });
 
   // Update page title
@@ -227,7 +253,7 @@ router.beforeEach(async (to, from, next) => {
     document.title = `${title} | WB Agent`;
   }
 
-  // Skip initialization check for error pages and public routes
+  // Skip initialization check for public routes
   if (to.meta.public) {
     console.log('[Router] Public route, skipping init check');
     next();
@@ -241,7 +267,33 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
 
-  // If not initialized yet, initialize the app
+  // Browser mode authentication check
+  if (isBrowserMode()) {
+    const { useBrowserAuthStore } = await import('../stores/browserAuth');
+    const browserAuth = useBrowserAuthStore();
+    
+    // Check if browser user is authenticated
+    if (!browserAuth.isAuthenticated) {
+      // Try to init from stored token
+      const isValid = await browserAuth.initAuth();
+      
+      if (!isValid) {
+        console.log('[Router] Browser auth required, redirecting to login');
+        next({ 
+          name: 'Login', 
+          query: { redirect: to.fullPath },
+          replace: true 
+        });
+        return;
+      }
+    }
+    
+    // Browser user is authenticated, proceed
+    next();
+    return;
+  }
+
+  // Telegram mode - original initialization logic
   if (!isAppInitialized) {
     console.log('[Router] App not initialized, starting initialization...');
     try {

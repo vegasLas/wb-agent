@@ -45,6 +45,28 @@ export const useUserStore = defineStore('user', () => {
     return new Date(user.value.subscriptionExpiresAt) > new Date();
   });
 
+  // Check if user is authenticated (has valid user data)
+  const isAuthenticated = computed(() => {
+    return isFetched.value && !notFound.value && user.value.id !== undefined;
+  });
+
+  // Reset user state (for logout)
+  function reset() {
+    user.value = {
+      name: '',
+      autobookingCount: 0,
+      subscriptionExpiresAt: null,
+      payments: [],
+      agreeTerms: false,
+      supplierApiKey: undefined,
+      selectedAccountId: undefined,
+      accounts: [],
+    };
+    isFetched.value = false;
+    error.value = null;
+    notFound.value = false;
+  }
+
   // Computed property to check if user has autobooking credits
   const hasAutobookingCredits = computed(() => user.value.autobookingCount > 0);
 
@@ -148,8 +170,6 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function logout() {
-    // Note: doAction would need to be imported from a utility
-    // For now, simplified version
     const confirmed = confirm(
       'Ваши автобронирования не будут активны, чтобы увидеть их снова, вам нужно будет авторизоваться в тот же аккаунт WB с которого вы создавали автобронирования. \n Вы уверены, что хотите выйти из всех аккаунтов WB ?',
     );
@@ -194,13 +214,14 @@ export const useUserStore = defineStore('user', () => {
     activeSupplier,
     allSuppliers,
     isFetched,
+    isAuthenticated,
 
     fetchUser,
     decreaseAutobookingCount,
     increaseAutobookingCount,
     getSupplierById,
     getAccountIdBySupplierId,
-
+    reset,
     logout,
     agreeToTerms,
   };
