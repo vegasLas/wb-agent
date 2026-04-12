@@ -3,10 +3,13 @@ import { ApiError } from '@/utils/errors';
 import { parseInitData } from '@/utils/parseInitData';
 import { prisma } from '@/config/database';
 import { logger } from '@/utils/logger';
+import { jwtAuthService } from '@/services/user/jwt-auth.service';
 
 export interface AuthUser {
   id: number;
-  telegramId: string;
+  telegramId: string;  // REQUIRED - always present
+  login?: string;      // May be set for browser users
+  authType: 'telegram' | 'browser';
   subscriptionExpiresAt?: Date | null;
   selectedAccountId?: string | null;
   chatId?: string | null;
@@ -23,8 +26,8 @@ declare module 'express' {
 }
 
 /**
- * Authentication middleware using Telegram Mini App initData
- * Validates x-init-data header and attaches user to request
+ * Authentication middleware supporting both Telegram initData and JWT Bearer tokens
+ * Validates authentication and attaches user to request
  */
 export const authenticate = async (
   req: Request,
@@ -37,7 +40,9 @@ export const authenticate = async (
     if (
       path.includes('_nuxt_icon') ||
       path.includes('payments/check') ||
-      path.includes('webhooks/yookassa')
+      path.includes('webhooks/yookassa') ||
+      path.includes('auth/login') ||  // Browser login is public
+      path.includes('health')
     ) {
       return next();
     }
@@ -60,8 +65,11 @@ export const authenticate = async (
             req.user = {
               id: user.id,
               telegramId: initData.user.id.toString(),
+              login: user.login || undefined,
+              authType: 'telegram',
               selectedAccountId: user.selectedAccountId,
               subscriptionExpiresAt: user.subscriptionExpiresAt,
+              chatId: user.chatId,
             };
           }
           return next();
@@ -86,37 +94,92 @@ export const authenticate = async (
       }
     }
 
-    // Normal authentication flow
-    const initData = parseInitData(req);
+    // Try Telegram auth first (initData in x-init-data header)
+    const initDataRaw = req.headers['x-init-data'] as string | undefined;
+    
+    if (initDataRaw) {
+      try {
+        const initData = parseInitData(req);
+        const user = await prisma.user.findUnique({
+          where: { telegramId: BigInt(initData.user.id) },
+        });
 
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { telegramId: BigInt(initData.user.id) },
-    });
+        if (!user) {
+          throw ApiError.unauthorized('Пользователь не найден');
+        }
 
-    if (!user) {
-      throw ApiError.unauthorized('Не авторизован');
+        // Check subscription
+        if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
+          throw ApiError.forbidden(
+            'Требуется активная подписка.',
+            'SUBSCRIPTION_REQUIRED',
+          );
+        }
+
+        req.user = {
+          id: user.id,
+          telegramId: initData.user.id.toString(),
+          login: user.login || undefined,
+          authType: 'telegram',
+          selectedAccountId: user.selectedAccountId,
+          subscriptionExpiresAt: user.subscriptionExpiresAt,
+          chatId: user.chatId,
+        };
+        
+        return next();
+      } catch (error) {
+        if (error instanceof ApiError) {
+          throw error;
+        }
+        logger.warn('Telegram auth failed, trying JWT:', error);
+        // Don't throw here - try JWT auth next
+      }
     }
 
-    // Check subscription for all protected routes
-    if (
-      !user.subscriptionExpiresAt ||
-      new Date(user.subscriptionExpiresAt) <= new Date()
-    ) {
-      throw ApiError.forbidden(
-        'Требуется активная подписка.',
-        'SUBSCRIPTION_REQUIRED',
-      );
+    // Try JWT auth (Authorization: Bearer <token> header)
+    const authHeader = req.headers['authorization'] as string | undefined;
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const payload = jwtAuthService.verifyToken(token);
+        
+        const user = await prisma.user.findUnique({
+          where: { id: payload.userId },
+        });
+        
+        if (!user) {
+          throw ApiError.unauthorized('Пользователь не найден');
+        }
+
+        // Check subscription
+        if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
+          throw ApiError.forbidden(
+            'Требуется активная подписка.',
+            'SUBSCRIPTION_REQUIRED',
+          );
+        }
+
+        req.user = {
+          id: user.id,
+          telegramId: user.telegramId.toString(),
+          login: payload.login,
+          authType: 'browser',
+          selectedAccountId: user.selectedAccountId,
+          subscriptionExpiresAt: user.subscriptionExpiresAt,
+          chatId: user.chatId,
+        };
+        
+        return next();
+      } catch (error) {
+        if (error instanceof ApiError) {
+          throw error;
+        }
+        logger.warn('JWT auth failed:', error);
+        throw ApiError.unauthorized('Недействительный токен авторизации');
+      }
     }
 
-    // Attach user to request
-    req.user = {
-      id: user.id,
-      telegramId: initData.user.id.toString(),
-      selectedAccountId: user.selectedAccountId,
-      subscriptionExpiresAt: user.subscriptionExpiresAt,
-    };
-    next();
+    throw ApiError.unauthorized('Требуется авторизация');
   } catch (error) {
     if (error instanceof ApiError) {
       next(error);
@@ -133,6 +196,6 @@ export const authenticate = async (
       return;
     }
 
-    next(ApiError.unauthorized('Не авторизован'));
+    next(ApiError.unauthorized('Ошибка авторизации'));
   }
 };
