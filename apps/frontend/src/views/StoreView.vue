@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useUserStore } from '../stores/user';
+import { useUserStore } from '@/stores/user';
 import { useViewReady } from '../composables/useSkeleton';
 import Button from 'primevue/button';
 import Card from 'primevue/card';

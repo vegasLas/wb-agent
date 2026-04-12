@@ -1,6 +1,6 @@
 import { computed, ref, type ComputedRef } from 'vue';
-import { useDraftStore, type FetchDraftsOptions } from '../stores/draft';
-import { useUserStore } from '../stores/user';
+import { useDraftStore, type FetchDraftsOptions } from '@/stores/drafts';
+import { useUserStore } from '@/stores/user';
 
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error';
 

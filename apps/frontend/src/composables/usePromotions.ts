@@ -33,8 +33,8 @@
  */
 
 import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
-import { usePromotionsStore } from '../stores/promotions';
-import { useUserStore } from '../stores/user';
+import { usePromotionsStore } from '@/stores/promotions';
+import { useUserStore } from '@/stores/user';
 import type { PromotionItem, PromotionDetail, PromotionFilter } from '../types';
 
 export interface FilterTab {

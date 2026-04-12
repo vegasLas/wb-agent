@@ -291,7 +291,7 @@ router.beforeEach(async (to, from, next) => {
 
   // Browser mode authentication check
   if (isBrowserMode()) {
-    const { useBrowserAuthStore } = await import('../stores/browserAuth');
+    const { useBrowserAuthStore } = await import('@/stores/auth');
     const browserAuth = useBrowserAuthStore();
     
     // Only init auth once per session - skip if already initialized and we have a valid auth

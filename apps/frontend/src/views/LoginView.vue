@@ -110,7 +110,7 @@ import { useRouter, useRoute } from 'vue-router';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
-import { useBrowserAuthStore } from '../stores/browserAuth';
+import { useBrowserAuthStore } from '@/stores/auth';
 
 const router = useRouter();
 const route = useRoute();

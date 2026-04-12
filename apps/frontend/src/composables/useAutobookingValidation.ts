@@ -1,5 +1,5 @@
 import { computed, ref, type Ref } from 'vue';
-import type { FormState } from '../stores/autobookingForm';
+import type { FormState } from '@/stores/autobooking';
 
 interface ValidationResult {
   isValid: boolean;

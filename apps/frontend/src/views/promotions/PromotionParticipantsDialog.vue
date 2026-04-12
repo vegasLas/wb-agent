@@ -445,7 +445,7 @@ import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
 import Checkbox from 'primevue/checkbox';
 import { useLocalStorage } from '@vueuse/core';
-import { usePromotionsStore } from '../../stores/promotions';
+import { usePromotionsStore } from '@/stores/promotions';
 import type { PromotionExcelItem } from '../../types';
 
 const promotionsStore = usePromotionsStore();
