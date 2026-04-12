@@ -1,7 +1,14 @@
 <template>
   <div class="space-y-4">
     <div class="bg-card rounded-lg shadow-card p-4">
-      <div class="flex items-center justify-end mb-6">
+      <!-- Header with Back Button -->
+      <div class="flex items-center gap-3 mb-6">
+        <Button
+          icon="pi pi-arrow-left"
+          variant="text"
+          severity="secondary"
+          @click="goBack"
+        />
         <h3 class="text-xl text-center font-semibold flex-1">
           Редактировать перепланирование
         </h3>
@@ -131,16 +138,22 @@
           </div>
         </div>
       </form>
-    </div>
 
-    <!-- Telegram Main Button -->
-    <MainButton
-      v-if="isFormValid && hasChanges"
-      :disabled="rescheduleStore.loading"
-      :progress="rescheduleStore.loading"
-      text="изменить"
-      @click="handleSubmit"
-    />
+      <!-- Submit Button -->
+      <div class="fixed bottom-0 left-0 right-0 p-4 bg-[var(--color-bg)] border-t border-[var(--color-border)] z-50">
+        <Button
+          :loading="rescheduleStore.loading"
+          :disabled="!isFormValid || !hasChanges || rescheduleStore.loading"
+          class="w-full"
+          label="Обновить"
+          icon="pi pi-check"
+          @click="handleSubmit"
+        />
+      </div>
+      
+      <!-- Spacer for fixed button -->
+      <div class="h-20" />
+    </div>
 
     <!-- Hints Modal -->
     <ReschedulesHints
@@ -148,8 +161,6 @@
       @close="showHintsModal = false"
     />
 
-    <!-- Telegram Back Button -->
-    <BackButton @click="goBack" />
   </div>
 </template>
 
@@ -157,7 +168,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { BackButton, MainButton } from 'vue-tg';
+
 import Button from 'primevue/button';
 import { useRescheduleStore } from '../../stores/reschedules';
 import { useRescheduleUpdateFormStore } from '../../stores/reschedules/updateForm';

@@ -4,7 +4,8 @@ import { reschedulesAPI } from '../../api';
 import { useUserStore } from '../user';
 import { useWarehousesStore } from '../warehouses';
 import { toastHelpers } from '../../utils/toast';
-import { doAction } from '../../utils/doAction';
+import { confirmPromise } from '../../utils/confirm';
+
 import type {
   AutobookingReschedule,
   CreateAutobookingRescheduleRequest,
@@ -199,12 +200,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     const warehouseStore = useWarehousesStore();
 
     // Show confirmation dialog
-    const confirmed = await doAction({
-      title: 'Удаление перепланирования',
+    const confirmed = await confirmPromise({
+      header: 'Удаление перепланирования',
       message: 'Вы уверены, что хотите удалить это перепланирование?',
-      buttonText: 'Удалить',
+      acceptLabel: 'Удалить',
     });
-
     if (!confirmed) {
       return false;
     }
@@ -249,12 +249,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     const warehouseStore = useWarehousesStore();
 
     // Show confirmation dialog
-    const confirmed = await doAction({
-      title: 'Архивирование перепланирования',
+    const confirmed = await confirmPromise({
+      header: 'Архивирование перепланирования',
       message: 'Вы уверены, что хотите архивировать это перепланирование?',
-      buttonText: 'Архивировать',
+      acceptLabel: 'Архивировать',
     });
-
     if (!confirmed) {
       return false;
     }
@@ -295,12 +294,11 @@ export const useRescheduleStore = defineStore('reschedule', () => {
     const warehouseStore = useWarehousesStore();
 
     // Show confirmation dialog
-    const confirmed = await doAction({
-      title: 'Активация перепланирования',
+    const confirmed = await confirmPromise({
+      header: 'Активация перепланирования',
       message: 'Вы уверены, что хотите активировать это перепланирование?',
-      buttonText: 'Активировать',
+      acceptLabel: 'Активировать',
     });
-
     if (!confirmed) {
       return false;
     }
