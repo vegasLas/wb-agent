@@ -233,12 +233,12 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Autobooking } from '../../types';
-import { useAutobookingStore } from '../../stores/autobooking';
-import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
-import { useAutobookingListStore } from '../../stores/autobookingList';
-import { useUserStore } from '../../stores/user';
-import { useWarehousesStore } from '../../stores/warehouses';
-import { useCoefficientsStore } from '../../stores/coefficients';
+import { useAutobookingStore } from '@/stores/autobooking';
+import { useAutobookingUpdateStore } from '@/stores/autobooking';
+import { useAutobookingListStore } from '@/stores/autobooking';
+import { useUserStore } from '@/stores/user';
+import { useWarehousesStore } from '@/stores/warehouses';
+import { useCoefficientsStore } from '@/stores/coefficients';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';

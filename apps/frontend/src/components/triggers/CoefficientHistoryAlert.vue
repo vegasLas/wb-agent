@@ -58,8 +58,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useCoefficientsStore } from '../../stores/coefficients';
-import { useWarehousesStore } from '../../stores/warehouses';
+import { useCoefficientsStore } from '@/stores/coefficients';
+import { useWarehousesStore } from '@/stores/warehouses';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';

@@ -63,8 +63,8 @@ import { ref, computed } from 'vue';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import { useCoefficientsStore } from '../../stores/coefficients';
-import { useWarehousesStore } from '../../stores/warehouses';
+import { useCoefficientsStore } from '@/stores/coefficients';
+import { useWarehousesStore } from '@/stores/warehouses';
 
 interface Props {
   warehouseId?: number | null;

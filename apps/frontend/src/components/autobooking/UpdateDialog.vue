@@ -58,9 +58,9 @@
 import { ref, computed, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
-import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
-import { useWarehousesStore } from '../../stores/warehouses';
-import { useDraftStore } from '../../stores/draft';
+import { useAutobookingUpdateStore } from '@/stores/autobooking';
+import { useWarehousesStore } from '@/stores/warehouses';
+import { useDraftStore } from '@/stores/drafts';
 import { useDraftsFetcher } from '../../composables/useDraftsFetcher';
 import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';

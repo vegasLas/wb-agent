@@ -186,8 +186,8 @@ import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
-import { useRescheduleStore } from '../../stores/reschedules';
-import { useSupplyDetailsStore } from '../../stores/supplyDetails';
+import { useRescheduleStore } from '@/stores/reschedules';
+import { useSupplyDetailsStore } from '@/stores/supplies';
 
 interface Props {
   show: boolean;

@@ -81,7 +81,7 @@ import {
 } from 'chart.js';
 import type { TooltipItem } from 'chart.js';
 import type { ReportItem } from '../../types';
-import { useUserStore } from '../../stores/user';
+import { useUserStore } from '@/stores/user';
 import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
