@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed, readonly } from 'vue';
 import { useUserStore } from './user';
 import { useBrowserAuthStore } from './browserAuth';
-import { closeWebApp } from '../utils/telegramWebApp';
+import { closeWebApp } from '../utils/telegram';
 
 export type AuthMode = 'telegram' | 'browser';
 

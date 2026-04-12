@@ -2,7 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { autobookingAPI } from '../api';
 import { useWarehousesStore } from './warehouses';
-import { toastHelpers } from '../utils/toast';
+import { toastHelpers } from '../utils/ui';
 import { AUTOBOOKING_STATUSES } from '../constants';
 import type { Autobooking, AutobookingReschedule } from '../types';
 

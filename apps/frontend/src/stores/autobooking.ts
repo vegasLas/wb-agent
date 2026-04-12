@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { autobookingAPI } from '../api';
 import { useAutobookingListStore } from './autobookingList';
 import { useWarehousesStore } from './warehouses';
-import { toastHelpers } from '../utils/toast';
+import { toastHelpers } from '../utils/ui';
 import type { Autobooking } from '../types';
 
 export const useAutobookingStore = defineStore('autobooking', () => {
