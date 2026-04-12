@@ -736,10 +736,30 @@ export interface PromotionRecoveryParams {
 }
 
 // -----------------------------------------------------------------------------
+// Auth Types
+// -----------------------------------------------------------------------------
+export type AuthMode = 'telegram' | 'browser';
+
+export interface BrowserUser {
+  id: number;
+  login: string;
+  name: string;
+}
+
+// -----------------------------------------------------------------------------
 // Global Window Extensions
 // -----------------------------------------------------------------------------
 declare global {
   interface Window {
+    /** True if running inside Telegram WebApp (set by early detection script) */
+    __IS_TELEGRAM_WEBAPP__?: boolean;
+    /** Telegram initData string (set by early detection script) */
+    __TELEGRAM_INIT_DATA__?: string;
+    /** True if browser mode is forced via URL params (set by early detection script) */
+    __FORCE_BROWSER_MODE__?: boolean;
+    /** Current auth mode: 'telegram' or 'browser' (set by early detection script) */
+    __AUTH_MODE__?: AuthMode;
+    
     Telegram?: {
       WebApp?: {
         close: () => void;

@@ -4,8 +4,66 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@wb-monorepo/wb-monorepo</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>WB Agent - Автобронирование поставок</title>
+
+    <!--
+      NOTE: We don't load telegram-web-app.js here.
+
+      When running inside Telegram WebApp:
+      - Telegram injects the script automatically
+      - window.Telegram.WebApp becomes available
+
+      When running in browser:
+      - No script is loaded
+      - App works in browser mode automatically
+    -->
+
+    <!-- Early Auth Detection Script -->
+    <script>
+      (function () {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const hashParams = new URLSearchParams(window.location.hash.slice(1));
+
+          // URL flag override
+          const source = urlParams.get('source');
+          const tgParam = urlParams.get('tg');
+          const forceBrowserMode = source === 'browser' || tgParam === 'false';
+
+          // Check for Telegram WebApp context
+          // 1. Check if Telegram object exists (injected by Telegram WebView)
+          // 2. Check for initData in URL (passed by Telegram)
+          const tg = window.Telegram?.WebApp;
+          const hasInitDataInURL =
+            urlParams.has('tgWebAppData') || hashParams.has('tgWebAppData');
+          const hasInitData =
+            Boolean(tg?.initData && tg.initData.length > 0) || hasInitDataInURL;
+
+          // Determine mode
+          const isTelegram = !forceBrowserMode && hasInitData;
+
+          // Set global flags
+          window.__IS_TELEGRAM_WEBAPP__ = isTelegram;
+          window.__TELEGRAM_INIT_DATA__ =
+            tg?.initData || urlParams.get('tgWebAppData') || '';
+          window.__FORCE_BROWSER_MODE__ = forceBrowserMode;
+          window.__AUTH_MODE__ = isTelegram ? 'telegram' : 'browser';
+
+          console.log('[Auth Detection]', {
+            isTelegram,
+            authMode: window.__AUTH_MODE__,
+            hasInitData,
+            hasTgObject: !!tg,
+          });
+        } catch (error) {
+          console.error('[Auth Detection] Error:', error);
+          window.__IS_TELEGRAM_WEBAPP__ = false;
+          window.__TELEGRAM_INIT_DATA__ = '';
+          window.__FORCE_BROWSER_MODE__ = false;
+          window.__AUTH_MODE__ = 'browser';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
