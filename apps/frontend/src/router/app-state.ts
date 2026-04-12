@@ -3,12 +3,28 @@ import { useUserStore } from '../stores/user';
 import { useWarehousesStore } from '../stores/warehouses';
 import { useRescheduleStore } from '../stores/reschedules';
 import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
-import { isTelegramMode, isBrowserMode } from '../composables/useTelegramSafe';
 import router from './index';
+import { isTelegramWebApp, getTelegramColorScheme, getInitData } from '../utils/telegramWebApp';
 
 // Reactive state for components that need it
 const isInitializing = ref(false);
 const telegramColorScheme = ref('light');
+
+/**
+ * Detect if running in Telegram Mini App
+ * Uses the flag set by early detection script in index.html
+ * Falls back to utility function if needed
+ */
+function detectTelegramMode(): boolean {
+  // Primary: Check global flag set in index.html early detection script
+  // This is the most reliable source as it runs before Vue Router
+  if (window.__IS_TELEGRAM_WEBAPP__ === true) {
+    return true;
+  }
+
+  // Fallback: Use utility function to check URL/hash
+  return isTelegramWebApp();
+}
 
 export function useAppState() {
   const userStore = useUserStore();
@@ -16,51 +32,65 @@ export function useAppState() {
   const rescheduleStore = useRescheduleStore();
   const accountModalStore = useAccountSupplierModalStore();
 
-  // Initialize Telegram WebApp
+  // Initialize Telegram mode (just check URL params, no WebApp object needed)
   async function initTelegram(): Promise<{
     isTgClient: boolean;
     colorScheme: string;
   }> {
-    // Check auth mode early
-    const isTg = isTelegramMode();
-    const isBrowser = isBrowserMode();
-    
-    if (isBrowser) {
+    // Detect Telegram mode based on URL params
+    const isTg = detectTelegramMode();
+    const forceBrowser = window.__FORCE_BROWSER_MODE__ === true;
+
+    if (forceBrowser || !isTg) {
       // Browser mode - use system color scheme
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)',
+      ).matches;
       const scheme = prefersDark ? 'dark' : 'light';
       telegramColorScheme.value = scheme;
-      
+
+      console.log('[AppState] Browser mode detected, colorScheme:', scheme);
+
       return {
         isTgClient: false,
         colorScheme: scheme,
       };
     }
-    
-    // Telegram mode - use vue-tg
-    try {
-      const vueTg = await import('vue-tg');
-      const { colorScheme } = vueTg.useWebAppTheme();
-      const initData = vueTg.useWebApp().initData;
 
-      telegramColorScheme.value = colorScheme.value;
+    // Telegram mode - we have initData from URL or localStorage
+    const initData = getInitData();
 
-      return {
-        isTgClient: Boolean(initData),
-        colorScheme: colorScheme.value,
-      };
-    } catch (error) {
-      console.error('[AppState] Failed to initialize Telegram:', error);
-      // Fallback to browser mode
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const scheme = prefersDark ? 'dark' : 'light';
-      telegramColorScheme.value = scheme;
+    if (initData) {
+      console.log('[AppState] Telegram mode with initData');
       
+      // Use utility to get color scheme from Telegram theme params
+      const scheme = getTelegramColorScheme();
+      telegramColorScheme.value = scheme;
+
       return {
-        isTgClient: false,
+        isTgClient: true,
         colorScheme: scheme,
       };
     }
+
+    // No initData available - fallback to browser mode
+    console.warn(
+      '[AppState] Telegram mode detected but no initData, falling back to browser',
+    );
+    const prefersDark = window.matchMedia(
+      '(prefers-color-scheme: dark)',
+    ).matches;
+    const scheme = prefersDark ? 'dark' : 'light';
+    telegramColorScheme.value = scheme;
+
+    // Update global flag since we're falling back
+    window.__AUTH_MODE__ = 'browser';
+    window.__IS_TELEGRAM_WEBAPP__ = false;
+
+    return {
+      isTgClient: false,
+      colorScheme: scheme,
+    };
   }
 
   // Initialize user data

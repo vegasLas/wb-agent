@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
+import { isTelegramWebApp, getInitData } from '../utils/telegramWebApp';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
 import {
@@ -226,16 +227,36 @@ let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
 
 /**
  * Check if current auth mode is browser
+ * Re-verifies using utility function to handle cases where
+ * early detection script might have missed Telegram params on sub-route reload
  */
 function isBrowserMode(): boolean {
-  return typeof window !== 'undefined' && window.__AUTH_MODE__ === 'browser';
-}
-
-/**
- * Check if current auth mode is Telegram
- */
-function isTelegramMode(): boolean {
-  return typeof window !== 'undefined' && window.__AUTH_MODE__ === 'telegram';
+  if (typeof window === 'undefined') return false;
+  
+  // If flag says Telegram, trust it
+  if (window.__AUTH_MODE__ === 'telegram' || window.__IS_TELEGRAM_WEBAPP__ === true) {
+    return false;
+  }
+  
+  // If flag says browser, double-check with utility (handles sub-route reload edge case)
+  if (isTelegramWebApp()) {
+    // We ARE in Telegram mode but flag wasn't set correctly
+    // Update flags for consistency
+    window.__AUTH_MODE__ = 'telegram';
+    window.__IS_TELEGRAM_WEBAPP__ = true;
+    console.log('[Router] Corrected auth mode to Telegram after re-check');
+    return false;
+  }
+  
+  // Also check if we have initData in localStorage (for sub-route reloads)
+  if (getInitData()) {
+    window.__AUTH_MODE__ = 'telegram';
+    window.__IS_TELEGRAM_WEBAPP__ = true;
+    console.log('[Router] Corrected auth mode to Telegram from localStorage initData');
+    return false;
+  }
+  
+  return true;
 }
 
 // Navigation guard for app initialization
@@ -272,23 +293,23 @@ router.beforeEach(async (to, from, next) => {
     const { useBrowserAuthStore } = await import('../stores/browserAuth');
     const browserAuth = useBrowserAuthStore();
     
-    // Check if browser user is authenticated
+    // Always try to init auth first (this will set up the token and fetch user if token exists)
+    // Don't rely on isAuthenticated check before initAuth - user might be null even with valid token
+    await browserAuth.initAuth();
+    
+    // After initAuth, check if authenticated
     if (!browserAuth.isAuthenticated) {
-      // Try to init from stored token
-      const isValid = await browserAuth.initAuth();
-      
-      if (!isValid) {
-        console.log('[Router] Browser auth required, redirecting to login');
-        next({ 
-          name: 'Login', 
-          query: { redirect: to.fullPath },
-          replace: true 
-        });
-        return;
-      }
+      console.log('[Router] Browser auth required, redirecting to login');
+      next({ 
+        name: 'Login', 
+        query: { redirect: to.fullPath },
+        replace: true 
+      });
+      return;
     }
     
     // Browser user is authenticated, proceed
+    console.log('[Router] Browser auth validated, proceeding to:', to.name);
     next();
     return;
   }
