@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useViewReady } from '../composables/useSkeleton';
+import { useViewReady } from '../composables/ui';
 import UserAlerts from '../components/global/UserAlerts.vue';
 
 

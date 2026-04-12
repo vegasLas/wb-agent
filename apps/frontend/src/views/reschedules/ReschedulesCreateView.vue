@@ -93,7 +93,7 @@ import Message from 'primevue/message';
 import { useRescheduleStore } from '@/stores/reschedules';
 import { useRescheduleCreateFormStore } from '@/stores/reschedules';
 import { useSupplyDetailsStore } from '@/stores/supplies';
-import { useViewReady } from '../../composables/useSkeleton';
+import { useViewReady } from '../../composables/ui';
 import ReschedulesFormFields from '../../components/reschedules/FormFields.vue';
 import ReschedulesSupplyDetailsModal from '../../components/reschedules/SupplyDetailsModal.vue';
 import ReschedulesHints from '../../components/reschedules/Hints.vue';

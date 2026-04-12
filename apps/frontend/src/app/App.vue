@@ -43,7 +43,7 @@ import ConfirmDialog from 'primevue/confirmdialog';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import LoadingLayout from '../components/layout/LoadingLayout.vue';
-import { useSkeleton } from '../composables/useSkeleton';
+import { useSkeleton } from '../composables/ui';
 import {
   SkeletonAccount,
   SkeletonAutobookings,

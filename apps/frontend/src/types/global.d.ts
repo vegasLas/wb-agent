@@ -10,6 +10,8 @@ declare global {
     __FORCE_BROWSER_MODE__?: boolean;
     /** Current auth mode: 'telegram' or 'browser' */
     __AUTH_MODE__?: 'telegram' | 'browser';
+    /** Telegram init data from URL (set by index.html) */
+    __TELEGRAM_INIT_DATA__?: string;
     
     /** Telegram WebApp object */
     Telegram?: {

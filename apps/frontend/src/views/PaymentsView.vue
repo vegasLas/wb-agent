@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useViewReady } from '../composables/useSkeleton';
+import { useViewReady } from '../composables/ui';
 import Card from 'primevue/card';
 import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
 import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
