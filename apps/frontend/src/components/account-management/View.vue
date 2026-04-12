@@ -86,8 +86,8 @@ import AuthCard from './AuthCard.vue';
 import CurrentSelectionSummary from './CurrentSelectionSummary.vue';
 import AccountSelection from './AccountSelection.vue';
 import SupplierSelection from './SupplierSelection.vue';
-import { useUserStore } from '../../stores/user';
-import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
+import { useUserStore } from '@/stores/user';
+import { useAccountSupplierModalStore } from '@/stores/ui';
 
 // Props
 interface Props {

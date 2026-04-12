@@ -88,7 +88,7 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
-import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
+import { useAutobookingUpdateStore } from '@/stores/autobooking';
 
 interface Props {
   dateType?: string;

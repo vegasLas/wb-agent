@@ -262,8 +262,8 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { useTriggerStore } from '../../stores/triggers';
-import { useWarehousesStore } from '../../stores/warehouses';
+import { useTriggerStore } from '@/stores/triggers';
+import { useWarehousesStore } from '@/stores/warehouses';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Card from 'primevue/card';

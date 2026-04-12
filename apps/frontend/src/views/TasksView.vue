@@ -19,9 +19,9 @@ import { ref, watch, onMounted } from 'vue';
 import TaskBookingList from '../components/tasks/TaskBookingList.vue';
 import TaskTriggerList from '../components/tasks/TaskTriggerList.vue';
 import { useViewReady } from '../composables/useSkeleton';
-import { useAutobookingListStore } from '../stores/autobookingList';
-import { useTriggerStore } from '../stores/triggers';
-import { useUserStore } from '../stores/user';
+import { useAutobookingListStore } from '@/stores/autobooking';
+import { useTriggerStore } from '@/stores/triggers';
+import { useUserStore } from '@/stores/user';
 
 type TabType = 'autobooking' | 'triggers';
 const activeTab = ref<TabType>('autobooking');

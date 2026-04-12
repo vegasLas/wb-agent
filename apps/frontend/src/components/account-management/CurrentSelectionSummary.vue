@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Account, Supplier } from '../../stores/user';
+import type { Account, Supplier } from '@/stores/user';
 
 interface Props {
   selectedAccount: Account | null;

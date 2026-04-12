@@ -226,8 +226,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import DatePicker from 'primevue/datepicker';
 
-import { useTriggerFormStore } from '../../stores/triggerForm';
-import { useTriggerStore } from '../../stores/triggers';
+import { useTriggerFormStore } from '@/stores/triggers';
+import { useTriggerStore } from '@/stores/triggers';
 import { TRIGGER_INTERVALS } from '../../constants';
 import type { SearchMode } from '../../types';
 import Button from 'primevue/button';

@@ -51,8 +51,8 @@ import { useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import AccountCard from './AccountCard.vue';
 import AddAccountCard from './AddAccountCard.vue';
-import { useUserStore } from '../../stores/user';
-import type { Account } from '../../stores/user';
+import { useUserStore } from '@/stores/user';
+import type { Account } from '@/stores/user';
 
 interface Props {
   accounts: Account[];

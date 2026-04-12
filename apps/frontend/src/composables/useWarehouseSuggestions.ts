@@ -5,7 +5,7 @@
  */
 
 import { computed } from 'vue';
-import { useReportStore } from '../stores/report';
+import { useReportStore } from '@/stores/reports';
 import type {
   ReportItem,
   WarehouseSuggestion,

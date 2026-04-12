@@ -40,7 +40,7 @@
 import Button from 'primevue/button';
 import SupplierCard from './SupplierCard.vue';
 import EmptySupplierState from './EmptySupplierState.vue';
-import type { Account } from '../../stores/user';
+import type { Account } from '@/stores/user';
 
 interface Props {
   tempSelectedAccount: Account | null;

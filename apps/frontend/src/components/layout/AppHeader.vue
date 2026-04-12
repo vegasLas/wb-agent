@@ -129,8 +129,8 @@ import { computed, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
-import { useUserStore } from '../../stores/user';
-import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
+import { useUserStore } from '@/stores/user';
+import { useAccountSupplierModalStore } from '@/stores/ui';
 
 defineEmits<{
   'show-help': [];

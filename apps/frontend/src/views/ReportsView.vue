@@ -209,9 +209,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { useViewReady } from '../composables/useSkeleton';
 import DatePicker from 'primevue/datepicker';
-import { useReportStore } from '../stores/report';
-import { useUserStore } from '../stores/user';
-import { useReportViewStore } from '../stores/reportView';
+import { useReportStore } from '@/stores/reports';
+import { useUserStore } from '@/stores/user';
+import { useReportViewStore } from '@/stores/reports';
 import UserAlerts from '../components/global/UserAlerts.vue';
 import MultiSelect from 'primevue/multiselect';
 import ReportCharts from '../components/report/ReportCharts.vue';

@@ -60,7 +60,7 @@
 import { ref, computed, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
-import { useTriggerFormStore } from '../../stores/triggerForm';
+import { useTriggerFormStore } from '@/stores/triggers';
 import TriggersFormFields from './FormFields.vue';
 import TriggerHints from './TriggerHints.vue';
 import type { SearchMode } from '../../types';

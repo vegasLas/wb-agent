@@ -196,9 +196,9 @@ import { computed } from 'vue';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import { useRescheduleStore } from '../../stores/reschedules';
-import { useWarehousesStore } from '../../stores/warehouses';
-import { useUserStore } from '../../stores/user';
+import { useRescheduleStore } from '@/stores/reschedules';
+import { useWarehousesStore } from '@/stores/warehouses';
+import { useUserStore } from '@/stores/user';
 import type { AutobookingReschedule } from '../../types';
 
 const props = defineProps<{

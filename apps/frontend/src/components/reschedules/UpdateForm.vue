@@ -170,9 +170,9 @@ import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 
 import Button from 'primevue/button';
-import { useRescheduleStore } from '../../stores/reschedules';
-import { useRescheduleUpdateFormStore } from '../../stores/reschedules/updateForm';
-import { useSupplyDetailsStore } from '../../stores/supplyDetails';
+import { useRescheduleStore } from '@/stores/reschedules';
+import { useRescheduleUpdateFormStore } from '@/stores/reschedules';
+import { useSupplyDetailsStore } from '@/stores/supplies';
 import DateSelection from '../common/DateSelection.vue';
 import ReschedulesSupplyDetailsModal from './SupplyDetailsModal.vue';
 import ReschedulesHints from './Hints.vue';

@@ -136,7 +136,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useViewReady } from '../composables/useSkeleton';
-import { useUserStore } from '../stores/user';
+import { useUserStore } from '@/stores/user';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import UserAlerts from '../components/global/UserAlerts.vue';

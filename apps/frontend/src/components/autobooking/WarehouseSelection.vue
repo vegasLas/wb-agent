@@ -86,7 +86,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useSupplierStore } from '../../stores/supplier';
+import { useSupplierStore } from '@/stores/suppliers';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';

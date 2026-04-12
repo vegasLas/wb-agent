@@ -72,7 +72,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useViewReady } from '../composables/useSkeleton';
-import { useUserStore } from '../stores/user';
+import { useUserStore } from '@/stores/user';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import UserAlerts from '../components/global/UserAlerts.vue';

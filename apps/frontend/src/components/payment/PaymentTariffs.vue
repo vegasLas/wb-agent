@@ -86,7 +86,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { BOOKING_TARIFFS } from '../../constants';
-import { useUserStore } from '../../stores/user';
+import { useUserStore } from '@/stores/user';
 import PaymentModal from './PaymentModal.vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';

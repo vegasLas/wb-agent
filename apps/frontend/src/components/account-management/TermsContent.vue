@@ -134,8 +134,8 @@
 import { ref } from 'vue';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
-import { useUserStore } from '../../stores/user';
-import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
+import { useUserStore } from '@/stores/user';
+import { useAccountSupplierModalStore } from '@/stores/ui';
 
 const userStore = useUserStore();
 const accountSupplierModalStore = useAccountSupplierModalStore();
