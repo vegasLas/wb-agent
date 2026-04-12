@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed, readonly } from 'vue';
 import { useUserStore } from './user';
 import { useBrowserAuthStore } from './browserAuth';
+import { closeWebApp } from '../utils/telegramWebApp';
 
 export type AuthMode = 'telegram' | 'browser';
 
@@ -93,7 +94,7 @@ export const useUnifiedAuthStore = defineStore('unifiedAuth', () => {
     if (isTelegramMode.value) {
       telegramStore.reset?.();
       // Close Telegram WebApp if available
-      window.Telegram?.WebApp?.close?.();
+      closeWebApp();
     } else {
       await browserStore.logout();
     }
