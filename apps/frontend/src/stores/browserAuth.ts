@@ -3,12 +3,8 @@ import { ref, computed, readonly } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStorage } from '@vueuse/core';
 import apiClient, { setAuthToken } from '../api/client';
-
-export interface BrowserUser {
-  id: number;
-  login: string;
-  name: string;
-}
+import { useUserStore } from './user';
+import { resetAppState } from '../router';
 
 /**
  * Browser authentication store for JWT-based auth
@@ -19,11 +15,10 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
 
   // Use VueUse useStorage for automatic localStorage sync
   const token = useStorage<string | null>('auth_token', null);
-  const user = useStorage<BrowserUser | null>('auth_user', null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
-  const isAuthenticated = computed(() => !!token.value && !!user.value);
+  const isAuthenticated = computed(() => !!token.value);
 
   /**
    * Login with credentials
@@ -41,11 +36,17 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       if (response.data.success) {
         // VueUse useStorage automatically syncs to localStorage
         token.value = response.data.token;
-        user.value = response.data.user;
         setAuthToken(response.data.token);
 
-        // Fetch full user data (accounts, etc.) and update storage
-        await fetchCurrentUser();
+        // Fetch full user data from userStore (includes subscription, accounts, etc.)
+        try {
+          const userStore = useUserStore();
+          await userStore.fetchUser();
+          console.log('[BrowserAuth] UserStore populated after login');
+        } catch (error) {
+          console.error('[BrowserAuth] Failed to populate userStore after login:', error);
+          // Still return true since login succeeded, but user data fetch failed
+        }
 
         return true;
       }
@@ -73,47 +74,25 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
     } finally {
       // VueUse useStorage automatically clears localStorage
       token.value = null;
-      user.value = null;
       setAuthToken(null);
+      
+      // Reset userStore as well
+      const userStore = useUserStore();
+      userStore.reset();
+      
+      // Reset router auth state to allow re-initialization on next login
+      resetAppState();
+      
       await router.push('/login');
     }
   }
 
   /**
-   * Fetch current user data from API
-   */
-  async function fetchCurrentUser(): Promise<boolean> {
-    try {
-      const response = await apiClient.get('/user'); // Fixed: was '/user/me'
-
-      if (response.data) {
-        // Update user with fresh data - automatically syncs to localStorage
-        user.value = {
-          id: response.data.id,
-          login: response.data.login || response.data.username || '',
-          name: response.data.name,
-        };
-        return true;
-      }
-
-      return false;
-    } catch (err: any) {
-      // Only clear auth on 401 Unauthorized
-      if (err?.response?.status === 401) {
-        token.value = null;
-        user.value = null;
-        setAuthToken(null);
-      }
-      return false;
-    }
-  }
-
-  /**
    * Initialize auth state from storage
+   * @param skipUserFetch If true, skip fetching user data (use when already fetched)
    */
-  async function initAuth(): Promise<boolean> {
+  async function initAuth(skipUserFetch = false): Promise<boolean> {
     if (!token.value) {
-      user.value = null;
       setAuthToken(null);
       return false;
     }
@@ -122,13 +101,28 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
     setAuthToken(token.value);
     console.log('[BrowserAuth] Token restored from storage, validating...');
 
-    // Try to fetch fresh user data
-    const isValid = await fetchCurrentUser();
+    // If we're skipping fetch, just return true (token exists)
+    if (skipUserFetch) {
+      return true;
+    }
 
-    // Return true if we have user (either from storage or API)
-    const hasAuth = isValid || !!user.value;
-    console.log('[BrowserAuth] initAuth result:', { isValid, hasUser: !!user.value, hasAuth });
-    return hasAuth;
+    // Fetch full user data from userStore (includes subscription, accounts, etc.)
+    try {
+      const userStore = useUserStore();
+      await userStore.fetchUser();
+      console.log('[BrowserAuth] UserStore populated with full user data');
+      return true;
+    } catch (error: any) {
+      console.error('[BrowserAuth] Failed to fetch user data:', error);
+      
+      // On 401, clear auth
+      if (error?.response?.status === 401) {
+        token.value = null;
+        setAuthToken(null);
+        resetAppState();
+      }
+      return false;
+    }
   }
 
   /**
@@ -160,7 +154,6 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   return {
     // State (readonly) - useStorage refs are already reactive
     token: readonly(token),
-    user: readonly(user),
     isLoading: readonly(isLoading),
     error: readonly(error),
 
@@ -170,7 +163,6 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
     // Actions
     login,
     logout,
-    fetchCurrentUser,
     initAuth,
     refreshToken,
     clearError,
