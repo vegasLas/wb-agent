@@ -3,8 +3,8 @@ import { defineStore } from 'pinia';
 import { reschedulesAPI } from '../../api';
 import { useUserStore } from '../user';
 import { useWarehousesStore } from '../warehouses';
-import { toastHelpers } from '../../utils/toast';
-import { confirmPromise } from '../../utils/confirm';
+import { toastHelpers } from '../../utils/ui';
+import { confirmPromise } from '../../utils/ui';
 
 import type {
   AutobookingReschedule,

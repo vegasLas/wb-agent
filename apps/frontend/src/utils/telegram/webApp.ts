@@ -13,7 +13,7 @@ import {
   isTelegramWebApp,
   type TelegramThemeParams,
   type ColorScheme,
-} from './telegramTheme';
+} from './theme';
 
 // Re-export theme utilities for convenience
 export {
@@ -184,12 +184,10 @@ function postEvent(
   console.log('[Telegram.WebApp] > postEvent', eventType, data);
 
   // Method 1: Native app via TelegramWebviewProxy
-  if (typeof (window as { TelegramWebviewProxy?: { postEvent: (type: string, data: string) => void } }).TelegramWebviewProxy !== 'undefined') {
+  const tgProxy = (window as { TelegramWebviewProxy?: { postEvent: (type: string, data: string) => void } }).TelegramWebviewProxy;
+  if (tgProxy) {
     try {
-      (window as { TelegramWebviewProxy: { postEvent: (type: string, data: string) => void } }).TelegramWebviewProxy.postEvent(
-        eventType,
-        JSON.stringify(data),
-      );
+      tgProxy.postEvent(eventType, JSON.stringify(data));
       return true;
     } catch {
       // Continue to next method

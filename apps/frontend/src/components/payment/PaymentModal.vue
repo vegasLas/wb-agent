@@ -99,7 +99,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import Tag from 'primevue/tag';
-import { closeWebApp } from '../../utils/telegramWebApp';
+import { closeWebApp } from '../../utils/telegram';
 
 const props = defineProps<{
   modelValue: boolean;

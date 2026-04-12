@@ -6,7 +6,7 @@ import { useAutobookingListStore } from './autobookingList';
 import { useUserStore } from './user';
 import { useWarehousesStore } from './warehouses';
 import { useDraftStore } from './draft';
-import { toastHelpers } from '../utils/toast';
+import { toastHelpers } from '../utils/ui';
 import type { ValidationResult } from './autobookingForm';
 import type { Autobooking, AutobookingUpdateData } from '../types';
 

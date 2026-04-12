@@ -2,7 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { triggersAPI } from '../api';
 import { useWarehousesStore } from './warehouses';
-import { toastHelpers } from '../utils/toast';
+import { toastHelpers } from '../utils/ui';
 import type { SupplyTrigger, CreateTriggerRequest } from '../types';
 
 export const useTriggerStore = defineStore('triggers', () => {
