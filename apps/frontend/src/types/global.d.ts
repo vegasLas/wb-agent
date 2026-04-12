@@ -6,8 +6,6 @@ declare global {
   interface Window {
     /** True if running inside Telegram WebApp */
     __IS_TELEGRAM_WEBAPP__?: boolean;
-    /** Telegram initData string */
-    __TELEGRAM_INIT_DATA__?: string;
     /** True if browser mode is forced via URL params */
     __FORCE_BROWSER_MODE__?: boolean;
     /** Current auth mode: 'telegram' or 'browser' */

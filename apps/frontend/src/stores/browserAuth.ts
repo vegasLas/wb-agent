@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed, readonly } from 'vue';
 import { useRouter } from 'vue-router';
+import { useStorage } from '@vueuse/core';
 import apiClient, { setAuthToken } from '../api/client';
 
 export interface BrowserUser {
@@ -15,9 +16,10 @@ export interface BrowserUser {
  */
 export const useBrowserAuthStore = defineStore('browserAuth', () => {
   const router = useRouter();
-  
-  const token = ref<string | null>(localStorage.getItem('auth_token'));
-  const user = ref<BrowserUser | null>(null);
+
+  // Use VueUse useStorage for automatic localStorage sync
+  const token = useStorage<string | null>('auth_token', null);
+  const user = useStorage<BrowserUser | null>('auth_user', null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
@@ -31,15 +33,23 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       isLoading.value = true;
       error.value = null;
 
-      const response = await apiClient.post('/auth/login', { login, password });
-      
+      const response = await apiClient.post('/auth/login', {
+        login,
+        password,
+      });
+
       if (response.data.success) {
+        // VueUse useStorage automatically syncs to localStorage
         token.value = response.data.token;
         user.value = response.data.user;
         setAuthToken(response.data.token);
+
+        // Fetch full user data (accounts, etc.) and update storage
+        await fetchCurrentUser();
+
         return true;
       }
-      
+
       return false;
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Ошибка входа';
@@ -61,6 +71,7 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
         });
       }
     } finally {
+      // VueUse useStorage automatically clears localStorage
       token.value = null;
       user.value = null;
       setAuthToken(null);
@@ -69,14 +80,14 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   }
 
   /**
-   * Fetch current user data
+   * Fetch current user data from API
    */
   async function fetchCurrentUser(): Promise<boolean> {
     try {
-      const response = await apiClient.get('/user/me');
-      
+      const response = await apiClient.get('/user'); // Fixed: was '/user/me'
+
       if (response.data) {
-        // Map user data to BrowserUser format
+        // Update user with fresh data - automatically syncs to localStorage
         user.value = {
           id: response.data.id,
           login: response.data.login || response.data.username || '',
@@ -84,29 +95,40 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
         };
         return true;
       }
-      
+
       return false;
-    } catch (err) {
-      token.value = null;
-      user.value = null;
-      setAuthToken(null);
+    } catch (err: any) {
+      // Only clear auth on 401 Unauthorized
+      if (err?.response?.status === 401) {
+        token.value = null;
+        user.value = null;
+        setAuthToken(null);
+      }
       return false;
     }
   }
 
   /**
-   * Initialize auth state from stored token
+   * Initialize auth state from storage
    */
   async function initAuth(): Promise<boolean> {
-    if (!token.value) return false;
-    
-    const isValid = await fetchCurrentUser();
-    
-    if (!isValid) {
-      await router.push('/login');
+    if (!token.value) {
+      user.value = null;
+      setAuthToken(null);
+      return false;
     }
-    
-    return isValid;
+
+    // Ensure token is set in API client for subsequent requests
+    setAuthToken(token.value);
+    console.log('[BrowserAuth] Token restored from storage, validating...');
+
+    // Try to fetch fresh user data
+    const isValid = await fetchCurrentUser();
+
+    // Return true if we have user (either from storage or API)
+    const hasAuth = isValid || !!user.value;
+    console.log('[BrowserAuth] initAuth result:', { isValid, hasUser: !!user.value, hasAuth });
+    return hasAuth;
   }
 
   /**
@@ -115,13 +137,13 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   async function refreshToken(): Promise<boolean> {
     try {
       const response = await apiClient.post('/auth/refresh');
-      
+
       if (response.data.success) {
-        token.value = response.data.token;
+        token.value = response.data.token; // Auto-syncs to localStorage
         setAuthToken(response.data.token);
         return true;
       }
-      
+
       return false;
     } catch (err) {
       return false;
@@ -136,15 +158,15 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   }
 
   return {
-    // State (readonly)
+    // State (readonly) - useStorage refs are already reactive
     token: readonly(token),
     user: readonly(user),
     isLoading: readonly(isLoading),
     error: readonly(error),
-    
+
     // Getters
     isAuthenticated,
-    
+
     // Actions
     login,
     logout,

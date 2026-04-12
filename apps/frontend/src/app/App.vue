@@ -42,7 +42,6 @@ import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import LoadingLayout from '../components/layout/LoadingLayout.vue';
 import { useSkeleton } from '../composables/useSkeleton';
-import { useTelegram } from '../composables/useTelegram';
 import {
   SkeletonAccount,
   SkeletonAutobookings,
@@ -54,6 +53,7 @@ import {
   SkeletonPromotions,
   SkeletonTasks,
 } from '../components/skeleton';
+import { getTelegramColorScheme, isTelegramWebApp } from '../utils/telegramWebApp';
 
 // Initialize color mode with proper configuration for class-based dark mode
 const colorMode = useColorMode({
@@ -61,8 +61,17 @@ const colorMode = useColorMode({
   selector: 'html',
 });
 
+// Set up Telegram color scheme if available
+// This works even when telegram-web-app.js is not loaded (uses URL initData detection)
+const telegramColorScheme = ref<string | undefined>(undefined);
+
+// Check for Telegram mode and set color scheme
+if (isTelegramWebApp()) {
+  // Get color scheme from Telegram theme params (URL hash or sessionStorage)
+  telegramColorScheme.value = getTelegramColorScheme();
+}
+
 // Watch Telegram's color scheme and apply it
-const { colorScheme: telegramColorScheme } = useTelegram();
 watch(
   telegramColorScheme,
   (newScheme) => {
@@ -138,6 +147,9 @@ const isPhone = ref(false);
 // Initialize toast for global use
 const toast = useToast();
 
+// Initialize confirm for global use
+const confirm = useConfirm();
+
 // Wait for router to resolve initial navigation
 onMounted(async () => {
   // Detect if device is a phone
@@ -153,7 +165,7 @@ onMounted(async () => {
   
   // Initialize confirm for stores
   const { setConfirmInstance } = await import('../utils/confirm');
-  setConfirmInstance(useConfirm());
+  setConfirmInstance(confirm);
 
   await router.isReady();
   markRouterReady();

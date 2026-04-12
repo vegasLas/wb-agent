@@ -30,7 +30,9 @@ export type ViewType =
 // User & Authentication Types
 // -----------------------------------------------------------------------------
 export interface User {
+  id?: number;
   name?: string;
+  username?: string;
   autobookingCount: number;
   subscriptionExpiresAt: string | null;
   agreeTerms: boolean;
@@ -753,8 +755,6 @@ declare global {
   interface Window {
     /** True if running inside Telegram WebApp (set by early detection script) */
     __IS_TELEGRAM_WEBAPP__?: boolean;
-    /** Telegram initData string (set by early detection script) */
-    __TELEGRAM_INIT_DATA__?: string;
     /** True if browser mode is forced via URL params (set by early detection script) */
     __FORCE_BROWSER_MODE__?: boolean;
     /** Current auth mode: 'telegram' or 'browser' (set by early detection script) */
