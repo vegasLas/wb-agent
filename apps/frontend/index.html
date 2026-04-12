@@ -22,30 +22,76 @@
     <script>
       (function () {
         try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const hashParams = new URLSearchParams(window.location.hash.slice(1));
+          /**
+           * Parse URL hash params manually (same logic as Telegram WebApp script)
+           * URLSearchParams doesn't handle encoded JSON values well
+           */
+          function urlSafeDecode(urlencoded) {
+            try {
+              urlencoded = urlencoded.replace(/\+/g, '%20');
+              return decodeURIComponent(urlencoded);
+            } catch (e) {
+              return urlencoded;
+            }
+          }
 
+          function parseHashParams(locationHash) {
+            var params = {};
+            var hash = locationHash.replace(/^#/, '');
+
+            if (!hash.length) {
+              return params;
+            }
+
+            // Handle hash that might contain path?query format
+            var qIndex = hash.indexOf('?');
+            if (qIndex >= 0) {
+              hash = hash.substr(qIndex + 1);
+            }
+
+            if (!hash.length) {
+              return params;
+            }
+
+            var queryParams = hash.split('&');
+            for (var i = 0; i < queryParams.length; i++) {
+              var param = queryParams[i].split('=');
+              var paramName = urlSafeDecode(param[0]);
+              var paramValue =
+                param[1] == null ? null : urlSafeDecode(param[1]);
+              params[paramName] = paramValue;
+            }
+            return params;
+          }
+
+          // Parse URL params
+          const urlParams = new URLSearchParams(window.location.search);
+          const hashParams = parseHashParams(window.location.hash);
           // URL flag override
           const source = urlParams.get('source');
           const tgParam = urlParams.get('tg');
           const forceBrowserMode = source === 'browser' || tgParam === 'false';
 
-          // Check for Telegram WebApp context
-          // 1. Check if Telegram object exists (injected by Telegram WebView)
-          // 2. Check for initData in URL (passed by Telegram)
-          const tg = window.Telegram?.WebApp;
-          const hasInitDataInURL =
-            urlParams.has('tgWebAppData') || hashParams.has('tgWebAppData');
-          const hasInitData =
-            Boolean(tg?.initData && tg.initData.length > 0) || hasInitDataInURL;
+          // Check for Telegram WebApp context via URL params
+          // This works even when telegram-web-app.js is loaded dynamically
+          // Telegram Mini Apps always include tgWebAppData in URL
+          const hasInitDataInSearch = urlParams.has('tgWebAppData');
+          const hasInitDataInHash = 'tgWebAppData' in hashParams;
+          const hasInitDataInURL = hasInitDataInSearch || hasInitDataInHash;
 
-          // Determine mode
+          // Also check if Telegram object already exists (for static script loading)
+          const tg = window.Telegram?.WebApp;
+          const hasInitDataFromObject = Boolean(
+            tg?.initData && tg.initData.length > 0,
+          );
+
+          const hasInitData = hasInitDataInURL || hasInitDataFromObject;
+
+          // Determine mode based on URL params or Telegram object
           const isTelegram = !forceBrowserMode && hasInitData;
 
-          // Set global flags
+          // Set global flags (initData will be read by utility from URL or localStorage)
           window.__IS_TELEGRAM_WEBAPP__ = isTelegram;
-          window.__TELEGRAM_INIT_DATA__ =
-            tg?.initData || urlParams.get('tgWebAppData') || '';
           window.__FORCE_BROWSER_MODE__ = forceBrowserMode;
           window.__AUTH_MODE__ = isTelegram ? 'telegram' : 'browser';
 
@@ -53,12 +99,14 @@
             isTelegram,
             authMode: window.__AUTH_MODE__,
             hasInitData,
+            hasInitDataInSearch,
+            hasInitDataInHash,
+            hasInitDataFromObject,
             hasTgObject: !!tg,
           });
         } catch (error) {
           console.error('[Auth Detection] Error:', error);
           window.__IS_TELEGRAM_WEBAPP__ = false;
-          window.__TELEGRAM_INIT_DATA__ = '';
           window.__FORCE_BROWSER_MODE__ = false;
           window.__AUTH_MODE__ = 'browser';
         }
