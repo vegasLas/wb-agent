@@ -1,5 +1,7 @@
 export * from './view';
 export * from './user';
+export * from './browserAuth';
+export * from './unifiedAuth';
 export * from './accounts';
 export * from './auth';
 export * from './warehouses';

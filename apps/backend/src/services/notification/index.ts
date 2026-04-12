@@ -5,6 +5,11 @@ export {
 } from './telegram.service';
 
 export {
+  botCommandsService,
+  BotCommandsService,
+} from './bot-commands.service';
+
+export {
   channelSubscriptionService,
   ChannelSubscriptionService,
 } from './channel-subscription.service';

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
+import { isTelegramWebApp, getInitData } from '../utils/telegramWebApp';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
 import {
@@ -15,6 +16,17 @@ import TasksView from '../views/TasksView.vue';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
+  // Public Routes (no layout)
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/LoginView.vue'),
+    meta: {
+      title: 'Вход',
+      public: true,
+    },
+  },
+
   // Error Routes (public, no layout)
   {
     path: '/error/session-expired',
@@ -212,6 +224,41 @@ const router = createRouter({
 // Global app state
 let isAppInitialized = false;
 let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
+let isBrowserAuthInitialized = false;
+
+/**
+ * Check if current auth mode is browser
+ * Re-verifies using utility function to handle cases where
+ * early detection script might have missed Telegram params on sub-route reload
+ */
+function isBrowserMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  // If flag says Telegram, trust it
+  if (window.__AUTH_MODE__ === 'telegram' || window.__IS_TELEGRAM_WEBAPP__ === true) {
+    return false;
+  }
+  
+  // If flag says browser, double-check with utility (handles sub-route reload edge case)
+  if (isTelegramWebApp()) {
+    // We ARE in Telegram mode but flag wasn't set correctly
+    // Update flags for consistency
+    window.__AUTH_MODE__ = 'telegram';
+    window.__IS_TELEGRAM_WEBAPP__ = true;
+    console.log('[Router] Corrected auth mode to Telegram after re-check');
+    return false;
+  }
+  
+  // Also check if we have initData in localStorage (for sub-route reloads)
+  if (getInitData()) {
+    window.__AUTH_MODE__ = 'telegram';
+    window.__IS_TELEGRAM_WEBAPP__ = true;
+    console.log('[Router] Corrected auth mode to Telegram from localStorage initData');
+    return false;
+  }
+  
+  return true;
+}
 
 // Navigation guard for app initialization
 router.beforeEach(async (to, from, next) => {
@@ -219,6 +266,7 @@ router.beforeEach(async (to, from, next) => {
     from: from.name,
     to: to.name,
     path: to.path,
+    authMode: typeof window !== 'undefined' ? window.__AUTH_MODE__ : 'unknown',
   });
 
   // Update page title
@@ -227,7 +275,7 @@ router.beforeEach(async (to, from, next) => {
     document.title = `${title} | WB Agent`;
   }
 
-  // Skip initialization check for error pages and public routes
+  // Skip initialization check for public routes
   if (to.meta.public) {
     console.log('[Router] Public route, skipping init check');
     next();
@@ -241,7 +289,39 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
 
-  // If not initialized yet, initialize the app
+  // Browser mode authentication check
+  if (isBrowserMode()) {
+    const { useBrowserAuthStore } = await import('../stores/browserAuth');
+    const browserAuth = useBrowserAuthStore();
+    
+    // Only init auth once per session - skip if already initialized and we have a valid auth
+    // This prevents repeated API calls when switching between screens
+    if (!isBrowserAuthInitialized || !browserAuth.isAuthenticated) {
+      console.log('[Router] Initializing browser auth...');
+      await browserAuth.initAuth();
+      isBrowserAuthInitialized = true;
+    } else {
+      console.log('[Router] Browser auth already initialized, skipping re-fetch');
+    }
+    
+    // After initAuth, check if authenticated
+    if (!browserAuth.isAuthenticated) {
+      console.log('[Router] Browser auth required, redirecting to login');
+      next({ 
+        name: 'Login', 
+        query: { redirect: to.fullPath },
+        replace: true 
+      });
+      return;
+    }
+    
+    // Browser user is authenticated, proceed
+    console.log('[Router] Browser auth validated, proceeding to:', to.name);
+    next();
+    return;
+  }
+
+  // Telegram mode - original initialization logic
   if (!isAppInitialized) {
     console.log('[Router] App not initialized, starting initialization...');
     try {
@@ -308,6 +388,7 @@ function errorToRouteName(error: string): string {
 export function resetAppState() {
   isAppInitialized = false;
   initError = null;
+  isBrowserAuthInitialized = false;
 }
 
 // Check if app is initialized

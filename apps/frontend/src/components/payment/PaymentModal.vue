@@ -99,7 +99,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import Tag from 'primevue/tag';
-import { useMiniApp } from 'vue-tg';
+import { closeWebApp } from '../../utils/telegramWebApp';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -168,13 +168,12 @@ async function initializePayment() {
 }
 
 function goToChat() {
-  // Close the WebApp using vue-tg
-  try {
-    const miniApp = useMiniApp();
-    miniApp.close();
-  } catch {
-    // Fallback if not in Telegram WebApp context
-    console.log('Not in Telegram WebApp context');
+  // Try to close Telegram WebApp if available, otherwise just close the modal
+  const closed = closeWebApp();
+  if (!closed) {
+    // Not in Telegram WebApp context - just close the modal
+    console.log('[PaymentModal] Not in Telegram WebApp, closing modal');
+    close();
   }
 }
 

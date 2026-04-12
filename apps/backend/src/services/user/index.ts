@@ -9,6 +9,13 @@ export {
 } from './auth.service';
 
 export {
+  jwtAuthService,
+  JWTAuthService,
+  type JWTPayload,
+  type BrowserAuthResult,
+} from './jwt-auth.service';
+
+export {
   userService,
   UserService,
 } from './user.service';

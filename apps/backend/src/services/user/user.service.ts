@@ -31,6 +31,8 @@ export class UserService {
         id: true,
         telegramId: true,
         chatId: true,
+        login: true,
+        name: true,
       },
     });
   }

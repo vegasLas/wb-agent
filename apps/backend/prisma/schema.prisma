@@ -11,7 +11,9 @@ datasource db {
 
 model User {
   id          Int      @id @default(autoincrement())
-  telegramId  BigInt   @unique
+  telegramId  BigInt   @unique  // REQUIRED - primary identifier
+  login       String?  @unique  // Auto-generated browser login
+  passwordHash String?          // Bcrypt hashed password for browser auth
   chatId      String?  @unique
   username    String? 
   languageCode String?

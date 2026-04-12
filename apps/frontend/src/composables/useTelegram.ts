@@ -70,7 +70,12 @@ export function useTelegram(): UseTelegramReturn {
   onMounted(() => {
     const tg = window.Telegram?.WebApp;
 
+    // Check for initData from URL (set by index.html) as fallback
+    const initDataFromURL = window.__TELEGRAM_INIT_DATA__;
+    const isTelegramMode = window.__IS_TELEGRAM_WEBAPP__ === true;
+
     if (tg) {
+      // Full Telegram WebApp is available
       isTelegram.value = true;
       isReady.value = true;
 
@@ -91,6 +96,13 @@ export function useTelegram(): UseTelegramReturn {
       if (tg.ready) {
         tg.ready();
       }
+    } else if (isTelegramMode && initDataFromURL) {
+ // Telegram mode detected via URL but WebApp not loaded
+      // This happens when testing with tgWebAppData in URL outside Telegram
+      isTelegram.value = true;
+      isReady.value = true;
+      initData = initDataFromURL;
+      // Note: initDataUnsafe won't be available without the WebApp object
     } else {
       // Not running in Telegram (dev mode)
       isTelegram.value = false;
@@ -165,8 +177,9 @@ export function useTelegram(): UseTelegramReturn {
   };
 
   // Get init data string for backend verification
+  // Falls back to window.__TELEGRAM_INIT_DATA__ if local initData is empty
   const getInitData = (): string | undefined => {
-    return initData;
+    return initData || window.__TELEGRAM_INIT_DATA__ || undefined;
   };
 
   return {

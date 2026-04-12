@@ -1,6 +1,13 @@
 <template>
   <div class="space-y-4 p-3">
-    <div class="flex items-center justify-end mb-6">
+    <!-- Header with Back Button -->
+    <div class="flex items-center gap-3 mb-6">
+      <Button
+        icon="pi pi-arrow-left"
+        variant="text"
+        severity="secondary"
+        @click="goBack"
+      />
       <h3 class="text-xl text-center font-semibold flex-1">
         Создание перепланирования
       </h3>
@@ -51,16 +58,22 @@
         </p>
       </div>
     </Message>
-  </div>
 
-  <!-- Telegram Main Button -->
-  <MainButton
-    v-if="formStore.validate"
-    :disabled="formStore.isSubmitting || rescheduleStore.loading"
-    :progress="formStore.isSubmitting || rescheduleStore.loading"
-    text="Создать"
-    @click="handleSubmit"
-  />
+    <!-- Submit Button -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-[var(--color-bg)] border-t border-[var(--color-border)] z-50">
+      <Button
+        :loading="formStore.isSubmitting || rescheduleStore.loading"
+        :disabled="!formStore.validate || formStore.isSubmitting || rescheduleStore.loading"
+        class="w-full"
+        label="Создать"
+        icon="pi pi-check"
+        @click="handleSubmit"
+      />
+    </div>
+    
+    <!-- Spacer for fixed button -->
+    <div class="h-20" />
+  </div>
 
   <!-- Supply Details Modal -->
   <ReschedulesSupplyDetailsModal
@@ -70,14 +83,11 @@
 
   <!-- Hints Modal -->
   <ReschedulesHints v-model:show="showHintsModal" />
-
-  <BackButton @click="goBack" />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { BackButton, MainButton } from 'vue-tg';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import { useRescheduleStore } from '../../stores/reschedules';

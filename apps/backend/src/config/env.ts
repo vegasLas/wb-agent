@@ -11,8 +11,8 @@ const envSchema = z.object({
   PORT: z.string().default('3001'),
   DATABASE_URL: z.string(),
 
-  // JWT Configuration (optional, for future use)
-  JWT_SECRET: z.string().optional(),
+  // JWT Configuration (required for browser auth)
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
 
   // Encryption

@@ -16,6 +16,8 @@ router.get('/', authenticate, async (req, res, next) => {
     }
 
     res.json({
+      id: user.id,
+      login: user.login,
       name: user.name,
       autobookingCount: user.autobookingCount,
       subscriptionExpiresAt: user.subscriptionExpiresAt,

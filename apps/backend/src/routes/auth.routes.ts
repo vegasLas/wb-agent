@@ -1,11 +1,83 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import { authService, userService } from '@/services/user/';
+import { jwtAuthService } from '@/services/user/jwt-auth.service';
 import { authenticate } from '@/middleware/auth.middleware';
 import { sendLogoutNotification } from '@/utils/TBOT';
 import { ApiError } from '@/utils/errors';
+import { createLogger } from '@/utils/logger';
 
+const logger = createLogger('AuthRoutes');
 const router = Router();
+
+// POST /api/v1/auth/login - Browser login (public)
+router.post(
+  '/login',
+  [
+    body('login').trim().isLength({ min: 3 }).withMessage('Логин должен быть не менее 3 символов'),
+    body('password').exists().withMessage('Пароль обязателен'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+      }
+
+      const { login, password } = req.body;
+      const result = await jwtAuthService.browserLogin(login, password);
+
+      res.json({
+        success: true,
+        user: result.user,
+        token: result.token,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /api/v1/auth/refresh - Refresh JWT token (protected)
+router.post('/refresh', authenticate, async (req, res, next) => {
+  try {
+    // Only allow refresh for browser auth users
+    if (req.user?.authType !== 'browser') {
+      throw ApiError.forbidden('Эндпоинт доступен только для браузерной авторизации');
+    }
+
+    const user = await userService.findByIdWithChatId(req.user.id);
+
+    if (!user) {
+      throw ApiError.unauthorized('Пользователь не найден');
+    }
+
+    if (!user.login) {
+      throw ApiError.unauthorized('У пользователя нет данных для браузерного входа');
+    }
+
+    const token = jwtAuthService.generateToken({
+      userId: user.id,
+      login: user.login,
+      telegramId: user.telegramId.toString(),
+      authType: 'browser',
+    });
+
+    logger.info(`Token refreshed for user: ${user.login}`);
+
+    res.json({ 
+      success: true, 
+      token,
+      user: {
+        id: user.id,
+        login: user.login,
+        name: user.name,
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // POST /api/v1/auth/verify-phone
 // Requires subscription (checked in auth middleware)
@@ -157,10 +229,12 @@ router.post('/logout', authenticate, async (req, res, next) => {
       // Logout all accounts
       await userService.logoutWb(BigInt(req.user!.telegramId));
 
-      // Send Telegram notification
-      const user = await userService.findByIdWithChatId(req.user!.id);
-      if (user?.chatId) {
-        await sendLogoutNotification(user.chatId);
+      // Send Telegram notification only for Telegram auth users
+      if (req.user?.authType === 'telegram') {
+        const user = await userService.findByIdWithChatId(req.user!.id);
+        if (user?.chatId) {
+          await sendLogoutNotification(user.chatId);
+        }
       }
     }
 

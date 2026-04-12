@@ -4,86 +4,116 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-import { useMiniApp } from 'vue-tg';
+import { getInitData } from '../utils/telegramWebApp';
+
+// Token storage key for browser auth
+const AUTH_TOKEN_KEY = 'auth_token';
 
 /**
- * Get Telegram initData from WebApp using vue-tg
+ * Check if current mode is Telegram
+ * Uses window.__AUTH_MODE__ or checks localStorage for cached initData
  */
-function getInitData(): string {
-  try {
-    const miniApp = useMiniApp();
-    return miniApp.initData || '';
-  } catch {
-    // Fallback if not in Telegram WebApp context
-    return '';
+function isTelegramMode(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  // Check global flag first
+  if (window.__AUTH_MODE__ === 'telegram') return true;
+
+  // Fallback: check if we have cached initData in localStorage
+  // This handles sub-route reloads where URL hash is lost
+  return getInitData() !== null;
+}
+
+/**
+ * Get authentication token based on current auth mode
+ */
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  if (isTelegramMode()) {
+    // Use utility that checks window global and localStorage
+    return getInitData();
+  }
+
+  // Always read fresh from localStorage
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  return token;
+}
+
+/**
+ * Set or remove the auth token (for browser mode)
+ */
+export function setAuthToken(token: string | null): void {
+  if (typeof window === 'undefined') return;
+
+  if (token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
   }
 }
 
 // Create axios instance with base URL
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to add Telegram initData
+// Request interceptor to add authentication
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    // Get initData from Telegram WebApp
-    const initData = getInitData();
-    if (initData && config.headers) {
-      config.headers['x-init-data'] = initData;
+    const token = getAuthToken();
+    const mode = isTelegramMode() ? 'telegram' : 'browser';
+
+    if (token && config.headers) {
+      if (isTelegramMode()) {
+        config.headers['x-init-data'] = token;
+      } else {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    } else {
+      console.log(
+        '[API Client] Request without auth:',
+        config.url,
+        'mode:',
+        mode,
+      );
     }
 
     return config;
   },
-  (error: AxiosError): Promise<AxiosError> => {
-    return Promise.reject(error);
-  },
+  (error: AxiosError) => Promise.reject(error),
 );
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response: AxiosResponse): AxiosResponse => {
+  (response: AxiosResponse) => {
     return response;
   },
-  (error: AxiosError): Promise<AxiosError | AxiosResponse> => {
-    if (error.response) {
-      // Handle specific error status codes
-      const status = error.response.status;
+  (error: AxiosError) => {
+    console.error(
+      '[API Client] Error:',
+      error.config?.url,
+      'status:',
+      error.response?.status,
+      'message:',
+      error.message,
+    );
 
-      switch (status) {
-        case 401:
-          // Unauthorized - clear token but don't reload
-          // This prevents recursive reloads when API calls fail during app init
-          localStorage.removeItem('auth_token');
-          console.error('Unauthorized - authentication required');
-          break;
-        case 403:
-          // Forbidden
-          console.error('Access denied');
-          break;
-        case 404:
-          // Not found
-          console.error('Resource not found');
-          break;
-        case 500:
-          // Server error
-          console.error('Server error');
-          break;
-        default:
-          console.error('API error:', error.message);
+    if (error.response?.status === 401) {
+      if (!isTelegramMode()) {
+        console.log(
+          '[API Client] 401 Unauthorized, clearing token and redirecting to login',
+        );
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        if (window.location.pathname !== '/login') {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }
       }
-    } else if (error.request) {
-      // Network error
-      console.error('Network error - no response received');
-    } else {
-      // Request setup error
-      console.error('Request error:', error.message);
     }
-
     return Promise.reject(error);
   },
 );

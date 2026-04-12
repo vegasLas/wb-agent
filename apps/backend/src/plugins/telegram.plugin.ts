@@ -5,7 +5,7 @@
  */
 
 import { TBOT } from '@/utils/TBOT';
-import { telegramService } from '@/services/notification/';
+import { telegramService, botCommandsService } from '@/services/notification/';
 import { adminService } from '@/services/admin/';
 import {
   enableAutobookingProcessing,
@@ -246,6 +246,9 @@ export function setupTelegramPlugin(): void {
       }
     }
   });
+
+  // Initialize bot commands service (/login, /reset_password, etc.)
+  botCommandsService.initialize();
 
   logger.debug('Telegram bot plugin setup complete');
 }
