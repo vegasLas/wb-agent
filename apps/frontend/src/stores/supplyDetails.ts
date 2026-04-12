@@ -1,6 +1,6 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { supplyDetailsAPI } from '../api';
+import { suppliesAPI } from '../api';
 import { useRescheduleStore } from './reschedules';
 import type { SupplyDetails, SupplyGood } from '../types';
 
@@ -26,7 +26,7 @@ export const useSupplyDetailsStore = defineStore('supplyDetails', () => {
     supplyRemoved.value = false;
 
     try {
-      const response = await supplyDetailsAPI.fetchSupplyDetails(supplyId);
+      const response = await suppliesAPI.fetchSupplyDetails(supplyId);
       if (response.success) {
         supplyGoods.value = response.data?.goods || [];
         supplyDetails.value = response.data?.supply || null;

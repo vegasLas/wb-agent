@@ -1,7 +1,6 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { supplierApiKeysAPI } from '../api';
-import type { ApiKeyStatus } from '../api/supplier-api-keys';
+import { suppliersAPI, type ApiKeyStatus } from '../api';
 
 export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
   // State
@@ -21,7 +20,7 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
     try {
       loading.value = true;
       error.value = null;
-      const data = await supplierApiKeysAPI.getApiKeyStatus();
+      const data = await suppliersAPI.checkApiKeyStatus();
       status.value = data;
       isFetched.value = true;
       return data;
@@ -40,7 +39,7 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
     try {
       saving.value = true;
       error.value = null;
-      await supplierApiKeysAPI.createOrUpdateApiKey(apiKey);
+      await suppliersAPI.updateSupplierApiKey(apiKey);
       // Re-check status after update
       await checkStatus();
     } catch (err: unknown) {
@@ -57,7 +56,7 @@ export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
     try {
       loading.value = true;
       error.value = null;
-      await supplierApiKeysAPI.deleteApiKey();
+      await suppliersAPI.deleteSupplierApiKey();
       // Clear status after delete
       status.value = null;
       isFetched.value = false;

@@ -1,6 +1,6 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { supplierAPI, type WarehouseBalance } from '../api';
+import { suppliersAPI, type WarehouseBalance } from '../api';
 import { useUserStore } from './user';
 import type { SupplierInfo } from '../types';
 
@@ -35,7 +35,7 @@ export const useSupplierStore = defineStore('supplier', () => {
     try {
       loading.value = true;
       error.value = null;
-      const data = await supplierAPI.fetchSupplierInfo();
+      const data = await suppliersAPI.fetchSupplierInfo();
       supplierInfo.value = data;
       isFetched.value = true;
       return data;
@@ -58,7 +58,7 @@ export const useSupplierStore = defineStore('supplier', () => {
       const userStore = useUserStore();
       const effectiveAccountId = accountId ?? userStore.selectedAccount?.id;
 
-      const data = await supplierAPI.fetchWarehouseBalances(effectiveAccountId);
+      const data = await suppliersAPI.fetchWarehouseBalances(effectiveAccountId);
       warehouseBalances.value = data || [];
       return data;
     } catch (err: unknown) {
