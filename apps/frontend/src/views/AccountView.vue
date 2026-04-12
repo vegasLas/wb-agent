@@ -161,7 +161,7 @@ import SupplierApiKeyComponent from '../components/store/SupplierApiKeyComponent
 
 import { useUserStore } from '@/stores/user';
 import { useAccountSupplierModalStore } from '@/stores/ui';
-import { useViewReady } from '../composables/useSkeleton';
+import { useViewReady } from '../composables/ui';
 
 // Skeleton control - call viewReady() when component is fully loaded
 const { viewReady } = useViewReady();

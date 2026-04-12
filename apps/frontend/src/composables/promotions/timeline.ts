@@ -13,7 +13,7 @@
  */
 
 import { computed, type ComputedRef, type Ref } from 'vue';
-import type { PromotionItem } from '../types';
+import type { PromotionItem } from '@/types';
 
 export interface MonthInfo {
   year: number;

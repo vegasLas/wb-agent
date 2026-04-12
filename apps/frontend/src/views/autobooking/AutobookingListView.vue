@@ -137,7 +137,7 @@ import { useUserStore } from '@/stores/user';
 import { useAutobookingListStore } from '@/stores/autobooking';
 import { useSupplierStore } from '@/stores/suppliers';
 import { draftsAPI } from '../../api';
-import { useViewReady } from '../../composables/useSkeleton';
+import { useViewReady } from '../../composables/ui';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';

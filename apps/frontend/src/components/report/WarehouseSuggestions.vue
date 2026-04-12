@@ -144,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { useWarehouseSuggestions } from '../../composables/useWarehouseSuggestions';
+import { useWarehouseSuggestions } from '../../composables/warehouse';
 import { useReportStore } from '@/stores/reports';
 import type { WarehouseSuggestionItem } from '../../types';
 import Card from 'primevue/card';

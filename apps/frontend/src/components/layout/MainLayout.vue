@@ -85,7 +85,7 @@ import { useAccountSupplierModalStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
 import { MainHelpModal } from '../help';
 import { AccountManagementView } from '../account-management';
-import { useSkeleton } from '../../composables/useSkeleton';
+import { useSkeleton } from '../../composables/ui';
 import BottomNavigation from '../BottomNavigation.vue';
 import AutobookingCreateDialog from '../autobooking/CreateDialog.vue';
 import TriggerCreateDialog from '../triggers/CreateDialog.vue';

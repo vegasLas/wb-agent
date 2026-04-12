@@ -351,7 +351,7 @@ import { computed, ref } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import { usePromotionDetailEnhanced } from '../../composables/usePromotionDetailEnhanced';
+import { usePromotionDetailEnhanced } from '../../composables/promotions';
 import type { PromotionDetail } from '../../types';
 
 interface Props {

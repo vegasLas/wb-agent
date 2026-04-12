@@ -31,7 +31,7 @@ import type {
   PromotionItem,
   PromotionDetail,
   PromotionParticipation,
-} from '../types';
+} from '@/types';
 
 export type ParticipationStatus =
   | 'PARTICIPATING'

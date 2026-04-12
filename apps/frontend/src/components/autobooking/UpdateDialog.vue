@@ -61,7 +61,7 @@ import Button from 'primevue/button';
 import { useAutobookingUpdateStore } from '@/stores/autobooking';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useDraftStore } from '@/stores/drafts';
-import { useDraftsFetcher } from '../../composables/useDraftsFetcher';
+import { useDraftsFetcher } from '../../composables/autobooking';
 import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 import AutobookingHints from './Hints.vue';

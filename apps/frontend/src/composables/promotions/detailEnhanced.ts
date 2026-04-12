@@ -19,13 +19,13 @@ import {
   type MaybeRefOrGetter,
   toValue,
 } from 'vue';
-import type { PromotionDetail } from '../types';
+import type { PromotionDetail } from '@/types';
 
 // Advantage mapping from English codes to Russian labels
 const ADVANTAGE_MAP: Record<string, string> = {
   'Advantage top up to 35%': 'Поднятие в поиске до 35%',
-  Badge: 'Плашка на карточке товара',
-  Banner: 'Баннер на сайте',
+  'Badge': 'Плашка на карточке товара',
+  'Banner': 'Баннер на сайте',
   'Red-Hot Deal': 'Красная цена',
   'Stock Countdown': 'Градусник',
   'Advantage top up to 25%': 'Поднятие в поиске до 25%',

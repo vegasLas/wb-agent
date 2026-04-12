@@ -176,7 +176,7 @@ import Slider from 'primevue/slider';
 import { useRescheduleStore } from '@/stores/reschedules';
 import { useRescheduleUpdateFormStore } from '@/stores/reschedules';
 import { useSupplyDetailsStore } from '@/stores/supplies';
-import { useViewReady } from '../../composables/useSkeleton';
+import { useViewReady } from '../../composables/ui';
 import DateSelection from '../../components/common/DateSelection.vue';
 import ReschedulesSupplyDetailsModal from '../../components/reschedules/SupplyDetailsModal.vue';
 import ReschedulesHints from '../../components/reschedules/Hints.vue';

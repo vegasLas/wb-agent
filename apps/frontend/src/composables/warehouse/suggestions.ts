@@ -10,7 +10,7 @@ import type {
   ReportItem,
   WarehouseSuggestion,
   WarehouseSuggestionItem,
-} from '../types';
+} from '@/types';
 
 // Default thresholds (will be dynamically adjusted based on data)
 const DEFAULT_MIN_SALES_FOR_VOLUME_ALERT = 10;

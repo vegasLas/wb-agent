@@ -35,23 +35,20 @@
  */
 
 import { computed, type ComputedRef, type Ref } from 'vue';
-import {
-  usePromotions,
-  type PromotionFilter,
-  type FilterTab,
-} from './usePromotions';
+import { usePromotions, type FilterTab } from './main';
+import type { PromotionFilter } from '@/types';
 import {
   usePromotionsCalendar,
   type MonthInfo,
   type GroupedPromotions,
-} from './usePromotionsCalendar';
+} from './calendar';
 import {
   usePromotionItem,
   usePromotionDetail,
   type UsePromotionItemReturn,
   type UsePromotionDetailReturn,
-} from './usePromotionItem';
-import type { PromotionItem, PromotionDetail } from '../types';
+} from './item';
+import type { PromotionItem, PromotionDetail } from '@/types';
 
 export interface UsePromotionsUnifiedOptions {
   /** Initial filter value (defaults to 'PARTICIPATING') */

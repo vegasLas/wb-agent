@@ -18,7 +18,7 @@
 import { ref, watch, onMounted } from 'vue';
 import TaskBookingList from '../components/tasks/TaskBookingList.vue';
 import TaskTriggerList from '../components/tasks/TaskTriggerList.vue';
-import { useViewReady } from '../composables/useSkeleton';
+import { useViewReady } from '../composables/ui';
 import { useAutobookingListStore } from '@/stores/autobooking';
 import { useTriggerStore } from '@/stores/triggers';
 import { useUserStore } from '@/stores/user';

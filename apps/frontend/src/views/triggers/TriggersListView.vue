@@ -272,7 +272,7 @@ import Message from 'primevue/message';
 import { useTriggerStore } from '@/stores/triggers';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useUserStore } from '@/stores/user';
-import { useViewReady } from '../../composables/useSkeleton';
+import { useViewReady } from '../../composables/ui';
 import UserAlerts from '../../components/global/UserAlerts.vue';
 import CoefficientHistoryAlert from '../../components/triggers/CoefficientHistoryAlert.vue';
 import TriggerCreateDialog from '../../components/triggers/CreateDialog.vue';

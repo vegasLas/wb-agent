@@ -207,7 +207,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useViewReady } from '../composables/useSkeleton';
+import { useViewReady } from '../composables/ui';
 import DatePicker from 'primevue/datepicker';
 import { useReportStore } from '@/stores/reports';
 import { useUserStore } from '@/stores/user';

@@ -97,7 +97,7 @@ export function useTelegram(): UseTelegramReturn {
         tg.ready();
       }
     } else if (isTelegramMode && initDataFromURL) {
- // Telegram mode detected via URL but WebApp not loaded
+      // Telegram mode detected via URL but WebApp not loaded
       // This happens when testing with tgWebAppData in URL outside Telegram
       isTelegram.value = true;
       isReady.value = true;

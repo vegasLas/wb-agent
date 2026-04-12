@@ -122,7 +122,7 @@ import { useUserStore } from '@/stores/user';
 import { useRescheduleStore } from '@/stores/reschedules';
 import { useRescheduleListStore } from '@/stores/reschedules';
 import { useSupplyDetailsStore } from '@/stores/supplies';
-import { useViewReady } from '../../composables/useSkeleton';
+import { useViewReady } from '../../composables/ui';
 import UserAlerts from '../../components/global/UserAlerts.vue';
 import ReschedulesCard from '../../components/reschedules/Card.vue';
 import ReschedulesSupplyDetailsModal from '../../components/reschedules/SupplyDetailsModal.vue';
