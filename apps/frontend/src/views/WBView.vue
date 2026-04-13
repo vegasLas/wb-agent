@@ -3,7 +3,7 @@
     <UserAlerts />
 
     <!-- Top Navigation Buttons -->
-    <div class="grid grid-cols-3 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <Button severity="primary" @click="showSection('promotions')">
         <i class="pi pi-tag mr-2" />
         акции
@@ -15,6 +15,10 @@
       <Button severity="help" @click="showSection('adverts')">
         <i class="pi pi-megaphone mr-2" />
         реклама
+      </Button>
+      <Button severity="info" @click="showSection('sales')">
+        <i class="pi pi-map mr-2" />
+        продажи по регионам
       </Button>
     </div>
 
@@ -101,6 +105,20 @@
       </div>
       <AdvertsView />
     </div>
+
+    <!-- Region Sales View -->
+    <div v-if="activeSection === 'sales'" class="space-y-4">
+      <div class="flex items-center gap-2">
+        <Button
+          icon="pi pi-arrow-left"
+          text
+          severity="secondary"
+          @click="showSection('main')"
+        />
+        <span class="font-medium">Продажи по регионам</span>
+      </div>
+      <RegionSalesView />
+    </div>
   </div>
 </template>
 
@@ -115,12 +133,13 @@ import UserAlerts from '../components/global/UserAlerts.vue';
 import PromotionsView from './promotions/PromotionsView.vue';
 import ReportsView from './ReportsView.vue';
 import AdvertsView from './adverts/AdvertsView.vue';
+import { RegionSalesView } from '@/components/report';
 
 const { viewReady } = useViewReady();
 const userStore = useUserStore();
 const advertsStore = useAdvertsStore();
 
-type SectionType = 'main' | 'promotions' | 'balances' | 'adverts';
+type SectionType = 'main' | 'promotions' | 'balances' | 'adverts' | 'sales';
 
 // Navigation state
 const activeSection = ref<SectionType>('main');
