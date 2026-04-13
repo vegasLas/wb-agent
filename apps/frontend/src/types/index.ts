@@ -738,6 +738,80 @@ export interface PromotionRecoveryParams {
 }
 
 // -----------------------------------------------------------------------------
+// Adverts Types
+// -----------------------------------------------------------------------------
+export interface AdvertsResponse {
+  http_status: number;
+  error: string;
+  code: number;
+  counts: AdvertsCounts;
+  content: AdvertContent[];
+}
+
+export interface AdvertsCounts {
+  totalCount: number;
+  pauseCount: number;
+}
+
+export interface AdvertContent {
+  id: number;
+  type: number;
+  bid_type: number;
+  status_id: number;
+  campaign_name: string;
+  create_date: string;
+  payment_model: string;
+  active_targets: number[];
+  products_count: number;
+  top_nm: number;
+  budget: number;
+  autofill: AdvertAutofill;
+}
+
+export interface AdvertAutofill {
+  is_enable: boolean;
+  error: unknown;
+}
+
+export interface AdvertPresetInfoResponse {
+  items: AdvertPresetItem[];
+  total: AdvertPresetTotal;
+  count: number;
+}
+
+export interface AdvertPresetItem {
+  name: string;
+  views: number;
+  clicks: number;
+  baskets: number;
+  orders: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  avg_pos: number;
+  shks: number;
+  is_excluded: boolean;
+  spend: number;
+  currency: string;
+}
+
+export interface AdvertPresetTotal {
+  name: string;
+  views: number;
+  clicks: number;
+  baskets: number;
+  orders: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  avg_pos: number;
+  shks: number;
+  is_excluded: boolean;
+  spend: number;
+  currency: string;
+}
+
+// -----------------------------------------------------------------------------
 // Auth Types
 // -----------------------------------------------------------------------------
 export type AuthMode = 'telegram' | 'browser';

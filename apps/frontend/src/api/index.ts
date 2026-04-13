@@ -16,6 +16,7 @@ export * from './drafts';
 export * from './reports';
 export * from './payments';
 export * from './promotions';
+export * from './adverts';
 export * from './suppliers';
 export * from './coefficients';
 
