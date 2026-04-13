@@ -8,6 +8,8 @@ import type {
   ReportItem,
   ReportRequestParams,
   ReportApiPayload,
+  RegionSaleData,
+  RegionSaleRequestBody,
 } from './types';
 
 // Helper to convert warehouse names to Russian
@@ -54,6 +56,11 @@ export const useReportStore = defineStore('report', () => {
   const error = ref<string | null>(null);
   const reportPending = ref(false);
   const estimatedWaitTime = ref<number | null>(null);
+
+  // Region Sales Report state
+  const regionSalesData = ref<RegionSaleData | null>(null);
+  const regionSalesLoading = ref(false);
+  const regionSalesError = ref<string | null>(null);
 
   // Legacy booking report state (keep for backward compatibility)
   const report = ref<Report | null>(null);
@@ -135,6 +142,17 @@ export const useReportStore = defineStore('report', () => {
   const hasData = computed(() => !!data.value && items.value.length > 0);
   const hasSuggestions = computed(() => warehouseSuggestions.value.length > 0);
 
+  // Region Sales getters
+  const regionSalesRows = computed(
+    () => regionSalesData.value?.salesRows || [],
+  );
+  const regionSalesTotal = computed(
+    () => regionSalesData.value?.cursor.total || 0,
+  );
+  const hasRegionSalesData = computed(
+    () => regionSalesRows.value.length > 0,
+  );
+
   // Actions
   async function getReport(params?: ReportRequestParams) {
     if (!userStore.user.selectedAccountId) {
@@ -197,6 +215,42 @@ export const useReportStore = defineStore('report', () => {
     }
   }
 
+  // Region Sales fetch
+  async function fetchRegionSales(body: RegionSaleRequestBody) {
+    if (!userStore.user.selectedAccountId) {
+      regionSalesError.value = 'Необходимо выбрать аккаунт';
+      return;
+    }
+    if (!userStore.hasValidSupplier) {
+      regionSalesError.value = 'Необходимо выбрать поставщика';
+      return;
+    }
+    if (!userStore.subscriptionActive) {
+      regionSalesError.value = 'Необходимо активировать подписку';
+      return;
+    }
+
+    regionSalesLoading.value = true;
+    regionSalesError.value = null;
+
+    try {
+      const response = await reportsAPI.fetchRegionSales(body);
+      regionSalesData.value = response;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'An unexpected error occurred';
+      regionSalesError.value = errorMsg;
+      regionSalesData.value = null;
+    } finally {
+      regionSalesLoading.value = false;
+    }
+  }
+
+  function clearRegionSales() {
+    regionSalesData.value = null;
+    regionSalesError.value = null;
+  }
+
   // Legacy fetch (booking stats)
   async function fetchReport() {
     try {
@@ -223,6 +277,7 @@ export const useReportStore = defineStore('report', () => {
     error.value = null;
     reportPending.value = false;
     estimatedWaitTime.value = null;
+    clearRegionSales();
   }
 
   return {
@@ -234,6 +289,9 @@ export const useReportStore = defineStore('report', () => {
     estimatedWaitTime: readonly(estimatedWaitTime),
     report: readonly(report),
     isFetched: readonly(isFetched),
+    regionSalesData: readonly(regionSalesData),
+    regionSalesLoading: readonly(regionSalesLoading),
+    regionSalesError: readonly(regionSalesError),
 
     // Getters
     items,
@@ -246,10 +304,15 @@ export const useReportStore = defineStore('report', () => {
     warehouseSuggestions,
     hasData,
     hasSuggestions,
+    regionSalesRows,
+    regionSalesTotal,
+    hasRegionSalesData,
 
     // Actions
     getReport,
     fetchReport,
     clearReport,
+    fetchRegionSales,
+    clearRegionSales,
   };
 });

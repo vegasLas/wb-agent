@@ -5,6 +5,7 @@
 
 import { Request, Response } from 'express';
 import { getSalesReport } from '@/services/domain/report/report.service';
+import { wbExtendedService } from '@/services/external/wb';
 import { logger } from '@/utils/logger';
 
 /**
@@ -91,6 +92,66 @@ export const fetchSalesReport = async (
  * Get user's legacy report data (booking stats)
  * This is kept for backward compatibility
  */
+/**
+ * POST /api/v1/reports/region-sales
+ * Get region sales report for the authenticated user
+ * Body: { dateFrom, dateTo, limit?, offset? }
+ */
+export const fetchRegionSales = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+      return;
+    }
+
+    const { dateFrom, dateTo, limit, offset } = req.body as {
+      dateFrom?: string;
+      dateTo?: string;
+      limit?: number;
+      offset?: number;
+    };
+
+    if (!dateFrom || !dateTo) {
+      res.status(400).json({
+        success: false,
+        error: 'dateFrom and dateTo are required',
+      });
+      return;
+    }
+
+    logger.info(
+      `Fetching region sales report for user ${userId}, date range: ${dateFrom} - ${dateTo}`,
+    );
+
+    const data = await wbExtendedService.getRegionSales({
+      userId,
+      dateFrom,
+      dateTo,
+      limit: limit ?? 10,
+      offset: offset ?? 0,
+    });
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    logger.error('Error in fetchRegionSales controller:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message || 'Internal server error',
+    });
+  }
+};
+
 export const fetchReport = async (
   req: Request,
   res: Response,
@@ -139,5 +200,6 @@ export const fetchReport = async (
 
 export default {
   fetchSalesReport,
+  fetchRegionSales,
   fetchReport,
 };

@@ -776,6 +776,50 @@ export interface AdvertPresetTotal {
   currency: string;
 }
 
+// ============ Region Sales Types ============
+
+export interface RegionSaleResponse {
+  data: RegionSaleData;
+  error: boolean;
+  errorText: string;
+  additionalErrors?: unknown;
+}
+
+export interface RegionSaleData {
+  salesRows: RegionSaleRow[];
+  cursor: RegionSaleCursor;
+}
+
+export interface RegionSaleCursor {
+  limit: number;
+  offset: number;
+  total: number;
+}
+
+export interface RegionSaleRow {
+  country: string;
+  fedOkr: string;
+  oblasts: RegionSaleOblast[];
+  qty: number;
+  reward: number;
+  share: number;
+}
+
+export interface RegionSaleOblast {
+  oblast: string;
+  cities: RegionSaleCity[];
+  qty: number;
+  reward: number;
+  share: number;
+}
+
+export interface RegionSaleCity {
+  city: string;
+  qty: number;
+  reward: number;
+  share: number;
+}
+
 // ============ MPStats Types ============
 
 export interface MpstatsSalesItem {

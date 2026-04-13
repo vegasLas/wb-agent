@@ -17,6 +17,8 @@ import type {
   MeasurementPenaltyData,
   AdvertsResponse,
   AdvertPresetInfoResponse,
+  RegionSaleResponse,
+  RegionSaleData,
 } from '@/types/wb';
 
 interface AccountContext {
@@ -75,6 +77,53 @@ async function resolveAccountContext(userId: number): Promise<AccountContext> {
 }
 
 export class WBExtendedService {
+  /**
+   * Get region sales by federal district from seller-weekly-report.wildberries.ru
+   * @param userId - User ID
+   * @param dateFrom - Start date (DD.MM.YY)
+   * @param dateTo - End date (DD.MM.YY)
+   * @param limit - Number of records to return (default: 10)
+   * @param offset - Offset for pagination (default: 0)
+   */
+  async getRegionSales({
+    userId,
+    dateFrom,
+    dateTo,
+    limit = 10,
+    offset = 0,
+  }: {
+    userId: number;
+    dateFrom: string;
+    dateTo: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<RegionSaleData> {
+    const { accountId, supplierId, userAgent, proxy } =
+      await resolveAccountContext(userId);
+
+    const url =
+      `https://seller-weekly-report.wildberries.ru/ns/regionsviewer/analytics-back/api/v1/region-sale-fedokr` +
+      `?dateFrom=${encodeURIComponent(dateFrom)}` +
+      `&dateTo=${encodeURIComponent(dateTo)}`;
+
+    logger.info(`Fetching region sales for user ${userId}`);
+
+    const response = await wbAccountRequest<RegionSaleResponse>({
+      url,
+      accountId,
+      userAgent,
+      proxy,
+      supplierId,
+      method: 'POST',
+      body: {
+        cursor: { offset, limit },
+        filters: ['country', 'fedOkr', 'oblast', 'city'],
+      },
+    });
+
+    return response.data;
+  }
+
   /**
    * Get measurement penalties from seller-weekly-report.wildberries.ru
    * @param userId - User ID
