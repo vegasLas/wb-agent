@@ -19,6 +19,7 @@ export * from './coefficients';
 export * from './payments';
 export * from './reports';
 export * from './promotions';
+export * from './adverts';
 
 // Complex Features
 export * from './triggers';
