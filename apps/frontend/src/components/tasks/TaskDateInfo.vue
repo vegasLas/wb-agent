@@ -53,7 +53,7 @@
 import { computed } from 'vue';
 import Tag from 'primevue/tag';
 import type { Autobooking } from '../../types';
-import { useAutobookingListStore } from '../../stores/autobookingList';
+import { useAutobookingListStore } from '@/stores/autobooking';
 import {
   formatDateShort,
   getWeekEndDate,

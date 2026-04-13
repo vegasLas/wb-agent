@@ -275,7 +275,7 @@ import InputOtp from 'primevue/inputotp';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import { PhoneInput } from '../ui';
-import { useAuthStore } from '../../stores/auth';
+import { useAuthStore } from '@/stores/auth';
 
 interface Emits {
   (e: 'cancel'): void;

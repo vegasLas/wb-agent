@@ -1,6 +1,7 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -18,6 +19,11 @@ export default defineConfig(() => ({
   // worker: {
   //  plugins: [],
   // },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   build: {
     outDir: '../../dist/apps/frontend',
     emptyOutDir: true,

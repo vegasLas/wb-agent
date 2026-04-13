@@ -1,6 +1,6 @@
-import { ref, computed, readonly } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { useRescheduleStore } from './index';
+import { useRescheduleStore } from './store';
 import { useWarehousesStore } from '../warehouses';
 
 export interface RescheduleUpdateFormData {
@@ -65,9 +65,10 @@ export const useRescheduleUpdateFormStore = defineStore(
             ? reschedule.value.endDate.split('T')[0]
             : formatDateToYYYYMMDD(reschedule.value.endDate)
           : '',
-        customDates: [...(reschedule.value.customDates || [])].map(
-          (date) =>
-            typeof date === 'string' ? date.split('T')[0] : formatDateToYYYYMMDD(date),
+        customDates: [...(reschedule.value.customDates || [])].map((date) =>
+          typeof date === 'string'
+            ? date.split('T')[0]
+            : formatDateToYYYYMMDD(date),
         ),
         maxCoefficient: reschedule.value.maxCoefficient,
       };
@@ -261,7 +262,9 @@ export const useRescheduleUpdateFormStore = defineStore(
         ) {
           formData.value.customDates = reschedule.value.customDates.map(
             (date) =>
-              typeof date === 'string' ? date.split('T')[0] : formatDateToYYYYMMDD(date),
+              typeof date === 'string'
+                ? date.split('T')[0]
+                : formatDateToYYYYMMDD(date),
           );
         }
       }

@@ -222,8 +222,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useTriggerStore } from '../../stores/triggers';
-import { useWarehousesStore } from '../../stores/warehouses';
+import { useTriggerStore } from '@/stores/triggers';
+import { useWarehousesStore } from '@/stores/warehouses';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';

@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import Button from 'primevue/button';
-import type { Account } from '../../stores/user';
+import type { Account } from '@/stores/user';
 
 interface Props {
   account: Account;

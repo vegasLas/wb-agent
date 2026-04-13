@@ -89,8 +89,8 @@
 import { useRouter } from 'vue-router';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
-import { useUserStore } from '../../stores/user';
-import { useAccountSupplierModalStore } from '../../stores/accountSupplierModal';
+import { useUserStore } from '@/stores/user';
+import { useAccountSupplierModalStore } from '@/stores/ui';
 
 const router = useRouter();
 const userStore = useUserStore();

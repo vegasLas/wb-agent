@@ -152,10 +152,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { SUPPLY_TYPES } from '../../constants';
-import { useDraftStore } from '../../stores/draft';
-import { useUserStore } from '../../stores/user';
-import { useAutobookingUpdateStore } from '../../stores/autobookingUpdate';
-import { useWarehousesStore } from '../../stores/warehouses';
+import { useDraftStore } from '@/stores/drafts';
+import { useUserStore } from '@/stores/user';
+import { useAutobookingUpdateStore } from '@/stores/autobooking';
+import { useWarehousesStore } from '@/stores/warehouses';
 import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 import Slider from 'primevue/slider';

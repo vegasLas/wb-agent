@@ -1,7 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { useRescheduleStore } from './index';
-import type { AutobookingReschedule, RescheduleStatus } from '../../types';
+import { useRescheduleStore } from './store';
+import type { RescheduleStatus } from '../../types';
 
 export interface RescheduleFilters {
   status: RescheduleStatus[];
@@ -122,7 +122,12 @@ export const useRescheduleListStore = defineStore('rescheduleList', () => {
       }
       // Numbers compare directly without modification
 
-      const comparison = (aValue as string | number) < (bValue as string | number) ? -1 : (aValue as string | number) > (bValue as string | number) ? 1 : 0;
+      const comparison =
+        (aValue as string | number) < (bValue as string | number)
+          ? -1
+          : (aValue as string | number) > (bValue as string | number)
+            ? 1
+            : 0;
       return sortOrder.value === 'desc' ? -comparison : comparison;
     });
 

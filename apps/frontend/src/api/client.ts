@@ -4,7 +4,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-import { getInitData } from '../utils/telegramWebApp';
+import { getInitData } from '../utils/telegram';
 
 // Token storage key for browser auth
 const AUTH_TOKEN_KEY = 'auth_token';

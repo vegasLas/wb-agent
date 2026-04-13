@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
-import { isTelegramWebApp, getInitData } from '../utils/telegramWebApp';
+import { isTelegramWebApp, getInitData } from '../utils/telegram';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
 import {
@@ -291,7 +291,7 @@ router.beforeEach(async (to, from, next) => {
 
   // Browser mode authentication check
   if (isBrowserMode()) {
-    const { useBrowserAuthStore } = await import('../stores/browserAuth');
+    const { useBrowserAuthStore } = await import('@/stores/auth');
     const browserAuth = useBrowserAuthStore();
     
     // Only init auth once per session - skip if already initialized and we have a valid auth

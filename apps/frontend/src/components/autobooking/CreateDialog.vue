@@ -58,11 +58,11 @@
 import { ref, computed, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
-import { useAutobookingFormStore } from '../../stores/autobookingForm';
-import { useUserStore } from '../../stores/user';
-import { useDraftStore } from '../../stores/draft';
-import { useWarehousesStore } from '../../stores/warehouses';
-import { useDraftsFetcher } from '../../composables/useDraftsFetcher';
+import { useAutobookingFormStore } from '@/stores/autobooking';
+import { useUserStore } from '@/stores/user';
+import { useDraftStore } from '@/stores/drafts';
+import { useWarehousesStore } from '@/stores/warehouses';
+import { useDraftsFetcher } from '../../composables/autobooking';
 import AutobookingFormFields from './FormFields.vue';
 import AutobookingDraftGoodsModal from './DraftGoodsModal.vue';
 import AutobookingHints from './Hints.vue';

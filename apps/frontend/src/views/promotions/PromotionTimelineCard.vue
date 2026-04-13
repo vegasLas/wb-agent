@@ -162,7 +162,7 @@ import Tag from 'primevue/tag';
 import { computed } from 'vue';
 import { usePromotionItem } from '../../composables';
 import type { PromotionItem } from '../../types';
-import type { PromotionPosition } from '../../composables/usePromotionsTimeline';
+import type { PromotionPosition } from '../../composables/promotions';
 
 interface Props {
   promotion: PromotionItem;

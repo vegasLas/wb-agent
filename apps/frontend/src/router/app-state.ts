@@ -1,10 +1,10 @@
 import { ref } from 'vue';
-import { useUserStore } from '../stores/user';
-import { useWarehousesStore } from '../stores/warehouses';
-import { useRescheduleStore } from '../stores/reschedules';
-import { useAccountSupplierModalStore } from '../stores/accountSupplierModal';
+import { useUserStore } from '@/stores/user';
+import { useWarehousesStore } from '@/stores/warehouses';
+import { useRescheduleStore } from '@/stores/reschedules';
+import { useAccountSupplierModalStore } from '@/stores/ui';
 import router from './index';
-import { isTelegramWebApp, getTelegramColorScheme, getInitData } from '../utils/telegramWebApp';
+import { isTelegramWebApp, getTelegramColorScheme, getInitData } from '../utils/telegram';
 
 // Reactive state for components that need it
 const isInitializing = ref(false);

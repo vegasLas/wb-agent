@@ -1,0 +1,97 @@
+import { ref, computed, readonly } from 'vue';
+import { defineStore } from 'pinia';
+import { suppliersAPI, type ApiKeyStatus } from '@/api';
+
+export const useSupplierApiKeyStore = defineStore('supplierApiKey', () => {
+  // State
+  const status = ref<ApiKeyStatus | null>(null);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
+  const isFetched = ref(false);
+  const saving = ref(false);
+
+  // Getters
+  const isValid = computed(() => status.value?.success || false);
+
+  const statusMessage = computed(() => status.value?.hasApiKey ? 'API key is configured' : 'No API key configured');
+
+  // Actions
+  async function checkStatus() {
+    try {
+      loading.value = true;
+      error.value = null;
+      const data = await suppliersAPI.checkApiKeyStatus();
+      status.value = data;
+      isFetched.value = true;
+      return data;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to check API key status';
+      error.value = errorMsg;
+      status.value = null;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function updateApiKey(apiKey: string) {
+    try {
+      saving.value = true;
+      error.value = null;
+      await suppliersAPI.updateSupplierApiKey(apiKey);
+      // Re-check status after update
+      await checkStatus();
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to update API key';
+      error.value = errorMsg;
+      throw err;
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function deleteApiKey() {
+    try {
+      loading.value = true;
+      error.value = null;
+      await suppliersAPI.deleteSupplierApiKey();
+      // Clear status after delete
+      status.value = null;
+      isFetched.value = false;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to delete API key';
+      error.value = errorMsg;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  function clearStatus() {
+    status.value = null;
+    isFetched.value = false;
+    error.value = null;
+  }
+
+  return {
+    // State
+    status: readonly(status),
+    loading: readonly(loading),
+    error: readonly(error),
+    isFetched: readonly(isFetched),
+    saving: readonly(saving),
+
+    // Getters
+    isValid,
+    statusMessage,
+
+    // Actions
+    checkStatus,
+    updateApiKey,
+    deleteApiKey,
+    clearStatus,
+  };
+});

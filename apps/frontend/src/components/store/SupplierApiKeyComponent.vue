@@ -161,8 +161,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useSupplierApiKeyStore } from '../../stores/supplierApiKey';
-import { useUserStore } from '../../stores/user';
+import { useSupplierApiKeyStore } from '@/stores/suppliers';
+import { useUserStore } from '@/stores/user';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Card from 'primevue/card';

@@ -1,6 +1,6 @@
 import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
-import { useRescheduleStore } from './index';
+import { useRescheduleStore } from './store';
 import { useUserStore } from '../user';
 import type { CreateAutobookingRescheduleRequest, Supply } from '../../types';
 
