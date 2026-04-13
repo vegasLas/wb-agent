@@ -1,5 +1,11 @@
 import apiClient from '../client';
-import type { Report, ReportApiPayload, ReportRequestParams } from './types';
+import type {
+  Report,
+  ReportApiPayload,
+  ReportRequestParams,
+  RegionSaleData,
+  RegionSaleRequestBody,
+} from './types';
 
 /**
  * Reports API
@@ -26,6 +32,18 @@ export const reportsAPI = {
     const response = await apiClient.get<{ data: ReportApiPayload }>(
       '/reports/sales',
       { params },
+    );
+    return response.data.data;
+  },
+
+  /**
+   * POST /api/v1/reports/region-sales
+   * Get region sales report for date range
+   */
+  async fetchRegionSales(body: RegionSaleRequestBody): Promise<RegionSaleData> {
+    const response = await apiClient.post<{ data: RegionSaleData }>(
+      '/reports/region-sales',
+      body,
     );
     return response.data.data;
   },
