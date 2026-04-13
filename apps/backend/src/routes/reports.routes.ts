@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import {
   fetchSalesReport,
+  fetchRegionSales,
   fetchReport,
 } from '@/controllers/reports.controller';
 
@@ -19,6 +20,17 @@ const router = Router();
  * @access  Private
  */
 router.get('/sales', fetchSalesReport);
+
+/**
+ * @route   POST /api/v1/reports/region-sales
+ * @desc    Get region sales report by federal districts
+ * @body    dateFrom - Start date (DD.MM.YY)
+ * @body    dateTo - End date (DD.MM.YY)
+ * @body    limit - Number of records (default: 10)
+ * @body    offset - Offset for pagination (default: 0)
+ * @access  Private
+ */
+router.post('/region-sales', fetchRegionSales);
 
 /**
  * @route   GET /api/v1/reports
