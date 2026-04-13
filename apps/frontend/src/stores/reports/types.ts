@@ -4,6 +4,8 @@ import type {
   ReportItem,
   ReportRequestParams,
   ReportApiPayload,
+  RegionSaleData,
+  RegionSaleRequestBody,
 } from '@/types';
 
 export type ReportViewType = 'charts' | 'suggestions' | 'daily-sales';
@@ -14,4 +16,6 @@ export {
   ReportItem,
   ReportRequestParams,
   ReportApiPayload,
+  RegionSaleData,
+  RegionSaleRequestBody,
 };
