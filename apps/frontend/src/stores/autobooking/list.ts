@@ -3,8 +3,13 @@ import { defineStore } from 'pinia';
 import { autobookingAPI } from '@/api';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { toastHelpers } from '@/utils/ui';
-import { AUTOBOOKING_STATUSES } from '@/constants';
-import type { Autobooking, AutobookingReschedule, BadgeColor, StatusCounts, AutobookingsResponse } from './types';
+import type {
+  Autobooking,
+  AutobookingReschedule,
+  BadgeColor,
+  StatusCounts,
+  AutobookingsResponse,
+} from './types';
 
 export const useAutobookingListStore = defineStore('autobookingList', () => {
   const searchQuery = ref('');
@@ -75,14 +80,17 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
    */
   async function fetchDataIfNeeded(): Promise<boolean> {
     const currentStatus = selectedStatus.value;
-    
+
     // If we already have data for this status, don't fetch again
-    if (isStatusFetched(currentStatus) && statusCache.value[currentStatus]?.length > 0) {
+    if (
+      isStatusFetched(currentStatus) &&
+      statusCache.value[currentStatus]?.length > 0
+    ) {
       // Use cached data for this status
       autobookings.value = statusCache.value[currentStatus];
       return false;
     }
-    
+
     // Fetch new data
     await fetchData();
     return true;
@@ -130,7 +138,8 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     )
       return [];
 
-    const completedDates = (booking as unknown as AutobookingReschedule).completedDates || [];
+    const completedDates =
+      (booking as unknown as AutobookingReschedule).completedDates || [];
     return booking.customDates.filter((date) => {
       const dateToCheck = new Date(date);
       dateToCheck.setHours(0, 0, 0, 0);
@@ -217,11 +226,19 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
       clearStatusCache();
 
       // Show success toast
-      const warehouseName = warehouseStore.getWarehouseName(updated.warehouseId);
-      toastHelpers.success('Автобронирование активировано', `Склад: ${warehouseName}`);
+      const warehouseName = warehouseStore.getWarehouseName(
+        updated.warehouseId,
+      );
+      toastHelpers.success(
+        'Автобронирование активировано',
+        `Склад: ${warehouseName}`,
+      );
     } catch (err) {
       error.value = 'Failed to activate autobooking';
-      toastHelpers.error('Ошибка активации', 'Не удалось активировать автобронирование');
+      toastHelpers.error(
+        'Ошибка активации',
+        'Не удалось активировать автобронирование',
+      );
       throw err;
     } finally {
       loading.value = false;
