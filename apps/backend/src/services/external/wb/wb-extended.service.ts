@@ -142,6 +142,7 @@ export class WBExtendedService {
     autofill = 'all',
     bidType = [1, 2],
     type = [8, 9],
+    filterState,
   }: {
     userId: number;
     pageNumber?: number;
@@ -152,11 +153,12 @@ export class WBExtendedService {
     autofill?: string;
     bidType?: number[];
     type?: number[];
+    filterState?: number;
   }): Promise<AdvertsResponse> {
     const { accountId, supplierId, userAgent, proxy } =
       await resolveAccountContext(userId);
 
-    const url =
+    let url =
       `https://cmp.wildberries.ru/api/v1/adverts` +
       `?page_number=${pageNumber}` +
       `&page_size=${pageSize}` +
@@ -166,6 +168,10 @@ export class WBExtendedService {
       `&autofill=${autofill}` +
       `&bid_type=${encodeURIComponent(JSON.stringify(bidType))}` +
       `&type=${encodeURIComponent(JSON.stringify(type))}`;
+
+    if (filterState !== undefined) {
+      url += `&filter_state=${filterState}`;
+    }
 
     logger.info(`Fetching adverts list for user ${userId}`);
 
@@ -188,33 +194,36 @@ export class WBExtendedService {
    * @param filterQuery - Filter query (default: empty)
    * @param from - Start date (default: 7 days ago)
    * @param to - End date (default: today)
+   * @param nmId - NM ID for filtering (required by WB API - use top_nm from advert)
    * @param sortDirection - Sort direction (default: 'descend')
-   * @param nmId - NM ID for filtering
+   * @param filterState - Filter state (1 = active, 2 = inactive)
    * @param calcPages - Calculate pages (default: true)
    * @param calcTotal - Calculate total (default: true)
    */
   async getAdvertPresetInfo({
     userId,
     advertId,
+    nmId,
     pageSize = 5,
     pageNumber = 1,
     filterQuery = '',
     from,
     to,
     sortDirection = 'descend',
-    nmId,
+    filterState,
     calcPages = true,
     calcTotal = true,
   }: {
     userId: number;
     advertId: number;
+    nmId: number; // Required by WB API
     pageSize?: number;
     pageNumber?: number;
     filterQuery?: string;
     from?: string;
     to?: string;
     sortDirection?: string;
-    nmId?: number;
+    filterState?: number;
     calcPages?: boolean;
     calcTotal?: boolean;
   }): Promise<AdvertPresetInfoResponse> {
@@ -237,11 +246,12 @@ export class WBExtendedService {
       `&from=${finalFrom}` +
       `&to=${finalTo}` +
       `&sort_direction=${sortDirection}` +
+      `&nm_id=${nmId}` +
       `&calc_pages=${calcPages}` +
       `&calc_total=${calcTotal}`;
 
-    if (nmId !== undefined) {
-      url += `&nm_id=${nmId}`;
+    if (filterState !== undefined) {
+      url += `&filter_state=${filterState}`;
     }
 
     logger.info(
