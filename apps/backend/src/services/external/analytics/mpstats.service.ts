@@ -5,74 +5,43 @@
  */
 
 import { prisma } from '@/config/database';
-import type { ProxyConfig } from '@/utils/wb-request';
 import { createLogger } from '@/utils/logger';
-import * as pkg from 'https-proxy-agent';
-const { HttpsProxyAgent } = pkg;
+import axios, { AxiosError } from 'axios';
 
 const logger = createLogger('MPStats');
 
 import type {
   MpstatsSalesItem,
   MpstatsSalesByRegionItem,
+  MpstatsBalanceByRegionItem,
+  MpstatsSkuSummary,
+  MpstatsItemFull,
 } from '@/types/wb';
 
-/**
- * Format proxy URL from ProxyConfig
- */
-function formatProxyUrl(proxy: ProxyConfig): string {
-  const auth =
-    proxy.username && proxy.password
-      ? `${encodeURIComponent(proxy.username)}:${encodeURIComponent(proxy.password)}@`
-      : '';
-  return `http://${auth}${proxy.ip}:${proxy.port}`;
-}
-
-/**
- * Make HTTP request with optional proxy
- */
-async function makeHttpRequest<T>(
+async function axiosGet<T>(
   url: string,
   headers: Record<string, string>,
-  proxy?: ProxyConfig,
 ): Promise<T> {
-  let response: Response;
-
-  if (proxy) {
-    const proxyUrl = formatProxyUrl(proxy);
-    const nodeFetch = await import('node-fetch').then((m) => m.default);
-    const proxyAgent = new HttpsProxyAgent(proxyUrl);
-
-    response = (await nodeFetch(url, {
-      method: 'GET',
+  try {
+    logger.info(`MPStats request: ${url}`);
+    const response = await axios.get<T>(url, {
       headers,
-      agent: proxyAgent as unknown as import('node-fetch').RequestInit['agent'],
-    })) as unknown as Response;
-  } else {
-    response = await fetch(url, {
-      method: 'GET',
-      headers,
+      timeout: 30000,
     });
-  }
-
-  if (!response.ok) {
-    let errorBody: unknown;
-    try {
-      errorBody = await response.clone().json();
-    } catch {
-      try {
-        errorBody = await response.clone().text();
-      } catch {
-        errorBody = 'Could not read error response body';
-      }
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const axiosErr = error as AxiosError;
+      logger.error(
+        `MPStats API error [${url}]: ${axiosErr.response?.status} - ${JSON.stringify(axiosErr.response?.data)}`,
+      );
+      const errorData = axiosErr.response?.data as { message?: string } | undefined;
+      throw new Error(
+        `MPStats API error: ${errorData?.message || axiosErr.message}`,
+      );
     }
-
-    throw new Error(
-      `Request failed with status ${response.status}: ${JSON.stringify(errorBody)}`,
-    );
+    throw error;
   }
-
-  return (await response.json()) as T;
 }
 
 export class MPStatsService {
@@ -83,7 +52,6 @@ export class MPStatsService {
    * @param d2 - End date (YYYY-MM-DD)
    * @param mpstatsToken - MPStats API token
    * @param fbs - FBS flag (default: 1)
-   * @param proxy - Optional proxy configuration
    */
   async getSales({
     nmId,
@@ -91,14 +59,12 @@ export class MPStatsService {
     d2,
     mpstatsToken,
     fbs = 1,
-    proxy,
   }: {
     nmId: number;
     d1: string;
     d2: string;
     mpstatsToken: string;
     fbs?: number;
-    proxy?: ProxyConfig;
   }): Promise<MpstatsSalesItem[]> {
     const url =
       `https://mpstats.io/api/wb/get/item/${nmId}/sales` +
@@ -113,7 +79,7 @@ export class MPStatsService {
 
     logger.info(`Fetching MPStats sales for nmId: ${nmId}`);
 
-    return makeHttpRequest<MpstatsSalesItem[]>(url, headers, proxy);
+    return axiosGet<MpstatsSalesItem[]>(url, headers);
   }
 
   /**
@@ -122,25 +88,25 @@ export class MPStatsService {
    * @param d1 - Start date (YYYY-MM-DD)
    * @param d2 - End date (YYYY-MM-DD)
    * @param mpstatsToken - MPStats API token
-   * @param proxy - Optional proxy configuration
    */
   async getSalesByRegion({
     nmId,
     d1,
     d2,
     mpstatsToken,
-    proxy,
+    fbs = 1,
   }: {
     nmId: number;
     d1: string;
     d2: string;
     mpstatsToken: string;
-    proxy?: ProxyConfig;
+    fbs?: number;
   }): Promise<MpstatsSalesByRegionItem[]> {
     const url =
       `https://mpstats.io/api/wb/get/item/${nmId}/sales_by_region` +
       `?d1=${encodeURIComponent(d1)}` +
-      `&d2=${encodeURIComponent(d2)}`;
+      `&d2=${encodeURIComponent(d2)}` +
+      `&fbs=${fbs}`;
 
     const headers = {
       'X-Mpstats-TOKEN': mpstatsToken,
@@ -149,7 +115,7 @@ export class MPStatsService {
 
     logger.info(`Fetching MPStats sales by region for nmId: ${nmId}`);
 
-    return makeHttpRequest<MpstatsSalesByRegionItem[]>(url, headers, proxy);
+    return axiosGet<MpstatsSalesByRegionItem[]>(url, headers);
   }
 
   /**
@@ -185,18 +151,44 @@ export class MPStatsService {
       throw new Error('MPStats token not configured for user');
     }
 
-    const envInfo = user.envInfo as unknown as {
-      proxy?: ProxyConfig;
-    } | null;
-
     return this.getSales({
       nmId,
       d1,
       d2,
       mpstatsToken: user.mpstatsToken,
       fbs,
-      proxy: envInfo?.proxy,
     });
+  }
+
+  /**
+   * Get MPStats balance by region for a specific NM ID
+   * @param nmId - Wildberries NM ID
+   * @param mpstatsToken - MPStats API token
+   */
+  async getBalanceByRegion({
+    nmId,
+    d,
+    mpstatsToken,
+    fbs = 1,
+  }: {
+    nmId: number;
+    d: string;
+    mpstatsToken: string;
+    fbs?: number;
+  }): Promise<MpstatsBalanceByRegionItem[]> {
+    const url =
+      `https://mpstats.io/api/wb/get/item/${nmId}/balance_by_region` +
+      `?d=${encodeURIComponent(d)}` +
+      `&fbs=${fbs}`;
+
+    const headers = {
+      'X-Mpstats-TOKEN': mpstatsToken,
+      'Content-Type': 'application/json',
+    };
+
+    logger.info(`Fetching MPStats balance by region for nmId: ${nmId}`);
+
+    return axiosGet<MpstatsBalanceByRegionItem[]>(url, headers);
   }
 
   /**
@@ -229,17 +221,147 @@ export class MPStatsService {
       throw new Error('MPStats token not configured for user');
     }
 
-    const envInfo = user.envInfo as unknown as {
-      proxy?: ProxyConfig;
-    } | null;
-
     return this.getSalesByRegion({
       nmId,
       d1,
       d2,
       mpstatsToken: user.mpstatsToken,
-      proxy: envInfo?.proxy,
     });
+  }
+
+  /**
+   * Get MPStats balance by region for a user (fetches token from user record)
+   * @param userId - User ID
+   * @param nmId - Wildberries NM ID
+   */
+  async getBalanceByRegionForUser({
+    userId,
+    nmId,
+    d,
+  }: {
+    userId: number;
+    nmId: number;
+    d: string;
+  }): Promise<MpstatsBalanceByRegionItem[]> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.mpstatsToken) {
+      throw new Error('MPStats token not configured for user');
+    }
+
+    return this.getBalanceByRegion({
+      nmId,
+      d,
+      mpstatsToken: user.mpstatsToken,
+    });
+  }
+
+  /**
+   * Get MPStats full item info
+   * @param nmId - Wildberries NM ID
+   * @param d1 - Start date (YYYY-MM-DD)
+   * @param d2 - End date (YYYY-MM-DD)
+   * @param mpstatsToken - MPStats API token
+   */
+  async getItemFull({
+    nmId,
+    d1,
+    d2,
+    mpstatsToken,
+  }: {
+    nmId: number;
+    d1: string;
+    d2: string;
+    mpstatsToken: string;
+  }): Promise<MpstatsItemFull> {
+    const url = `https://mpstats.io/api/analytics/v1/wb/items/${nmId}/full?d1=${encodeURIComponent(d1)}&d2=${encodeURIComponent(d2)}`;
+
+    const headers = {
+      'X-Mpstats-TOKEN': mpstatsToken,
+      'Content-Type': 'application/json',
+    };
+
+    logger.info(`Fetching MPStats item full for nmId: ${nmId}`);
+
+    return axiosGet<MpstatsItemFull>(url, headers);
+  }
+
+  async getItemFullForUser({
+    userId,
+    nmId,
+    d1,
+    d2,
+  }: {
+    userId: number;
+    nmId: number;
+    d1: string;
+    d2: string;
+  }): Promise<MpstatsItemFull> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.mpstatsToken) {
+      throw new Error('MPStats token not configured for user');
+    }
+
+    return this.getItemFull({
+      nmId,
+      d1,
+      d2,
+      mpstatsToken: user.mpstatsToken,
+    });
+  }
+
+  async getSkuSummary({
+    userId,
+    nmId,
+    d1,
+    d2,
+    fbs = 1,
+  }: {
+    userId: number;
+    nmId: number;
+    d1: string;
+    d2: string;
+    fbs?: number;
+  }): Promise<MpstatsSkuSummary> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.mpstatsToken) {
+      throw new Error('MPStats token not configured for user');
+    }
+
+    const mpstatsToken = user.mpstatsToken;
+
+    const [sales, salesByRegion, balanceByRegion] = await Promise.all([
+      this.getSales({ nmId, d1, d2, mpstatsToken, fbs }),
+      this.getSalesByRegion({ nmId, d1, d2, mpstatsToken, fbs }),
+      this.getBalanceByRegion({ nmId, d: d2, mpstatsToken, fbs }),
+    ]);
+
+    return {
+      nmId,
+      sales,
+      salesByRegion,
+      balanceByRegion,
+    };
   }
 }
 
