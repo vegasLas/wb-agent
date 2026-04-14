@@ -35,7 +35,9 @@ async function axiosGet<T>(
       logger.error(
         `MPStats API error [${url}]: ${axiosErr.response?.status} - ${JSON.stringify(axiosErr.response?.data)}`,
       );
-      const errorData = axiosErr.response?.data as { message?: string } | undefined;
+      const errorData = axiosErr.response?.data as
+        | { message?: string }
+        | undefined;
       throw new Error(
         `MPStats API error: ${errorData?.message || axiosErr.message}`,
       );
