@@ -26,3 +26,6 @@ export * from './triggers';
 export * from './autobooking';
 export * from './reschedules';
 export * from './supplies';
+
+// Analytics
+export * from './mpstats';
