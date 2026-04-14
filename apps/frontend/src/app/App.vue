@@ -60,6 +60,7 @@ import {
   isTelegramWebApp,
   getInitData,
 } from '../utils/telegram';
+import type { ColorScheme } from '../utils/telegram/theme';
 
 // Initialize color mode with proper configuration for class-based dark mode
 const colorMode = useColorMode({
@@ -69,12 +70,17 @@ const colorMode = useColorMode({
 
 // Set up Telegram color scheme if available
 // This works even when telegram-web-app.js is not loaded (uses URL initData detection)
-const telegramColorScheme = ref<string | undefined>(undefined);
+const telegramColorScheme = ref<ColorScheme | undefined>(undefined);
 
 // Check for Telegram mode and set color scheme
+// Only apply Telegram theme on init if user hasn't manually set a preference
 if (isTelegramWebApp()) {
-  // Get color scheme from Telegram theme params (URL hash or sessionStorage)
-  telegramColorScheme.value = getTelegramColorScheme();
+  const manualPreference = localStorage.getItem('vueuse-color-scheme');
+  const hasManualPreference = manualPreference && manualPreference !== 'auto';
+  if (!hasManualPreference) {
+    // Get color scheme from Telegram theme params (URL hash or sessionStorage)
+    telegramColorScheme.value = getTelegramColorScheme();
+  }
 }
 
 // Watch Telegram's color scheme and apply it
