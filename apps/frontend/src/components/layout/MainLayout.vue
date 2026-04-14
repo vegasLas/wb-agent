@@ -30,16 +30,29 @@
           </Button>
         </div>
 
-        <!-- Plus Button with Entity Selection (Right) -->
-        <Button
-          severity="primary"
-          class="rounded"
-          aria-label="Добавить"
-          @click="toggleAddMenu"
-        >
-          <i class="pi pi-plus" />
-        </Button>
-        <Menu ref="addMenu" :model="addMenuItems" :popup="true" />
+        <!-- Action Buttons (Right) -->
+        <div class="flex items-center gap-2">
+          <Button
+            severity="secondary"
+            variant="outlined"
+            class="rounded"
+            aria-label="Переключить тему"
+            @click="toggleTheme"
+          >
+            <i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" />
+          </Button>
+
+          <!-- Plus Button with Entity Selection -->
+          <Button
+            severity="primary"
+            class="rounded"
+            aria-label="Добавить"
+            @click="toggleAddMenu"
+          >
+            <i class="pi pi-plus" />
+          </Button>
+          <Menu ref="addMenu" :model="addMenuItems" :popup="true" />
+        </div>
       </div>
 
       <!-- Content Area -->
@@ -79,6 +92,7 @@
 <script setup lang="ts">
 import { ref, inject, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useColorMode } from '@vueuse/core';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import { useAccountSupplierModalStore } from '@/stores/ui';
@@ -96,6 +110,18 @@ import { useTriggerStore } from '@/stores/triggers';
 const accountModalStore = useAccountSupplierModalStore();
 const userStore = useUserStore();
 const showHelpModal = ref(false);
+
+// Theme toggle
+const colorMode = useColorMode({
+  attribute: 'class',
+  selector: 'html',
+});
+
+const isDark = computed(() => colorMode.value === 'dark');
+
+const toggleTheme = () => {
+  colorMode.value = isDark.value ? 'light' : 'dark';
+};
 
 // Computed property to get current supplier name
 const currentSupplierName = computed(() => {
