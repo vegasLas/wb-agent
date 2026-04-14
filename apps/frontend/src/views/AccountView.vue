@@ -76,6 +76,9 @@
     <!-- Supplier API Key -->
     <SupplierApiKeyComponent />
 
+    <!-- MPStats Token -->
+    <MpstatsTokenComponent />
+
     <!-- Payment History -->
     <Card>
       <template #title>
@@ -158,6 +161,7 @@ import Tag from 'primevue/tag';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import SupplierApiKeyComponent from '../components/store/SupplierApiKeyComponent.vue';
+import MpstatsTokenComponent from '../components/mpstats/MpstatsTokenComponent.vue';
 
 import { useUserStore } from '@/stores/user';
 import { useAccountSupplierModalStore } from '@/stores/ui';
