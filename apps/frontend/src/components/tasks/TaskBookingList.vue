@@ -233,12 +233,11 @@ function getTotalForSelectedStatus(): number {
   return listStore.statusCounts[listStore.selectedStatus] || 0;
 }
 
-// Initialize infinite scroll on the TaskListLayout's scrollContainer
+// Initialize infinite scroll on the actual scrollable container (document)
 useInfiniteScroll(
-  () => layoutRef.value?.scrollContainer ?? null,
+  document,
   async () => {
-    if (!listStore.nextPage) return;
-    console.log('useInfiniteScroll');
+    if (!listStore.nextPage || listStore.loading) return;
     const totalForStatus = getTotalForSelectedStatus();
     if (listStore.filteredBookings.length >= totalForStatus) return;
     await listStore.loadNextPage();
@@ -247,6 +246,7 @@ useInfiniteScroll(
     distance: 100,
     canLoadMore: () =>
       Boolean(listStore.nextPage) &&
+      !listStore.loading &&
       listStore.filteredBookings.length < getTotalForSelectedStatus(),
   },
 );
