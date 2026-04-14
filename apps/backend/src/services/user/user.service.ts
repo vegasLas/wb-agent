@@ -126,6 +126,13 @@ export class UserService {
     });
   }
 
+  async updateMpstatsToken(userId: number, token: string | null) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { mpstatsToken: token },
+    });
+  }
+
   async getUserStats(userId: number) {
     const stats = await prisma.user.findUnique({
       where: { id: userId },
