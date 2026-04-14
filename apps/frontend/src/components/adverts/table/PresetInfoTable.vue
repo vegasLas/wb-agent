@@ -21,30 +21,25 @@
     </div>
 
     <!-- Filter inputs -->
-    <div class="filter-block">
-      <FloatLabel variant="on">
-        <InputNumber
-          id="minCost"
-          v-model="minCost"
-          :min="0"
-          :step="10"
-          class="filter-input"
-          input-class="filter-input-inner"
-        />
-        <label for="minCost" class="filter-float-label">Мин. затраты, ₽</label>
+    <div
+      class="flex flex-wrap items-center gap-4 p-4 rounded-[18px] border bg-card border-[var(--color-border)] shadow-card dark:bg-gradient-to-br dark:from-[rgba(30,30,40,0.9)] dark:to-[#15151C] dark:border-[rgba(106,57,244,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
+    >
+      <FloatLabel variant="on" class="flex-1">
+        <InputNumber id="minCost" v-model="minCost" :min="0" :step="10" />
+        <label for="minCost">Мин. затраты, ₽</label>
       </FloatLabel>
-      <div class="filter-divider" />
-      <FloatLabel variant="on">
+      <div
+        class="w-px h-10 hidden sm:block bg-[var(--color-border)] dark:bg-[#2a2a35]"
+      />
+      <FloatLabel variant="on" class="flex-1">
         <InputNumber
           id="minCtr"
           v-model="minCtr"
           :min="0"
           :step="0.1"
           :maxFractionDigits="2"
-          class="filter-input"
-          input-class="filter-input-inner"
         />
-        <label for="minCtr" class="filter-float-label">Макс. CTR</label>
+        <label for="minCtr">Макс. CTR</label>
       </FloatLabel>
     </div>
 
@@ -232,72 +227,11 @@ function formatCtr(value: number): string {
 }
 </script>
 
-<style scoped>
-.filter-block {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 1.25rem 1.5rem;
-  border-radius: 18px;
-  background: linear-gradient(
-    160deg,
-    rgba(30, 30, 40, 0.9),
-    rgba(21, 21, 28, 1)
-  );
-  border: 1px solid rgba(106, 57, 244, 0.12);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.filter-input {
-  width: 130px;
-}
-
-.filter-input :deep(.filter-input-inner) {
-  background: rgba(10, 10, 15, 0.7) !important;
-  border: 1px solid #2a2a35 !important;
-  border-radius: 12px !important;
-  color: #ffffff !important;
-  padding: 0.875rem 0.875rem 0.5rem !important;
-  font-size: 0.9375rem !important;
-  font-weight: 600 !important;
-  transition: all 0.2s ease;
-}
-
-.filter-input :deep(.filter-input-inner:hover) {
-  border-color: #3d3d4d !important;
-  background: rgba(10, 10, 15, 0.85) !important;
-}
-
-.filter-input :deep(.filter-input-inner:focus) {
-  border-color: #6a39f4 !important;
-  box-shadow: 0 0 0 3px rgba(106, 57, 244, 0.12) !important;
-  background: rgba(10, 10, 15, 0.9) !important;
-}
-
-.filter-float-label {
-  color: #6b7280 !important;
-  font-size: 0.75rem !important;
-  font-weight: 500 !important;
-  letter-spacing: 0.02em;
-}
-
-.filter-input :deep(.filter-input-inner:focus ~ label),
-.filter-input :deep(label.p-active) {
-  color: #8b69f6 !important;
-}
-
-.filter-divider {
-  width: 1px;
-  height: 40px;
-  background: linear-gradient(180deg, transparent, #2a2a35 50%, transparent);
-}
-
-:deep(.bg-amber-50) {
+<style>
+.bg-amber-50 {
   background-color: rgba(251, 191, 36, 0.12) !important;
 }
-:deep(.bg-amber-50 td) {
+.bg-amber-50 td {
   background-color: rgba(251, 191, 36, 0.12) !important;
 }
 </style>
