@@ -7,12 +7,12 @@
       <Card class="text-center py-8">
         <template #content>
           <div class="flex flex-col items-center">
-            <div class="w-16 h-16 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+            <div
+              class="w-16 h-16 rounded-lg bg-blue-600 flex items-center justify-center mb-4"
+            >
               <i class="pi pi-chart-bar text-white text-2xl" />
             </div>
-            <p class="text-lg font-medium mb-2">
-              MPStats
-            </p>
+            <p class="text-lg font-medium mb-2">MPStats</p>
             <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-6">
               Для работы с MPStats необходимо настроить токен MPStats
             </p>
@@ -21,11 +21,19 @@
               <!-- MPStats Token Status -->
               <div
                 class="flex items-center gap-3 p-4 rounded-lg border"
-                :class="hasMpstatsToken ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-gray-600'"
+                :class="
+                  hasMpstatsToken
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                    : 'border-gray-300 dark:border-gray-600'
+                "
               >
                 <i
                   class="text-xl"
-                  :class="hasMpstatsToken ? 'pi pi-check-circle text-green-500' : 'pi pi-lock text-gray-400'"
+                  :class="
+                    hasMpstatsToken
+                      ? 'pi pi-check-circle text-green-500'
+                      : 'pi pi-lock text-gray-400'
+                  "
                 />
                 <div class="flex-1">
                   <p class="font-medium">Токен MPStats</p>
@@ -55,16 +63,6 @@
             <i class="pi pi-search mr-2" />
             Поиск
           </Tab>
-          <Tab value="history">
-            <i class="pi pi-clock mr-2" />
-            История
-            <span
-              v-if="mpstatsStore.history.length > 0"
-              class="ml-2 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full"
-            >
-              {{ mpstatsStore.history.length }}
-            </span>
-          </Tab>
           <Tab value="favorites">
             <i class="pi pi-heart mr-2" />
             Избранное
@@ -73,6 +71,16 @@
               class="ml-2 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full"
             >
               {{ mpstatsStore.favorites.length }}
+            </span>
+          </Tab>
+          <Tab value="history">
+            <i class="pi pi-clock mr-2" />
+            История
+            <span
+              v-if="mpstatsStore.history.length > 0"
+              class="ml-2 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full"
+            >
+              {{ mpstatsStore.history.length }}
             </span>
           </Tab>
         </TabList>
@@ -112,7 +120,7 @@
               :loading="mpstatsStore.loadingFavorites"
               :error="mpstatsStore.favoritesError"
               :removing-favorite="mpstatsStore.removingFavorite"
-              @remove-favorite="mpstatsStore.removeFavorite"
+              @toggle-favorite="mpstatsStore.toggleFavorite"
               @open-detail="openDetail"
             />
           </TabPanel>
