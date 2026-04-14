@@ -69,6 +69,8 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const chartSales = computed(() => [...props.sales].reverse());
+
 const totalRevenue = computed(() => {
   return props.sales.reduce((sum, item) => {
     return sum + item.sales * item.final_price;
@@ -88,14 +90,14 @@ function formatNumber(value: number): string {
 }
 
 const labels = computed(() => {
-  return props.sales.map((item) => {
+  return chartSales.value.map((item) => {
     const date = new Date(item.data);
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   });
 });
 
-const salesData = computed(() => props.sales.map((item) => item.sales));
-const priceData = computed(() => props.sales.map((item) => item.final_price));
+const salesData = computed(() => chartSales.value.map((item) => item.sales));
+const priceData = computed(() => chartSales.value.map((item) => item.final_price));
 
 const isDark = computed(() => {
   return (
