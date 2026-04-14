@@ -1,4 +1,4 @@
-export { default as AppHeader } from './AppHeader.vue';
+export { default as AppSidebar } from './AppSidebar.vue';
 export { default as ErrorLayout } from './ErrorLayout.vue';
 export { default as InitialLoading } from './InitialLoading.vue';
 export { default as LoadingLayout } from './LoadingLayout.vue';

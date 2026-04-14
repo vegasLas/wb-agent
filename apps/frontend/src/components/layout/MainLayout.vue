@@ -1,8 +1,15 @@
 <template>
   <div class="min-h-screen bg-deep-bg text-theme flex flex-col lg:flex-row">
     <!-- Main Content -->
+    <AppSidebar
+      class="hidden lg:block"
+      @show-help="showHelpModal = true"
+      @show-accounts="accountModalStore.showModal = true"
+    />
+
+    <!-- Main Content -->
     <main
-      class="flex-1 container mx-auto px-4 py-6 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative pb-24"
+      class="flex-1 px-4 py-6 lg:px-8 lg:py-6 overflow-y-auto relative pb-24 lg:pb-6 min-h-screen"
     >
       <!-- Top Bar with Account (left) and Plus (right) buttons -->
       <!-- This is always visible once router is ready - not part of skeleton -->
@@ -66,7 +73,9 @@
           <component :is="currentRouteSkeleton" />
         </div>
 
-        <RouterView />
+        <div class="max-w-7xl mx-auto w-full">
+          <RouterView />
+        </div>
       </div>
     </main>
 
@@ -101,6 +110,7 @@ import { MainHelpModal } from '../help';
 import { AccountManagementView } from '../account-management';
 import { useSkeleton } from '../../composables/ui';
 import BottomNavigation from '../BottomNavigation.vue';
+import AppSidebar from './AppSidebar.vue';
 import AutobookingCreateDialog from '../autobooking/CreateDialog.vue';
 import TriggerCreateDialog from '../triggers/CreateDialog.vue';
 import type { MenuItem } from 'primevue/menu';
