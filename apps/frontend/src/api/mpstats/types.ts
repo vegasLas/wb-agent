@@ -157,6 +157,7 @@ export interface MpstatsSkuSummary {
   sales: MpstatsSalesItem[];
   salesByRegion: MpstatsSalesByRegionItem[];
   balanceByRegion: MpstatsBalanceByRegionItem[];
+  itemFull: MpstatsItemFull;
 }
 
 export interface MpstatsTokenStatus {
