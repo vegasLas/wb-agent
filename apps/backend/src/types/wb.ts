@@ -858,6 +858,7 @@ export interface MpstatsSkuSummary {
   sales: MpstatsSalesItem[];
   salesByRegion: MpstatsSalesByRegionItem[];
   balanceByRegion: MpstatsBalanceByRegionItem[];
+  itemFull: MpstatsItemFull;
 }
 
 // ============ MPStats Full Item Types ============

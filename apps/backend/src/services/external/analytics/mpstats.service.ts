@@ -352,10 +352,11 @@ export class MPStatsService {
 
     const mpstatsToken = user.mpstatsToken;
 
-    const [sales, salesByRegion, balanceByRegion] = await Promise.all([
+    const [sales, salesByRegion, balanceByRegion, itemFull] = await Promise.all([
       this.getSales({ nmId, d1, d2, mpstatsToken, fbs }),
       this.getSalesByRegion({ nmId, d1, d2, mpstatsToken, fbs }),
       this.getBalanceByRegion({ nmId, d: d2, mpstatsToken, fbs }),
+      this.getItemFull({ nmId, d1, d2, mpstatsToken }),
     ]);
 
     return {
@@ -363,6 +364,7 @@ export class MPStatsService {
       sales,
       salesByRegion,
       balanceByRegion,
+      itemFull,
     };
   }
 }
