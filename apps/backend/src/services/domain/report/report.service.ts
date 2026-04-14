@@ -11,6 +11,7 @@ import {
 } from '@/utils/parseExcelDataNode';
 import * as ordersController from '@/controllers/orders.controller';
 import { logger } from '@/utils/logger';
+import { convertWarehouseName } from '@/utils/warehouseNames';
 import type { ProxyConfig } from '@/utils/wb-request';
 
 export interface OrderSummary {
@@ -201,6 +202,15 @@ export const getSalesReport = async ({
 
       if (xlsxResponse?.data) {
         const parsedData = parseExcelDataNode(xlsxResponse.data);
+
+        // Convert warehouse names to Russian
+        if (parsedData?.items) {
+          parsedData.items = parsedData.items.map((item) => ({
+            ...item,
+            warehouse: convertWarehouseName(item.warehouse || ''),
+          }));
+        }
+
         result.parsedData = parsedData;
       } else {
         result.parsedData = null;
