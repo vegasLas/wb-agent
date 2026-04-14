@@ -10,64 +10,88 @@ datasource db {
 // ============== USER & ACCOUNTS ==============
 
 model User {
-  id          Int      @id @default(autoincrement())
-  telegramId  BigInt   @unique  // REQUIRED - primary identifier
-  login       String?  @unique  // Auto-generated browser login
-  passwordHash String?          // Bcrypt hashed password for browser auth
-  chatId      String?  @unique
-  username    String? 
-  languageCode String?
-  phone       String?
-  name        String
-  captcha     String?
-  phoneWb     String?
-  wbCookies   String?
-  wbAuthUpdatedAt DateTime?
-  autobookingCount Int @default(0)
-  subscriptionExpiresAt DateTime?
-  supplyTriggers SupplyTrigger[]
-  payments Payment[]
-  autobookings Autobooking[]
-  supplierApiKey SupplierApiKey?
-  captchaText String?
-  captchaExpiry DateTime?
-  awaitingPhone Boolean @default(false)
-  lastUpdatedCookie DateTime?
-  agreeTerms Boolean @default(false)
-  supplierId    String?
-  supplierName  String?
-  selectedAccountId String?  // Direct reference to selected account
-  envInfo         Json?    // Stores the generated environment information
-  createdAt           DateTime @default(now())
-  envInfoUpdatedAt DateTime?
-  accounts Account[]
-  bonuses Bonus[]
+  id                     Int                     @id @default(autoincrement())
+  telegramId             BigInt                  @unique // REQUIRED - primary identifier
+  login                  String?                 @unique // Auto-generated browser login
+  passwordHash           String? // Bcrypt hashed password for browser auth
+  chatId                 String?                 @unique
+  username               String?
+  languageCode           String?
+  phone                  String?
+  name                   String
+  captcha                String?
+  phoneWb                String?
+  wbCookies              String?
+  wbAuthUpdatedAt        DateTime?
+  autobookingCount       Int                     @default(0)
+  subscriptionExpiresAt  DateTime?
+  supplyTriggers         SupplyTrigger[]
+  payments               Payment[]
+  autobookings           Autobooking[]
+  supplierApiKey         SupplierApiKey?
+  captchaText            String?
+  captchaExpiry          DateTime?
+  awaitingPhone          Boolean                 @default(false)
+  lastUpdatedCookie      DateTime?
+  agreeTerms             Boolean                 @default(false)
+  supplierId             String?
+  supplierName           String?
+  selectedAccountId      String? // Direct reference to selected account
+  envInfo                Json? // Stores the generated environment information
+  createdAt              DateTime                @default(now())
+  envInfoUpdatedAt       DateTime?
+  accounts               Account[]
+  bonuses                Bonus[]
   autobookingReschedules AutobookingReschedule[]
-  mpstatsToken String?
+  mpstatsToken           String?
+  skuCards               WbSkuCard[]
+}
+
+model WbSkuCard {
+  id          String   @id @default(uuid())
+  nmID        Int
+  imtID       Int?
+  nmUUID      String?
+  subjectID   Int?
+  subjectName String?
+  vendorCode  String?
+  brand       String?
+  title       String?
+  description String?
+  image       String?
+  favourite   Boolean  @default(false)
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([nmID, userId])
+  @@index([userId])
+  @@index([nmID])
 }
 
 model Account {
-  id                String   @id @default(uuid())
-  userId            Int
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wbCookies         String?
-  wbLocalStorage    String?  // Encrypted localStorage JSON string
-  phoneWb           String?
+  id                 String     @id @default(uuid())
+  userId             Int
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wbCookies          String?
+  wbLocalStorage     String? // Encrypted localStorage JSON string
+  phoneWb            String?
   selectedSupplierId String?
-  lastUpdatedCookie DateTime?
-  suppliers         Supplier[]
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  lastUpdatedCookie  DateTime?
+  suppliers          Supplier[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
   @@index([userId])
 }
 
 model Supplier {
-  id           Int    @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   supplierId   String
   supplierName String
   accountId    String
-  account      Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
 
   @@unique([supplierId, accountId]) // Ensure unique supplier per account
@@ -84,29 +108,29 @@ enum SupplyTypeDb {
 }
 
 model Autobooking {
-  id                String    @id @default(uuid())
-  userId           Int
-  supplierId       String
-  user             User      @relation(fields: [userId], references: [id])
-  draftId          String    // External WB draft ID
-  warehouseId      Int       // Main warehouse ID
-  transitWarehouseId Int?     // Optional transit warehouse ID
+  id                   String     @id @default(uuid())
+  userId               Int
+  supplierId           String
+  user                 User       @relation(fields: [userId], references: [id])
+  draftId              String // External WB draft ID
+  warehouseId          Int // Main warehouse ID
+  transitWarehouseId   Int? // Optional transit warehouse ID
   transitWarehouseName String?
-  supplyType       String    // BOX, MONOPALLETE, SUPERSAFE
-  dateType         String    // WEEK, MONTH, CUSTOM_DATES, CUSTOM_PERIOD
-  startDate        DateTime?
-  endDate          DateTime?
-  customDates      DateTime[] // For CUSTOM_DATES type
-  completedDates   DateTime[] @default([]) // New field to track completed dates
-  maxCoefficient   Float     @default(0)
-  monopalletCount  Int?      // Number of monopallets for MONOPALLETE supply type
-  status           String    @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
-  bookedAt         DateTime?
-  bookedDate       DateTime?
-  supplyId         String?   // Cached supply ID from WB
-  supplyIdUpdatedAt DateTime? // When supplyId was last updated
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  supplyType           String // BOX, MONOPALLETE, SUPERSAFE
+  dateType             String // WEEK, MONTH, CUSTOM_DATES, CUSTOM_PERIOD
+  startDate            DateTime?
+  endDate              DateTime?
+  customDates          DateTime[] // For CUSTOM_DATES type
+  completedDates       DateTime[] @default([]) // New field to track completed dates
+  maxCoefficient       Float      @default(0)
+  monopalletCount      Int? // Number of monopallets for MONOPALLETE supply type
+  status               String     @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
+  bookedAt             DateTime?
+  bookedDate           DateTime?
+  supplyId             String? // Cached supply ID from WB
+  supplyIdUpdatedAt    DateTime? // When supplyId was last updated
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -114,23 +138,23 @@ model Autobooking {
 }
 
 model AutobookingReschedule {
-  id                String    @id @default(uuid())
-  userId            Int
-  supplierId        String
-  user              User      @relation(fields: [userId], references: [id])
-  warehouseId       Int       // Target warehouse ID
-  dateType          String    // WEEK, MONTH, CUSTOM_PERIOD, CUSTOM_DATES_SINGLE
-  startDate         DateTime? // For WEEK, MONTH, CUSTOM_PERIOD
-  endDate           DateTime? // For CUSTOM_PERIOD
-  currentDate       DateTime  // Current target date for reschedule
-  customDates       DateTime[] @default([]) // For CUSTOM_DATES_SINGLE
-  completedDates    DateTime[] @default([]) // Track completed reschedule dates
-  maxCoefficient    Float     @default(0)
-  status            String    @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
-  supplyType        String    // BOX, MONOPALLETE, SUPERSAFE
-  supplyId          String    // Required WB supply ID
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id             String     @id @default(uuid())
+  userId         Int
+  supplierId     String
+  user           User       @relation(fields: [userId], references: [id])
+  warehouseId    Int // Target warehouse ID
+  dateType       String // WEEK, MONTH, CUSTOM_PERIOD, CUSTOM_DATES_SINGLE
+  startDate      DateTime? // For WEEK, MONTH, CUSTOM_PERIOD
+  endDate        DateTime? // For CUSTOM_PERIOD
+  currentDate    DateTime // Current target date for reschedule
+  customDates    DateTime[] @default([]) // For CUSTOM_DATES_SINGLE
+  completedDates DateTime[] @default([]) // Track completed reschedule dates
+  maxCoefficient Float      @default(0)
+  status         String     @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
+  supplyType     String // BOX, MONOPALLETE, SUPERSAFE
+  supplyId       String // Required WB supply ID
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -140,22 +164,22 @@ model AutobookingReschedule {
 // ============== TRIGGERS ==============
 
 model SupplyTrigger {
-  id                  String   @id @default(uuid())
-  userId              Int
-  user                User     @relation(fields: [userId], references: [id])
-  warehouseIds        Int[]
-  supplyTypes         String[]    // BOX, MONOPALLETE, SUPERSAFE
-  isActive            Boolean  @default(true)
-  checkInterval       Int      @default(180)
-  maxCoefficient      Float    @default(0)
-  lastNotificationAt  DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  searchMode          String   @default("TODAY") // TODAY, TOMORROW, WEEK, UNTIL_FOUND, CUSTOM_DATES
-  startDate           DateTime? // For CUSTOM_DATES mode
-  endDate             DateTime? // For CUSTOM_DATES mode
-  selectedDates       DateTime[] @default([]) // For CUSTOM_DATES mode
-  status              String   @default("RELEVANT") // RELEVANT, EXPIRED, COMPLETED
+  id                 String     @id @default(uuid())
+  userId             Int
+  user               User       @relation(fields: [userId], references: [id])
+  warehouseIds       Int[]
+  supplyTypes        String[] // BOX, MONOPALLETE, SUPERSAFE
+  isActive           Boolean    @default(true)
+  checkInterval      Int        @default(180)
+  maxCoefficient     Float      @default(0)
+  lastNotificationAt DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  searchMode         String     @default("TODAY") // TODAY, TOMORROW, WEEK, UNTIL_FOUND, CUSTOM_DATES
+  startDate          DateTime? // For CUSTOM_DATES mode
+  endDate            DateTime? // For CUSTOM_DATES mode
+  selectedDates      DateTime[] @default([]) // For CUSTOM_DATES mode
+  status             String     @default("RELEVANT") // RELEVANT, EXPIRED, COMPLETED
 
   @@index([userId])
   @@index([isActive])
@@ -164,18 +188,18 @@ model SupplyTrigger {
 // ============== PAYMENTS ==============
 
 model Payment {
-  id            String    @id @default(uuid())
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id])
-  amount        Float
-  currency      String    @default("RUB")
-  status        String    // pending, succeeded, canceled
-  paymentId     String    @unique // YooKassa payment ID
-  tariffId      String    // Add this field
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id])
+  amount         Float
+  currency       String    @default("RUB")
+  status         String // pending, succeeded, canceled
+  paymentId      String    @unique // YooKassa payment ID
+  tariffId       String // Add this field
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   idempotencyKey String    @unique
-  paidAt        DateTime?
+  paidAt         DateTime?
 
   @@index([userId])
   @@index([status])
@@ -198,14 +222,14 @@ model SupplierApiKey {
 // ============== WAREHOUSE DATA ==============
 
 model WarehouseCoefficient {
-  id             String     @id @default(uuid())
+  id             String       @id @default(uuid())
   warehouseId    Int
   warehouseName  String
-  date           DateTime   @db.Date
+  date           DateTime     @db.Date
   supplyType     SupplyTypeDb
   maxCoefficient Float
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@unique([warehouseId, date, supplyType])
   @@index([warehouseId])
@@ -215,18 +239,18 @@ model WarehouseCoefficient {
 // ============== BONUSES ==============
 
 model Bonus {
-  id              String   @id @default(uuid())
-  userId          Int
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bonusType       String   // NEW_USER_WELCOME, REFERRAL, PROMOTION_SUMMER, etc.
-  bonusValue      Int      // Amount of autobookingCount or other value
-  description     String?  // Human readable description
-  isApplied       Boolean  @default(false)
-  appliedAt       DateTime?
-  expiresAt       DateTime? // Optional expiration date
-  promotionCode   String?  // Optional promotion code
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String    @id @default(uuid())
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bonusType     String // NEW_USER_WELCOME, REFERRAL, PROMOTION_SUMMER, etc.
+  bonusValue    Int // Amount of autobookingCount or other value
+  description   String? // Human readable description
+  isApplied     Boolean   @default(false)
+  appliedAt     DateTime?
+  expiresAt     DateTime? // Optional expiration date
+  promotionCode String? // Optional promotion code
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@unique([userId, bonusType]) // Prevent duplicate bonuses for same user+bonus type
   @@index([userId])
@@ -237,12 +261,12 @@ model Bonus {
 // ============== RATE LIMITING ==============
 
 model RateLimit {
-  id            String   @id @default(uuid())
-  userId        String   // Telegram user ID
-  type          String   // message, command, callback
-  timestamps    DateTime[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id         String     @id @default(uuid())
+  userId     String // Telegram user ID
+  type       String // message, command, callback
+  timestamps DateTime[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   @@index([userId, type])
   @@index([updatedAt])
@@ -251,9 +275,9 @@ model RateLimit {
 // ============== SUPPLIER HISTORY ==============
 
 model UserSupplierHistory {
-  id              Int      @id @default(autoincrement())
-  supplierId      String   @unique // WB supplier ID from cookies
-  createdAt       DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  supplierId String   @unique // WB supplier ID from cookies
+  createdAt  DateTime @default(now())
 
   @@index([supplierId])
 }

@@ -50,6 +50,8 @@ router.get('/', authenticate, async (req, res, next) => {
             updatedAt: user.supplierApiKey.updatedAt.toISOString(),
           }
         : undefined,
+      hasMpstatsToken: !!user.mpstatsToken,
+
       accounts: (user.accounts || []).map(
         (account: {
           id: string;
