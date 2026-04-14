@@ -1,14 +1,14 @@
 <template>
-  <Card class="overflow-hidden group">
+  <Card class="overflow-hidden group h-full">
     <template #content>
-      <div class="space-y-3">
+      <div class="flex flex-col gap-y-3 h-full">
         <!-- Image -->
         <div class="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
           <img
             v-if="card.image"
             :src="card.image"
             :alt="card.name"
-            class="w-full h-full object-cover"
+            class="w-full h-full object-contain"
             loading="lazy"
           >
           <div
@@ -34,7 +34,7 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex justify-end items-center gap-2">
+        <div class="flex justify-end items-center gap-2 mt-auto">
           <Button
             size="small"
             @click="$emit('open-detail', card)"
@@ -77,3 +77,13 @@ defineEmits<{
   'open-detail': [card: MpstatsCard];
 }>();
 </script>
+
+<style scoped>
+:deep(.p-card-body) {
+  @apply h-full flex flex-col;
+}
+
+:deep(.p-card-content) {
+  @apply flex-1;
+}
+</style>

@@ -91,8 +91,8 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
       return false;
     }
 
-    // Fetch new data
-    await fetchData();
+    // Fetch new data starting from page 1
+    await fetchData(1);
     return true;
   }
 
