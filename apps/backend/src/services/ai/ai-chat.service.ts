@@ -22,25 +22,33 @@ interface HandleChatInput {
   messages: UIMessage[];
 }
 
+function getMessageText(message: UIMessage): string {
+  return message.parts
+    .filter((p: any) => p.type === 'text')
+    .map((p: any) => p.text)
+    .join('');
+}
+
 export class AIChatService {
   async handleChat({ userId, conversationId, messages }: HandleChatInput) {
     // 1. Load or create conversation
     let convId = conversationId;
     if (!convId) {
       const conv = await prisma.aiConversation.create({
-        data: { userId, title: messages[0]?.content?.slice(0, 80) || 'New chat' },
+        data: { userId, title: getMessageText(messages[0]).slice(0, 80) || 'New chat' },
       });
       convId = conv.id;
     }
 
     // 2. Persist the latest user message
     const lastUserMessage = messages[messages.length - 1];
-    if (lastUserMessage?.role === 'user') {
+    const lastUserText = lastUserMessage ? getMessageText(lastUserMessage) : '';
+    if (lastUserMessage?.role === 'user' && lastUserText) {
       await prisma.aiMessage.create({
         data: {
           conversationId: convId,
           role: 'user',
-          content: lastUserMessage.content as string,
+          content: lastUserText,
         },
       });
     }
@@ -51,26 +59,12 @@ export class AIChatService {
       content: await buildContextMessage(userId),
     };
 
-    // 4. Load history (last 20 stored messages)
-    const history = await prisma.aiMessage.findMany({
-      where: { conversationId: convId },
-      orderBy: { createdAt: 'asc' },
-      take: 20,
-    });
-
-    const historyMessages: CoreMessage[] = history.map(m => ({
-      role: m.role as 'user' | 'assistant' | 'tool',
-      content: m.content,
-    }));
-
-    const modelMessages: CoreMessage[] = [
-      systemMessage,
-      ...historyMessages,
-      ...convertToModelMessages(messages),
-    ];
+    // 4. Convert client UIMessages to CoreMessages
+    const convertedMessages = await convertToModelMessages(messages);
+    const modelMessages: CoreMessage[] = [systemMessage, ...convertedMessages];
 
     // 5. Model routing
-    const userText = (lastUserMessage?.content as string)?.toLowerCase() ?? '';
+    const userText = lastUserText.toLowerCase();
     const wantsReasoning =
       userText.includes('почему') ||
       userText.includes('why') ||
@@ -101,16 +95,21 @@ export class AIChatService {
       tools: tools as any,
       maxSteps: wantsReasoning ? 1 : 5,
       maxTokens: 2048,
-      onFinish: async ({ text, usage }) => {
-        await prisma.aiMessage.create({
-          data: {
-            conversationId: convId!,
-            role: 'assistant',
-            content: text,
-          },
-        });
-        // TODO: log usage for cost monitoring
-        console.log(`[AI-CHAT] user=${userId} conv=${convId} tokens=${JSON.stringify(usage)}`);
+      onFinish: ({ text, usage }) => {
+        prisma.aiMessage
+          .create({
+            data: {
+              conversationId: convId!,
+              role: 'assistant',
+              content: text,
+            },
+          })
+          .then(() => {
+            console.log(`[AI-CHAT] user=${userId} conv=${convId} tokens=${JSON.stringify(usage)}`);
+          })
+          .catch((err) => {
+            console.error('[AI-CHAT] Failed to save assistant message:', err);
+          });
       },
     });
 

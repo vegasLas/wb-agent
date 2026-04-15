@@ -125,6 +125,7 @@ const routeSkeletonMap: Record<string, any> = {
   StoreBookings: SkeletonStore,
   Payments: SkeletonPayments,
   Tasks: SkeletonTasks,
+  Chat: SkeletonAccount,
   default: SkeletonAccount,
 };
 
