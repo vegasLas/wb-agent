@@ -281,3 +281,29 @@ model UserSupplierHistory {
 
   @@index([supplierId])
 }
+
+model AiConversation {
+  id        String      @id @default(uuid())
+  userId    Int
+  title     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  messages  AiMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model AiMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  role           String   // user | assistant | tool
+  content        String   @db.Text
+  toolCalls      Json?
+  toolResults    Json?
+  createdAt      DateTime @default(now())
+
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
