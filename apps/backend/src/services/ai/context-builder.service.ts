@@ -6,7 +6,7 @@ export async function buildContextMessage(userId: number): Promise<string> {
     include: {
       accounts: { include: { suppliers: true } },
       autobookings: { orderBy: { createdAt: 'desc' }, take: 5 },
-      triggers: { orderBy: { createdAt: 'desc' }, take: 5 },
+      supplyTriggers: { orderBy: { createdAt: 'desc' }, take: 5 },
     },
   });
 
@@ -19,7 +19,7 @@ export async function buildContextMessage(userId: number): Promise<string> {
     .map(ab => `- ${ab.id}: ${ab.supplyType} @ ${ab.warehouseId} [${ab.status}]`)
     .join('\n');
 
-  const triggerList = user.triggers
+  const triggerList = user.supplyTriggers
     .map(t => `- ${t.id}: warehouses=[${t.warehouseIds.join(',')}] [${t.status}]`)
     .join('\n');
 
