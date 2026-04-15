@@ -24,6 +24,7 @@ const pathToRouteNameMap = [
   { pattern: /^\/store(\/|$)/, routeName: 'Store' },
   { pattern: /^\/payments(\/|$)/, routeName: 'Payments' },
   { pattern: /^\/mpstats(\/|$)/, routeName: 'MPStats' },
+  { pattern: /^\/chat(\/|$)/, routeName: 'Chat' },
 ];
 
 /**

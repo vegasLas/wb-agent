@@ -1,25 +1,32 @@
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
-import { ref, computed } from 'vue';
 import Button from 'primevue/button';
 import Sidebar from 'primevue/sidebar';
-import InputText from 'primevue/inputtext';
+import ConversationList from './ConversationList.vue';
+import ChatMessageList from './ChatMessageList.vue';
+import ChatInput from './ChatInput.vue';
 
 const store = useAIChatStore();
 const isOpen = ref(false);
-const inputText = ref('');
-
-const isLoading = computed(() => store.status === 'submitted' || store.status === 'streaming');
 
 function toggle() {
   isOpen.value = !isOpen.value;
+  if (isOpen.value) {
+    store.loadConversations();
+  }
 }
 
-async function handleSubmit() {
-  if (!inputText.value.trim() || isLoading.value) return;
-  const text = inputText.value;
-  inputText.value = '';
-  await store.sendMessage(text);
+function handleSelect(id: string) {
+  store.loadConversation(id);
+}
+
+function handleNew() {
+  store.startNewConversation();
+}
+
+function handleSendFromSuggestion(text: string) {
+  store.sendMessage(text);
 }
 
 // Cmd/Ctrl + K shortcut
@@ -30,9 +37,13 @@ function onKeyDown(e: KeyboardEvent) {
   }
 }
 
-if (typeof window !== 'undefined') {
+onMounted(() => {
   window.addEventListener('keydown', onKeyDown);
-}
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
 </script>
 
 <template>
@@ -45,51 +56,51 @@ if (typeof window !== 'undefined') {
     />
   </div>
 
-  <Sidebar v-model:visible="isOpen" position="right" class="w-full md:w-[30rem]">
-    <div class="flex flex-col h-full">
-      <h2 class="text-lg font-semibold mb-4">AI Assistant</h2>
-
-      <div class="flex-1 overflow-y-auto space-y-4 px-2">
-        <div
-          v-for="message in store.messages"
-          :key="message.id"
-          :class="[
-            'p-3 rounded-lg max-w-[85%]',
-            message.role === 'user'
-              ? 'bg-primary text-white ml-auto'
-              : 'bg-surface-200 dark:bg-surface-700'
-          ]"
-        >
-          <template v-for="(part, idx) in message.parts" :key="idx">
-            <span v-if="part.type === 'text'">{{ part.text }}</span>
-            <span v-else-if="part.type === 'reasoning'" class="italic opacity-75">
-              {{ part.text }}
-            </span>
-            <div
-              v-else-if="part.type === 'dynamic-tool' || (typeof part.type === 'string' && part.type.startsWith('tool-'))"
-              class="text-sm border-l-2 pl-2"
-            >
-              🔧 {{ 'toolName' in part ? part.toolName : part.type }}
-            </div>
-          </template>
-        </div>
+  <Sidebar
+    v-model:visible="isOpen"
+    position="right"
+    class="w-full md:w-[40rem]"
+  >
+    <div class="flex h-full">
+      <!-- Conversation list (hidden on very small screens inside panel) -->
+      <div class="hidden sm:flex w-56 border-r border-deep-border flex-col">
+        <ConversationList
+          :selected-id="store.conversationId"
+          @select="handleSelect"
+          @new="handleNew"
+        />
       </div>
 
-      <form class="mt-4 flex gap-2" @submit.prevent="handleSubmit">
-        <InputText
-          v-model="inputText"
-          class="flex-1"
-          placeholder="Напишите задачу для ИИ..."
-          :disabled="isLoading"
-        />
-        <Button
-          v-if="isLoading"
-          icon="pi pi-stop"
-          severity="secondary"
-          @click="store.stop"
-        />
-        <Button v-else type="submit" icon="pi pi-send" />
-      </form>
+      <!-- Chat area -->
+      <div class="flex-1 flex flex-col h-full min-w-0">
+        <div class="px-4 py-3 border-b border-deep-border flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-sparkles text-purple-600" />
+            <h2 class="font-semibold">AI Assistant</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <Button
+              icon="pi pi-plus"
+              severity="secondary"
+              variant="text"
+              size="small"
+              label="Новый чат"
+              @click="handleNew"
+            />
+            <Button
+              icon="pi pi-times"
+              severity="secondary"
+              variant="text"
+              size="small"
+              aria-label="Закрыть"
+              @click="isOpen = false"
+            />
+          </div>
+        </div>
+
+        <ChatMessageList @send="handleSendFromSuggestion" />
+        <ChatInput />
+      </div>
     </div>
   </Sidebar>
 </template>

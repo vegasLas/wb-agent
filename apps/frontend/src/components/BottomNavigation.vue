@@ -31,6 +31,19 @@
             <i class="pi pi-check-square text-xl" />
           </button>
 
+          <!-- Chat -->
+          <button
+            :class="[
+              'flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-200/80 dark:bg-gray-700/80 transition-colors',
+              isActive('/chat')
+                ? 'text-purple-700 dark:text-purple-400'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600',
+            ]"
+            @click="navigate('/chat')"
+          >
+            <i class="pi pi-comments text-xl" />
+          </button>
+
           <!-- WB -->
           <button
             :class="[

@@ -177,6 +177,7 @@ const primaryNav = [
   },
   { id: 'mpstats', label: 'MPStats', icon: 'pi pi-chart-bar', route: 'MPStats' },
   { id: 'tasks', label: 'Задачи', icon: 'pi pi-check-square', route: 'Tasks' },
+  { id: 'chat', label: 'AI Чат', icon: 'pi pi-comments', route: 'Chat' },
 ];
 
 // Secondary navigation
