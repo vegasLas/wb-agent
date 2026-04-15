@@ -95,6 +95,7 @@
       v-model:show="showTriggerDialog"
       @created="handleTriggerCreated"
     />
+    <ChatPanel />
   </div>
 </template>
 
@@ -116,6 +117,7 @@ import TriggerCreateDialog from '../triggers/CreateDialog.vue';
 import type { MenuItem } from 'primevue/menu';
 import { useAutobookingListStore } from '@/stores/autobooking';
 import { useTriggerStore } from '@/stores/triggers';
+import ChatPanel from '../ai/ChatPanel.vue';
 
 const accountModalStore = useAccountSupplierModalStore();
 const userStore = useUserStore();
