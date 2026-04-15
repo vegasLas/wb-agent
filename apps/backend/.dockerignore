@@ -29,6 +29,9 @@ build
 **/*.spec.ts
 coverage
 
+# Backup files
+**/*.bak
+
 # Documentation
 README.md
 CHANGELOG.md

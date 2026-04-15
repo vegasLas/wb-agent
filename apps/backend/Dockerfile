@@ -11,6 +11,7 @@ FROM --platform=linux/amd64 mcr.microsoft.com/playwright:v1.59.1-noble AS builde
 
 WORKDIR /app
 
+
 # Install build essentials (Python, make, g++, openssl)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ openssl \
@@ -24,6 +25,10 @@ RUN npm install
 
 # Copy source code (backend + libs)
 COPY . .
+
+# Stub out heavy AI SDK types to prevent tsc OOM during build
+RUN cp docker-types/ai-stub.d.ts node_modules/ai/dist/index.d.ts
+RUN cp docker-types/ai-sdk-stub.d.ts node_modules/@ai-sdk/deepseek/dist/index.d.ts
 
 # Generate Prisma client
 RUN npx prisma generate --schema=prisma/schema.prisma
@@ -41,6 +46,7 @@ RUN npx tsc-alias -p tsconfig.docker.json
 FROM --platform=linux/amd64 mcr.microsoft.com/playwright:v1.59.1-noble
 
 WORKDIR /app
+
 
 # Copy package files
 COPY package*.json ./
