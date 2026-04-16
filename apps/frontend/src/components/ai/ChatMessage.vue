@@ -12,9 +12,34 @@ const textContent = computed(() => {
     .join('');
 });
 
+function sanitizeAssistantText(text: string): string {
+  // Strip UUIDs
+  let cleaned = text.replace(
+    /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi,
+    '',
+  );
+  // Strip "оригид: 12345" or "(оригид: 12345)" or "warehouseId: 12345"
+  cleaned = cleaned.replace(
+    /\(?\s*(оригид|warehouseId)\s*[:\-]?\s*\d+\s*\)?/gi,
+    '',
+  );
+  // Fix inline lists: ensure a newline before bullet or numbered list items that follow text on the same line
+  cleaned = cleaned.replace(/(:\s+)([-*]\s)/g, '$1\n\n$2');
+  cleaned = cleaned.replace(/([:?.!]\s+)(\d{1,2}[.\)]\s+\S)/g, '$1\n\n$2');
+  // Clean up double spaces and stray punctuation left behind
+  cleaned = cleaned
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .trim();
+  return cleaned;
+}
+
 const renderedHtml = computed(() => {
   if (!textContent.value) return '';
-  const parsed = marked.parse(textContent.value, {
+  const safeText =
+    props.message.role === 'assistant' ? sanitizeAssistantText(textContent.value) : textContent.value;
+  const parsed = marked.parse(safeText, {
     breaks: true,
     gfm: true,
   }) as string;
@@ -24,10 +49,7 @@ const renderedHtml = computed(() => {
 
 <template>
   <div
-    :class="[
-      'flex',
-      message.role === 'user' ? 'justify-end' : 'justify-start',
-    ]"
+    :class="['flex', message.role === 'user' ? 'justify-end' : 'justify-start']"
   >
     <div
       :class="[
@@ -67,8 +89,14 @@ const renderedHtml = computed(() => {
   margin: 0.25rem 0;
 }
 
-.assistant-markdown :deep(ul),
+.assistant-markdown :deep(ul) {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+
 .assistant-markdown :deep(ol) {
+  list-style-type: decimal;
   padding-left: 1.25rem;
   margin: 0.25rem 0;
 }
