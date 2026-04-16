@@ -62,15 +62,6 @@ onUnmounted(() => {
     class="w-full md:w-[40rem]"
   >
     <div class="flex h-full">
-      <!-- Conversation list (hidden on very small screens inside panel) -->
-      <div class="hidden sm:flex w-56 border-r border-deep-border flex-col">
-        <ConversationList
-          :selected-id="store.conversationId"
-          @select="handleSelect"
-          @new="handleNew"
-        />
-      </div>
-
       <!-- Chat area -->
       <div class="flex-1 flex flex-col h-full min-w-0">
         <div class="px-4 py-3 border-b border-deep-border flex items-center justify-between shrink-0">
@@ -100,6 +91,15 @@ onUnmounted(() => {
 
         <ChatMessageList @send="handleSendFromSuggestion" />
         <ChatInput />
+      </div>
+
+      <!-- Conversation list (hidden on very small screens inside panel) -->
+      <div class="hidden sm:flex w-[260px] border-l border-deep-border flex-col">
+        <ConversationList
+          :selected-id="store.conversationId"
+          @select="handleSelect"
+          @new="handleNew"
+        />
       </div>
     </div>
   </Sidebar>

@@ -29,17 +29,6 @@ function handleSendFromSuggestion(text: string) {
 
 <template>
   <div class="h-[calc(100vh-120px)] lg:h-[calc(100vh-100px)] flex gap-4">
-    <!-- Conversation list -->
-    <div
-      class="hidden md:flex w-64 h-full bg-card border border-deep-border rounded-2xl flex-col overflow-hidden"
-    >
-      <ConversationList
-        :selected-id="store.conversationId"
-        @select="handleSelect"
-        @new="handleNew"
-      />
-    </div>
-
     <!-- Chat area -->
     <div class="flex-1 h-full bg-card border border-deep-border rounded-2xl flex flex-col overflow-hidden">
       <div class="px-4 py-3 border-b border-deep-border flex items-center justify-between">
@@ -57,6 +46,17 @@ function handleSendFromSuggestion(text: string) {
 
       <ChatMessageList @send="handleSendFromSuggestion" />
       <ChatInput />
+    </div>
+
+    <!-- Conversation list -->
+    <div
+      class="hidden md:flex w-[260px] h-full bg-card border border-deep-border rounded-2xl flex-col overflow-hidden"
+    >
+      <ConversationList
+        :selected-id="store.conversationId"
+        @select="handleSelect"
+        @new="handleNew"
+      />
     </div>
   </div>
 </template>
