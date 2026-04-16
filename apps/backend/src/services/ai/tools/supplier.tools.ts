@@ -10,12 +10,13 @@ export function supplierTools(userId: number): Record<string, Tool> {
       description: `List goods or черновики for the user's selected account.
 Call this when the user asks about their products, черновики inventory, or goods ready for supply.
 Required: type ('active' for goods in a черновик, 'drafts' for черновик list).
-Optional: draftID (required when type='active'), limit (default 10), offset (default 0), search.`,
+Optional: draftID (required when type='active'), limit (default 50), offset (default 0), search.
+When describing drafts to the user, NEVER mention draft IDs or UUIDs. Use only the date and quantity information.`,
       inputSchema: z
         .object({
           type: z.enum(['active', 'drafts']),
           draftID: z.string().optional(),
-          limit: z.number().int().min(1).max(100).default(10),
+          limit: z.number().int().min(1).max(100).default(50),
           offset: z.number().int().min(0).default(0),
           search: z.string().optional(),
         })
@@ -28,13 +29,22 @@ Optional: draftID (required when type='active'), limit (default 10), offset (def
           const ctx = await resolveAccountContext(userId);
           if (data.type === 'drafts') {
             return cachedExecute(`drafts-${ctx.accountId}`, 30000, async () => {
-              return wbSupplierService.listDraftsByAccount({
+              const res: any = await wbSupplierService.listDraftsByAccount({
                 accountId: ctx.accountId,
                 supplierId: ctx.supplierId,
                 params: { limit: data.limit, offset: data.offset },
                 userAgent: ctx.userAgent,
                 proxy: ctx.proxy,
               });
+              const drafts = res.result?.drafts || [];
+              // Sanitize: remove IDs so the model cannot leak them
+              return {
+                drafts: drafts.map((d: any) => ({
+                  createdAt: d.createdAt,
+                  goodQuantity: d.goodQuantity,
+                  barcodeQuantity: d.barcodeQuantity,
+                })),
+              };
             });
           }
           return cachedExecute(`goods-${ctx.accountId}-${data.draftID}`, 30000, async () => {

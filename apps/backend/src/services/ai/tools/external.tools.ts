@@ -11,19 +11,79 @@ export function externalTools(userId: number): Record<string, Tool> {
   return {
     getAllWarehouses: tool({
       description: `Get all warehouses for the user's selected account from the WB seller API.
-Call this when the user needs the full warehouse list tied to their account or when resolving warehouse names to IDs.
+Call this when the user needs the full warehouse list tied to their account or when resolving warehouse names.
+Each warehouse has: name, address, rating, and warehouseId. Use warehouseId when calling createAutobooking.
+NEVER mention warehouseId or any numeric ID to the user in your response.
+DO NOT dump the entire list if there are more than 6 warehouses. Use searchWarehouses instead to let the user search by city/name.
 Required: none.`,
       inputSchema: z.object({}),
       execute: safeTool('getAllWarehouses', async () => {
         return loggedTool('getAllWarehouses', userId, async () => {
           return cachedExecute('all-warehouses', 30000, async () => {
             const ctx = await resolveAccountContext(userId);
-            return wbWarehouseService.getAllWarehousesByAccount({
+            const res: any = await wbWarehouseService.getAllWarehousesByAccount({
               accountId: ctx.accountId,
               supplierId: ctx.supplierId,
               userAgent: ctx.userAgent,
               proxy: ctx.proxy,
             });
+            // Return only user-friendly fields + warehouseId (which is origid internally)
+            const warehouses =
+              res.result?.resp?.data?.map((w: any) => ({
+                name: w.warehouse,
+                address: w.address,
+                rating: w.rating,
+                warehouseId: w.origid,
+              })) || [];
+            return { warehouses };
+          });
+        });
+      }),
+    }),
+
+    searchWarehouses: tool({
+      description: `Search warehouses by city or name. Use this INSTEAD of getAllWarehouses when the user needs to pick a warehouse.
+Ask the user: "Какой склад вам нужен?" (or let them type the city/name). Then call this tool with their reply.
+Returns up to 6 best matches. Rules for the AI:
+- 0 matches: say not found and ask again.
+- 1 match: use it directly (do NOT ask to confirm with a numbered list).
+- 2–6 matches: present as a numbered list (1., 2., etc.) and ask to choose.
+- >6 matches: the tool returns the top 6; tell the user these are the best matches and ask them to pick or refine.
+Required: query (string).`,
+      inputSchema: z.object({ query: z.string() }),
+      execute: safeTool('searchWarehouses', async ({ query }) => {
+        return loggedTool('searchWarehouses', userId, async () => {
+          return cachedExecute(`search-warehouses-${query}`, 30000, async () => {
+            const ctx = await resolveAccountContext(userId);
+            const res: any = await wbWarehouseService.getAllWarehousesByAccount({
+              accountId: ctx.accountId,
+              supplierId: ctx.supplierId,
+              userAgent: ctx.userAgent,
+              proxy: ctx.proxy,
+            });
+            const all =
+              res.result?.resp?.data?.map((w: any) => ({
+                name: w.warehouse,
+                address: w.address,
+                rating: w.rating,
+                warehouseId: w.origid,
+              })) || [];
+            const q = query.toLowerCase();
+            const scored = all.map((w: any) => {
+              const name = (w.name || '').toLowerCase();
+              const addr = (w.address || '').toLowerCase();
+              let score = 0;
+              if (name === q) score += 100;
+              else if (name.startsWith(q)) score += 80;
+              else if (name.includes(q)) score += 60;
+              if (addr.includes(q)) score += 30;
+              return { ...w, score };
+            });
+            const matches = scored
+              .filter((w: any) => w.score > 0)
+              .sort((a: any, b: any) => b.score - a.score)
+              .slice(0, 6);
+            return { matches, total: all.length };
           });
         });
       }),
