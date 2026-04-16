@@ -22,6 +22,8 @@
   },
   "private": true,
   "dependencies": {
+    "dompurify": "^3.4.0",
+    "marked": "^18.0.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -42,6 +44,7 @@
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
+    "@types/marked": "^5.0.2",
     "@types/node": "20.19.9",
     "@typescript-eslint/parser": "^8.40.0",
     "eslint": "^9.8.0",
