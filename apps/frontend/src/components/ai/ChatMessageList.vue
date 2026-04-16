@@ -2,6 +2,9 @@
 import { ref, watch, nextTick, computed } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import Button from 'primevue/button';
+import ChatMessage from './ChatMessage.vue';
+import ChatToolSteps from './ChatToolSteps.vue';
+import { normalizeToolName } from '@/utils/ai-labels';
 
 const store = useAIChatStore();
 const scrollContainer = ref<HTMLElement | null>(null);
@@ -13,6 +16,33 @@ const isLoading = computed(
 );
 const hasError = computed(() => !!store.error);
 const isEmpty = computed(() => safeMessages.value.length === 0);
+
+// Extract any active tool steps from the last assistant message to show above the loading dots
+const activeToolSteps = computed(() => {
+  if (!isLoading.value) return [];
+  const lastMsg = safeMessages.value[safeMessages.value.length - 1];
+  if (!lastMsg || lastMsg.role !== 'assistant') return [];
+  return (lastMsg.parts || [])
+    .filter((p: any) => {
+      return (
+        p?.type === 'tool-invocation' ||
+        p?.type === 'dynamic-tool' ||
+        (typeof p?.type === 'string' && p.type.startsWith('tool-'))
+      );
+    })
+    .map((p: any) => {
+      if (p.type === 'tool-invocation') {
+        return {
+          toolName: normalizeToolName(p.toolInvocation?.toolName) || 'unknown',
+          state: p.toolInvocation?.state || 'call',
+        };
+      }
+      return {
+        toolName: normalizeToolName(p.toolName || p.type) || 'unknown',
+        state: 'call' as const,
+      };
+    });
+});
 
 watch(
   () => {
@@ -29,7 +59,7 @@ watch(
       lastText: text.slice(0, 80),
     };
   },
-  (val, oldVal) => {
+  () => {
     nextTick().then(() => {
       if (scrollContainer.value) {
         scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
@@ -49,25 +79,9 @@ const suggestions = [
   'Какие акции доступны?',
 ];
 
-function getPartText(part: any): string {
-  try {
-    if (part?.type === 'text') return part.text ?? '';
-    if (part?.type === 'reasoning') return `(reasoning) ${part.text ?? ''}`;
-    if (
-      part?.type === 'dynamic-tool' ||
-      (typeof part?.type === 'string' && part.type.startsWith('tool-'))
-    ) {
-      return `[tool:${part.toolName || part.type}]`;
-    }
-    if (part?.type === 'tool-invocation') {
-      return `[tool:${part.toolInvocation?.toolName || 'unknown'}]`;
-    }
-    return `[${part?.type || 'unknown'}]`;
-  } catch (err) {
-    console.error('[CHAT-DEBUG] error in getPartText:', err, 'part:', part);
-    return '[error]';
-  }
-}
+defineEmits<{
+  send: [text: string];
+}>();
 </script>
 
 <template>
@@ -88,7 +102,9 @@ function getPartText(part: any): string {
       >
         <i class="pi pi-sparkles text-2xl text-purple-600" />
       </div>
-      <h3 class="text-lg font-semibold mb-2">Чем могу помочь?</h3>
+      <h3 class="text-lg font-semibold mb-2">
+        Чем могу помочь?
+      </h3>
       <p class="text-sm text-muted mb-6 max-w-xs">
         Задавайте вопросы про автобронирования, таймслоты, отчеты и акции.
       </p>
@@ -105,55 +121,47 @@ function getPartText(part: any): string {
     </div>
 
     <!-- Messages -->
-    <div
+    <ChatMessage
       v-for="message in safeMessages"
       :key="message?.id ?? Math.random()"
-      :class="[
-        'flex',
-        message.role === 'user' ? 'justify-end' : 'justify-start',
-      ]"
-    >
-      <div
-        :class="[
-          'max-w-[85%] p-3 rounded-2xl text-sm',
-          message.role === 'user'
-            ? 'bg-purple-600 text-white rounded-br-md'
-            : 'bg-surface-200 dark:bg-surface-700 rounded-bl-md',
-        ]"
-      >
-        <template v-for="(part, idx) in message.parts || []" :key="idx">
-          <span
-            v-if="message.role === 'user' && part?.type === 'text'"
-            class="whitespace-pre-wrap"
-            >{{ part?.text ?? '' }}</span
-          >
-          <div v-else class="whitespace-pre-wrap">{{ getPartText(part) }}</div>
-        </template>
-      </div>
-    </div>
+      :message="message"
+    />
 
     <!-- Loading indicator -->
-    <div v-if="isLoading" class="flex justify-start">
+    <div
+      v-if="isLoading"
+      class="flex justify-start"
+    >
       <div
-        class="bg-surface-200 dark:bg-surface-700 rounded-2xl rounded-bl-md p-3 flex items-center gap-2 min-w-[80px]"
+        class="bg-surface-200 dark:bg-surface-700 rounded-2xl rounded-bl-md p-3 flex flex-col gap-2 min-w-[120px]"
       >
-        <span
-          class="w-2 h-2 bg-muted rounded-full animate-bounce"
-          style="animation-delay: 0ms"
+        <ChatToolSteps
+          v-if="activeToolSteps.length"
+          :steps="activeToolSteps"
         />
-        <span
-          class="w-2 h-2 bg-muted rounded-full animate-bounce"
-          style="animation-delay: 150ms"
-        />
-        <span
-          class="w-2 h-2 bg-muted rounded-full animate-bounce"
-          style="animation-delay: 300ms"
-        />
+        <div class="flex items-center gap-2">
+          <span
+            class="w-2 h-2 bg-muted rounded-full animate-bounce"
+            style="animation-delay: 0ms"
+          />
+          <span
+            class="w-2 h-2 bg-muted rounded-full animate-bounce"
+            style="animation-delay: 150ms"
+          />
+          <span
+            class="w-2 h-2 bg-muted rounded-full animate-bounce"
+            style="animation-delay: 300ms"
+          />
+          <span class="text-xs text-muted ml-1">AI думает…</span>
+        </div>
       </div>
     </div>
 
     <!-- Error -->
-    <div v-if="hasError" class="flex justify-center">
+    <div
+      v-if="hasError"
+      class="flex justify-center"
+    >
       <div
         class="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 flex items-center gap-3"
       >
