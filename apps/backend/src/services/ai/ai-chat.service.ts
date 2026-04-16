@@ -17,6 +17,7 @@ import { supplierTools } from './tools/supplier.tools';
 import { mpstatsTools } from './tools/mpstats.tools';
 import { advertsTools } from './tools/adverts.tools';
 import { reportsTools } from './tools/reports.tools';
+import { userContextTools } from './tools/user-context.tools';
 import { resolvePendingOption, clearPendingAction } from './ai-pending-action.service';
 
 interface HandleChatInput {
@@ -99,6 +100,7 @@ export class AIChatService {
           mpstatsTools(userId),
           advertsTools(userId),
           reportsTools(userId),
+          userContextTools(userId),
         );
 
     // 7. Stream
