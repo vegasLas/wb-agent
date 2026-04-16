@@ -44,15 +44,109 @@ const activeToolSteps = computed(() => {
     });
 });
 
+function getMessageText(message: any): string {
+  if (!message) return '';
+  return (message.parts || [])
+    .filter((p: any) => p?.type === 'text')
+    .map((p: any) => p?.text)
+    .join('');
+}
+
+function stripMarkdown(text: string): string {
+  return text.replace(/\*\*/g, '').replace(/(?<!\*)\*(?!\*)/g, '');
+}
+
+function isChoiceMessage(text: string): boolean {
+  const lower = text.toLowerCase();
+  const indicators = [
+    'выберите',
+    'выбери',
+    'какой',
+    'какую',
+    'какое',
+    'какие',
+    'хотите',
+    'да или нет',
+    'вариант',
+    'option',
+    'choose',
+    'select',
+    'pick',
+    'which',
+    'скажите номер',
+    'номер варианта',
+    'всё верно',
+    'создаём',
+    'правильный черновик',
+    'подтвердите',
+    'создать',
+  ];
+  return indicators.some((w) => lower.includes(w));
+}
+
+interface QuickReply {
+  value: string; // text sent on click
+  label: string; // text shown on chip
+  isNumbered?: boolean;
+}
+
+// Extract quick-reply suggestions from the LAST choice block or confirmation pattern
+const quickReplies = computed<QuickReply[]>(() => {
+  if (isLoading.value) return [];
+  const msgs = safeMessages.value;
+  const lastMsg = msgs[msgs.length - 1];
+  if (!lastMsg || lastMsg.role !== 'assistant') return [];
+
+  const text = getMessageText(lastMsg);
+  if (!isChoiceMessage(text)) return [];
+
+  const lower = text.toLowerCase();
+
+  // Confirmation patterns
+  if (lower.includes('всё верно') || lower.includes('все верно') || lower.includes('создаём автобронирование') || lower.includes('создаем автобронирование')) {
+    return [
+      { value: 'Да, создаём', label: 'Да, создаём' },
+      { value: 'Нет', label: 'Нет, изменить' },
+    ];
+  }
+  if (lower.includes('это правильный черновик')) {
+    return [
+      { value: 'Да', label: 'Да' },
+      { value: 'Нет', label: 'Нет' },
+    ];
+  }
+
+  // Normalize so that inline numbered items like "text: 1. Option" are split onto new lines
+  const normalizedText = text.replace(/([^\n])(\d+[.\)]\s+)/g, '$1\n$2');
+  const lines = normalizedText.split('\n');
+
+  // Find the last contiguous block of NUMBERED lines only (never bullets)
+  const suggestions: QuickReply[] = [];
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i];
+    const match = line.match(/^\s*(\d+)[.\)]\s+(.+)$/);
+    if (match) {
+      const num = match[1];
+      const label = stripMarkdown(match[2].trim());
+      if (label.length > 0 && label.length < 120) {
+        suggestions.unshift({ value: num, label, isNumbered: true });
+      }
+    } else if (suggestions.length > 0) {
+      // Stop once we leave the last choice block
+      break;
+    }
+  }
+
+  // Hide chips if there is only 1 option or more than 6
+  if (suggestions.length <= 1 || suggestions.length > 6) return [];
+  return suggestions;
+});
+
 watch(
   () => {
     const msgs = safeMessages.value;
     const last = msgs[msgs.length - 1];
-    const text =
-      last?.parts
-        ?.filter((p: any) => p?.type === 'text')
-        ?.map((p: any) => p?.text)
-        ?.join('') ?? '';
+    const text = getMessageText(last);
     return {
       count: msgs.length,
       lastTextLength: text.length,
@@ -73,13 +167,17 @@ function handleRetry() {
   store.retry();
 }
 
+function handleQuickReply(reply: QuickReply) {
+  emit('send', reply.value);
+}
+
 const suggestions = [
   'Создай автобронирование на завтра',
   'Покажи мои таймслоты',
   'Какие акции доступны?',
 ];
 
-defineEmits<{
+const emit = defineEmits<{
   send: [text: string];
 }>();
 </script>
@@ -113,7 +211,7 @@ defineEmits<{
           v-for="suggestion in suggestions"
           :key="suggestion"
           class="w-full text-left px-4 py-2.5 rounded-xl border border-deep-border text-sm text-secondary hover:bg-elevated hover:border-purple-600/30 transition-all"
-          @click="$emit('send', suggestion)"
+          @click="emit('send', suggestion)"
         >
           {{ suggestion }}
         </button>
@@ -126,6 +224,23 @@ defineEmits<{
       :key="message?.id ?? Math.random()"
       :message="message"
     />
+
+    <!-- Quick reply chips -->
+    <div
+      v-if="quickReplies.length && !isLoading"
+      class="flex justify-start"
+    >
+      <div class="max-w-[85%] flex flex-wrap gap-2">
+        <button
+          v-for="(reply, idx) in quickReplies"
+          :key="idx"
+          class="px-3 py-1.5 rounded-full border border-purple-600/30 bg-purple-600/10 text-sm text-purple-700 dark:text-purple-300 hover:bg-purple-600/20 transition-colors"
+          @click="handleQuickReply(reply)"
+        >
+          <template v-if="reply.isNumbered">{{ idx + 1 }}. </template>{{ reply.label }}
+        </button>
+      </div>
+    </div>
 
     <!-- Loading indicator -->
     <div

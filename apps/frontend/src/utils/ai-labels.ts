@@ -10,6 +10,7 @@ export const TOOL_LABELS: Record<string, { label: string; icon: string }> = {
   // Autobooking
   listAutobookings: { label: 'Автобронирования', icon: 'pi pi-list' },
   createAutobooking: { label: 'Создание автоброни', icon: 'pi pi-calendar-plus' },
+  prepareAutobooking: { label: 'Подготовка автоброни', icon: 'pi pi-check-circle' },
   updateAutobooking: { label: 'Обновление автоброни', icon: 'pi pi-pencil' },
   deleteAutobooking: { label: 'Удаление автоброни', icon: 'pi pi-trash' },
 
@@ -29,6 +30,7 @@ export const TOOL_LABELS: Record<string, { label: string; icon: string }> = {
 
   // Warehouses / External
   getAllWarehouses: { label: 'Список складов', icon: 'pi pi-warehouse' },
+  searchWarehouses: { label: 'Поиск склада', icon: 'pi pi-search' },
   getCoefficients: { label: 'Коэффициенты приемки', icon: 'pi pi-percentage' },
   getWarehouseTransitions: { label: 'Тарифы транзитных складов', icon: 'pi pi-arrow-right-arrow-left' },
   getAcceptanceCoefficients: { label: 'Плановые коэффициенты приемки', icon: 'pi pi-percentage' },

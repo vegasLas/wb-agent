@@ -17,6 +17,7 @@ import { supplierTools } from './tools/supplier.tools';
 import { mpstatsTools } from './tools/mpstats.tools';
 import { advertsTools } from './tools/adverts.tools';
 import { reportsTools } from './tools/reports.tools';
+import { resolvePendingOption, clearPendingAction } from './ai-pending-action.service';
 
 interface HandleChatInput {
   userId: number;
@@ -58,17 +59,24 @@ export class AIChatService {
       });
     }
 
-    // 3. Build system context
+    // 3. Resolve any pending action based on the user's reply
+    let pendingContextInjection = '';
+    const pending = await resolvePendingOption(convId, lastUserText);
+    if (pending.resolved && pending.actionType && pending.value) {
+      pendingContextInjection = `\n[SYSTEM NOTE] Пользователь только что выбрал опцию для действия "${pending.actionType}". Выбранное значение: ${pending.value}. Сохраненный контекст: ${JSON.stringify(pending.context)}. Используй это значение и продолжи выполнение.\n`;
+    }
+
+    // 4. Build system context
     const systemMessage: CoreMessage = {
       role: 'system',
-      content: await buildContextMessage(userId),
+      content: (await buildContextMessage(userId)) + pendingContextInjection,
     };
 
-    // 4. Convert client UIMessages to CoreMessages
+    // 5. Convert client UIMessages to CoreMessages
     const convertedMessages = await convertToModelMessages(messages);
     const modelMessages: CoreMessage[] = [systemMessage, ...convertedMessages];
 
-    // 5. Model routing
+    // 6. Model routing
     const userText = lastUserText.toLowerCase();
     const wantsReasoning =
       userText.includes('почему') ||
@@ -84,7 +92,7 @@ export class AIChatService {
       ? undefined
       : Object.assign(
           {} as Record<string, Tool>,
-          autobookingTools(userId),
+          autobookingTools(userId, convId),
           triggerTools(userId),
           externalTools(userId),
           supplierTools(userId),
@@ -93,8 +101,7 @@ export class AIChatService {
           reportsTools(userId),
         );
 
-    // 6. Stream
-
+    // 7. Stream
     const result = streamText<Record<string, Tool>>({
       model,
       messages: modelMessages,
@@ -105,19 +112,18 @@ export class AIChatService {
         delayInMs: 40,
         chunking: 'word',
       }),
-      onFinish: ({ text, usage }) => {
-        prisma.aiMessage
+      onFinish: async ({ text, usage }) => {
+        // Extract suggestions from assistant text if any
+        const suggestions = extractSuggestions(text);
+
+        await prisma.aiMessage
           .create({
             data: {
               conversationId: convId!,
               role: 'assistant',
               content: text,
+              suggestions,
             },
-          })
-          .then(() => {
-            console.log(
-              `[AI-CHAT] user=${userId} conv=${convId} tokens=${JSON.stringify(usage)}`,
-            );
           })
           .catch((err) => {
             console.error('[AI-CHAT] Failed to save assistant message:', err);
@@ -127,6 +133,30 @@ export class AIChatService {
 
     return result;
   }
+}
+
+/**
+ * Extracts quick-reply suggestions from assistant text.
+ * Looks for numbered lists or lines starting with option markers.
+ */
+function extractSuggestions(text: string): string[] {
+  const suggestions: string[] = [];
+  const lines = text.split('\n');
+
+  for (const line of lines) {
+    // Match "1. Option text" or "1) Option text" or "- Option text"
+    const match = line.match(/^\s*(?:\d+[.\)]\s+|[\-\*]\s+)(.+)$/);
+    if (match) {
+      const label = match[1].trim();
+      // Only use relatively short labels
+      if (label.length > 0 && label.length < 120) {
+        suggestions.push(label);
+      }
+    }
+  }
+
+  // Limit to first 6 suggestions
+  return suggestions.slice(0, 6);
 }
 
 export const aiChatService = new AIChatService();
