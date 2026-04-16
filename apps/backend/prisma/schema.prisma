@@ -283,13 +283,14 @@ model UserSupplierHistory {
 }
 
 model AiConversation {
-  id        String      @id @default(uuid())
-  userId    Int
-  title     String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id             String      @id @default(uuid())
+  userId         Int
+  title          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  messages  AiMessage[]
+  messages       AiMessage[]
+  pendingAction  AiPendingAction?
 
   @@index([userId, updatedAt])
 }
@@ -301,9 +302,25 @@ model AiMessage {
   content        String   @db.Text
   toolCalls      Json?
   toolResults    Json?
+  suggestions    String[] @default([])
   createdAt      DateTime @default(now())
 
   conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+}
+
+model AiPendingAction {
+  id             String   @id @default(uuid())
+  conversationId String   @unique
+  actionType     String
+  options        Json
+  context        Json     @default("{}")
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, expiresAt])
 }
