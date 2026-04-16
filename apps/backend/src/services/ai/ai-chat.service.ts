@@ -2,6 +2,8 @@ import { deepseek } from '@ai-sdk/deepseek';
 import {
   convertToModelMessages,
   streamText,
+  stepCountIs,
+  smoothStream,
   UIMessage,
   CoreMessage,
   Tool,
@@ -35,7 +37,10 @@ export class AIChatService {
     let convId = conversationId;
     if (!convId) {
       const conv = await prisma.aiConversation.create({
-        data: { userId, title: getMessageText(messages[0]).slice(0, 80) || 'New chat' },
+        data: {
+          userId,
+          title: getMessageText(messages[0]).slice(0, 80) || 'New chat',
+        },
       });
       convId = conv.id;
     }
@@ -89,12 +94,17 @@ export class AIChatService {
         );
 
     // 6. Stream
+
     const result = streamText<Record<string, Tool>>({
       model,
       messages: modelMessages,
       tools: tools as any,
-      maxSteps: wantsReasoning ? 1 : 5,
+      stopWhen: wantsReasoning ? stepCountIs(1) : stepCountIs(5),
       maxTokens: 2048,
+      experimental_transform: smoothStream({
+        delayInMs: 40,
+        chunking: 'word',
+      }),
       onFinish: ({ text, usage }) => {
         prisma.aiMessage
           .create({
@@ -105,7 +115,9 @@ export class AIChatService {
             },
           })
           .then(() => {
-            console.log(`[AI-CHAT] user=${userId} conv=${convId} tokens=${JSON.stringify(usage)}`);
+            console.log(
+              `[AI-CHAT] user=${userId} conv=${convId} tokens=${JSON.stringify(usage)}`,
+            );
           })
           .catch((err) => {
             console.error('[AI-CHAT] Failed to save assistant message:', err);
