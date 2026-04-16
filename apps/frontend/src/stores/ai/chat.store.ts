@@ -22,7 +22,9 @@ function isTelegramMode(): boolean {
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {};
 
-  const token = isTelegramMode() ? getInitData() : localStorage.getItem(AUTH_TOKEN_KEY);
+  const token = isTelegramMode()
+    ? getInitData()
+    : localStorage.getItem(AUTH_TOKEN_KEY);
   if (!token) return {};
 
   return isTelegramMode()
@@ -56,7 +58,8 @@ export const useAIChatStore = defineStore('aiChat', () => {
   const isLoadingConversations = ref(false);
   const isLoadingMessages = ref(false);
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
+  const apiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
   const chatApiPath =
     (apiBaseUrl.startsWith('http')
       ? new URL(apiBaseUrl).pathname
@@ -66,6 +69,42 @@ export const useAIChatStore = defineStore('aiChat', () => {
   const transport = markRaw(
     new DefaultChatTransport<UIMessage>({
       api: chatApiPath,
+      fetch: async (url, init) => {
+        const response = await fetch(url, { ...init, cache: 'no-store' });
+        if (!response.ok || !response.body) {
+          return response;
+        }
+        // Wrap the response body to log every chunk as it arrives in the browser
+        const reader = response.body.getReader();
+        const loggedStream = new ReadableStream({
+          start(controller) {
+            function push() {
+              reader
+                .read()
+                .then(({ done, value }) => {
+                  if (done) {
+                    controller.close();
+                    return;
+                  }
+                  controller.enqueue(value);
+                  push();
+                })
+                .catch((err) => {
+                  controller.error(err);
+                });
+            }
+            push();
+          },
+          cancel(reason) {
+            return reader.cancel(reason);
+          },
+        });
+        return new Response(loggedStream, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        });
+      },
       prepareSendMessagesRequest: async ({ id, messages }) => {
         return {
           headers: getAuthHeaders(),
@@ -81,8 +120,38 @@ export const useAIChatStore = defineStore('aiChat', () => {
   const chat = markRaw(
     new Chat<UIMessage>({
       transport,
+      experimental_throttle: 50,
+      onError: (err) => {
+        console.error('[CHAT-STORE] AI SDK error:', err);
+      },
     }),
   );
+
+  // Debug: log every message array change
+  let lastMessagesDebug = JSON.stringify(chat.messages);
+  setInterval(() => {
+    const current = JSON.stringify(chat.messages);
+    if (current !== lastMessagesDebug) {
+      const msgs = chat.messages ?? [];
+      const last = msgs[msgs.length - 1];
+      console.log(
+        '[CHAT-STORE] messages mutated. count:',
+        msgs.length,
+        'lastMessage role:',
+        last?.role,
+        'lastMessage parts count:',
+        last?.parts?.length,
+      );
+      if (last?.parts?.length) {
+        last.parts.forEach((p: any, i: number) => {
+          console.log(
+            `[CHAT-STORE]   part[${i}] type=${p?.type}, textLen=${p?.text?.length}`,
+          );
+        });
+      }
+      lastMessagesDebug = current;
+    }
+  }, 300);
 
   async function loadConversations() {
     isLoadingConversations.value = true;
@@ -132,11 +201,23 @@ export const useAIChatStore = defineStore('aiChat', () => {
   }
 
   async function sendMessage(text: string) {
-    await chat.sendMessage({ text });
+    console.log('[CHAT-STORE] sendMessage called:', text);
+    try {
+      await chat.sendMessage({ text });
+      console.log('[CHAT-STORE] sendMessage finished streaming');
+    } catch (err) {
+      console.error('[CHAT-STORE] sendMessage error:', err);
+      throw err;
+    }
     // After sending, refresh conversation list so the title appears
     // Use a small delay to let the backend create the conversation
     setTimeout(() => {
-      loadConversations();
+      loadConversations().then(() => {
+        if (!conversationId.value && conversations.value.length > 0) {
+          const mostRecent = conversations.value[0];
+          conversationId.value = mostRecent.id;
+        }
+      });
     }, 800);
   }
 
@@ -150,7 +231,9 @@ export const useAIChatStore = defineStore('aiChat', () => {
     if (lastMessage && lastMessage.role === 'user') {
       const text = getMessageContent(lastMessage);
       // Remove the last user message and any assistant response after it
-      const lastUserIndex = chat.messages.findLastIndex((m) => m.role === 'user');
+      const lastUserIndex = chat.messages.findLastIndex(
+        (m) => m.role === 'user',
+      );
       if (lastUserIndex !== -1) {
         chat.messages = chat.messages.slice(0, lastUserIndex);
       }
@@ -161,7 +244,14 @@ export const useAIChatStore = defineStore('aiChat', () => {
   return {
     conversationId,
     conversations: computed(() => conversations.value),
-    messages: computed(() => chat.messages),
+    messages: computed(() => {
+      const msgs = chat.messages ?? [];
+      if (!Array.isArray(msgs)) {
+        console.error('[CHAT-STORE] chat.messages is not an array!', msgs);
+        return [];
+      }
+      return msgs;
+    }),
     status: computed(() => chat.status),
     error: computed(() => chat.error),
     isLoadingConversations: computed(() => isLoadingConversations.value),

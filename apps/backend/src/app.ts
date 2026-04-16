@@ -26,8 +26,17 @@ export function createApp(): Application {
     }),
   );
 
-  // Compression middleware
-  app.use(compression());
+  // Compression middleware (disabled for AI chat to preserve streaming)
+  app.use(
+    compression({
+      filter: (req, res) => {
+        if (req.path === '/v1/ai/chat' || req.path.startsWith('/v1/ai/chat/')) {
+          return false;
+        }
+        return compression.filter(req, res);
+      },
+    }),
+  );
 
   // Body parsing middleware
   app.use(express.json({ limit: '10mb' }));

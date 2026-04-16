@@ -63,22 +63,20 @@ router.post('/chat', authenticate, async (req, res, next) => {
       messages: messages as any,
     });
 
-    if (typeof (result as any).pipeDataStreamToResponse === 'function') {
-      return (result as any).pipeDataStreamToResponse(res);
-    }
-
-    const streamResponse = (result as any).toUIMessageStreamResponse?.() || (result as any).toDataStreamResponse?.();
-    if (streamResponse?.body) {
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.setHeader('Transfer-Encoding', 'chunked');
-      const reader = streamResponse.body.getReader();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(value);
+    if (typeof (result as any).pipeUIMessageStreamToResponse === 'function') {
+      console.log('[AI-BACKEND] Piping UI message stream to response');
+      if ((res as any).socket) {
+        (res as any).socket.setNoDelay(true);
       }
-      res.end();
-      return;
+      return (result as any).pipeUIMessageStreamToResponse(res, {
+        headers: {
+          'Content-Encoding': 'none',
+          'X-Accel-Buffering': 'no',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      });
     }
 
     return res.status(500).json({ error: 'Streaming unsupported' });
