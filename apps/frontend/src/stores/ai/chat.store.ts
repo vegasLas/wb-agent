@@ -10,6 +10,7 @@ import {
   type AIConversation,
 } from '@/api/ai';
 import { getInitData } from '@/utils/telegram';
+import { createToolTrackingStream } from '@/utils/ai/stream';
 
 const AUTH_TOKEN_KEY = 'auth_token';
 
@@ -57,6 +58,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
   const conversations = ref<AIConversation[]>([]);
   const isLoadingConversations = ref(false);
   const isLoadingMessages = ref(false);
+  const finishedToolCallIds = ref<Set<string>>(new Set());
 
   const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
@@ -74,38 +76,21 @@ export const useAIChatStore = defineStore('aiChat', () => {
         if (!response.ok || !response.body) {
           return response;
         }
-        // Wrap the response body to log every chunk as it arrives in the browser
-        const reader = response.body.getReader();
-        const loggedStream = new ReadableStream({
-          start(controller) {
-            function push() {
-              reader
-                .read()
-                .then(({ done, value }) => {
-                  if (done) {
-                    controller.close();
-                    return;
-                  }
-                  controller.enqueue(value);
-                  push();
-                })
-                .catch((err) => {
-                  controller.error(err);
-                });
-            }
-            push();
+
+        const trackedStream = createToolTrackingStream(
+          response.body,
+          (toolCallId) => {
+            finishedToolCallIds.value.add(toolCallId);
           },
-          cancel(reason) {
-            return reader.cancel(reason);
-          },
-        });
-        return new Response(loggedStream, {
+        );
+
+        return new Response(trackedStream, {
           status: response.status,
           statusText: response.statusText,
           headers: response.headers,
         });
       },
-      prepareSendMessagesRequest: async ({ id, messages }) => {
+      prepareSendMessagesRequest: async ({ messages }) => {
         return {
           headers: getAuthHeaders(),
           body: {
@@ -127,32 +112,6 @@ export const useAIChatStore = defineStore('aiChat', () => {
     }),
   );
 
-  // Debug: log every message array change
-  let lastMessagesDebug = JSON.stringify(chat.messages);
-  setInterval(() => {
-    const current = JSON.stringify(chat.messages);
-    if (current !== lastMessagesDebug) {
-      const msgs = chat.messages ?? [];
-      const last = msgs[msgs.length - 1];
-      console.log(
-        '[CHAT-STORE] messages mutated. count:',
-        msgs.length,
-        'lastMessage role:',
-        last?.role,
-        'lastMessage parts count:',
-        last?.parts?.length,
-      );
-      if (last?.parts?.length) {
-        last.parts.forEach((p: any, i: number) => {
-          console.log(
-            `[CHAT-STORE]   part[${i}] type=${p?.type}, textLen=${p?.text?.length}`,
-          );
-        });
-      }
-      lastMessagesDebug = current;
-    }
-  }, 300);
-
   async function loadConversations() {
     isLoadingConversations.value = true;
     try {
@@ -170,6 +129,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
       chat.messages = messages.map((m) =>
         createUIMessageFromStored(m.id, m.role, m.content),
       );
+      finishedToolCallIds.value.clear();
     } finally {
       isLoadingMessages.value = false;
     }
@@ -194,6 +154,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
   function startNewConversation() {
     conversationId.value = undefined;
     chat.messages = [];
+    finishedToolCallIds.value.clear();
   }
 
   function setConversationId(id: string) {
@@ -201,7 +162,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
   }
 
   async function sendMessage(text: string) {
-    console.log('[CHAT-STORE] sendMessage called:', text);
+    finishedToolCallIds.value.clear();
     try {
       await chat.sendMessage({ text });
       console.log('[CHAT-STORE] sendMessage finished streaming');
@@ -226,6 +187,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
   }
 
   async function retry() {
+    finishedToolCallIds.value.clear();
     // Retry the last message by re-sending it
     const lastMessage = chat.messages[chat.messages.length - 1];
     if (lastMessage && lastMessage.role === 'user') {
@@ -265,5 +227,6 @@ export const useAIChatStore = defineStore('aiChat', () => {
     loadConversation,
     deleteConversation,
     updateTitle,
+    isToolFinished: (toolCallId: string) => finishedToolCallIds.value.has(toolCallId),
   };
 });
