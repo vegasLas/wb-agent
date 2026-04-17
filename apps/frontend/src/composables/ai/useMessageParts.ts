@@ -52,7 +52,13 @@ export interface ProcessedToolPart {
   toolInfo: ToolPartInfo;
 }
 
-export type ProcessedPart = ProcessedTextPart | ProcessedToolPart;
+export interface ProcessedFilePart {
+  type: 'file';
+  filename: string;
+  mediaType: string;
+}
+
+export type ProcessedPart = ProcessedTextPart | ProcessedToolPart | ProcessedFilePart;
 
 function isTextPart(part: unknown): part is TextPart {
   return typeof part === 'object' && part !== null && (part as Record<string, unknown>).type === 'text';
@@ -67,6 +73,10 @@ function isDynamicToolPart(part: unknown): part is DynamicToolPart {
   const p = part as Record<string, unknown>;
   if (p.type === 'dynamic-tool') return true;
   return typeof p.type === 'string' && p.type.startsWith('tool-');
+}
+
+function isFilePart(part: unknown): part is { type: 'file'; filename?: string; mediaType?: string } {
+  return typeof part === 'object' && part !== null && (part as Record<string, unknown>).type === 'file';
 }
 
 function getToolCallId(part: ToolInvocationPart | DynamicToolPart, info: ToolPartInfo): string {
@@ -155,6 +165,7 @@ export function useMessageParts(
 
     const seenToolCalls = new Set<string>();
     const result: ProcessedPart[] = [];
+    const seenFiles = new Set<string>();
 
     for (const part of parts) {
       if (isTextPart(part)) {
@@ -165,6 +176,19 @@ export function useMessageParts(
             html: renderTextHtml(part.text, msg.role),
           });
         }
+        continue;
+      }
+
+      if (isFilePart(part)) {
+        const filename = part.filename || 'file';
+        const key = `${filename}-${part.mediaType}`;
+        if (seenFiles.has(key)) continue;
+        seenFiles.add(key);
+        result.push({
+          type: 'file',
+          filename,
+          mediaType: part.mediaType || '',
+        });
         continue;
       }
 
