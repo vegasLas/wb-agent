@@ -1,15 +1,31 @@
-import { ref, watch, nextTick, onMounted } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import type { UIMessage } from 'ai';
+
+const BOTTOM_THRESHOLD = 100; // px
 
 export function useChatScroll(messages: () => UIMessage[]) {
   const scrollContainer = ref<HTMLElement | null>(null);
+  let userWasNearBottom = true;
+  let scrollEl: HTMLElement | null = null;
+
+  function isNearBottom(): boolean {
+    if (!scrollEl) return true;
+    return (
+      scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight <=
+      BOTTOM_THRESHOLD
+    );
+  }
 
   function scrollToBottom() {
     nextTick(() => {
-      if (scrollContainer.value) {
-        scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
+      if (scrollEl) {
+        scrollEl.scrollTop = scrollEl.scrollHeight;
       }
     });
+  }
+
+  function onScroll() {
+    userWasNearBottom = isNearBottom();
   }
 
   watch(
@@ -23,11 +39,24 @@ export function useChatScroll(messages: () => UIMessage[]) {
         lastText: text.slice(0, 80),
       };
     },
-    scrollToBottom,
+    (newVal, oldVal) => {
+      const isNewMessage = !oldVal || newVal.count !== oldVal.count;
+      if (isNewMessage || userWasNearBottom) {
+        scrollToBottom();
+      }
+    },
     { deep: true },
   );
 
-  onMounted(scrollToBottom);
+  onMounted(() => {
+    scrollEl = scrollContainer.value;
+    scrollToBottom();
+    scrollEl?.addEventListener('scroll', onScroll, { passive: true });
+  });
+
+  onUnmounted(() => {
+    scrollEl?.removeEventListener('scroll', onScroll);
+  });
 
   return { scrollContainer };
 }

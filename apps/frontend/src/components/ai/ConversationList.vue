@@ -14,11 +14,15 @@ const emit = defineEmits<{
   new: [];
 }>();
 
-const sortedConversations = computed(() =>
-  [...store.conversations].sort(
+const sortedConversations = computed(() => {
+  const list = [...store.conversations].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-  ),
-);
+  );
+  const pending = [...store.pendingConversations.values()].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  return [...pending, ...list];
+});
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -81,11 +85,15 @@ async function handleDelete(id: string, event: Event) {
               ? 'bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-md shadow-purple-900/20'
               : 'text-secondary hover:text-theme hover:bg-elevated hover:translate-x-0.5',
           ]"
-          @click="emit('select', conv.id)"
+          :disabled="conv.id.startsWith('__pending-')"
+          @click="!conv.id.startsWith('__pending-') && emit('select', conv.id)"
         >
           <i
             :class="[
-              'pi pi-comments text-base transition-transform duration-200 shrink-0',
+              'text-base transition-transform duration-200 shrink-0',
+              conv.id.startsWith('__pending-')
+                ? 'pi pi-spinner pi-spin'
+                : 'pi pi-comments',
               selectedId === conv.id ? '' : 'group-hover:scale-110',
             ]"
           />
@@ -99,10 +107,11 @@ async function handleDelete(id: string, event: Event) {
                 selectedId === conv.id ? 'text-white/80' : 'text-muted',
               ]"
             >
-              {{ formatDate(conv.updatedAt) }}
+              {{ conv.id.startsWith('__pending-') ? 'Создание…' : formatDate(conv.updatedAt) }}
             </div>
           </div>
           <Button
+            v-if="!conv.id.startsWith('__pending-')"
             icon="pi pi-trash"
             severity="danger"
             variant="text"
