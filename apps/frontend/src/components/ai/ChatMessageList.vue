@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue';
+import { ref, watch, nextTick, computed, onMounted } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import Button from 'primevue/button';
 import ChatMessage from './ChatMessage.vue';
@@ -163,6 +163,14 @@ watch(
   { deep: true },
 );
 
+onMounted(() => {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
+    }
+  });
+});
+
 function handleRetry() {
   store.retry();
 }
@@ -237,7 +245,9 @@ const emit = defineEmits<{
           class="px-3 py-1.5 rounded-full border border-purple-600/30 bg-purple-600/10 text-sm text-purple-700 dark:text-purple-300 hover:bg-purple-600/20 transition-colors"
           @click="handleQuickReply(reply)"
         >
-          <template v-if="reply.isNumbered">{{ idx + 1 }}. </template>{{ reply.label }}
+          <template v-if="reply.isNumbered">
+            {{ idx + 1 }}.
+          </template>{{ reply.label }}
         </button>
       </div>
     </div>

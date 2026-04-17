@@ -5,7 +5,9 @@
         <div class="text-2xl font-bold text-purple-600">
           {{ totalCount }}
         </div>
-        <div class="text-xs text-gray-500">Всего рекламных кампаний</div>
+        <div class="text-xs text-gray-500">
+          Всего рекламных кампаний
+        </div>
       </template>
     </Card>
     <Card class="text-center">
@@ -13,7 +15,9 @@
         <div class="text-2xl font-bold text-amber-600">
           {{ pauseCount }}
         </div>
-        <div class="text-xs text-gray-500">На паузе</div>
+        <div class="text-xs text-gray-500">
+          На паузе
+        </div>
       </template>
     </Card>
   </div>

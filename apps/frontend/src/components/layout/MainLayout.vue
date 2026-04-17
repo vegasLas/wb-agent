@@ -9,11 +9,13 @@
 
     <!-- Main Content -->
     <main
-      class="flex-1 px-4 py-6 lg:px-8 lg:py-6 overflow-y-auto relative pb-24 lg:pb-6 min-h-screen"
+      class="flex-1 px-4 lg:px-8 lg:py-6 relative pb-24 lg:pb-6 min-h-screen"
     >
       <!-- Top Bar with Account (left) and Plus (right) buttons -->
       <!-- This is always visible once router is ready - not part of skeleton -->
-      <div class="flex items-center justify-between mb-4 lg:hidden">
+      <div
+        class="flex items-center justify-between lg:hidden sticky top-0 z-30 bg-deep-bg py-4 -mx-4 px-4"
+      >
         <!-- Account Button and Supplier Name (Left) -->
         <div class="flex items-center gap-2">
           <Button
@@ -66,8 +68,8 @@
       <div class="relative">
         <!-- Content skeleton overlay during view loading/navigation -->
         <!-- Positioned to only cover content below the header -->
-        <div 
-          v-if="showContentSkeleton" 
+        <div
+          v-if="showContentSkeleton"
           class="absolute inset-0 bg-deep-bg text-theme z-10"
         >
           <component :is="currentRouteSkeleton" />
@@ -95,7 +97,6 @@
       v-model:show="showTriggerDialog"
       @created="handleTriggerCreated"
     />
-    <ChatPanel />
   </div>
 </template>
 
@@ -117,7 +118,6 @@ import TriggerCreateDialog from '../triggers/CreateDialog.vue';
 import type { MenuItem } from 'primevue/menu';
 import { useAutobookingListStore } from '@/stores/autobooking';
 import { useTriggerStore } from '@/stores/triggers';
-import ChatPanel from '../ai/ChatPanel.vue';
 
 const accountModalStore = useAccountSupplierModalStore();
 const userStore = useUserStore();

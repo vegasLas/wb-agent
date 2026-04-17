@@ -187,8 +187,6 @@
     :show="showHintsModal"
     @close="showHintsModal = false"
   />
-
-
 </template>
 
 <script setup lang="ts">

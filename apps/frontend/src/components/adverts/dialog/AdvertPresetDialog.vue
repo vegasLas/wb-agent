@@ -1,16 +1,19 @@
 <template>
   <Dialog
     :visible="visible"
-    @update:visible="$emit('update:visible', $event)"
     :header="title"
     :style="{ width: '95vw', maxWidth: '1200px' }"
     :modal="true"
     :closable="true"
+    @update:visible="$emit('update:visible', $event)"
     @hide="$emit('hide')"
   >
     <div class="space-y-4">
       <!-- Error message -->
-      <ErrorMessage v-if="error" :message="error" />
+      <ErrorMessage
+        v-if="error"
+        :message="error"
+      />
 
       <!-- Loading state -->
       <LoadingSpinner v-if="loading" />

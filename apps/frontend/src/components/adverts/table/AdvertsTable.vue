@@ -10,7 +10,10 @@
     :first="(currentPage - 1) * pageSize"
     @page="onPageChange"
   >
-    <Column header="" style="width: 6rem">
+    <Column
+      header=""
+      style="width: 6rem"
+    >
       <template #body="{ data }">
         <Button
           label="Кластеры"
@@ -22,22 +25,35 @@
       </template>
     </Column>
 
-    <Column field="id" header="ID" style="width: 5rem">
+    <Column
+      field="id"
+      header="ID"
+      style="width: 5rem"
+    >
       <template #body="{ data }">
         <span class="text-xs font-mono">{{ data.id }}</span>
       </template>
     </Column>
 
-    <Column field="campaign_name" header="Название">
+    <Column
+      field="campaign_name"
+      header="Название"
+    >
       <template #body="{ data }">
-        <div class="font-medium text-sm">{{ data.campaign_name }}</div>
+        <div class="font-medium text-sm">
+          {{ data.campaign_name }}
+        </div>
         <div class="text-xs text-gray-500">
           {{ formatDate(data.create_date) }}
         </div>
       </template>
     </Column>
 
-    <Column field="status_id" header="Статус" style="width: 8rem">
+    <Column
+      field="status_id"
+      header="Статус"
+      style="width: 8rem"
+    >
       <template #body="{ data }">
         <Tag
           :value="getStatusLabel(data.status_id)"
@@ -47,13 +63,21 @@
       </template>
     </Column>
 
-    <Column field="products_count" header="Товаров" style="width: 6rem">
+    <Column
+      field="products_count"
+      header="Товаров"
+      style="width: 6rem"
+    >
       <template #body="{ data }">
         <span class="text-sm">{{ data.products_count }}</span>
       </template>
     </Column>
 
-    <Column field="budget" header="Бюджет" style="width: 7rem">
+    <Column
+      field="budget"
+      header="Бюджет"
+      style="width: 7rem"
+    >
       <template #body="{ data }">
         <span class="text-sm font-medium">
           {{ formatCurrency(data.budget) }}
@@ -61,7 +85,11 @@
       </template>
     </Column>
 
-    <Column field="autofill" header="Автозаполнение" style="width: 8rem">
+    <Column
+      field="autofill"
+      header="Автозаполнение"
+      style="width: 8rem"
+    >
       <template #body="{ data }">
         <Tag
           :value="data.autofill?.is_enable ? 'Вкл' : 'Выкл'"

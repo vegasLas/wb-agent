@@ -8,7 +8,10 @@
       </template>
       <template #content>
         <!-- Loading -->
-        <div v-if="checking" class="flex items-center gap-3 p-3">
+        <div
+          v-if="checking"
+          class="flex items-center gap-3 p-3"
+        >
           <i class="pi pi-spin pi-spinner text-blue-500" />
           <span class="text-sm text-gray-500">Проверка статуса токена...</span>
         </div>

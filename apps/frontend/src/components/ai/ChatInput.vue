@@ -35,7 +35,10 @@ function adjustHeight() {
 </script>
 
 <template>
-  <form class="flex items-end gap-2 p-2 border-t border-deep-border" @submit.prevent="handleSubmit">
+  <form
+    class="flex items-end gap-2 p-2 border-t border-deep-border"
+    @submit.prevent="handleSubmit"
+  >
     <textarea
       ref="textareaRef"
       v-model="inputText"

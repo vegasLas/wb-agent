@@ -3,7 +3,10 @@
     <UserAlerts />
 
     <!-- Token Setup State -->
-    <div v-if="!tokensReady" class="space-y-4">
+    <div
+      v-if="!tokensReady"
+      class="space-y-4"
+    >
       <Card class="text-center py-8">
         <template #content>
           <div class="flex flex-col items-center">
@@ -12,7 +15,9 @@
             >
               <i class="pi pi-chart-bar text-white text-2xl" />
             </div>
-            <p class="text-lg font-medium mb-2">MPStats</p>
+            <p class="text-lg font-medium mb-2">
+              MPStats
+            </p>
             <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-6">
               Для работы с MPStats необходимо настроить токен MPStats
             </p>
@@ -36,7 +41,9 @@
                   "
                 />
                 <div class="flex-1">
-                  <p class="font-medium">Токен MPStats</p>
+                  <p class="font-medium">
+                    Токен MPStats
+                  </p>
                   <p class="text-sm text-gray-500 dark:text-gray-400">
                     {{ hasMpstatsToken ? 'Настроен' : 'Не настроен' }}
                   </p>
@@ -56,7 +63,10 @@
     </div>
 
     <!-- Main MPStats View -->
-    <div v-else class="space-y-4">
+    <div
+      v-else
+      class="space-y-4"
+    >
       <Tabs value="search">
         <TabList>
           <Tab value="search">

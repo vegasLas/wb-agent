@@ -21,7 +21,9 @@
 
         <!-- Info -->
         <div class="space-y-1">
-          <p class="font-medium line-clamp-2 text-sm">{{ card.name }}</p>
+          <p class="font-medium line-clamp-2 text-sm">
+            {{ card.name }}
+          </p>
           <p class="text-xs text-gray-500 dark:text-gray-400">
             Артикул: {{ card.nmID }}
           </p>
