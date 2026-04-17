@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '@/middleware/auth.middleware';
 import { aiChatService } from '@/services/ai/ai-chat.service';
+import { processMessageFiles } from '@/services/ai/file-extraction.service';
 import { prisma } from '@/config/database';
 import { z } from 'zod';
 
@@ -28,6 +29,12 @@ function sanitizeContent(content: unknown): string {
 
 const uiPartSchema = z.union([
   z.object({ type: z.literal('text'), text: z.string() }),
+  z.object({
+    type: z.literal('file'),
+    mediaType: z.string(),
+    filename: z.string().optional(),
+    url: z.string(),
+  }),
   z.object({ type: z.string() }).passthrough(),
 ]);
 
@@ -57,10 +64,15 @@ router.post('/chat', authenticate, async (req, res, next) => {
       content: sanitizeContent(m.content),
     }));
 
+    const { messages: processedMessages, attachments } = await processMessageFiles(
+      messages as any,
+    );
+
     const result = await aiChatService.handleChat({
       userId,
       conversationId: parsed.id,
-      messages: messages as any,
+      messages: processedMessages as any,
+      attachments: attachments.length ? attachments : undefined,
     });
 
     if (typeof (result as any).pipeUIMessageStreamToResponse === 'function') {
@@ -136,6 +148,7 @@ router.get('/conversations/:id/messages', authenticate, async (req, res, next) =
         id: true,
         role: true,
         content: true,
+        attachments: true,
         createdAt: true,
       },
     });
