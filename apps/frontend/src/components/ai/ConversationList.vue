@@ -68,7 +68,10 @@ async function handleDelete(id: string, event: Event) {
         Нет чатов
       </div>
 
-      <nav v-else class="space-y-1">
+      <nav
+        v-else
+        class="space-y-1"
+      >
         <button
           v-for="conv in sortedConversations"
           :key="conv.id"
