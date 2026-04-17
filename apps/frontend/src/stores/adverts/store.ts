@@ -39,8 +39,8 @@ export const useAdvertsStore = defineStore('adverts', () => {
 
   // Actions
   async function fetchAdverts(
-    page: number = 1,
-    size: number = 10,
+    page = 1,
+    size = 10,
     state?: number,
   ) {
     if (!userStore.user?.selectedAccountId) {
@@ -85,8 +85,8 @@ export const useAdvertsStore = defineStore('adverts', () => {
   async function fetchPresetInfo(
     advertId: number,
     nmId: number,
-    page: number = 1,
-    size: number = 20,
+    page = 1,
+    size = 20,
     state?: number,
   ) {
     if (!userStore.user?.selectedAccountId) {

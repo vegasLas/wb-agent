@@ -24,20 +24,31 @@
     <div
       class="flex flex-wrap items-center gap-4 p-4 rounded-[18px] border bg-card border-[var(--color-border)] shadow-card dark:bg-gradient-to-br dark:from-[rgba(30,30,40,0.9)] dark:to-[#15151C] dark:border-[rgba(106,57,244,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
     >
-      <FloatLabel variant="on" class="flex-1">
-        <InputNumber id="minCost" v-model="minCost" :min="0" :step="10" />
+      <FloatLabel
+        variant="on"
+        class="flex-1"
+      >
+        <InputNumber
+          id="minCost"
+          v-model="minCost"
+          :min="0"
+          :step="10"
+        />
         <label for="minCost">Мин. затраты, ₽</label>
       </FloatLabel>
       <div
         class="w-px h-10 hidden sm:block bg-[var(--color-border)] dark:bg-[#2a2a35]"
       />
-      <FloatLabel variant="on" class="flex-1">
+      <FloatLabel
+        variant="on"
+        class="flex-1"
+      >
         <InputNumber
           id="minCtr"
           v-model="minCtr"
           :min="0"
           :step="0.1"
-          :maxFractionDigits="2"
+          :max-fraction-digits="2"
         />
         <label for="minCtr">Макс. CTR</label>
       </FloatLabel>
@@ -52,14 +63,20 @@
       :total-records="filteredTotalCount"
       :lazy="true"
       :first="(currentPage - 1) * pageSize"
-      @page="onPageChange"
       scrollable
       scroll-height="400px"
       :row-class="getRowClass"
+      @page="onPageChange"
     >
-      <Column field="name" header="Название" style="min-width: 180px">
+      <Column
+        field="name"
+        header="Название"
+        style="min-width: 180px"
+      >
         <template #body="{ data }">
-          <div class="font-medium text-sm truncate">{{ data.name }}</div>
+          <div class="font-medium text-sm truncate">
+            {{ data.name }}
+          </div>
         </template>
       </Column>
 
@@ -76,7 +93,12 @@
         </template>
       </Column>
 
-      <Column field="ctr" header="CTR" style="width: 5rem" class="text-right">
+      <Column
+        field="ctr"
+        header="CTR"
+        style="width: 5rem"
+        class="text-right"
+      >
         <template #body="{ data }">
           <span class="text-sm">{{ formatCtr(data.ctr) }}</span>
         </template>
@@ -137,7 +159,12 @@
         </template>
       </Column>
 
-      <Column field="cpm" header="CPM" style="width: 5rem" class="text-right">
+      <Column
+        field="cpm"
+        header="CPM"
+        style="width: 5rem"
+        class="text-right"
+      >
         <template #body="{ data }">
           <span class="text-sm">{{ formatCurrency(data.cpm) }}</span>
         </template>

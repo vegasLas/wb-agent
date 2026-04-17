@@ -8,25 +8,33 @@
         <div class="text-lg font-bold text-purple-700">
           {{ formatNumber(total.views) }}
         </div>
-        <div class="text-xs text-gray-600">Показы</div>
+        <div class="text-xs text-gray-600">
+          Показы
+        </div>
       </div>
       <div class="text-center">
         <div class="text-lg font-bold text-purple-700">
           {{ formatNumber(total.clicks) }}
         </div>
-        <div class="text-xs text-gray-600">Клики</div>
+        <div class="text-xs text-gray-600">
+          Клики
+        </div>
       </div>
       <div class="text-center">
         <div class="text-lg font-bold text-purple-700">
           {{ formatNumber(total.orders) }}
         </div>
-        <div class="text-xs text-gray-600">Заказы</div>
+        <div class="text-xs text-gray-600">
+          Заказы
+        </div>
       </div>
       <div class="text-center">
         <div class="text-lg font-bold text-purple-700">
           {{ formatCurrency(total.spend) }}
         </div>
-        <div class="text-xs text-gray-600">Расход</div>
+        <div class="text-xs text-gray-600">
+          Расход
+        </div>
       </div>
     </div>
   </div>

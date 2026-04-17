@@ -6,18 +6,33 @@
     :style="{ width: '95vw', maxWidth: '1400px' }"
     @update:visible="$emit('update:visible', $event)"
   >
-    <div v-if="loading" class="flex flex-col items-center justify-center py-12">
+    <div
+      v-if="loading"
+      class="flex flex-col items-center justify-center py-12"
+    >
       <i class="pi pi-spin pi-spinner text-4xl text-blue-500 mb-4" />
-      <p class="text-gray-600 dark:text-gray-400">Загрузка аналитики...</p>
+      <p class="text-gray-600 dark:text-gray-400">
+        Загрузка аналитики...
+      </p>
     </div>
 
-    <div v-else-if="error" class="flex flex-col items-center justify-center py-12 text-center">
+    <div
+      v-else-if="error"
+      class="flex flex-col items-center justify-center py-12 text-center"
+    >
       <i class="pi pi-exclamation-triangle text-4xl text-red-500 mb-4" />
-      <p class="text-red-600 dark:text-red-400 font-medium">Ошибка загрузки</p>
-      <p class="text-gray-600 dark:text-gray-400 mt-2">{{ error }}</p>
+      <p class="text-red-600 dark:text-red-400 font-medium">
+        Ошибка загрузки
+      </p>
+      <p class="text-gray-600 dark:text-gray-400 mt-2">
+        {{ error }}
+      </p>
     </div>
 
-    <div v-else-if="summary" class="space-y-4">
+    <div
+      v-else-if="summary"
+      class="space-y-4"
+    >
       <!-- Item Header -->
       <Card v-if="card">
         <template #content>
@@ -29,24 +44,41 @@
                 :alt="card.name"
                 class="w-full h-full object-cover"
               >
-              <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center text-gray-400"
+              >
                 <i class="pi pi-image text-4xl" />
               </div>
             </div>
             <div class="flex-1 space-y-2 min-w-0">
-              <h2 class="text-lg font-semibold leading-tight">{{ card.name }}</h2>
+              <h2 class="text-lg font-semibold leading-tight">
+                {{ card.name }}
+              </h2>
               <div class="grid grid-cols-3 gap-2 text-xs">
                 <div>
-                  <p class="text-gray-500 dark:text-gray-400">Артикул</p>
-                  <p class="font-medium">{{ card.nmID }}</p>
+                  <p class="text-gray-500 dark:text-gray-400">
+                    Артикул
+                  </p>
+                  <p class="font-medium">
+                    {{ card.nmID }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-gray-500 dark:text-gray-400">Бренд</p>
-                  <p class="font-medium">{{ card.brand || '—' }}</p>
+                  <p class="text-gray-500 dark:text-gray-400">
+                    Бренд
+                  </p>
+                  <p class="font-medium">
+                    {{ card.brand || '—' }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-gray-500 dark:text-gray-400">Предмет</p>
-                  <p class="font-medium truncate">{{ card.subjectName || '—' }}</p>
+                  <p class="text-gray-500 dark:text-gray-400">
+                    Предмет
+                  </p>
+                  <p class="font-medium truncate">
+                    {{ card.subjectName || '—' }}
+                  </p>
                 </div>
               </div>
             </div>

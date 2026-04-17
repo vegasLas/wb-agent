@@ -1,9 +1,14 @@
 <template>
   <div class="space-y-4">
     <!-- Loading -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-12">
+    <div
+      v-if="loading"
+      class="flex flex-col items-center justify-center py-12"
+    >
       <i class="pi pi-spin pi-spinner text-4xl text-blue-500 mb-4" />
-      <p class="text-gray-600 dark:text-gray-400">Загрузка избранного...</p>
+      <p class="text-gray-600 dark:text-gray-400">
+        Загрузка избранного...
+      </p>
     </div>
 
     <!-- Error -->
@@ -15,7 +20,10 @@
     </Message>
 
     <!-- Favorites Grid -->
-    <div v-else-if="favorites.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div
+      v-else-if="favorites.length > 0"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+    >
       <MpstatsProductCard
         v-for="card in favorites"
         :key="card.nmID"

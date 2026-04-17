@@ -1,7 +1,9 @@
 <template>
   <Card>
     <template #title>
-      <h3 class="text-lg font-semibold">{{ title }}</h3>
+      <h3 class="text-lg font-semibold">
+        {{ title }}
+      </h3>
     </template>
     <template #content>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">

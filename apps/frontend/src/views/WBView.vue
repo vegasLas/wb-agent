@@ -4,19 +4,31 @@
 
     <!-- Top Navigation Buttons -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <Button severity="primary" @click="showSection('promotions')">
+      <Button
+        severity="primary"
+        @click="showSection('promotions')"
+      >
         <i class="pi pi-tag mr-2" />
         акции
       </Button>
-      <Button severity="secondary" @click="showSection('balances')">
+      <Button
+        severity="secondary"
+        @click="showSection('balances')"
+      >
         <i class="pi pi-wallet mr-2" />
         остаток
       </Button>
-      <Button severity="help" @click="showSection('adverts')">
+      <Button
+        severity="help"
+        @click="showSection('adverts')"
+      >
         <i class="pi pi-megaphone mr-2" />
         реклама
       </Button>
-      <Button severity="info" @click="showSection('sales')">
+      <Button
+        severity="info"
+        @click="showSection('sales')"
+      >
         <i class="pi pi-map mr-2" />
         продажи по регионам
       </Button>
@@ -32,8 +44,12 @@
       >
         <span class="text-white font-bold text-2xl">WB</span>
       </div>
-      <p class="text-lg font-medium">Wildberries</p>
-      <p class="text-sm">Центр управления WB</p>
+      <p class="text-lg font-medium">
+        Wildberries
+      </p>
+      <p class="text-sm">
+        Центр управления WB
+      </p>
 
       <!-- Quick Stats -->
       <div class="grid grid-cols-3 gap-4 mt-8 w-full max-w-md">
@@ -42,7 +58,9 @@
             <div class="text-2xl font-bold text-purple-600">
               {{ promotionsCount }}
             </div>
-            <div class="text-xs text-gray-500">Акций доступно</div>
+            <div class="text-xs text-gray-500">
+              Акций доступно
+            </div>
           </template>
         </Card>
         <Card class="text-center">
@@ -50,7 +68,9 @@
             <div class="text-2xl font-bold text-blue-600">
               {{ reportsAvailable ? 'Да' : 'Нет' }}
             </div>
-            <div class="text-xs text-gray-500">Отчеты</div>
+            <div class="text-xs text-gray-500">
+              Отчеты
+            </div>
           </template>
         </Card>
         <Card class="text-center">
@@ -58,14 +78,19 @@
             <div class="text-2xl font-bold text-pink-600">
               {{ advertsCount }}
             </div>
-            <div class="text-xs text-gray-500">Рекламных кампаний</div>
+            <div class="text-xs text-gray-500">
+              Рекламных кампаний
+            </div>
           </template>
         </Card>
       </div>
     </div>
 
     <!-- Promotions View -->
-    <div v-if="activeSection === 'promotions'" class="space-y-4">
+    <div
+      v-if="activeSection === 'promotions'"
+      class="space-y-4"
+    >
       <div class="flex items-center gap-2">
         <Button
           icon="pi pi-arrow-left"
@@ -79,7 +104,10 @@
     </div>
 
     <!-- Balances/Reports View -->
-    <div v-if="activeSection === 'balances'" class="space-y-4">
+    <div
+      v-if="activeSection === 'balances'"
+      class="space-y-4"
+    >
       <div class="flex items-center gap-2">
         <Button
           icon="pi pi-arrow-left"
@@ -93,7 +121,10 @@
     </div>
 
     <!-- Adverts View -->
-    <div v-if="activeSection === 'adverts'" class="space-y-4">
+    <div
+      v-if="activeSection === 'adverts'"
+      class="space-y-4"
+    >
       <div class="flex items-center gap-2">
         <Button
           icon="pi pi-arrow-left"
@@ -107,7 +138,10 @@
     </div>
 
     <!-- Region Sales View -->
-    <div v-if="activeSection === 'sales'" class="space-y-4">
+    <div
+      v-if="activeSection === 'sales'"
+      class="space-y-4"
+    >
       <div class="flex items-center gap-2">
         <Button
           icon="pi pi-arrow-left"

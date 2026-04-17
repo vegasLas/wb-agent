@@ -4,11 +4,11 @@ import type {
   AdvertPresetTotal,
 } from '@/types';
 
-export interface AdvertItem extends AdvertContent {}
+export type AdvertItem = AdvertContent
 
-export interface PresetInfoItem extends AdvertPresetItem {}
+export type PresetInfoItem = AdvertPresetItem
 
-export interface PresetInfoTotal extends AdvertPresetTotal {}
+export type PresetInfoTotal = AdvertPresetTotal
 
 export interface PresetInfo {
   items: PresetInfoItem[];
