@@ -21,7 +21,14 @@ const processedParts = useMessageParts(
 
 function partKey(part: ProcessedPart, index: number): string {
   if (part.type === 'text') return `text-${index}-${part.text.slice(0, 20)}`;
+  if (part.type === 'file') return `file-${index}-${part.filename}`;
   return `tool-${index}-${part.toolInfo.toolName}-${part.toolInfo.state}`;
+}
+
+function getFileIcon(filename: string, mediaType: string): string {
+  if (filename.match(/\.(xlsx|xls)$/i) || mediaType.includes('sheet')) return 'pi pi-file-excel text-green-600';
+  if (filename.match(/\.pdf$/i) || mediaType.includes('pdf')) return 'pi pi-file-pdf text-red-500';
+  return 'pi pi-file text-surface-500';
 }
 </script>
 
@@ -55,6 +62,14 @@ function partKey(part: ProcessedPart, index: number): string {
             v-html="item.html"
           />
         </template>
+
+        <div
+          v-else-if="item.type === 'file'"
+          class="flex items-center gap-1.5 bg-white/20 dark:bg-black/20 rounded-lg px-2 py-1 text-xs mt-1"
+        >
+          <i :class="getFileIcon(item.filename, item.mediaType)" />
+          <span class="truncate max-w-[140px]">{{ item.filename }}</span>
+        </div>
 
         <ChatToolIndicator
           v-else-if="item.type === 'tool'"
