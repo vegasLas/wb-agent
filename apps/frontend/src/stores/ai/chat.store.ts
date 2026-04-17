@@ -53,24 +53,20 @@ function createUIMessageFromStored(
   } as unknown as UIMessage;
 }
 
-export const useAIChatStore = defineStore('aiChat', () => {
-  const conversationId = ref<string | undefined>(undefined);
-  const conversations = ref<AIConversation[]>([]);
-  const isLoadingConversations = ref(false);
-  const isLoadingMessages = ref(false);
-  const finishedToolCallIds = ref<Set<string>>(new Set());
+interface ChatSession {
+  chat: Chat<UIMessage>;
+  finishedToolCallIds: Set<string>;
+}
 
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
-  const chatApiPath =
-    (apiBaseUrl.startsWith('http')
-      ? new URL(apiBaseUrl).pathname
-      : apiBaseUrl
-    ).replace(/\/$/, '') + '/ai/chat';
+function createChatSession(
+  conversationId: string | undefined,
+  apiPath: string,
+): ChatSession {
+  const finishedToolCallIds = new Set<string>();
 
   const transport = markRaw(
     new DefaultChatTransport<UIMessage>({
-      api: chatApiPath,
+      api: apiPath,
       fetch: async (url, init) => {
         const response = await fetch(url, { ...init, cache: 'no-store' });
         if (!response.ok || !response.body) {
@@ -80,7 +76,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
         const trackedStream = createToolTrackingStream(
           response.body,
           (toolCallId) => {
-            finishedToolCallIds.value.add(toolCallId);
+            finishedToolCallIds.add(toolCallId);
           },
         );
 
@@ -94,7 +90,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
         return {
           headers: getAuthHeaders(),
           body: {
-            id: conversationId.value,
+            id: conversationId,
             messages,
           },
         };
@@ -112,6 +108,40 @@ export const useAIChatStore = defineStore('aiChat', () => {
     }),
   );
 
+  return { chat, finishedToolCallIds };
+}
+
+function isPendingId(id: string): boolean {
+  return id.startsWith('__pending-');
+}
+
+let nextClientId = 0;
+function generateClientId(): string {
+  return `__pending-${++nextClientId}`;
+}
+
+export const useAIChatStore = defineStore('aiChat', () => {
+  const conversationId = ref<string | undefined>(undefined);
+  const conversations = ref<AIConversation[]>([]);
+  const isLoadingConversations = ref(false);
+  const isLoadingMessages = ref(false);
+  const pendingConversations = ref<Map<string, AIConversation>>(new Map());
+
+  const sessions = ref<Map<string, ChatSession>>(new Map());
+
+  const apiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
+  const chatApiPath =
+    (apiBaseUrl.startsWith('http')
+      ? new URL(apiBaseUrl).pathname
+      : apiBaseUrl
+    ).replace(/\/$/, '') + '/ai/chat';
+
+  const activeSession = computed<ChatSession | undefined>(() => {
+    if (!conversationId.value) return undefined;
+    return sessions.value.get(conversationId.value);
+  });
+
   async function loadConversations() {
     isLoadingConversations.value = true;
     try {
@@ -126,10 +156,16 @@ export const useAIChatStore = defineStore('aiChat', () => {
     try {
       const { conversation, messages } = await fetchConversationMessages(id);
       conversationId.value = conversation.id;
-      chat.messages = messages.map((m) =>
+
+      let session = sessions.value.get(id);
+      if (!session) {
+        session = createChatSession(conversation.id, chatApiPath);
+        sessions.value.set(id, session);
+      }
+      session.chat.messages = messages.map((m) =>
         createUIMessageFromStored(m.id, m.role, m.content),
       );
-      finishedToolCallIds.value.clear();
+      session.finishedToolCallIds.clear();
     } finally {
       isLoadingMessages.value = false;
     }
@@ -138,6 +174,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
   async function deleteConversation(id: string) {
     await apiDeleteConversation(id);
     conversations.value = conversations.value.filter((c) => c.id !== id);
+    sessions.value.delete(id);
     if (conversationId.value === id) {
       startNewConversation();
     }
@@ -152,9 +189,11 @@ export const useAIChatStore = defineStore('aiChat', () => {
   }
 
   function startNewConversation() {
-    conversationId.value = undefined;
-    chat.messages = [];
-    finishedToolCallIds.value.clear();
+    const clientId = generateClientId();
+    conversationId.value = clientId;
+    const session = createChatSession(undefined, chatApiPath);
+    session.chat.messages = [];
+    sessions.value.set(clientId, session);
   }
 
   function setConversationId(id: string) {
@@ -162,42 +201,81 @@ export const useAIChatStore = defineStore('aiChat', () => {
   }
 
   async function sendMessage(text: string) {
-    finishedToolCallIds.value.clear();
+    let session = activeSession.value;
+    if (!session) {
+      startNewConversation();
+      session = activeSession.value;
+    }
+    if (!session) {
+      console.error('[CHAT-STORE] Failed to create chat session');
+      return;
+    }
+    session.finishedToolCallIds.clear();
+
+    // Show pending item in sidebar immediately for new conversations
+    const currentId = conversationId.value;
+    if (currentId && isPendingId(currentId)) {
+      pendingConversations.value.set(currentId, {
+        id: currentId,
+        title: text.slice(0, 40) || 'Новый чат',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
     try {
-      await chat.sendMessage({ text });
+      await session.chat.sendMessage({ text });
       console.log('[CHAT-STORE] sendMessage finished streaming');
     } catch (err) {
       console.error('[CHAT-STORE] sendMessage error:', err);
       throw err;
     }
-    // After sending, refresh conversation list so the title appears
-    // Use a small delay to let the backend create the conversation
-    setTimeout(() => {
-      loadConversations().then(() => {
-        if (!conversationId.value && conversations.value.length > 0) {
-          const mostRecent = conversations.value[0];
-          conversationId.value = mostRecent.id;
+
+    // After streaming finishes, refresh conversation list and migrate sessions
+    await loadConversations();
+
+    // Match newly created backend conversations to pending items
+    const loaded = [...conversations.value].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    );
+    const pendingIds = [...pendingConversations.value.keys()];
+
+    for (const pendingId of pendingIds) {
+      // Find the most recent backend conversation that doesn't already have a session
+      const unmatched = loaded.find(
+        (c) => !sessions.value.has(c.id) && !isPendingId(c.id),
+      );
+      if (unmatched) {
+        const pendingSession = sessions.value.get(pendingId);
+        if (pendingSession) {
+          sessions.value.set(unmatched.id, pendingSession);
+          sessions.value.delete(pendingId);
         }
-      });
-    }, 800);
+        pendingConversations.value.delete(pendingId);
+        // If this was the active conversation, switch to the real ID
+        if (conversationId.value === pendingId) {
+          conversationId.value = unmatched.id;
+        }
+      }
+    }
   }
 
   async function stop() {
-    await chat.stop();
+    await activeSession.value?.chat.stop();
   }
 
   async function retry() {
-    finishedToolCallIds.value.clear();
-    // Retry the last message by re-sending it
-    const lastMessage = chat.messages[chat.messages.length - 1];
+    const session = activeSession.value;
+    if (!session) return;
+    session.finishedToolCallIds.clear();
+    const lastMessage = session.chat.messages[session.chat.messages.length - 1];
     if (lastMessage && lastMessage.role === 'user') {
       const text = getMessageContent(lastMessage);
-      // Remove the last user message and any assistant response after it
-      const lastUserIndex = chat.messages.findLastIndex(
+      const lastUserIndex = session.chat.messages.findLastIndex(
         (m) => m.role === 'user',
       );
       if (lastUserIndex !== -1) {
-        chat.messages = chat.messages.slice(0, lastUserIndex);
+        session.chat.messages = session.chat.messages.slice(0, lastUserIndex);
       }
       await sendMessage(text);
     }
@@ -207,15 +285,15 @@ export const useAIChatStore = defineStore('aiChat', () => {
     conversationId,
     conversations: computed(() => conversations.value),
     messages: computed(() => {
-      const msgs = chat.messages ?? [];
+      const msgs = activeSession.value?.chat.messages ?? [];
       if (!Array.isArray(msgs)) {
         console.error('[CHAT-STORE] chat.messages is not an array!', msgs);
         return [];
       }
       return msgs;
     }),
-    status: computed(() => chat.status),
-    error: computed(() => chat.error),
+    status: computed(() => activeSession.value?.chat.status ?? 'ready'),
+    error: computed(() => activeSession.value?.chat.error ?? undefined),
     isLoadingConversations: computed(() => isLoadingConversations.value),
     isLoadingMessages: computed(() => isLoadingMessages.value),
     sendMessage,
@@ -227,6 +305,8 @@ export const useAIChatStore = defineStore('aiChat', () => {
     loadConversation,
     deleteConversation,
     updateTitle,
-    isToolFinished: (toolCallId: string) => finishedToolCallIds.value.has(toolCallId),
+    pendingConversations: computed(() => pendingConversations.value),
+    isToolFinished: (toolCallId: string) =>
+      activeSession.value?.finishedToolCallIds.has(toolCallId) ?? false,
   };
 });
