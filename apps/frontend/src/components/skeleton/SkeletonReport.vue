@@ -1,15 +1,31 @@
 <template>
   <div class="space-y-6">
     <!-- User Alerts placeholder -->
-    <Skeleton height="3rem" border-radius="0.25rem" />
+    <Skeleton
+      height="3rem"
+      border-radius="0.25rem"
+    />
 
     <!-- Date Range Selection Card -->
     <div class="p-4 bg-deep-card">
       <div class="space-y-4">
-        <Skeleton width="50%" height="1.5rem" border-radius="0.25rem" />
+        <Skeleton
+          width="50%"
+          height="1.5rem"
+          border-radius="0.25rem"
+        />
         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <Skeleton width="100%" height="2.5rem" border-radius="0.25rem" class="sm:w-64" />
-          <Skeleton width="6rem" height="2.5rem" border-radius="0.25rem" />
+          <Skeleton
+            width="100%"
+            height="2.5rem"
+            border-radius="0.25rem"
+            class="sm:w-64"
+          />
+          <Skeleton
+            width="6rem"
+            height="2.5rem"
+            border-radius="0.25rem"
+          />
         </div>
       </div>
     </div>
@@ -17,20 +33,60 @@
     <!-- Summary Statistics Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="p-4 bg-deep-card text-center">
-        <Skeleton width="4rem" height="2rem" border-radius="0.25rem" class="mx-auto mb-2" />
-        <Skeleton width="60%" height="0.75rem" border-radius="0.25rem" class="mx-auto" />
+        <Skeleton
+          width="4rem"
+          height="2rem"
+          border-radius="0.25rem"
+          class="mx-auto mb-2"
+        />
+        <Skeleton
+          width="60%"
+          height="0.75rem"
+          border-radius="0.25rem"
+          class="mx-auto"
+        />
       </div>
       <div class="p-4 bg-deep-card text-center">
-        <Skeleton width="5rem" height="2rem" border-radius="0.25rem" class="mx-auto mb-2" />
-        <Skeleton width="50%" height="0.75rem" border-radius="0.25rem" class="mx-auto" />
+        <Skeleton
+          width="5rem"
+          height="2rem"
+          border-radius="0.25rem"
+          class="mx-auto mb-2"
+        />
+        <Skeleton
+          width="50%"
+          height="0.75rem"
+          border-radius="0.25rem"
+          class="mx-auto"
+        />
       </div>
       <div class="p-4 bg-deep-card text-center">
-        <Skeleton width="4rem" height="2rem" border-radius="0.25rem" class="mx-auto mb-2" />
-        <Skeleton width="55%" height="0.75rem" border-radius="0.25rem" class="mx-auto" />
+        <Skeleton
+          width="4rem"
+          height="2rem"
+          border-radius="0.25rem"
+          class="mx-auto mb-2"
+        />
+        <Skeleton
+          width="55%"
+          height="0.75rem"
+          border-radius="0.25rem"
+          class="mx-auto"
+        />
       </div>
       <div class="p-4 bg-deep-card text-center">
-        <Skeleton width="3rem" height="2rem" border-radius="0.25rem" class="mx-auto mb-2" />
-        <Skeleton width="45%" height="0.75rem" border-radius="0.25rem" class="mx-auto" />
+        <Skeleton
+          width="3rem"
+          height="2rem"
+          border-radius="0.25rem"
+          class="mx-auto mb-2"
+        />
+        <Skeleton
+          width="45%"
+          height="0.75rem"
+          border-radius="0.25rem"
+          class="mx-auto"
+        />
       </div>
     </div>
 
@@ -38,42 +94,130 @@
     <div class="p-4 bg-deep-card">
       <div class="space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <Skeleton width="60%" height="1.5rem" border-radius="0.25rem" />
-          <Skeleton width="10rem" height="2.25rem" border-radius="0.25rem" />
+          <Skeleton
+            width="60%"
+            height="1.5rem"
+            border-radius="0.25rem"
+          />
+          <Skeleton
+            width="10rem"
+            height="2.25rem"
+            border-radius="0.25rem"
+          />
         </div>
 
         <!-- Table -->
         <div class="space-y-2">
           <!-- Table Header -->
           <div class="flex gap-2 pb-2 border-b border-deep-border">
-            <Skeleton width="20%" height="2rem" border-radius="0.25rem" />
-            <Skeleton width="20%" height="2rem" border-radius="0.25rem" />
-            <Skeleton width="20%" height="2rem" border-radius="0.25rem" />
-            <Skeleton width="20%" height="2rem" border-radius="0.25rem" />
-            <Skeleton width="20%" height="2rem" border-radius="0.25rem" />
+            <Skeleton
+              width="20%"
+              height="2rem"
+              border-radius="0.25rem"
+            />
+            <Skeleton
+              width="20%"
+              height="2rem"
+              border-radius="0.25rem"
+            />
+            <Skeleton
+              width="20%"
+              height="2rem"
+              border-radius="0.25rem"
+            />
+            <Skeleton
+              width="20%"
+              height="2rem"
+              border-radius="0.25rem"
+            />
+            <Skeleton
+              width="20%"
+              height="2rem"
+              border-radius="0.25rem"
+            />
           </div>
           <!-- Table Rows -->
           <div class="space-y-2">
             <div class="flex gap-2">
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
             </div>
             <div class="flex gap-2">
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
             </div>
             <div class="flex gap-2">
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
-              <Skeleton width="20%" height="1.5rem" border-radius="0.25rem" />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
+              <Skeleton
+                width="20%"
+                height="1.5rem"
+                border-radius="0.25rem"
+              />
             </div>
           </div>
         </div>
@@ -82,22 +226,55 @@
 
     <!-- View Toggle Buttons -->
     <div class="flex space-x-2">
-      <Skeleton width="6rem" height="2rem" border-radius="0.25rem" />
-      <Skeleton width="8rem" height="2rem" border-radius="0.25rem" />
+      <Skeleton
+        width="6rem"
+        height="2rem"
+        border-radius="0.25rem"
+      />
+      <Skeleton
+        width="8rem"
+        height="2rem"
+        border-radius="0.25rem"
+      />
     </div>
 
     <!-- Chart/Suggestions Section -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="p-4 bg-deep-card">
-        <Skeleton width="100%" height="300px" border-radius="0.25rem" />
+        <Skeleton
+          width="100%"
+          height="300px"
+          border-radius="0.25rem"
+        />
       </div>
       <div class="p-4 bg-deep-card">
-        <Skeleton width="50%" height="1.5rem" border-radius="0.25rem" class="mb-4" />
+        <Skeleton
+          width="50%"
+          height="1.5rem"
+          border-radius="0.25rem"
+          class="mb-4"
+        />
         <div class="space-y-2">
-          <Skeleton width="100%" height="2rem" border-radius="0.25rem" />
-          <Skeleton width="100%" height="2rem" border-radius="0.25rem" />
-          <Skeleton width="100%" height="2rem" border-radius="0.25rem" />
-          <Skeleton width="100%" height="2rem" border-radius="0.25rem" />
+          <Skeleton
+            width="100%"
+            height="2rem"
+            border-radius="0.25rem"
+          />
+          <Skeleton
+            width="100%"
+            height="2rem"
+            border-radius="0.25rem"
+          />
+          <Skeleton
+            width="100%"
+            height="2rem"
+            border-radius="0.25rem"
+          />
+          <Skeleton
+            width="100%"
+            height="2rem"
+            border-radius="0.25rem"
+          />
         </div>
       </div>
     </div>
