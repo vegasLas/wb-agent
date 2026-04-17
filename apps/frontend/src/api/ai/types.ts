@@ -5,10 +5,17 @@ export interface AIConversation {
   updatedAt: string;
 }
 
+export interface AttachmentMeta {
+  name: string;
+  type: string;
+  extractedPreview?: string;
+}
+
 export interface AIMessage {
   id: string;
   role: 'user' | 'assistant' | 'tool';
   content: string;
+  attachments?: AttachmentMeta[] | null;
   createdAt: string;
 }
 

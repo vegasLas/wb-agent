@@ -303,6 +303,7 @@ model AiMessage {
   toolCalls      Json?
   toolResults    Json?
   suggestions    String[] @default([])
+  attachments    Json?
   createdAt      DateTime @default(now())
 
   conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

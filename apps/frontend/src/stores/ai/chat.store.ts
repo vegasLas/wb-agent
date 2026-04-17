@@ -8,6 +8,7 @@ import {
   deleteConversation as apiDeleteConversation,
   updateConversationTitle as apiUpdateConversationTitle,
   type AIConversation,
+  type AttachmentMeta,
 } from '@/api/ai';
 import { getInitData } from '@/utils/telegram';
 import { createToolTrackingStream } from '@/utils/ai/stream';
@@ -44,12 +45,23 @@ function createUIMessageFromStored(
   id: string,
   role: 'user' | 'assistant' | 'tool',
   content: string,
+  attachments?: AttachmentMeta[] | null,
 ): UIMessage {
+  const parts: any[] = [{ type: 'text', text: content }];
+  if (attachments && attachments.length > 0) {
+    for (const att of attachments) {
+      parts.push({
+        type: 'file',
+        mediaType: att.type,
+        filename: att.name,
+      });
+    }
+  }
   return {
     id,
     role: role === 'tool' ? 'assistant' : role,
     createdAt: new Date(),
-    parts: [{ type: 'text', text: content }],
+    parts,
   } as unknown as UIMessage;
 }
 
@@ -163,7 +175,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
         sessions.value.set(id, session);
       }
       session.chat.messages = messages.map((m) =>
-        createUIMessageFromStored(m.id, m.role, m.content),
+        createUIMessageFromStored(m.id, m.role, m.content, m.attachments),
       );
       session.finishedToolCallIds.clear();
     } finally {
@@ -200,7 +212,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
     conversationId.value = id;
   }
 
-  async function sendMessage(text: string) {
+  async function sendMessage(text: string, files?: File[]) {
     let session = activeSession.value;
     if (!session) {
       startNewConversation();
@@ -213,6 +225,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
     session.finishedToolCallIds.clear();
 
     // Show pending item in sidebar immediately for new conversations
+    // OR bump existing conversation to top optimistically
     const currentId = conversationId.value;
     if (currentId && isPendingId(currentId)) {
       pendingConversations.value.set(currentId, {
@@ -221,10 +234,27 @@ export const useAIChatStore = defineStore('aiChat', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
+    } else if (currentId) {
+      // Optimistically bump existing conversation to top
+      const idx = conversations.value.findIndex((c) => c.id === currentId);
+      if (idx !== -1) {
+        conversations.value[idx] = {
+          ...conversations.value[idx],
+          updatedAt: new Date().toISOString(),
+        };
+      }
     }
 
     try {
-      await session.chat.sendMessage({ text });
+      if (files && files.length > 0) {
+        const dt = new DataTransfer();
+        for (const file of files) {
+          dt.items.add(file);
+        }
+        await session.chat.sendMessage({ text, files: dt.files });
+      } else {
+        await session.chat.sendMessage({ text });
+      }
       console.log('[CHAT-STORE] sendMessage finished streaming');
     } catch (err) {
       console.error('[CHAT-STORE] sendMessage error:', err);

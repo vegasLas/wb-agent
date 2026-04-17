@@ -20,10 +20,13 @@ import { reportsTools } from './tools/reports.tools';
 import { userContextTools } from './tools/user-context.tools';
 import { resolvePendingOption, clearPendingAction } from './ai-pending-action.service';
 
+import type { AttachmentMeta } from './file-extraction.service';
+
 interface HandleChatInput {
   userId: number;
   conversationId?: string;
   messages: UIMessage[];
+  attachments?: AttachmentMeta[];
 }
 
 function getMessageText(message: UIMessage): string {
@@ -34,7 +37,7 @@ function getMessageText(message: UIMessage): string {
 }
 
 export class AIChatService {
-  async handleChat({ userId, conversationId, messages }: HandleChatInput) {
+  async handleChat({ userId, conversationId, messages, attachments }: HandleChatInput) {
     // 1. Load or create conversation
     let convId = conversationId;
     if (!convId) {
@@ -56,7 +59,14 @@ export class AIChatService {
           conversationId: convId,
           role: 'user',
           content: lastUserText,
+          attachments: attachments?.length ? attachments : undefined,
         },
+      });
+
+      // Bump conversation to top of the list
+      await prisma.aiConversation.update({
+        where: { id: convId },
+        data: { updatedAt: new Date() },
       });
     }
 
