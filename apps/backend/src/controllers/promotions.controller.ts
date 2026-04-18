@@ -10,7 +10,19 @@ import {
   getPromotionExcel,
   applyPromotionRecovery,
 } from '@/services/domain/promotion/promotions.service';
+import { successResponse, errorResponse } from '@/utils/response';
+import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
+
+/**
+ * Assert that the request has an authenticated user.
+ */
+function assertUser(req: Request): { id: number } {
+  if (!req.user) {
+    throw ApiError.unauthorized('Unauthorized');
+  }
+  return req.user;
+}
 
 /**
  * GET /api/v1/promotions/timeline
@@ -21,41 +33,26 @@ export const fetchPromotionsTimeline = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
+    const user = assertUser(req);
     const { startDate, endDate, filter } = req.query as {
       startDate?: string;
       endDate?: string;
       filter?: string;
     };
 
-    logger.info(`Fetching promotions timeline for user ${userId}`);
+    logger.info(`Fetching promotions timeline for user ${user.id}`);
 
     const data = await getPromotionsTimeline({
-      userId,
+      userId: user.id,
       startDate,
       endDate,
       filter,
     });
 
-    res.status(200).json({
-      success: true,
-      data,
-    });
+    successResponse(res, data);
   } catch (error) {
-    logger.error('Error in fetchPromotionsTimeline controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+    logger.error('Error in fetchPromotionsTimeline:', error);
+    errorResponse(res, error as Error);
   }
 };
 
@@ -68,45 +65,22 @@ export const fetchPromotionDetail = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
+    const user = assertUser(req);
     const { promoID } = req.query as { promoID?: string };
 
-    if (!promoID) {
-      res.status(400).json({
-        success: false,
-        error: 'promoID is required',
-      });
-      return;
-    }
-
     logger.info(
-      `Fetching promotion detail for user ${userId}, promoID: ${promoID}`,
+      `Fetching promotion detail for user ${user.id}, promoID: ${promoID}`,
     );
 
     const data = await getPromotionDetail({
-      userId,
+      userId: user.id,
       promoID: Number(promoID),
     });
 
-    res.status(200).json({
-      success: true,
-      data,
-    });
+    successResponse(res, data);
   } catch (error) {
-    logger.error('Error in fetchPromotionDetail controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+    logger.error('Error in fetchPromotionDetail:', error);
+    errorResponse(res, error as Error);
   }
 };
 
@@ -119,39 +93,21 @@ export const fetchPromotionExcel = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
+    const user = assertUser(req);
     const { periodID, isRecovery, hasStarted } = req.body as {
       periodID?: number;
       isRecovery?: boolean;
       hasStarted?: boolean;
     };
 
-    if (!periodID) {
-      res.status(400).json({
-        success: false,
-        error: 'periodID is required',
-      });
-      return;
-    }
-
-    // Default to true if not provided
     const recoveryFlag = isRecovery !== false;
 
     logger.info(
-      `Fetching promotion Excel for user ${userId}, periodID: ${periodID}, isRecovery: ${recoveryFlag}, hasStarted: ${hasStarted}`,
+      `Fetching promotion Excel for user ${user.id}, periodID: ${periodID}, isRecovery: ${recoveryFlag}, hasStarted: ${hasStarted}`,
     );
 
     const result = await getPromotionExcel({
-      userId,
+      userId: user.id,
       periodID,
       isRecovery: recoveryFlag,
       hasStarted,
@@ -159,40 +115,36 @@ export const fetchPromotionExcel = async (
 
     if (result.error && !result.items) {
       if (result.reportPending) {
-        res.status(202).json({
-          success: true,
-          data: {
+        successResponse(
+          res,
+          {
             items: null,
             error: result.error,
             reportPending: true,
             estimatedWaitTime: result.estimatedWaitTime || 30,
           },
-        });
+          202,
+        );
         return;
       }
 
-      res.status(400).json({
-        success: false,
-        error: result.error,
-      });
+      errorResponse(
+        res,
+        ApiError.badRequest(result.error, 'EXCEL_ERROR'),
+        400,
+      );
       return;
     }
 
-    res.status(200).json({
-      success: true,
-      data: {
-        items: result.items,
-        error: null,
-        reportPending: false,
-        estimatedWaitTime: null,
-      },
+    successResponse(res, {
+      items: result.items,
+      error: null,
+      reportPending: false,
+      estimatedWaitTime: null,
     });
   } catch (error) {
-    logger.error('Error in fetchPromotionExcel controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+    logger.error('Error in fetchPromotionExcel:', error);
+    errorResponse(res, error as Error);
   }
 };
 
@@ -205,75 +157,37 @@ export const promotionRecovery = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
+    const user = assertUser(req);
     const { periodID, selectedItems, isRecovery } = req.body as {
       periodID?: number;
       selectedItems?: string[];
       isRecovery?: boolean;
     };
 
-    if (!periodID) {
-      res.status(400).json({
-        success: false,
-        error: 'periodID is required',
-      });
-      return;
-    }
-
-    if (!selectedItems || !Array.isArray(selectedItems)) {
-      res.status(400).json({
-        success: false,
-        error: 'selectedItems is required and must be an array',
-      });
-      return;
-    }
-
-    if (typeof isRecovery !== 'boolean') {
-      res.status(400).json({
-        success: false,
-        error: 'isRecovery is required and must be a boolean',
-      });
-      return;
-    }
-
     logger.info(
-      `Applying promotion recovery for user ${userId}, periodID: ${periodID}, items: ${selectedItems.length}, isRecovery: ${isRecovery}`,
+      `Applying promotion recovery for user ${user.id}, periodID: ${periodID}, items: ${selectedItems?.length}, isRecovery: ${isRecovery}`,
     );
 
     const result = await applyPromotionRecovery({
-      userId,
+      userId: user.id,
       periodID,
       selectedItems,
       isRecovery,
     });
 
     if (!result.success) {
-      res.status(400).json({
-        success: false,
-        error: result.error,
-      });
+      errorResponse(
+        res,
+        ApiError.badRequest(result.error || 'Recovery failed', 'RECOVERY_ERROR'),
+        400,
+      );
       return;
     }
 
-    res.status(200).json({
-      success: true,
-      data: {},
-    });
+    successResponse(res, {});
   } catch (error) {
-    logger.error('Error in promotionRecovery controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+    logger.error('Error in promotionRecovery:', error);
+    errorResponse(res, error as Error);
   }
 };
 
