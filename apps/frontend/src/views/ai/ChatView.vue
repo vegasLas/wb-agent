@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { onMounted, computed, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import { useViewReady } from '@/composables/ui';
 import Button from 'primevue/button';
-import Menu from 'primevue/menu';
-import type { MenuItem } from 'primevue/menu';
+import Drawer from 'primevue/drawer';
 import ConversationList from '@/components/ai/ConversationList.vue';
 import ChatMessageList from '@/components/ai/ChatMessageList.vue';
 import ChatInput from '@/components/ai/ChatInput.vue';
 
 const store = useAIChatStore();
 const { viewReady } = useViewReady();
-const historyMenu = ref<InstanceType<typeof Menu> | null>(null);
+const historyDrawerVisible = ref(false);
 
 onMounted(() => {
   store.loadConversations();
@@ -20,35 +19,17 @@ onMounted(() => {
 
 function handleSelect(id: string) {
   store.loadConversation(id);
+  historyDrawerVisible.value = false;
 }
 
 function handleNew() {
   store.startNewConversation();
+  historyDrawerVisible.value = false;
 }
 
 function handleSendFromSuggestion(text: string) {
   store.sendMessage(text);
 }
-
-function openHistoryMenu(event: MouseEvent) {
-  historyMenu.value?.toggle(event);
-}
-
-const historyMenuItems = computed<MenuItem[]>(() => {
-  const list = [...store.conversations].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-  );
-  return [
-    { separator: true },
-    ...list.map((c) => ({
-      label: c.title || 'Новый чат',
-      icon: 'pi pi-comments',
-      class:
-        c.id === store.conversationId ? 'font-semibold text-purple-600' : '',
-      command: () => handleSelect(c.id),
-    })),
-  ];
-});
 </script>
 
 <template>
@@ -65,7 +46,7 @@ const historyMenuItems = computed<MenuItem[]>(() => {
           <h1 class="font-semibold">AI Assistant</h1>
         </div>
 
-        <!-- Mobile actions: new chat + history menu -->
+        <!-- Mobile actions: new chat + history drawer -->
         <div class="flex items-center gap-2 md:hidden">
           <Button
             icon="pi pi-plus"
@@ -81,9 +62,8 @@ const historyMenuItems = computed<MenuItem[]>(() => {
             size="small"
             severity="secondary"
             variant="outlined"
-            @click="openHistoryMenu"
+            @click="historyDrawerVisible = true"
           />
-          <Menu ref="historyMenu" :model="historyMenuItems" :popup="true" />
         </div>
 
         <!-- Desktop new chat -->
@@ -110,15 +90,20 @@ const historyMenuItems = computed<MenuItem[]>(() => {
       />
     </div>
   </div>
-</template>
 
-<style scoped>
-:deep(.p-menuitem-link) {
-  max-width: 16rem;
-}
-:deep(.p-menuitem-text) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-</style>
+  <!-- Mobile history drawer -->
+  <Drawer
+    v-model:visible="historyDrawerVisible"
+    position="right"
+    :pt="{
+      root: { class: 'w-[280px]' },
+      content: { class: 'p-0' },
+    }"
+  >
+    <ConversationList
+      :selected-id="store.conversationId"
+      @select="handleSelect"
+      @new="handleNew"
+    />
+  </Drawer>
+</template>

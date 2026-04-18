@@ -103,16 +103,22 @@ const emit = defineEmits<{
         class="w-8 h-8 rounded-full bg-purple-600/10 flex items-center justify-center shrink-0 mt-1"
       >
         <svg
-          class="w-4 h-4 text-purple-600 brain-pulse"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="1.5"
+          stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
+          class="lucide lucide-sparkles size-3.5 shrink-0 transition-colors text-amber-500 dark:text-amber-400 animate-pulse"
+          aria-hidden="true"
         >
-          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04Z" />
-          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04Z" />
+          <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
+          <path d="M20 2v4" />
+          <path d="M22 4h-4" />
+          <circle cx="4" cy="20" r="2" />
         </svg>
       </div>
       <div
@@ -144,27 +150,5 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-.brain-pulse {
-  animation: brain-pulse 2.5s ease-in-out infinite;
-}
 
-@keyframes brain-pulse {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(0.95);
-  }
-  25% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-  75% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
 </style>
