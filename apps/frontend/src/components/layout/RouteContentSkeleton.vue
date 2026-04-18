@@ -57,6 +57,7 @@ const routeConfig: Record<
   Reschedules: { showStats: true, skeletonCount: 3 },
   ReschedulesList: { showStats: true, skeletonCount: 3 },
   Reports: { showStats: false, skeletonCount: 2 },
+  Tariffs: { showStats: false, skeletonCount: 4 },
   Account: { showStats: false, skeletonCount: 2 },
   Store: { showStats: false, skeletonCount: 2 },
 };
