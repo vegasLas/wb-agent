@@ -37,6 +37,7 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+*.bak
 
 .nx/cache
 .nx/workspace-data
@@ -48,3 +49,5 @@ frontend-plan
 issues.txt
 .kimi
 test-results
+ai_plan
+scripts

@@ -116,11 +116,16 @@
         class="flex flex-col items-center justify-center py-20"
       >
         <i class="pi pi-refresh animate-spin text-5xl text-[#6A39F4] mb-4" />
-        <p class="text-[var(--text-muted)]">Загрузка акций...</p>
+        <p class="text-[var(--text-muted)]">
+          Загрузка акций...
+        </p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="p.error.value" class="text-center py-16 px-4">
+      <div
+        v-else-if="p.error.value"
+        class="text-center py-16 px-4"
+      >
         <div
           class="p-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 max-w-md mx-auto"
         >
@@ -128,7 +133,11 @@
           <p class="text-red-600 dark:text-red-400">
             {{ p.error.value }}
           </p>
-          <Button class="mt-4" severity="primary" @click="p.refreshData">
+          <Button
+            class="mt-4"
+            severity="primary"
+            @click="p.refreshData"
+          >
             <i class="pi pi-refresh mr-2" />
             Повторить
           </Button>
@@ -136,7 +145,10 @@
       </div>
 
       <!-- Promotions Timeline -->
-      <div v-else class="promotions-timeline -mx-4">
+      <div
+        v-else
+        class="promotions-timeline -mx-4"
+      >
         <!-- Horizontal Scrollable Container -->
         <div class="overflow-x-auto pb-4">
           <div class="min-w-[1200px] px-4">
@@ -264,11 +276,11 @@
                     :style="timeline.getPromotionStyle(promotion)"
                     :detail-loading="
                       p.detailLoading.value &&
-                      p.selectedPromotionId.value === promotion.promoID
+                        p.selectedPromotionId.value === promotion.promoID
                     "
                     :excel-loading="
                       p.excelLoading.value &&
-                      p.selectedPromotionId.value === promotion.promoID
+                        p.selectedPromotionId.value === promotion.promoID
                     "
                     @toggle-expand="toggleExpand(promotion.promoID)"
                     @show-details="p.handleShowDetails(promotion.promoID)"
@@ -287,7 +299,7 @@
                     <i
                       :class="
                         p.emptyState.value.icon +
-                        ' text-5xl text-[var(--text-secondary)] mb-3'
+                          ' text-5xl text-[var(--text-secondary)] mb-3'
                       "
                     />
                     <p class="text-[var(--text-muted)]">

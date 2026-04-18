@@ -1,0 +1,47 @@
+import { tool, Tool } from 'ai';
+import { z } from 'zod';
+import { prisma } from '@/config/database';
+import { safeTool, loggedTool } from './safe-tool.utils';
+
+export function userContextTools(userId: number): Record<string, Tool> {
+  return {
+    getUserContext: tool({
+      description: `Get the current user's context: autobooking credits, suppliers, recent autobookings, and recent supply triggers.
+Call this when you need to know the user's credits before creating an autobooking, or when the user asks about their suppliers, recent autobookings, or triggers.
+Required: none.`,
+      inputSchema: z.object({}),
+      execute: safeTool('getUserContext', async () => {
+        return loggedTool('getUserContext', userId, async () => {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+              accounts: { include: { suppliers: true } },
+              autobookings: { orderBy: { createdAt: 'desc' }, take: 5 },
+              supplyTriggers: { orderBy: { createdAt: 'desc' }, take: 5 },
+            },
+          });
+
+          if (!user) throw new Error('User not found');
+
+          const suppliers = user.accounts.flatMap((a) => a.suppliers);
+
+          return {
+            credits: user.autobookingCount ?? 0,
+            suppliers: suppliers.map((s) => s.supplierName),
+            recentAutobookings: user.autobookings.map((ab) => ({
+              id: ab.id,
+              supplyType: ab.supplyType,
+              warehouseId: ab.warehouseId,
+              status: ab.status,
+            })),
+            recentTriggers: user.supplyTriggers.map((t) => ({
+              id: t.id,
+              warehouseIds: t.warehouseIds,
+              status: t.status,
+            })),
+          };
+        });
+      }),
+    }),
+  };
+}

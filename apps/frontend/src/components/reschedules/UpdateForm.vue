@@ -160,7 +160,6 @@
       :show="showHintsModal"
       @close="showHintsModal = false"
     />
-
   </div>
 </template>
 

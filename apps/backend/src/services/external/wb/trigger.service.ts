@@ -24,6 +24,8 @@ export interface UpdateTriggerDto {
   warehouseIds?: number[];
   supplyTypes?: string[];
   isActive?: boolean;
+  maxCoefficient?: number;
+  checkInterval?: number;
 }
 
 /**
@@ -190,6 +192,8 @@ export class TriggerService {
         warehouseIds: data.warehouseIds,
         supplyTypes: data.supplyTypes,
         isActive: data.isActive,
+        maxCoefficient: data.maxCoefficient,
+        checkInterval: data.checkInterval,
       },
     });
   }

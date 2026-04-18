@@ -985,3 +985,252 @@ export interface MpstatsCard {
   image: string;
   favourite?: boolean;
 }
+
+// ============ Content Card (WB Viewer) Types ============
+
+export interface ContentCardTableListResponse {
+  data: ContentCardTableListData;
+  error: boolean;
+  errorText: string;
+  additionalErrors: Record<string, unknown>;
+}
+
+export interface ContentCardTableListData {
+  cards: ContentCard[];
+  cursor: ContentCardCursor;
+}
+
+export interface ContentCardCursor {
+  next: boolean;
+  n: number;
+  value: null;
+  nmID: number;
+}
+
+export interface ContentCard {
+  imtID: number;
+  nmID: number;
+  vendorCode: string;
+  updateAt: string;
+  brandRaw: string;
+  title: string;
+  mediaFiles: Record<string, ContentCardMediaFile>;
+  brand: string;
+  subject: string;
+  colors: string[];
+  sizes: ContentCardSize[];
+  tags: unknown[];
+  stocks: number;
+  meta: ContentCardMeta;
+  externalBan: null;
+  feedbackRating: number;
+  feedbacks: ContentCardFeedbacks;
+  hasPaidOptions: ContentCardPaidOptions;
+}
+
+export interface ContentCardPaidOptions {
+  hasPhotoTags: boolean;
+  hasRichContent: boolean;
+  hasAutoplayVideo: boolean;
+  hasClientTryOn: boolean;
+}
+
+export interface ContentCardFeedbacks {
+  rating: number;
+  count: number;
+}
+
+export interface ContentCardMeta {
+  dimensionsWarning: boolean;
+  hasDimensionDeviation: boolean;
+  tnvedWarning: boolean;
+  needKiz: boolean;
+  needUIN: boolean;
+  ratingData: ContentCardRatingData;
+  withABTest: boolean;
+  noWeightBruttoWarning: boolean;
+  hasWeightBruttoDeviation: boolean;
+  richModerationFail: boolean;
+}
+
+export interface ContentCardRatingData {
+  rating: number;
+  isCardRated: boolean;
+  errors: ContentCardRatingError[];
+}
+
+export interface ContentCardRatingError {
+  field: string;
+  details: string[];
+}
+
+export interface ContentCardSize {
+  sizeID: number;
+  techSize: string;
+  skus: string[];
+  wbSize: string;
+  currency: string;
+  currentPrice: number;
+}
+
+export interface ContentCardMediaFile {
+  value: string;
+  thumbnail?: string;
+  preview?: string;
+  mimeType: string;
+}
+
+export interface ContentCardImtResponse {
+  data: ContentCardImtData;
+  error: boolean;
+  errorText: string;
+  additionalErrors: Record<string, unknown>;
+}
+
+export interface ContentCardImtData {
+  imtID: number;
+  subjectInfo: ContentCardSubjectInfo;
+  variants: ContentCardVariant[];
+  ratings: ContentCardImtRating[];
+  isRegionalSizes: boolean;
+}
+
+export interface ContentCardImtRating {
+  rating: number;
+  isCardRated: boolean;
+  errors: ContentCardRatingError[];
+}
+
+export interface ContentCardVariant {
+  nmID: number;
+  nmUUID: string;
+  vendorCode: string;
+  title: string;
+  description: string;
+  brand: ContentCardBrand;
+  tnved: string;
+  sizes: ContentCardVariantSize[];
+  mediaFiles: Record<string, ContentCardMediaFile>;
+  dimensions: ContentCardDimensions;
+  characteristics: ContentCardCharacteristic[];
+  needKiz: boolean;
+  kizMarked: boolean;
+  isSwatchTryOn: boolean;
+  isKizUserMarked: boolean;
+  hasPhotoTags: boolean;
+  isAutoplayingVideo: boolean;
+  isAutoplayingCatalogVideo: boolean;
+  isAdult: boolean;
+  isDimensionsApprovedByUser: boolean;
+  attachments: unknown[];
+  isBlockedAdultAttribute: boolean;
+  autoplay: ContentCardAutoplay;
+}
+
+export interface ContentCardAutoplay {
+  enableJamAutoplayingVideo: boolean;
+  enableTariffProductCardAutoplayingVideo: boolean;
+  enableTariffCatalogAutoplayingVideo: boolean;
+}
+
+export interface ContentCardCharacteristic {
+  type: string;
+  value: string[] | unknown[] | null | number | string;
+}
+
+export interface ContentCardDimensions {
+  width: number;
+  height: number;
+  length: number;
+  weightBrutto: number;
+}
+
+export interface ContentCardVariantSize {
+  chrtID: number;
+  techSize: string;
+  wbSize: string;
+  skus: string[];
+  price: number;
+  currency: string;
+}
+
+export interface ContentCardBrand {
+  title: string;
+  id: number;
+  originalMark: ContentCardOriginalMark;
+}
+
+export interface ContentCardOriginalMark {
+  isActive: boolean;
+  expiredAt: string;
+}
+
+export interface ContentCardSubjectInfo {
+  parent: string;
+  subject: string;
+  predictedSubjects: unknown[];
+  supplierSubject: string;
+  translates: ContentCardTranslates;
+}
+
+export interface ContentCardTranslates {
+  parent: string;
+  subject: string;
+  supplierSubject: string;
+}
+
+// ============ Content Card Tariffs Types ============
+
+export interface ContentCardTariffsResponse {
+  data: ContentCardTariffsData;
+  error: boolean;
+  errorText: string;
+  additionalErrors: null;
+}
+
+export interface ContentCardTariffsData {
+  warehouselist: ContentCardWarehouseTariff[];
+}
+
+export interface ContentCardWarehouseTariff {
+  office_id: number;
+  warehouseSort: number;
+  warehouseName: string;
+  delivery: string;
+  deliveryMonoAndMix: string;
+  deliveryMonopallet: string;
+  deliveryReturn: string;
+  storageMonoAndMix: string;
+  storageMonopallet: string;
+  acceptanceMonoAndMix: string;
+  acceptanceMonopallet: string;
+  acceptanceSuperSafe: string;
+  deliverySubjectSettingByVolume: string;
+}
+
+// ============ Content Card Categories Types ============
+
+export interface ContentCardCategoriesResponse {
+  data: ContentCardCategoriesData;
+  error: boolean;
+  errorText: string;
+  additionalErrors: null;
+}
+
+export interface ContentCardCategoriesData {
+  categories: ContentCardCategory[];
+  columns: string[];
+  length: number;
+  countryCode: string;
+}
+
+export interface ContentCardCategory {
+  id: number;
+  name: string;
+  subject: string;
+  percent: number;
+  percentFBS: number;
+  kgvpSupplier: number;
+  kgvpSupplierExpress: number;
+  kgvpPickup: number;
+}

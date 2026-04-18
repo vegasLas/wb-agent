@@ -9,10 +9,18 @@
       <!-- Top Bar Skeleton (matches MainLayout) -->
       <div class="flex items-center justify-between mb-4 lg:hidden">
         <!-- Account Button Skeleton (Left) -->
-        <Skeleton width="2.5rem" height="2.5rem" border-radius="0.375rem" />
+        <Skeleton
+          width="2.5rem"
+          height="2.5rem"
+          border-radius="0.375rem"
+        />
 
         <!-- Plus Button Skeleton (Right) -->
-        <Skeleton width="2.5rem" height="2.5rem" border-radius="0.375rem" />
+        <Skeleton
+          width="2.5rem"
+          height="2.5rem"
+          border-radius="0.375rem"
+        />
       </div>
 
       <!-- Content Skeleton -->
@@ -25,10 +33,26 @@
         class="bg-deep-card border border-deep-border rounded-full px-4 py-2 shadow-lg"
       >
         <div class="flex items-center gap-2">
-          <Skeleton width="3rem" height="2.5rem" border-radius="0.5rem" />
-          <Skeleton width="3rem" height="2.5rem" border-radius="0.5rem" />
-          <Skeleton width="3rem" height="2.5rem" border-radius="0.5rem" />
-          <Skeleton width="3rem" height="2.5rem" border-radius="0.5rem" />
+          <Skeleton
+            width="3rem"
+            height="2.5rem"
+            border-radius="0.5rem"
+          />
+          <Skeleton
+            width="3rem"
+            height="2.5rem"
+            border-radius="0.5rem"
+          />
+          <Skeleton
+            width="3rem"
+            height="2.5rem"
+            border-radius="0.5rem"
+          />
+          <Skeleton
+            width="3rem"
+            height="2.5rem"
+            border-radius="0.5rem"
+          />
         </div>
       </div>
     </div>

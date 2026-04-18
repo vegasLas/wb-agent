@@ -38,7 +38,10 @@
       v-if="reportStore.regionSalesLoading"
       class="flex items-center justify-center py-12"
     >
-      <ProgressSpinner style="width: 3rem; height: 3rem" stroke-width="4" />
+      <ProgressSpinner
+        style="width: 3rem; height: 3rem"
+        stroke-width="4"
+      />
     </div>
 
     <template v-else-if="reportStore.hasRegionSalesData">
@@ -49,7 +52,9 @@
             <div class="text-xl font-bold text-purple-600">
               {{ formatNumber(totalQty) }}
             </div>
-            <div class="text-xs text-gray-500">Выкупили, шт.</div>
+            <div class="text-xs text-gray-500">
+              Выкупили, шт.
+            </div>
           </template>
         </Card>
         <Card class="text-center">
@@ -57,7 +62,9 @@
             <div class="text-xl font-bold text-emerald-600">
               {{ formatCurrency(totalReward) }}
             </div>
-            <div class="text-xs text-gray-500">К перечислению, руб.</div>
+            <div class="text-xs text-gray-500">
+              К перечислению, руб.
+            </div>
           </template>
         </Card>
         <Card class="text-center">
@@ -65,7 +72,9 @@
             <div class="text-xl font-bold text-blue-600">
               {{ reportStore.regionSalesRows.length }}
             </div>
-            <div class="text-xs text-gray-500">Фед. округов</div>
+            <div class="text-xs text-gray-500">
+              Фед. округов
+            </div>
           </template>
         </Card>
         <Card class="text-center">
@@ -73,7 +82,9 @@
             <div class="text-xl font-bold text-amber-600">
               {{ topRegion }}
             </div>
-            <div class="text-xs text-gray-500">Топ регион</div>
+            <div class="text-xs text-gray-500">
+              Топ регион
+            </div>
           </template>
         </Card>
       </div>
@@ -88,7 +99,9 @@
       class="flex flex-col items-center justify-center py-12 text-gray-400"
     >
       <i class="pi pi-map text-4xl mb-3" />
-      <p class="text-sm">Выберите период и нажмите «Обновить»</p>
+      <p class="text-sm">
+        Выберите период и нажмите «Обновить»
+      </p>
     </div>
   </div>
 </template>

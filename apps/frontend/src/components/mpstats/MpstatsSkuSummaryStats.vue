@@ -194,11 +194,9 @@
                 <span>Упущенная выручка, ₽</span>
                 <i class="pi pi-question-circle text-[10px]" />
               </div>
-              <span class="text-xl font-semibold"
-                >{{ formatCurrency(period.lost_profit) }} ({{
-                  formatPercent(period.lost_profit_percent)
-                }})</span
-              >
+              <span class="text-xl font-semibold">{{ formatCurrency(period.lost_profit) }} ({{
+                formatPercent(period.lost_profit_percent)
+              }})</span>
             </div>
           </div>
         </template>

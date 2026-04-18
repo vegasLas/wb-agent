@@ -20,6 +20,8 @@ export * from './adverts';
 export * from './suppliers';
 export * from './coefficients';
 export * from './mpstats';
+export * from './content-cards';
+export * from './ai';
 
 // Generic API methods
 export const api = {

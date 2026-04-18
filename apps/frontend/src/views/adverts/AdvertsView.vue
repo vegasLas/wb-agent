@@ -7,7 +7,10 @@
     />
 
     <!-- Error Message -->
-    <ErrorMessage v-if="advertsStore.error" :message="advertsStore.error" />
+    <ErrorMessage
+      v-if="advertsStore.error"
+      :message="advertsStore.error"
+    />
 
     <!-- Loading Spinner -->
     <LoadingSpinner v-if="advertsStore.loading" />

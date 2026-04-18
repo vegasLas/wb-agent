@@ -66,7 +66,10 @@
     <slot name="header-extra" />
 
     <!-- List Content -->
-    <div ref="scrollContainer" class="space-y-3">
+    <div
+      ref="scrollContainer"
+      class="space-y-3"
+    >
       <slot />
     </div>
 

@@ -14,8 +14,10 @@
     "migrate:alias": "node scripts/migrate-to-alias.js"
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^2.0.29",
     "@prisma/client": "^6.5.0",
     "@telegram-apps/init-data-node": "^2.0.10",
+    "ai": "^6.0.159",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
@@ -29,6 +31,7 @@
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
     "node-telegram-bot-api": "^0.67.0",
+    "pdf-parse": "^2.4.5",
     "playwright": "^1.58.0",
     "prisma": "^6.5.0",
     "socks-proxy-agent": "^9.0.0",

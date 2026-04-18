@@ -89,6 +89,14 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'chat',
+        name: 'Chat',
+        component: () => import('../views/ai/ChatView.vue'),
+        meta: {
+          title: 'AI Чат',
+        },
+      },
+      {
         path: 'wb',
         name: 'WB',
         component: WBView,
@@ -161,6 +169,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/ReportsView.vue'),
         meta: {
           title: 'Reports',
+        },
+      },
+      {
+        path: 'tariffs',
+        name: 'Tariffs',
+        component: () => import('../views/content-cards/TariffsView.vue'),
+        meta: {
+          title: 'Тарифы',
         },
       },
       {

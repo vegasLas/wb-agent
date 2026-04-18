@@ -10,7 +10,9 @@
         <span class="text-white font-bold text-sm tracking-tight">WB</span>
       </div>
       <div>
-        <div class="font-semibold text-theme text-sm leading-none">Agent</div>
+        <div class="font-semibold text-theme text-sm leading-none">
+          Agent
+        </div>
         <div class="text-[11px] text-muted leading-none mt-1">
           Панель управления
         </div>
@@ -175,8 +177,15 @@ const primaryNav = [
     icon: 'pi pi-shopping-bag',
     route: 'WB',
   },
+  {
+    id: 'tariffs',
+    label: 'Тарифы',
+    icon: 'pi pi-percentage',
+    route: 'Tariffs',
+  },
   { id: 'mpstats', label: 'MPStats', icon: 'pi pi-chart-bar', route: 'MPStats' },
   { id: 'tasks', label: 'Задачи', icon: 'pi pi-check-square', route: 'Tasks' },
+  { id: 'chat', label: 'AI Чат', icon: 'pi pi-comments', route: 'Chat' },
 ];
 
 // Secondary navigation
