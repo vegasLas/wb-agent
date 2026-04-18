@@ -7,16 +7,14 @@
     <template
       v-if="
         userStore.user.selectedAccountId &&
-          userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+        userStore.hasValidSupplier &&
+        userStore.subscriptionActive
       "
     >
       <!-- Date Range Selection -->
       <Card class="mb-6">
         <template #title>
-          <h3 class="text-lg font-semibold">
-            Отчет продаж за период
-          </h3>
+          <h3 class="text-lg font-semibold">Отчет продаж за период</h3>
         </template>
         <template #content>
           <div
@@ -109,17 +107,12 @@
       </div>
 
       <!-- Top Products Table -->
-      <Card
-        v-if="topProducts.length > 0"
-        class="mb-6"
-      >
+      <Card v-if="topProducts.length > 0" class="mb-6">
         <template #title>
           <div
             class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
-            <h4 class="text-lg font-semibold">
-              Топ-10 продаваемых товаров
-            </h4>
+            <h4 class="text-lg font-semibold">Топ-10 продаваемых товаров</h4>
             <MultiSelect
               v-model="selectedColumns"
               :options="availableColumns"
@@ -152,10 +145,7 @@
       </Card>
 
       <!-- View Toggle Buttons -->
-      <div
-        v-if="!reportStore.loading"
-        class="mb-6 flex space-x-2"
-      >
+      <div v-if="!reportStore.loading" class="mb-6 flex space-x-2">
         <Button
           :severity="
             reportViewStore.activeView === 'charts' ? 'primary' : 'secondary'
