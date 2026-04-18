@@ -129,9 +129,10 @@ export const fetchPromotionExcel = async (
       return;
     }
 
-    const { periodID, isRecovery } = req.body as {
+    const { periodID, isRecovery, hasStarted } = req.body as {
       periodID?: number;
       isRecovery?: boolean;
+      hasStarted?: boolean;
     };
 
     if (!periodID) {
@@ -146,13 +147,14 @@ export const fetchPromotionExcel = async (
     const recoveryFlag = isRecovery !== false;
 
     logger.info(
-      `Fetching promotion Excel for user ${userId}, periodID: ${periodID}, isRecovery: ${recoveryFlag}`,
+      `Fetching promotion Excel for user ${userId}, periodID: ${periodID}, isRecovery: ${recoveryFlag}, hasStarted: ${hasStarted}`,
     );
 
     const result = await getPromotionExcel({
       userId,
       periodID,
       isRecovery: recoveryFlag,
+      hasStarted,
     });
 
     if (result.error && !result.items) {

@@ -20,6 +20,7 @@ import type {
   PromotionExcelGetResponse,
   PromotionRecoveryResponse,
   PromotionRecoveryInitResponse,
+  PromotionExcelCreateResponse,
 } from '@/types/wb';
 
 // Promotion Excel column mapping: English header -> Russian field name
@@ -134,6 +135,13 @@ export interface PromotionExcelResult {
   error: string | null;
   reportPending?: boolean;
   estimatedWaitTime?: number;
+}
+
+export interface GetPromotionExcelParams {
+  userId: number;
+  periodID: number;
+  isRecovery: boolean;
+  hasStarted?: boolean;
 }
 
 interface AccountContext {
@@ -267,11 +275,8 @@ export const getPromotionExcel = async ({
   userId,
   periodID,
   isRecovery,
-}: {
-  userId: number;
-  periodID: number;
-  isRecovery: boolean;
-}): Promise<PromotionExcelResult> => {
+  hasStarted,
+}: GetPromotionExcelParams): Promise<PromotionExcelResult> => {
   const result: PromotionExcelResult = {
     items: null,
     error: null,
@@ -281,9 +286,66 @@ export const getPromotionExcel = async ({
     const { accountId, supplierId, userAgent, proxy } =
       await resolveAccountContext(userId);
 
-    // Step 1: Call init endpoint with user's isRecovery flag
-    try {
-      await callRecoveryInit(
+    // Step 1: Init/create the report based on whether promotion has started
+    if (hasStarted === true) {
+      // Promotion already started: create excel first, then fetch it
+      try {
+        await createPromotionExcel(
+          periodID,
+          accountId,
+          supplierId,
+          userAgent,
+          proxy,
+        );
+      } catch (createError) {
+        logger.warn('Excel create endpoint failed, continuing:', createError);
+      }
+    } else if (hasStarted === false) {
+      // Promotion not started yet: use recovery init
+      try {
+        await callRecoveryInit(
+          periodID,
+          isRecovery,
+          accountId,
+          supplierId,
+          userAgent,
+          proxy,
+        );
+      } catch (initError) {
+        logger.warn('Recovery init endpoint failed, continuing:', initError);
+      }
+    } else {
+      // Backward compatibility: old clients don't send hasStarted.
+      // Preserve original behavior: recovery init + fetch from /excel endpoint.
+      try {
+        await callRecoveryInit(
+          periodID,
+          isRecovery,
+          accountId,
+          supplierId,
+          userAgent,
+          proxy,
+        );
+      } catch (initError) {
+        logger.warn('Recovery init endpoint failed, continuing:', initError);
+      }
+    }
+
+    // Wait a bit for the init/create to take effect
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Step 2: Fetch Excel report
+    let excelResult: { data?: PromotionExcelGetResponse; error?: string };
+    if (hasStarted === true) {
+      excelResult = await fetchPromotionExcel(
+        periodID,
+        accountId,
+        supplierId,
+        userAgent,
+        proxy,
+      );
+    } else if (hasStarted === false) {
+      excelResult = await fetchPromotionRecoveryReport(
         periodID,
         isRecovery,
         accountId,
@@ -291,21 +353,16 @@ export const getPromotionExcel = async ({
         userAgent,
         proxy,
       );
-    } catch (initError) {
-      logger.warn('Init endpoint failed, continuing:', initError);
+    } else {
+      // Backward compatibility: fetch from /excel (original behavior)
+      excelResult = await fetchPromotionExcel(
+        periodID,
+        accountId,
+        supplierId,
+        userAgent,
+        proxy,
+      );
     }
-
-    // Wait a bit for the init to take effect
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Step 2: Fetch Excel report (use /excel endpoint - 17 columns)
-    const excelResult = await fetchPromotionExcelReport(
-      periodID,
-      accountId,
-      supplierId,
-      userAgent,
-      proxy,
-    );
 
     if (excelResult.error || !excelResult.data?.data?.file) {
       result.error =
@@ -344,6 +401,31 @@ export const getPromotionExcel = async ({
 };
 
 /**
+ * Create promotion Excel report on WB side
+ */
+async function createPromotionExcel(
+  periodID: number,
+  accountId: string,
+  supplierId: string,
+  userAgent: string,
+  proxy: ProxyConfig | undefined,
+): Promise<void> {
+  const url =
+    'https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/excel/create';
+  await wbAccountRequest<PromotionExcelCreateResponse>({
+    url,
+    accountId,
+    userAgent,
+    proxy,
+    supplierId,
+    method: 'POST',
+    body: {
+      periodID,
+    },
+  });
+}
+
+/**
  * Call the recovery init endpoint
  */
 async function callRecoveryInit(
@@ -371,25 +453,54 @@ async function callRecoveryInit(
 }
 
 /**
- * Fetch Excel report from WB
- * Supports both /excel (17 cols) and /recovery (21 cols) endpoints
+ * Fetch Excel report from WB (17 columns)
  */
-async function fetchPromotionExcelReport(
+async function fetchPromotionExcel(
   periodID: number,
   accountId: string,
   supplierId: string,
   userAgent: string,
   proxy: ProxyConfig | undefined,
-  useRecoveryEndpoint = false,
-  isRecovery = true,
 ): Promise<{ data?: PromotionExcelGetResponse; error?: string }> {
-  // Use /recovery endpoint for full 21 columns (Smart Promo), /excel for 17 columns
-  const fetchUrl = useRecoveryEndpoint
-    ? `https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/recovery` +
-      `?isRecovery=${encodeURIComponent(isRecovery)}` +
-      `&periodID=${encodeURIComponent(periodID)}`
-    : `https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/excel` +
-      `?periodID=${encodeURIComponent(periodID)}`;
+  const fetchUrl =
+    `https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/excel` +
+    `?periodID=${encodeURIComponent(periodID)}`;
+
+  try {
+    const response = await wbAccountRequest<PromotionExcelGetResponse>({
+      url: fetchUrl,
+      accountId,
+      userAgent,
+      proxy,
+      supplierId,
+      method: 'GET',
+    });
+
+    if (response?.data?.file) {
+      return { data: response };
+    }
+
+    return { error: 'Excel файл не найден' };
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+}
+
+/**
+ * Fetch recovery report from WB (21 columns)
+ */
+async function fetchPromotionRecoveryReport(
+  periodID: number,
+  isRecovery: boolean,
+  accountId: string,
+  supplierId: string,
+  userAgent: string,
+  proxy: ProxyConfig | undefined,
+): Promise<{ data?: PromotionExcelGetResponse; error?: string }> {
+  const fetchUrl =
+    `https://discounts-prices.wildberries.ru/ns/calendar-api/dp-calendar/suppliers/api/v2/recovery` +
+    `?isRecovery=${encodeURIComponent(isRecovery)}` +
+    `&periodID=${encodeURIComponent(periodID)}`;
 
   try {
     const response = await wbAccountRequest<PromotionExcelGetResponse>({
@@ -432,14 +543,13 @@ export const applyPromotionRecovery = async ({
 
     // Fetch Excel (use /recovery endpoint to get full 21 columns like browser)
     await new Promise((r) => setTimeout(r, 1000));
-    const excelResult = await fetchPromotionExcelReport(
+    const excelResult = await fetchPromotionRecoveryReport(
       periodID,
+      true, // isRecovery=true
       ctx.accountId,
       ctx.supplierId,
       ctx.userAgent,
       ctx.proxy,
-      true, // useRecoveryEndpoint=true for 21 columns
-      true, // isRecovery=true
     );
 
     if (excelResult.error || !excelResult.data?.data?.file) {

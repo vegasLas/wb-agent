@@ -111,6 +111,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
     periodID: number,
     isRecovery = true,
     retryCount = 1,
+    hasStarted?: boolean,
   ) {
     if (!userStore.user?.selectedAccountId) {
       excelError.value = 'Необходимо выбрать аккаунт';
@@ -132,7 +133,19 @@ export const usePromotionsStore = defineStore('promotions', () => {
     _excelItems.value = [];
 
     try {
-      const response = await promotionsAPI.fetchExcel({ periodID, isRecovery });
+      // Derive hasStarted from promotion detail if not explicitly passed
+      const started =
+        hasStarted ??
+        (promotionDetail.value?.startDt
+          ? new Date(promotionDetail.value.startDt).setHours(0, 0, 0, 0) <
+            new Date().setHours(0, 0, 0, 0)
+          : undefined);
+
+      const response = await promotionsAPI.fetchExcel({
+        periodID,
+        isRecovery,
+        hasStarted: started,
+      });
 
       if (response.error) {
         excelError.value = response.error;
@@ -143,7 +156,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
           const waitMs = (response.estimatedWaitTime || 5) * 1000;
           await new Promise((resolve) => setTimeout(resolve, waitMs));
           excelLoading.value = false;
-          return fetchExcel(periodID, isRecovery, retryCount - 1);
+          return fetchExcel(periodID, isRecovery, retryCount - 1, hasStarted);
         }
         return;
       }
@@ -170,10 +183,16 @@ export const usePromotionsStore = defineStore('promotions', () => {
   async function selectPromotionAndLoadExcel(
     promoID: number,
     isRecovery = true,
+    hasStarted?: boolean,
   ) {
     await fetchDetail(promoID);
     if (promotionDetail.value?.periodID) {
-      await fetchExcel(promotionDetail.value.periodID, isRecovery);
+      await fetchExcel(
+        promotionDetail.value.periodID,
+        isRecovery,
+        1,
+        hasStarted,
+      );
     }
   }
 

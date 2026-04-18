@@ -347,6 +347,8 @@ import {
   usePromotionsUnified,
   useViewReady,
   usePromotionsTimeline,
+  isPromotionStarted,
+  isPromotionEditable,
 } from '../../composables';
 import PromotionDetailDialog from './PromotionDetailDialog.vue';
 import PromotionParticipantsDialog from './PromotionParticipantsDialog.vue';
@@ -366,19 +368,10 @@ const timeline = usePromotionsTimeline(p.currentDate);
 // Recovery mode for participants dialog
 const participantsIsRecovery = ref(true);
 
-// Check if promotion can be edited (hasn't started yet)
+// Check if promotion can be edited (hasn't started yet or starts today)
 const canEditPromotion = computed(() => {
   const promotion = p.selectedPromotion.value;
-  if (!promotion) return false;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const startDate = new Date(promotion.startDate);
-  startDate.setHours(0, 0, 0, 0);
-
-  // Can edit if start date is today or in the future
-  return startDate >= today;
+  return promotion ? isPromotionEditable(promotion) : false;
 });
 
 // Track expanded promotion cards
@@ -404,7 +397,10 @@ function handleShowParticipants(promoID: number) {
     // Otherwise, set isRecovery to true (recover mode)
     participantsIsRecovery.value = promotion.participation.counts.available > 0;
   }
-  p.handleShowParticipants(promoID);
+
+  const hasStarted = promotion ? isPromotionStarted(promotion) : undefined;
+
+  p.handleShowParticipants(promoID, hasStarted);
 }
 
 // Handle apply recovery from participants dialog
