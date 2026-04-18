@@ -86,6 +86,7 @@ export interface UsePromotionsReturn {
   handleShowDetails: (promoID: number) => Promise<void>;
   handleShowParticipants: (
     promoID: number,
+    isRecovery?: boolean,
     hasStarted?: boolean,
   ) => Promise<void>;
   handleParticipantsRetry: () => Promise<void>;
@@ -203,11 +204,16 @@ export function usePromotions(
    */
   async function handleShowParticipants(
     promoID: number,
+    isRecovery = true,
     hasStarted?: boolean,
   ): Promise<void> {
     selectedPromotionId.value = promoID;
     showParticipantsDialog.value = true;
-    await promotionsStore.selectPromotionAndLoadExcel(promoID, true, hasStarted);
+    await promotionsStore.selectPromotionAndLoadExcel(
+      promoID,
+      isRecovery,
+      hasStarted,
+    );
   }
 
   /**

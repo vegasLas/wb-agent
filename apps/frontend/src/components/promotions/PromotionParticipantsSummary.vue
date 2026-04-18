@@ -10,11 +10,11 @@
             :class="[
               'ml-1 font-medium',
               isRecovery
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400',
+                ? 'text-red-600 dark:text-red-400'
+                : 'text-green-600 dark:text-green-400',
             ]"
           >
-            {{ isRecovery ? 'Восстановление' : 'Исключение' }}
+            {{ isRecovery ? 'Исключение' : 'Восстановление' }}
           </span>
         </div>
         <div v-else>

@@ -108,7 +108,7 @@
         :visible-months="p.visibleMonths.value"
         :current-month-date="p.currentDate.value"
         :column-width="p.columnWidth"
-        :expanded-ids="expandedPromotions"
+        :expanded-ids="expandedIdsSet"
         :selected-promotion-id="p.selectedPromotionId.value"
         :detail-loading="p.detailLoading.value"
         :excel-loading="p.excelLoading.value"
@@ -142,8 +142,11 @@
       :report-pending="p.reportPending.value"
       :is-recovery="participantsIsRecovery"
       :can-edit="canEditPromotion"
-      @retry="p.handleParticipantsRetry"
+      :timeline-participating-count="timelineParticipatingCount"
+      :timeline-not-participating-count="timelineNotParticipatingCount"
+      @retry="handleParticipantsRetry"
       @apply-recovery="handleApplyRecovery"
+      @switch-mode="handleSwitchMode"
     />
   </div>
 </template>
@@ -157,6 +160,7 @@ import {
   isPromotionStarted,
   isPromotionEditable,
 } from '../../composables';
+import { usePromotionsStore } from '@/stores/promotions';
 import PromotionFilterBar from '@/components/promotions/PromotionFilterBar.vue';
 import PromotionTimelineGrid from '@/components/promotions/PromotionTimelineGrid.vue';
 import PromotionDetailDialog from './PromotionDetailDialog.vue';
@@ -170,6 +174,8 @@ const p = usePromotionsUnified({
   immediate: false,
 });
 
+const promotionsStore = usePromotionsStore();
+
 // Recovery mode for participants dialog
 const participantsIsRecovery = ref(true);
 
@@ -179,26 +185,63 @@ const canEditPromotion = computed(() => {
   return promotion ? isPromotionEditable(promotion) : false;
 });
 
-// Track expanded promotion cards
-const expandedPromotions = ref<Set<number>>(new Set());
+// Track expanded promotion cards (only one at a time)
+const expandedPromoId = ref<number | null>(null);
+
+const expandedIdsSet = computed(() =>
+  expandedPromoId.value !== null ? new Set([expandedPromoId.value]) : new Set(),
+);
 
 function toggleExpand(promoID: number) {
-  if (expandedPromotions.value.has(promoID)) {
-    expandedPromotions.value.delete(promoID);
-  } else {
-    expandedPromotions.value.add(promoID);
-  }
+  expandedPromoId.value = expandedPromoId.value === promoID ? null : promoID;
 }
+
+// Timeline counts for the selected promotion
+const timelineParticipatingCount = computed(() => {
+  return p.selectedPromotion.value?.participation.counts.participating ?? 0;
+});
+
+const timelineNotParticipatingCount = computed(() => {
+  const counts = p.selectedPromotion.value?.participation.counts;
+  if (!counts) return 0;
+  return counts.available + counts.participatingOutOfStock;
+});
 
 // Handle show participants with isRecovery flag
 function handleShowParticipants(promoID: number) {
   const promotion = p.promotions.value.find((p) => p.promoID === promoID);
-  if (promotion) {
-    participantsIsRecovery.value =
-      promotion.participation.counts.participating === 0;
-  }
+  // Default to 'Участвуют' if it has items, otherwise fall back to 'Не участвуют'
+  const isRecovery = promotion
+    ? promotion.participation.counts.participating > 0
+    : true;
+  participantsIsRecovery.value = isRecovery;
   const hasStarted = promotion ? isPromotionStarted(promotion) : undefined;
-  p.handleShowParticipants(promoID, hasStarted);
+  p.handleShowParticipants(promoID, isRecovery, hasStarted);
+}
+
+// Handle switch mode from dialog buttons
+function handleSwitchMode(isRecovery: boolean) {
+  participantsIsRecovery.value = isRecovery;
+  const promoID = p.selectedPromotionId.value;
+  const promotion = p.selectedPromotion.value;
+  const hasStarted = promotion ? isPromotionStarted(promotion) : undefined;
+  if (promoID) {
+    p.handleShowParticipants(promoID, isRecovery, hasStarted);
+  }
+}
+
+// Handle retry with current isRecovery mode
+async function handleParticipantsRetry() {
+  const detail = p.promotionDetail.value;
+  if (detail?.periodID) {
+    const promotion = p.selectedPromotion.value;
+    const hasStarted = promotion ? isPromotionStarted(promotion) : undefined;
+    await promotionsStore.fetchExcel(
+      detail.periodID,
+      participantsIsRecovery.value,
+      hasStarted,
+    );
+  }
 }
 
 // Handle apply recovery

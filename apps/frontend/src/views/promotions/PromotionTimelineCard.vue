@@ -6,7 +6,7 @@
       'h-[58px]': !isExpanded,
       expanded: isExpanded,
     }"
-    :style="cardStyle"
+    :style="wrapperStyle"
   >
     <div
       class="promotion-card w-full h-full mx-1 rounded-lg border shadow-sm hover:shadow-md cursor-pointer relative overflow-hidden"
@@ -16,9 +16,7 @@
           : display.isNotStarted.value
             ? 'promotion-card--upcoming'
             : 'promotion-card--active',
-        isExpanded
-          ? 'p-3 animate-expand'
-          : 'p-2',
+        isExpanded ? 'p-3 !block' : 'p-2',
       ]"
     >
       <!-- Main Row (Always Visible) -->
@@ -39,9 +37,11 @@
             <!-- Type Badge -->
             <span
               class="text-xs font-medium flex-shrink-0"
-              :class="display.isExpired.value
-                ? 'text-[var(--text-muted)]'
-                : 'text-[var(--promo-primary)]'"
+              :class="
+                display.isExpired.value
+                  ? 'text-[var(--text-muted)]'
+                  : 'text-[var(--promo-primary)]'
+              "
             >
               {{ display.typeLabel.value }}
             </span>
@@ -49,9 +49,11 @@
             <!-- Title -->
             <span
               class="text-xs font-medium truncate"
-              :class="display.isExpired.value
-                ? 'text-[var(--text-muted)]'
-                : 'text-[var(--color-text)]'"
+              :class="
+                display.isExpired.value
+                  ? 'text-[var(--text-muted)]'
+                  : 'text-[var(--color-text)]'
+              "
             >
               {{ display.name.value }}
             </span>
@@ -69,7 +71,7 @@
               Не участвуют:
               <strong>{{
                 promotion.participation.counts.available +
-                  promotion.participation.counts.participatingOutOfStock
+                promotion.participation.counts.participatingOutOfStock
               }}</strong>
             </span>
           </div>
@@ -85,7 +87,11 @@
         <div class="mb-2">
           <Tag
             :value="display.participationStatusLabel.value"
-            :severity="display.isExpired.value ? 'secondary' : display.participationStatusSeverity.value"
+            :severity="
+              display.isExpired.value
+                ? 'secondary'
+                : display.participationStatusSeverity.value
+            "
             class="text-xs"
           />
         </div>
@@ -109,16 +115,19 @@
         <!-- Date Range & Product Count -->
         <div
           class="text-xs space-y-1 mb-3"
-          :class="display.isExpired.value
-            ? 'text-[var(--text-secondary)]'
-            : 'text-[var(--text-muted)]'"
+          :class="
+            display.isExpired.value
+              ? 'text-[var(--text-secondary)]'
+              : 'text-[var(--text-muted)]'
+          "
         >
           <div>
             {{ dateRangeText }}
             <span
               v-if="display.isExpired.value"
               class="ml-1 text-[var(--text-muted)] font-medium"
-            >(завершена)</span>
+              >(завершена)</span
+            >
           </div>
           <div>{{ display.productCountText.value }}</div>
         </div>
@@ -126,9 +135,11 @@
         <!-- Action Buttons (Moved to expanded section) -->
         <div
           class="flex items-center justify-start gap-2 pt-2 border-t"
-          :class="display.isExpired.value
-            ? 'border-[var(--promo-border)]'
-            : 'border-[var(--promo-primary)]/20'"
+          :class="
+            display.isExpired.value
+              ? 'border-[var(--promo-border)]'
+              : 'border-[var(--promo-primary)]/20'
+          "
         >
           <Button
             v-if="!display.isExpired.value"
@@ -180,18 +191,16 @@ const emit = defineEmits<{
   'show-participants': [];
 }>();
 
-// Compute card style - in collapsed mode, use the exact date-range width.
-// When expanded, drop the fixed width but enforce a min-width so the card
-// never shrinks below its timeline span and can grow to fit content.
-const cardStyle = computed(() => {
-  if (props.isExpanded) {
-    const { width, ...rest } = props.style;
-    return {
-      ...rest,
-      minWidth: width,
-    };
+// Allow expanded card to grow beyond its date-range width
+const wrapperStyle = computed(() => {
+  if (!props.isExpanded) {
+    return props.style;
   }
-  return props.style;
+  return {
+    ...props.style,
+    width: 'auto',
+    minWidth: props.style.width,
+  };
 });
 
 // Use the composable for all display logic
@@ -217,10 +226,6 @@ const dateRangeText = computed(() => {
 </script>
 
 <style scoped>
-.promotion-card-wrapper {
-  transition: all 0.2s ease;
-}
-
 .promotion-card-wrapper.expanded {
   z-index: 100 !important;
 }

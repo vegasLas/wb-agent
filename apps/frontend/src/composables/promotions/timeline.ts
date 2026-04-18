@@ -155,7 +155,7 @@ export function usePromotionsTimeline(): UsePromotionsTimelineReturn {
 
   // ── Calendar Labels ──────────────────────────────────────────────────────
 
-  const currentMonthLabel = computed(() => currentMonthInfo.value.label);
+  const currentMonthLabel = computed(() => formatMonthLabel(currentDate.value));
 
   const todayLabel = computed(() =>
     today.toLocaleDateString('ru-RU', {

@@ -58,6 +58,36 @@
           </p>
         </div>
 
+        <!-- Mode Switch Buttons -->
+        <div v-if="canEdit" class="mb-4 flex gap-2">
+          <Button
+            :disabled="props.timelineParticipatingCount === 0"
+            :severity="isRecovery ? 'primary' : 'secondary'"
+            size="small"
+            @click="emit('switch-mode', true)"
+          >
+            Участвуют
+            <Badge
+              :value="props.timelineParticipatingCount"
+              class="ml-2"
+              :severity="isRecovery ? 'contrast' : 'secondary'"
+            />
+          </Button>
+          <Button
+            :disabled="props.timelineNotParticipatingCount === 0"
+            :severity="!isRecovery ? 'primary' : 'secondary'"
+            size="small"
+            @click="emit('switch-mode', false)"
+          >
+            Не участвуют
+            <Badge
+              :value="props.timelineNotParticipatingCount"
+              class="ml-2"
+              :severity="!isRecovery ? 'contrast' : 'secondary'"
+            />
+          </Button>
+        </div>
+
         <!-- Summary and Column Selector -->
         <PromotionParticipantsSummary
           v-model="selectedColumns"
@@ -103,9 +133,9 @@
           />
           <Button
             v-if="canEdit && selectedItems.length > 0"
-            :label="isRecovery ? 'Восстановить' : 'Исключить'"
-            :severity="isRecovery ? 'success' : 'danger'"
-            :icon="isRecovery ? 'pi pi-check' : 'pi pi-times'"
+            :label="isRecovery ? 'Исключить' : 'Восстановить'"
+            :severity="isRecovery ? 'danger' : 'success'"
+            :icon="isRecovery ? 'pi pi-times' : 'pi pi-check'"
             :loading="applying"
             @click="handleApply"
           />
@@ -119,6 +149,7 @@
 import { computed, ref, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
+import Badge from 'primevue/badge';
 import { useLocalStorage } from '@vueuse/core';
 import { usePromotionsStore } from '@/stores/promotions';
 import PromotionParticipantsSummary from '@/components/promotions/PromotionParticipantsSummary.vue';
@@ -160,6 +191,8 @@ interface Props {
   reportPending: boolean;
   isRecovery: boolean;
   canEdit: boolean;
+  timelineParticipatingCount: number;
+  timelineNotParticipatingCount: number;
 }
 
 const props = defineProps<Props>();
@@ -168,6 +201,7 @@ const emit = defineEmits<{
   'update:show': [value: boolean];
   retry: [];
   'apply-recovery': [selectedItems: string[], isRecovery: boolean];
+  'switch-mode': [isRecovery: boolean];
 }>();
 
 // Selected items for recovery/exclusion
@@ -202,8 +236,8 @@ const visible = computed({
 const dialogHeader = computed(() => {
   const modeLabel = props.canEdit
     ? props.isRecovery
-      ? 'Восстановление'
-      : 'Исключение'
+      ? 'Исключение'
+      : 'Восстановление'
     : 'Просмотр';
   return props.promotionName
     ? `${modeLabel}: ${props.promotionName}`
