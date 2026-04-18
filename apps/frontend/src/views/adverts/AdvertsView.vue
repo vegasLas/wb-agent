@@ -57,6 +57,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useAdvertsStore } from '@/stores/adverts';
+import { useViewReady } from '@/composables/ui';
 import {
   AdvertsStatsCards,
   AdvertsTable,
@@ -68,6 +69,7 @@ import {
 import type { AdvertItem } from '@/stores/adverts';
 
 const advertsStore = useAdvertsStore();
+const { viewReady } = useViewReady();
 
 // Dialog state
 const showPresetDialog = ref(false);
@@ -120,7 +122,11 @@ function onDialogHide() {
   selectedAdvert.value = null;
 }
 
-onMounted(() => {
-  advertsStore.fetchAdverts(1, 10);
+onMounted(async () => {
+  try {
+    await advertsStore.fetchAdverts(1, 10);
+  } finally {
+    viewReady();
+  }
 });
 </script>

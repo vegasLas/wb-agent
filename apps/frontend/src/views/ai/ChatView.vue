@@ -55,7 +55,7 @@ const historyMenuItems = computed<MenuItem[]>(() => {
   <div class="h-[78vh] lg:h-[calc(100vh-100px)] flex gap-4">
     <!-- Chat area -->
     <div
-      class="flex-1 h-full bg-card border border-deep-border rounded-2xl flex flex-col overflow-hidden pb-1"
+      class="flex-1 h-full bg-card border border-deep-border rounded-2xl flex flex-col overflow-hidden pb-1 max-w-[900px]"
     >
       <div
         class="px-4 py-3 border-b border-deep-border flex items-center justify-between gap-3"

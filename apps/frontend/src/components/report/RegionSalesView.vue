@@ -109,6 +109,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useReportStore } from '@/stores/reports';
+import { useViewReady } from '@/composables/ui';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -116,6 +117,7 @@ import ProgressSpinner from 'primevue/progressspinner';
 import RegionSalesTable from './RegionSalesTable.vue';
 
 const reportStore = useReportStore();
+const { viewReady } = useViewReady();
 
 const dateRange = ref<Date[] | null>(null);
 
@@ -176,12 +178,16 @@ async function fetchData() {
   });
 }
 
-onMounted(() => {
+onMounted(async () => {
   // Set default range to last 14 days
   const end = new Date();
   const start = new Date();
   start.setDate(end.getDate() - 13);
   dateRange.value = [start, end];
-  fetchData();
+  try {
+    await fetchData();
+  } finally {
+    viewReady();
+  }
 });
 </script>
