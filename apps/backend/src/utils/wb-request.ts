@@ -309,18 +309,22 @@ export async function wbAccountRequest<T>({
     // Build cookie string, optionally overriding supplier ID
     let cookieString = buildCookieStringFromCookies(cookies);
 
-    // If supplierId is provided, override it in the cookie string
+    // Override locale cookies to ru and supplierId if provided
+    const cookieEntries = cookieString.split('; ').filter(Boolean);
+    const filteredEntries = cookieEntries.filter(
+      (entry) =>
+        !entry.startsWith('external-locale') &&
+        !entry.startsWith('locale') &&
+        !entry.startsWith('x-supplier-id') &&
+        !entry.startsWith('x-supplier-id-external'),
+    );
+    filteredEntries.push('external-locale=ru');
+    filteredEntries.push('locale=ru');
     if (supplierId) {
-      const cookieEntries = cookieString.split('; ').filter(Boolean);
-      const filteredEntries = cookieEntries.filter(
-        (entry) =>
-          !entry.startsWith('x-supplier-id') &&
-          !entry.startsWith('x-supplier-id-external'),
-      );
       filteredEntries.push(`x-supplier-id=${supplierId}`);
       filteredEntries.push(`x-supplier-id-external=${supplierId}`);
-      cookieString = filteredEntries.join('; ');
     }
+    cookieString = filteredEntries.join('; ');
 
     // Get WBTokenV3 for authorizev3 header
     const wbTokenV3 = cookies.find((c) => c.name === 'WBTokenV3')?.value || '';
