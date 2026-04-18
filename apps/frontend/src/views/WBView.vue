@@ -3,7 +3,10 @@
     <UserAlerts />
 
     <!-- Top Navigation Buttons -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div
+      v-if="activeSection === 'main'"
+      class="grid grid-cols-2 md:grid-cols-4 gap-3"
+    >
       <Button
         severity="primary"
         @click="showSection('promotions')"
