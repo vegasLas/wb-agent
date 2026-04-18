@@ -59,6 +59,20 @@
         <span class="text-[11px] font-medium">WB</span>
       </button>
 
+      <!-- Tariffs -->
+      <button
+        :class="[
+          'flex flex-col items-center justify-center min-w-[64px] gap-1 rounded-xl px-2 py-1 transition-colors',
+          isActive('/tariffs')
+            ? 'text-purple-700 dark:text-purple-400'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
+        ]"
+        @click="navigate('/tariffs')"
+      >
+        <i class="pi pi-percentage text-xl" />
+        <span class="text-[11px] font-medium">Тарифы</span>
+      </button>
+
       <!-- MPStats -->
       <button
         :class="[

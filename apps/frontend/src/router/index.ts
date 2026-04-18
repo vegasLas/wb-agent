@@ -172,6 +172,14 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'tariffs',
+        name: 'Tariffs',
+        component: () => import('../views/content-cards/TariffsView.vue'),
+        meta: {
+          title: 'Тарифы',
+        },
+      },
+      {
         path: 'store',
         name: 'Store',
         component: () => import('../views/StoreView.vue'),
