@@ -200,9 +200,7 @@ class LegacyPromotionStrategy implements PromotionExcelStrategy {
 
 // ─── Strategy Resolver ──────────────────────────────────────────────────────
 
-function resolveStrategy(
-  hasStarted?: boolean,
-): PromotionExcelStrategy {
+function resolveStrategy(hasStarted?: boolean): PromotionExcelStrategy {
   if (hasStarted === true) return new StartedPromotionStrategy();
   if (hasStarted === false) return new UpcomingPromotionStrategy();
   return new LegacyPromotionStrategy();
@@ -254,9 +252,11 @@ export async function getPromotionExcel(
     }
 
     // Step 4: Parse base64 Excel
-    const { data: jsonData, sheetName, allSheets } = parseExcelFromBase64(
-      excelResult.data.data.file,
-    );
+    const {
+      data: jsonData,
+      sheetName,
+      allSheets,
+    } = parseExcelFromBase64(excelResult.data.data.file);
 
     const rawResult: RawExcelResult = {
       data: jsonData,
@@ -305,8 +305,7 @@ export async function applyPromotionRecovery(
 
   try {
     // Fetch recovery report
-    await delay(1000);
-    const excelResult = await fetchRecoveryReport(periodID, true, ctx);
+    const excelResult = await fetchRecoveryReport(periodID, isRecovery, ctx);
 
     if (excelResult.error || !excelResult.data?.data?.file) {
       return {
@@ -358,7 +357,7 @@ export async function applyPromotionRecovery(
       proxy: ctx.proxy,
       supplierId: ctx.supplierId,
       method: 'POST',
-      body: { periodID, isRecovery, file: base64File },
+      body: { periodID, isRecovery: !isRecovery, file: base64File },
     });
 
     return { success: true, error: null };
