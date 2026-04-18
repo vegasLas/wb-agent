@@ -16,6 +16,8 @@ export {
   usePromotionsUnified,
   usePromotionDetailEnhanced,
   isCurrentLevel,
+  isPromotionStarted,
+  isPromotionEditable,
   type PromotionFilter,
   type FilterTab,
   type MonthInfo,

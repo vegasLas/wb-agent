@@ -18,6 +18,8 @@ export {
   usePromotionItem,
   usePromotionDetail,
   isCurrentLevel,
+  isPromotionStarted,
+  isPromotionEditable,
   type ParticipationStatus,
   type PromotionType,
   type Severity,

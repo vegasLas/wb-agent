@@ -370,6 +370,30 @@ export function usePromotionItem(
 }
 
 /**
+ * Pure utility: check if a promotion has already started.
+ * Uses start-of-day comparison so promotions starting today are NOT considered started.
+ *
+ * NOTE: This differs from the `isNotStarted` computed inside `usePromotionItem`.
+ * `isNotStarted` checks if start is strictly in the future (un-normalized `now`),
+ * while this utility uses start-of-day for both sides, matching the backend
+ * `canEditPromotion` semantics (editable = today or future).
+ */
+export function isPromotionStarted(promotion: PromotionItem): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startDate = new Date(promotion.startDate);
+  startDate.setHours(0, 0, 0, 0);
+  return startDate < today;
+}
+
+/**
+ * Pure utility: check if a promotion is editable (hasn't started yet or starts today).
+ */
+export function isPromotionEditable(promotion: PromotionItem): boolean {
+  return !isPromotionStarted(promotion);
+}
+
+/**
  * Composable for promotion detail display logic
  */
 export function usePromotionDetail(
