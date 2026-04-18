@@ -14,6 +14,9 @@ import type {
  * Endpoints for WB promotions calendar
  */
 
+const MAX_EXCEL_RETRIES = 1;
+const EXCEL_RETRY_DELAY_MS = 5000;
+
 export const promotionsAPI = {
   /**
    * GET /api/v1/promotions/timeline
@@ -47,14 +50,29 @@ export const promotionsAPI = {
 
   /**
    * POST /api/v1/promotions/excel
-   * Create and fetch promotion Excel report
+   * Create and fetch promotion Excel report.
+   * Automatically retries once if the report is still pending.
    */
-  async fetchExcel(params: ExcelParams): Promise<PromotionApiPayload> {
+  async fetchExcel(
+    params: ExcelParams,
+    retryCount = MAX_EXCEL_RETRIES,
+  ): Promise<PromotionApiPayload> {
     const response = await apiClient.post<{ data: PromotionApiPayload }>(
       '/promotions/excel',
       params,
     );
-    return response.data.data;
+    const payload = response.data.data;
+
+    if (
+      payload.reportPending &&
+      retryCount > 0
+    ) {
+      const waitMs = (payload.estimatedWaitTime || 5) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+      return this.fetchExcel(params, retryCount - 1);
+    }
+
+    return payload;
   },
 
   /**

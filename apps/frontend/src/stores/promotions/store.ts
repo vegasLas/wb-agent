@@ -30,24 +30,32 @@ export const usePromotionsStore = defineStore('promotions', () => {
   // Getters
   const hasPromotions = computed(() => promotions.value.length > 0);
   const excelItems = computed(() => _excelItems.value);
-  const excelMeta = computed(() => null); // Meta removed, keeping for backward compatibility
 
-  // Actions
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  function checkPrerequisites(): string | null {
+    if (!userStore.user?.selectedAccountId) {
+      return 'Необходимо выбрать аккаунт';
+    }
+    if (!userStore.hasValidSupplier) {
+      return 'Необходимо выбрать поставщика';
+    }
+    if (!userStore.subscriptionActive) {
+      return 'Необходимо активировать подписку';
+    }
+    return null;
+  }
+
+  // ─── Actions ──────────────────────────────────────────────────────────────
+
   async function fetchTimeline(
     startDate?: string,
     endDate?: string,
     filter = 'PARTICIPATING',
   ) {
-    if (!userStore.user?.selectedAccountId) {
-      error.value = 'Необходимо выбрать аккаунт';
-      return;
-    }
-    if (!userStore.hasValidSupplier) {
-      error.value = 'Необходимо выбрать поставщика';
-      return;
-    }
-    if (!userStore.subscriptionActive) {
-      error.value = 'Необходимо активировать подписку';
+    const prerequisiteError = checkPrerequisites();
+    if (prerequisiteError) {
+      error.value = prerequisiteError;
       return;
     }
 
@@ -75,16 +83,9 @@ export const usePromotionsStore = defineStore('promotions', () => {
   }
 
   async function fetchDetail(promoID: number) {
-    if (!userStore.user?.selectedAccountId) {
-      detailError.value = 'Необходимо выбрать аккаунт';
-      return;
-    }
-    if (!userStore.hasValidSupplier) {
-      detailError.value = 'Необходимо выбрать поставщика';
-      return;
-    }
-    if (!userStore.subscriptionActive) {
-      detailError.value = 'Необходимо активировать подписку';
+    const prerequisiteError = checkPrerequisites();
+    if (prerequisiteError) {
+      detailError.value = prerequisiteError;
       return;
     }
 
@@ -95,7 +96,8 @@ export const usePromotionsStore = defineStore('promotions', () => {
     try {
       const response = await promotionsAPI.fetchDetail({ promoID });
       promotionDetail.value = response.data || null;
-      const found = promotions.value.find((p) => p.promoID === promoID) || null;
+      const found =
+        promotions.value.find((p) => p.promoID === promoID) || null;
       selectedPromotion.value = found;
     } catch (err: unknown) {
       const errorMsg =
@@ -110,19 +112,11 @@ export const usePromotionsStore = defineStore('promotions', () => {
   async function fetchExcel(
     periodID: number,
     isRecovery = true,
-    retryCount = 1,
     hasStarted?: boolean,
   ) {
-    if (!userStore.user?.selectedAccountId) {
-      excelError.value = 'Необходимо выбрать аккаунт';
-      return;
-    }
-    if (!userStore.hasValidSupplier) {
-      excelError.value = 'Необходимо выбрать поставщика';
-      return;
-    }
-    if (!userStore.subscriptionActive) {
-      excelError.value = 'Необходимо активировать подписку';
+    const prerequisiteError = checkPrerequisites();
+    if (prerequisiteError) {
+      excelError.value = prerequisiteError;
       return;
     }
 
@@ -133,35 +127,19 @@ export const usePromotionsStore = defineStore('promotions', () => {
     _excelItems.value = [];
 
     try {
-      // Derive hasStarted from promotion detail if not explicitly passed
-      const started =
-        hasStarted ??
-        (promotionDetail.value?.startDt
-          ? new Date(promotionDetail.value.startDt).setHours(0, 0, 0, 0) <
-            new Date().setHours(0, 0, 0, 0)
-          : undefined);
-
       const response = await promotionsAPI.fetchExcel({
         periodID,
         isRecovery,
-        hasStarted: started,
+        hasStarted,
       });
 
       if (response.error) {
         excelError.value = response.error;
         reportPending.value = response.reportPending || false;
         estimatedWaitTime.value = response.estimatedWaitTime || null;
-
-        if (response.reportPending && retryCount > 0) {
-          const waitMs = (response.estimatedWaitTime || 5) * 1000;
-          await new Promise((resolve) => setTimeout(resolve, waitMs));
-          excelLoading.value = false;
-          return fetchExcel(periodID, isRecovery, retryCount - 1, hasStarted);
-        }
         return;
       }
 
-      // Response now contains items directly instead of parsedData
       _excelItems.value = response.items || [];
       reportPending.value = false;
       estimatedWaitTime.value = null;
@@ -190,7 +168,6 @@ export const usePromotionsStore = defineStore('promotions', () => {
       await fetchExcel(
         promotionDetail.value.periodID,
         isRecovery,
-        1,
         hasStarted,
       );
     }
@@ -198,24 +175,14 @@ export const usePromotionsStore = defineStore('promotions', () => {
 
   /**
    * Apply promotion recovery with selected items
-   *
-   * isRecovery: true = recover only selected items (add to promotion)
-   * isRecovery: false = exclude selected items (remove from promotion, keep others)
    */
   async function applyRecovery(
     selectedItems: string[],
     isRecovery: boolean,
   ): Promise<boolean> {
-    if (!userStore.user?.selectedAccountId) {
-      excelError.value = 'Необходимо выбрать аккаунт';
-      return false;
-    }
-    if (!userStore.hasValidSupplier) {
-      excelError.value = 'Необходимо выбрать поставщика';
-      return false;
-    }
-    if (!userStore.subscriptionActive) {
-      excelError.value = 'Необходимо активировать подписку';
+    const prerequisiteError = checkPrerequisites();
+    if (prerequisiteError) {
+      excelError.value = prerequisiteError;
       return false;
     }
 
@@ -291,7 +258,6 @@ export const usePromotionsStore = defineStore('promotions', () => {
     // Getters
     hasPromotions,
     excelItems,
-    excelMeta,
 
     // Actions
     fetchTimeline,

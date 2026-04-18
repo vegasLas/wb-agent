@@ -7,41 +7,18 @@
  *
  * Combines:
  * - usePromotions (data fetching, filtering, dialogs)
- * - usePromotionsCalendar (calendar navigation, date logic)
+ * - usePromotionsTimeline (calendar navigation, date logic, timeline layout)
  * - usePromotionItem (item display logic)
  * - usePromotionDetail (detail display logic)
- *
- * @example
- * // Basic usage
- * const promotions = usePromotionsUnified({ immediate: true });
- *
- * // Access state
- * console.log(promotions.currentMonthLabel.value);
- * console.log(promotions.filteredPromotions.value);
- *
- * // Navigate
- * promotions.navigateMonth(1);
- *
- * // Show dialogs
- * await promotions.handleShowDetails(promoId);
- *
- * // Use in template with promotion card
- * <PromotionCard
- *   v-for="promo in promotions.groupedPromotions.currentMonth"
- *   :key="promo.promoID"
- *   :promotion="promo"
- *   @show-details="promotions.handleShowDetails"
- * />
  */
 
 import { computed, type ComputedRef, type Ref } from 'vue';
 import { usePromotions, type FilterTab } from './main';
 import type { PromotionFilter } from '@/types';
 import {
-  usePromotionsCalendar,
-  type MonthInfo,
+  usePromotionsTimeline,
   type GroupedPromotions,
-} from './calendar';
+} from './timeline';
 import {
   usePromotionItem,
   usePromotionDetail,
@@ -51,7 +28,7 @@ import {
 import type { PromotionItem, PromotionDetail } from '@/types';
 
 export interface UsePromotionsUnifiedOptions {
-  /** Initial filter value (defaults to 'PARTICIPATING') */
+  /** Initial filter value (defaults to 'AVAILABLE') */
   initialFilter?: PromotionFilter;
   /** Auto-fetch on mount */
   immediate?: boolean;
@@ -90,18 +67,19 @@ export interface UsePromotionsUnifiedReturn {
   participationCounts: Ref<Record<PromotionFilter, number>>;
   emptyState: ComputedRef<EmptyStateConfig>;
 
-  // ==================== CALENDAR ====================
+  // ==================== CALENDAR / TIMELINE ====================
 
   currentDate: ComputedRef<Date>;
   currentMonthLabel: ComputedRef<string>;
   todayLabel: ComputedRef<string>;
   visibleMonths: ComputedRef<Array<{ key: string; label: string }>>;
 
-  // Calendar grid
-  currentMonthDays: ComputedRef<number>;
-  currentMonthOffset: ComputedRef<number>;
-  nextMonthDays: ComputedRef<number>;
-  nextMonthOffset: ComputedRef<number>;
+  // Timeline grid
+  currentMonthDaysList: ComputedRef<number[]>;
+  nextMonthDaysList: ComputedRef<number[]>;
+  totalTimelineDays: ComputedRef<number>;
+  totalWidth: ComputedRef<number>;
+  columnWidth: number;
   weekDays: string[];
 
   // Grouped promotions
@@ -144,8 +122,15 @@ export interface UsePromotionsUnifiedReturn {
   isToday: (monthDate: Date, day: number) => boolean;
   /** Format date range */
   formatDateRange: (startDate: string, endDate: string) => string;
+  /** Get promotion card style for timeline positioning */
+  getPromotionStyle: (promotion: PromotionItem) => { left: string; width?: string };
+  /** Group promotions into non-overlapping rows */
+  groupPromotionsIntoRows: (promotions: PromotionItem[]) => PromotionItem[][];
   /** Apply recovery/exclusion for selected items */
-  applyRecovery: (selectedItems: string[], isRecovery: boolean) => Promise<boolean>;
+  applyRecovery: (
+    selectedItems: string[],
+    isRecovery: boolean,
+  ) => Promise<boolean>;
 }
 
 // Empty state messages
@@ -171,26 +156,26 @@ export function usePromotionsUnified(
 
   // Initialize sub-composables
   const promotions = usePromotions({ initialFilter, immediate: false });
-  const calendar = usePromotionsCalendar();
+  const timeline = usePromotionsTimeline();
 
-  // Computed wrapper for current filter to make it readable
+  // Computed wrapper for current filter
   const currentFilter = computed(() => promotions.currentFilter.value);
 
   // Empty state based on current filter
   const emptyState = computed(() => EMPTY_STATE_MESSAGES[currentFilter.value]);
 
-  // Grouped promotions (re-computed when promotions or calendar changes)
+  // Grouped promotions
   const groupedPromotions = computed(() =>
-    calendar.groupByMonth([...promotions.promotions.value]),
+    timeline.groupByMonth([...promotions.promotions.value]),
   );
 
-  // Current month promotions
   const currentMonthPromotions = computed(
     () => groupedPromotions.value.currentMonth,
   );
 
-  // Next month promotions
-  const nextMonthPromotions = computed(() => groupedPromotions.value.nextMonth);
+  const nextMonthPromotions = computed(
+    () => groupedPromotions.value.nextMonth,
+  );
 
   // Selected promotion display helpers
   const selectedPromotionDisplay = computed(() => {
@@ -198,7 +183,6 @@ export function usePromotionsUnified(
     return usePromotionItem(promotions.selectedPromotion.value);
   });
 
-  // Selected promotion detail display
   const selectedPromotionDetailDisplay = computed(() =>
     usePromotionDetail(promotions.promotionDetail.value),
   );
@@ -207,8 +191,8 @@ export function usePromotionsUnified(
    * Navigate month and refresh data
    */
   async function navigateMonth(direction: number): Promise<void> {
-    calendar.navigateMonth(direction);
-    const { start, end } = calendar.getDateRange();
+    timeline.navigateMonth(direction);
+    const { start, end } = timeline.getDateRange();
     await promotions.fetchForDateRange(start, end);
   }
 
@@ -216,8 +200,8 @@ export function usePromotionsUnified(
    * Go to today and refresh data
    */
   async function goToToday(): Promise<void> {
-    calendar.goToToday();
-    const { start, end } = calendar.getDateRange();
+    timeline.goToToday();
+    const { start, end } = timeline.getDateRange();
     await promotions.fetchForDateRange(start, end);
   }
 
@@ -225,7 +209,7 @@ export function usePromotionsUnified(
    * Refresh data for current date range
    */
   async function refreshData(): Promise<void> {
-    const { start, end } = calendar.getDateRange();
+    const { start, end } = timeline.getDateRange();
     await promotions.fetchForDateRange(start, end);
   }
 
@@ -266,18 +250,19 @@ export function usePromotionsUnified(
     participationCounts: promotions.participationCounts,
     emptyState,
 
-    // Calendar
-    currentDate: computed(() => calendar.currentDate.value),
-    currentMonthLabel: calendar.currentMonthLabel,
-    todayLabel: calendar.todayLabel,
-    visibleMonths: calendar.visibleMonths,
+    // Calendar / Timeline
+    currentDate: computed(() => timeline.currentMonthInfo.value.date),
+    currentMonthLabel: timeline.currentMonthLabel,
+    todayLabel: timeline.todayLabel,
+    visibleMonths: timeline.visibleMonthsInfo,
 
-    // Calendar grid
-    currentMonthDays: calendar.currentMonthDays,
-    currentMonthOffset: calendar.currentMonthOffset,
-    nextMonthDays: calendar.nextMonthDays,
-    nextMonthOffset: calendar.nextMonthOffset,
-    weekDays: calendar.weekDays,
+    // Timeline grid
+    currentMonthDaysList: timeline.currentMonthDaysList,
+    nextMonthDaysList: timeline.nextMonthDaysList,
+    totalTimelineDays: timeline.totalTimelineDays,
+    totalWidth: timeline.totalWidth,
+    columnWidth: timeline.columnWidth,
+    weekDays: timeline.weekDays,
 
     // Grouped
     groupedPromotions,
@@ -303,8 +288,10 @@ export function usePromotionsUnified(
     closeDetailDialog: promotions.closeDetailDialog,
     closeParticipantsDialog: promotions.closeParticipantsDialog,
     clearErrors: promotions.clearErrors,
-    isToday: calendar.isToday,
-    formatDateRange: calendar.formatDateRange,
+    isToday: timeline.isToday,
+    formatDateRange: timeline.formatDateRange,
+    getPromotionStyle: timeline.getPromotionStyle,
+    groupPromotionsIntoRows: timeline.groupPromotionsIntoRows,
     applyRecovery: promotions.applyRecovery,
   };
 }

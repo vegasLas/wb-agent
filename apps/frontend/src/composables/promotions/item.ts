@@ -101,6 +101,13 @@ export interface UsePromotionItemReturn {
   raw: ComputedRef<PromotionItem>;
 }
 
+export interface RangingLevelDisplay {
+  nomenclatures: number;
+  coefficient: number;
+  isActive: boolean;
+  isCompleted: boolean;
+}
+
 export interface UsePromotionDetailReturn {
   // Basic info
   promoId: ComputedRef<number>;
@@ -109,6 +116,7 @@ export interface UsePromotionDetailReturn {
   name: ComputedRef<string>;
   description: ComputedRef<string>;
   formattedDescription: ComputedRef<string>;
+  parsedDescription: ComputedRef<string>;
 
   // Flags
   isAutoAction: ComputedRef<boolean>;
@@ -117,29 +125,45 @@ export interface UsePromotionDetailReturn {
   isHasRecovery: ComputedRef<boolean>;
   isMultiLevels: ComputedRef<boolean>;
 
+  // Status
+  statusLabel: ComputedRef<string>;
+  statusSeverity: ComputedRef<'success' | 'info' | 'warn' | 'secondary'>;
+
   // Dates
   startDate: ComputedRef<Date | null>;
   endDate: ComputedRef<Date | null>;
   formattedStartDate: ComputedRef<string>;
   formattedEndDate: ComputedRef<string>;
+  formattedStartDateShort: ComputedRef<string>;
+  formattedEndDateShort: ComputedRef<string>;
+  formattedStartDateOnly: ComputedRef<string>;
 
   // Stats
   participationPercentage: ComputedRef<number>;
   inPromoStock: ComputedRef<{ current: number; total: number }>;
   notInPromoStock: ComputedRef<{ current: number; total: number }>;
   actionInStock: ComputedRef<number>;
+  eligibleProducts: ComputedRef<number>;
+  participatingProducts: ComputedRef<number>;
+  participatingWithStock: ComputedRef<number>;
+  notParticipatingProducts: ComputedRef<number>;
+  notParticipatingWithStock: ComputedRef<number>;
 
   // Ranging
   currentCoefficient: ComputedRef<number>;
+  maxCoefficient: ComputedRef<number>;
   rangingLevels: ComputedRef<
     Array<{ nomenclatures: number; coefficient: number }>
   >;
+  rangingLevelsDisplay: ComputedRef<RangingLevelDisplay[]>;
   isMaxLevel: ComputedRef<boolean>;
   nmToNextLevel: ComputedRef<number>;
   currentLevelIndex: ComputedRef<number>;
+  progressPercentage: ComputedRef<number>;
 
   // Advantages
   advantages: ComputedRef<readonly string[]>;
+  advantagesTranslated: ComputedRef<readonly string[]>;
 
   // Status helpers
   participationPercentageClass: ComputedRef<string>;
@@ -394,6 +418,78 @@ export function isPromotionEditable(promotion: PromotionItem): boolean {
 }
 
 /**
+ * Parse Lexical editor JSON format to plain text
+ */
+function parseLexicalDescription(jsonString: string): string {
+  if (!jsonString) return '';
+  try {
+    const parsed = JSON.parse(jsonString);
+    if (!parsed.root?.children) return '';
+    const paragraphs: string[] = [];
+    for (const node of parsed.root.children) {
+      if (node.type === 'paragraph' && node.children) {
+        const text = node.children
+          .filter((child: any) => child.type === 'text')
+          .map((child: any) => child.text)
+          .join('');
+        if (text.trim()) {
+          paragraphs.push(text);
+        }
+      }
+    }
+    return paragraphs.join('\n\n');
+  } catch {
+    return jsonString;
+  }
+}
+
+// Advantage mapping from English codes to Russian labels
+const ADVANTAGE_MAP: Record<string, string> = {
+  'Advantage top up to 35%': 'Поднятие в поиске до 35%',
+  Badge: 'Плашка на карточке товара',
+  Banner: 'Баннер на сайте',
+  'Red-Hot Deal': 'Красная цена',
+  'Stock Countdown': 'Градусник',
+  'Advantage top up to 25%': 'Поднятие в поиске до 25%',
+  'Advantage top up to 30%': 'Поднятие в поиске до 30%',
+  'Advantage top up to 20%': 'Поднятие в поиске до 20%',
+  'Advantage top up to 15%': 'Поднятие в поиске до 15%',
+  'Advantage top up to 10%': 'Поднятие в поиске до 10%',
+};
+
+const MONTHS_GENITIVE = [
+  'января',
+  'февраля',
+  'марта',
+  'апреля',
+  'мая',
+  'июня',
+  'июля',
+  'августа',
+  'сентября',
+  'октября',
+  'ноября',
+  'декабря',
+];
+
+function formatDateTimeShort(date: Date | null): string {
+  if (!date) return '-';
+  const day = date.getDate();
+  const month = MONTHS_GENITIVE[date.getMonth()];
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${day} ${month} ${hours}:${minutes}`;
+}
+
+function formatDateOnly(date: Date | null): string {
+  if (!date) return '-';
+  const day = date.getDate();
+  const month = MONTHS_GENITIVE[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+/**
  * Composable for promotion detail display logic
  */
 export function usePromotionDetail(
@@ -410,6 +506,9 @@ export function usePromotionDetail(
   const formattedDescription = computed(
     () => item()?.formattedDescription ?? '',
   );
+  const parsedDescription = computed(() =>
+    parseLexicalDescription(item()?.formattedDescription || ''),
+  );
 
   // Flags
   const isAutoAction = computed(() => item()?.isAutoAction ?? false);
@@ -417,6 +516,23 @@ export function usePromotionDetail(
   const isAnnouncement = computed(() => item()?.isAnnouncement ?? false);
   const isHasRecovery = computed(() => item()?.isHasRecovery ?? false);
   const isMultiLevels = computed(() => item()?.isMultiLevels ?? false);
+
+  // Status
+  const statusLabel = computed(() => {
+    const status = item()?.status;
+    if (status === 1) return 'Акция идёт';
+    if (status === 2) return 'Акция завершена';
+    if (status === 0) return 'Акция скоро начнётся';
+    return 'Акция идёт';
+  });
+
+  const statusSeverity = computed(() => {
+    const status = item()?.status;
+    if (status === 1) return 'success';
+    if (status === 2) return 'secondary';
+    if (status === 0) return 'info';
+    return 'success';
+  });
 
   // Dates
   const startDate = computed(() => {
@@ -442,6 +558,15 @@ export function usePromotionDetail(
 
   const formattedStartDate = computed(() => formatDateTime(startDate.value));
   const formattedEndDate = computed(() => formatDateTime(endDate.value));
+  const formattedStartDateShort = computed(() =>
+    formatDateTimeShort(startDate.value),
+  );
+  const formattedEndDateShort = computed(() =>
+    formatDateTimeShort(endDate.value),
+  );
+  const formattedStartDateOnly = computed(() =>
+    formatDateOnly(startDate.value),
+  );
 
   // Stats
   const participationPercentage = computed(
@@ -460,6 +585,23 @@ export function usePromotionDetail(
 
   const actionInStock = computed(() => item()?.actionInStock ?? 0);
 
+  // Product statistics
+  const eligibleProducts = computed(
+    () => item()?.calculateProductsCount || 0,
+  );
+  const participatingProducts = computed(
+    () => item()?.inPromoActionTotal || 0,
+  );
+  const participatingWithStock = computed(
+    () => item()?.inPromoActionLeftovers || 0,
+  );
+  const notParticipatingProducts = computed(
+    () => item()?.notInPromoActionTotal || 0,
+  );
+  const notParticipatingWithStock = computed(
+    () => item()?.notInPromoActionLeftovers || 0,
+  );
+
   // Ranging
   const rangingLevels = computed(
     () =>
@@ -472,6 +614,12 @@ export function usePromotionDetail(
   const currentCoefficient = computed(
     () => item()?.ranging?.currentCoefficient ?? 0,
   );
+
+  const maxCoefficient = computed(() => {
+    const levels = item()?.ranging?.levels;
+    if (!levels || levels.length === 0) return 0;
+    return Math.max(...levels.map((l) => l.coefficient));
+  });
 
   const isMaxLevel = computed(() => item()?.ranging?.isMaxLevel ?? false);
   const nmToNextLevel = computed(() => item()?.ranging?.nmToNextLevel ?? 0);
@@ -489,8 +637,31 @@ export function usePromotionDetail(
     return -1;
   });
 
+  const rangingLevelsDisplay = computed(() => {
+    const levels = item()?.ranging?.levels || [];
+    const currentIdx = currentLevelIndex.value;
+    return levels.map((level, index) => ({
+      nomenclatures: level.nomenclatures,
+      coefficient: level.coefficient,
+      isActive: index === currentIdx,
+      isCompleted: index < currentIdx || isMaxLevel.value,
+    }));
+  });
+
+  const progressPercentage = computed(() => {
+    const levels = item()?.ranging?.levels;
+    if (!levels || levels.length === 0) return 0;
+    const currentIdx = currentLevelIndex.value;
+    if (currentIdx < 0) return 5;
+    if (isMaxLevel.value) return 100;
+    return ((currentIdx + 1) / levels.length) * 100;
+  });
+
   // Advantages
   const advantages = computed(() => item()?.advantages ?? []);
+  const advantagesTranslated = computed(() =>
+    advantages.value.map((a) => ADVANTAGE_MAP[a] || a),
+  );
 
   // Status helpers
   const participationPercentageClass = computed(() => {
@@ -508,6 +679,7 @@ export function usePromotionDetail(
     name,
     description,
     formattedDescription,
+    parsedDescription,
 
     // Flags
     isAutoAction,
@@ -516,27 +688,43 @@ export function usePromotionDetail(
     isHasRecovery,
     isMultiLevels,
 
+    // Status
+    statusLabel,
+    statusSeverity,
+
     // Dates
     startDate,
     endDate,
     formattedStartDate,
     formattedEndDate,
+    formattedStartDateShort,
+    formattedEndDateShort,
+    formattedStartDateOnly,
 
     // Stats
     participationPercentage,
     inPromoStock,
     notInPromoStock,
     actionInStock,
+    eligibleProducts,
+    participatingProducts,
+    participatingWithStock,
+    notParticipatingProducts,
+    notParticipatingWithStock,
 
     // Ranging
     currentCoefficient,
+    maxCoefficient,
     rangingLevels,
+    rangingLevelsDisplay,
     isMaxLevel,
     nmToNextLevel,
     currentLevelIndex,
+    progressPercentage,
 
     // Advantages
     advantages,
+    advantagesTranslated,
 
     // Helpers
     participationPercentageClass,
