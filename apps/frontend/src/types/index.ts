@@ -747,23 +747,44 @@ export interface PromotionLevel {
 }
 
 export interface PromotionExcelItem {
-  'Товар уже участвует в акции': string;
-  Бренд: string;
-  Предмет: string;
-  Наименование: string;
-  'Артикул поставщика': string;
-  'Артикул WB': number;
-  'Количество дней на сайте': number;
-  Оборачиваемость: number;
-  'Остаток товара на складах Wb (шт.)': number;
-  'Остаток товара на складе продавца Wb (шт.)': number;
-  'Плановая цена для акции': number;
-  'Текущая розничная цена': number;
-  Валюта: string;
-  'Текущая скидка на сайте, %': number;
-  'Загружаемая скидка для участия в акции': number;
-  [key: string]: unknown;
+  inPromo: string;
+  brand: string;
+  subject: string;
+  name: string;
+  vendorCode: string;
+  wbCode: string;
+  daysOnSite: number;
+  turnover: number;
+  wbStock: number;
+  sellerStock: number;
+  promoPrice: number;
+  currentPrice: number;
+  currency: string;
+  currentDiscount: number;
+  uploadedDiscount: number;
 }
+
+/** Maps camelCase field names to Russian display headers */
+export const PROMOTION_EXCEL_DISPLAY_NAMES: Record<
+  keyof PromotionExcelItem,
+  string
+> = {
+  inPromo: 'Товар уже участвует в акции',
+  brand: 'Бренд',
+  subject: 'Предмет',
+  name: 'Наименование',
+  vendorCode: 'Артикул поставщика',
+  wbCode: 'Артикул WB',
+  daysOnSite: 'Количество дней на сайте',
+  turnover: 'Оборачиваемость',
+  wbStock: 'Остаток товара на складах Wb (шт.)',
+  sellerStock: 'Остаток товара на складе продавца Wb (шт.)',
+  promoPrice: 'Плановая цена для акции',
+  currentPrice: 'Текущая розничная цена',
+  currency: 'Валюта',
+  currentDiscount: 'Текущая скидка на сайте, %',
+  uploadedDiscount: 'Загружаемая скидка для участия в акции',
+};
 
 export interface PromotionParsedData {
   items: PromotionExcelItem[];

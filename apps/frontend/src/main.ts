@@ -1,4 +1,5 @@
 import './styles.css';
+import './styles/promotions-theme.css';
 import 'primeicons/primeicons.css';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';

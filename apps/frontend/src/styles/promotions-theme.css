@@ -1,0 +1,272 @@
+/**
+ * Promotions Theme
+ * Theme-aware design system for the promotions feature.
+ * Supports both light and dark modes via CSS variables.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Accent Colors (same in both modes) ── */
+  --promo-primary: #ff6b35;
+  --promo-primary-dim: rgba(255, 107, 53, 0.1);
+  --promo-primary-glow: rgba(255, 107, 53, 0.25);
+  --promo-secondary: #00c2a0;
+  --promo-secondary-dim: rgba(0, 194, 160, 0.1);
+  --promo-danger: #ff4757;
+  --promo-danger-dim: rgba(255, 71, 87, 0.1);
+  --promo-warn: #f59e0b;
+  --promo-warn-dim: rgba(245, 158, 11, 0.1);
+
+  /* ── Backgrounds (inherit from app theme in light mode) ── */
+  --promo-bg-deep: var(--color-bg);
+  --promo-bg-card: var(--color-card);
+  --promo-bg-elevated: var(--color-elevated);
+  --promo-bg-hover: var(--color-elevated);
+
+  /* ── Borders ── */
+  --promo-border: var(--color-border);
+  --promo-border-subtle: var(--color-border);
+
+  /* ── Text ── */
+  --promo-text: var(--color-text);
+  --promo-text-secondary: var(--text-secondary);
+  --promo-text-muted: var(--text-muted);
+
+  /* ── Typography ── */
+  --promo-font-display: 'Space Grotesk', system-ui, sans-serif;
+  --promo-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ── Spacing ── */
+  --promo-column-width: 40px;
+}
+
+/* ── Dark Mode Overrides ── */
+.dark {
+  --promo-primary: #ff6b35;
+  --promo-primary-dim: rgba(255, 107, 53, 0.15);
+  --promo-primary-glow: rgba(255, 107, 53, 0.35);
+  --promo-secondary: #00c2a0;
+  --promo-secondary-dim: rgba(0, 194, 160, 0.15);
+  --promo-danger: #ff4757;
+  --promo-danger-dim: rgba(255, 71, 87, 0.15);
+  --promo-warn: #feca57;
+  --promo-warn-dim: rgba(254, 202, 87, 0.15);
+
+  /* ── Backgrounds (promo-specific dark palette) ── */
+  --promo-bg-deep: #0f1419;
+  --promo-bg-card: #1a1f2e;
+  --promo-bg-elevated: #22283a;
+  --promo-bg-hover: #2a3045;
+
+  /* ── Borders ── */
+  --promo-border: #2a3045;
+  --promo-border-subtle: rgba(42, 48, 69, 0.5);
+
+  /* ── Text ── */
+  --promo-text: #e8ecf1;
+  --promo-text-secondary: #8b95a8;
+  --promo-text-muted: #5c6578;
+}
+
+/* ── Global Overrides for Promotions View ── */
+
+.promotions-view {
+  font-family: var(--promo-font-display);
+  background: var(--promo-bg-deep);
+  color: var(--promo-text);
+}
+
+/* ── Timeline Grid ── */
+
+.promotions-timeline {
+  --today-glow: var(--promo-primary-dim);
+  --today-text: var(--promo-primary);
+}
+
+.promotions-timeline .today-highlight {
+  background: var(--today-glow);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.promotions-timeline .today-text {
+  color: var(--today-text);
+  font-weight: 600;
+}
+
+/* ── Promotion Cards ── */
+
+.promotion-card {
+  display: flex;
+  align-items: center;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  will-change: transform;
+  background-color: var(--promo-bg-card);
+}
+
+.promotion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+}
+
+.dark .promotion-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.promotion-card.expanded {
+  display: block !important;
+  z-index: 100 !important;
+}
+
+.promotion-card--active {
+  border-color: var(--promo-primary);
+  background-color: var(--promo-bg-card);
+  background-image: linear-gradient(
+    135deg,
+    var(--promo-primary-dim),
+    transparent
+  );
+}
+
+.promotion-card--upcoming {
+  border-color: var(--promo-secondary);
+  background-color: var(--promo-bg-card);
+  background-image: linear-gradient(
+    135deg,
+    var(--promo-secondary-dim),
+    transparent
+  );
+}
+
+.promotion-card--expired {
+  border-color: var(--promo-border);
+  background-color: var(--promo-bg-card);
+  background-image: linear-gradient(
+    135deg,
+    var(--promo-bg-elevated),
+    transparent
+  );
+  opacity: 0.7;
+}
+
+/* ── Filter Bar ── */
+
+.promo-filter-btn {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.promo-filter-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--promo-primary);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
+}
+
+.promo-filter-btn.active::after {
+  width: 60%;
+}
+
+/* ── Dialogs ── */
+
+.promo-dialog {
+  background: var(--promo-bg-card);
+  border: 1px solid var(--promo-border);
+  border-radius: 12px;
+}
+
+.promo-dialog-header {
+  font-family: var(--promo-font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ── Data Table ── */
+
+.promo-table .p-datatable-header {
+  background: var(--promo-bg-elevated);
+  border-color: var(--promo-border);
+}
+
+.promo-table .p-datatable-tbody > tr {
+  transition: background 0.15s ease;
+}
+
+.promo-table .p-datatable-tbody > tr:hover {
+  background: var(--promo-bg-hover);
+}
+
+.promo-table .p-datatable-tbody > tr.p-highlight {
+  background: var(--promo-primary-dim);
+}
+
+/* ── Animations ── */
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px var(--promo-primary-glow);
+  }
+  50% {
+    box-shadow: inset 0 0 0 1px var(--promo-primary-dim);
+  }
+}
+
+@keyframes slide-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes expand-card {
+  from {
+    opacity: 0;
+    transform: scaleY(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in-bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-expand {
+  display: block;
+  animation: expand-card 0.2s ease both;
+}
+
+/* ── Scrollbar ── */
+
+.promo-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.promo-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.promo-scroll::-webkit-scrollbar-thumb {
+  background: var(--promo-border);
+  border-radius: 3px;
+}
+
+.promo-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--promo-text-muted);
+}
