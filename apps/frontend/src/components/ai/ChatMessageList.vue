@@ -103,13 +103,16 @@ const emit = defineEmits<{
         class="w-8 h-8 rounded-full bg-purple-600/10 flex items-center justify-center shrink-0 mt-1"
       >
         <svg
-          class="w-4 h-4 text-purple-600 sparkle-pulse"
+          class="w-4 h-4 text-purple-600 brain-pulse"
           viewBox="0 0 24 24"
-          fill="currentColor"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         >
-          <path
-            d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
-          />
+          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04Z" />
+          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04Z" />
         </svg>
       </div>
       <div
@@ -141,19 +144,27 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-.sparkle-pulse {
-  animation: sparkle-pulse 3s ease-in-out infinite;
+.brain-pulse {
+  animation: brain-pulse 2.5s ease-in-out infinite;
 }
 
-@keyframes sparkle-pulse {
+@keyframes brain-pulse {
   0%,
   100% {
-    opacity: 0.3;
-    transform: scale(0.9) rotate(0deg);
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.05);
   }
   50% {
     opacity: 1;
-    transform: scale(1.1) rotate(12deg);
+    transform: scale(1.1);
+  }
+  75% {
+    opacity: 0.8;
+    transform: scale(1.05);
   }
 }
 </style>

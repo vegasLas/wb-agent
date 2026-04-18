@@ -17,6 +17,7 @@ import { supplierTools } from './tools/supplier.tools';
 import { mpstatsTools } from './tools/mpstats.tools';
 import { advertsTools } from './tools/adverts.tools';
 import { reportsTools } from './tools/reports.tools';
+import { contentCardsTools } from './tools/content-cards.tools';
 import { userContextTools } from './tools/user-context.tools';
 import { resolvePendingOption, clearPendingAction } from './ai-pending-action.service';
 
@@ -110,6 +111,7 @@ export class AIChatService {
           mpstatsTools(userId),
           advertsTools(userId),
           reportsTools(userId),
+          contentCardsTools(userId),
           userContextTools(userId),
         );
 
