@@ -114,7 +114,7 @@ function getFileIcon(file: File): string {
 
 <template>
   <form
-    class="relative bg-card border border-deep-border rounded-2xl p-4 mx-3 mb-3 transition-colors"
+    class="relative bg-card border border-deep-border rounded-2xl p-2 md:p-4 mx-3 mb-3 transition-colors"
     :class="{ 'border-purple bg-purple/5': isDragOver }"
     @submit.prevent="handleSubmit"
     @dragover="handleDragOver"
@@ -137,14 +137,14 @@ function getFileIcon(file: File): string {
       v-model="inputText"
       rows="1"
       :disabled="isLoading"
-      class="w-full min-h-[72px] max-h-[240px] bg-transparent text-theme text-base resize-none outline-none border-none placeholder:text-secondary disabled:opacity-60"
+      class="w-full min-h-[48px] md:min-h-[72px] max-h-[240px] bg-transparent text-theme text-base resize-none outline-none border-none placeholder:text-secondary disabled:opacity-60"
       placeholder="Напишите задачу для ИИ..."
       @keydown="handleKeydown"
       @input="adjustHeight"
     />
 
     <!-- Bottom toolbar -->
-    <div class="flex items-center justify-between mt-2">
+    <div class="flex items-center justify-between mt-1 md:mt-2">
       <!-- Left: file input + paperclip -->
       <div class="flex items-center gap-2">
         <input
@@ -157,7 +157,7 @@ function getFileIcon(file: File): string {
         />
         <button
           type="button"
-          class="flex items-center justify-center w-8 h-8 rounded-lg text-secondary hover:text-white transition-colors"
+          class="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-lg text-secondary hover:text-white transition-colors"
           :disabled="isLoading || attachedFiles.length >= MAX_FILES"
           @click="fileInputRef?.click()"
         >
@@ -188,7 +188,7 @@ function getFileIcon(file: File): string {
       <button
         v-if="isLoading"
         type="button"
-        class="flex items-center justify-center w-9 h-9 rounded-xl bg-elevated text-theme hover:bg-red-500/20 hover:text-red-400 transition-colors"
+        class="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-elevated text-theme hover:bg-red-500/20 hover:text-red-400 transition-colors"
         @click="store.stop"
       >
         <i class="pi pi-stop text-xs" />
@@ -196,7 +196,7 @@ function getFileIcon(file: File): string {
       <button
         v-else
         type="submit"
-        class="flex items-center justify-center w-9 h-9 rounded-xl bg-purple text-white hover:bg-purple-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-purple text-white hover:bg-purple-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="!hasInput"
       >
         <i class="pi pi-send text-xs" />
