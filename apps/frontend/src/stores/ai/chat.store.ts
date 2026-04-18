@@ -70,8 +70,12 @@ interface ChatSession {
   finishedToolCallIds: Set<string>;
 }
 
+interface ConversationIdRef {
+  value: string | undefined;
+}
+
 function createChatSession(
-  conversationId: string | undefined,
+  conversationIdRef: ConversationIdRef,
   apiPath: string,
 ): ChatSession {
   const finishedToolCallIds = new Set<string>();
@@ -102,7 +106,7 @@ function createChatSession(
         return {
           headers: getAuthHeaders(),
           body: {
-            id: conversationId,
+            id: conversationIdRef.value,
             messages,
           },
         };
@@ -171,7 +175,8 @@ export const useAIChatStore = defineStore('aiChat', () => {
 
       let session = sessions.value.get(id);
       if (!session) {
-        session = createChatSession(conversation.id, chatApiPath);
+        const idRef: ConversationIdRef = { value: conversation.id };
+        session = createChatSession(idRef, chatApiPath);
         sessions.value.set(id, session);
       }
       session.chat.messages = messages.map((m) =>
@@ -203,7 +208,8 @@ export const useAIChatStore = defineStore('aiChat', () => {
   function startNewConversation() {
     const clientId = generateClientId();
     conversationId.value = clientId;
-    const session = createChatSession(undefined, chatApiPath);
+    const idRef: ConversationIdRef = { value: undefined };
+    const session = createChatSession(idRef, chatApiPath);
     session.chat.messages = [];
     sessions.value.set(clientId, session);
   }
@@ -286,6 +292,21 @@ export const useAIChatStore = defineStore('aiChat', () => {
         if (conversationId.value === pendingId) {
           conversationId.value = unmatched.id;
         }
+      }
+    }
+
+    // After migration, ensure all active sessions have the correct conversationId
+    // by recreating them with a mutable ref pointing to the real ID.
+    // This fixes the closure capture issue where the session's transport
+    // still sends id: undefined after migration.
+    const activeId = conversationId.value;
+    if (activeId && !isPendingId(activeId)) {
+      const existingSession = sessions.value.get(activeId);
+      if (existingSession) {
+        const idRef: ConversationIdRef = { value: activeId };
+        const newSession = createChatSession(idRef, chatApiPath);
+        newSession.chat.messages = existingSession.chat.messages;
+        sessions.value.set(activeId, newSession);
       }
     }
   }
