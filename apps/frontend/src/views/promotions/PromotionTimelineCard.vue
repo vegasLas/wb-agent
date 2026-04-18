@@ -9,15 +9,15 @@
     :style="cardStyle"
   >
     <div
-      class="mx-1 rounded-lg border shadow-sm hover:shadow-md transition-all cursor-pointer hover:z-20 relative overflow-hidden"
+      class="promotion-card w-full h-full mx-1 rounded-lg border shadow-sm hover:shadow-md cursor-pointer relative overflow-hidden"
       :class="[
         display.isExpired.value
-          ? 'border-deep-border bg-gradient-to-r from-deep-elevated to-deep-card'
+          ? 'promotion-card--expired'
           : display.isNotStarted.value
-            ? 'border-emerald-500/30 hover:border-emerald-500 bg-gradient-to-r from-emerald-500/10 to-deep-card'
-            : 'border-[#6A39F4]/30 hover:border-[#6A39F4] bg-gradient-to-r from-[#6A39F4]/10 to-deep-card',
+            ? 'promotion-card--upcoming'
+            : 'promotion-card--active',
         isExpanded
-          ? 'p-3 bg-deep-card'
+          ? 'p-3 animate-expand'
           : 'p-2',
       ]"
     >
@@ -41,7 +41,7 @@
               class="text-xs font-medium flex-shrink-0"
               :class="display.isExpired.value
                 ? 'text-[var(--text-muted)]'
-                : 'text-[#6A39F4]'"
+                : 'text-[var(--promo-primary)]'"
             >
               {{ display.typeLabel.value }}
             </span>
@@ -79,7 +79,7 @@
       <!-- Expanded Content -->
       <div
         v-if="isExpanded"
-        class="mt-3 pt-3 border-t border-[#6A39F4]/30 dark:border-[#6A39F4]/30 border-[#6A39F4]/20"
+        class="mt-3 pt-3 border-t border-[var(--promo-primary)]/30"
       >
         <!-- Status Badge -->
         <div class="mb-2">
@@ -100,7 +100,7 @@
           </span>
           <span
             v-if="display.hasBoost.value"
-            class="text-xs text-[#6A39F4] font-medium"
+            class="text-xs text-[var(--promo-primary)] font-medium"
           >
             {{ display.boostText.value }}
           </span>
@@ -127,8 +127,8 @@
         <div
           class="flex items-center justify-start gap-2 pt-2 border-t"
           :class="display.isExpired.value
-            ? 'border-deep-border'
-            : 'border-[#6A39F4]/20'"
+            ? 'border-[var(--promo-border)]'
+            : 'border-[var(--promo-primary)]/20'"
         >
           <Button
             v-if="!display.isExpired.value"
@@ -180,12 +180,16 @@ const emit = defineEmits<{
   'show-participants': [];
 }>();
 
-// Compute card style - remove width constraint when expanded to allow content to show fully
+// Compute card style - in collapsed mode, use the exact date-range width.
+// When expanded, drop the fixed width but enforce a min-width so the card
+// never shrinks below its timeline span and can grow to fit content.
 const cardStyle = computed(() => {
   if (props.isExpanded) {
-    // When expanded, only keep the left position, let width expand naturally
     const { width, ...rest } = props.style;
-    return rest;
+    return {
+      ...rest,
+      minWidth: width,
+    };
   }
   return props.style;
 });
