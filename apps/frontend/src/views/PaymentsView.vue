@@ -1,5 +1,45 @@
 <template>
   <div class="payment-view">
+    <!-- Subscription & Credits Summary -->
+    <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Card>
+        <template #content>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Подписка</p>
+              <p
+                :class="[
+                  'text-lg font-semibold',
+                  userStore.subscriptionActive ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+                ]"
+              >
+                {{ userStore.subscriptionActive ? `Активна, ${userStore.subscriptionRemainingDays} дн.` : 'Не активна' }}
+              </p>
+            </div>
+            <i
+              :class="[
+                'pi text-2xl',
+                userStore.subscriptionActive ? 'pi-check-circle text-green-600 dark:text-green-400' : 'pi-times-circle text-red-500 dark:text-red-400'
+              ]"
+            />
+          </div>
+        </template>
+      </Card>
+      <Card>
+        <template #content>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Кредиты</p>
+              <p class="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                {{ userStore.user.autobookingCount || 0 }}
+              </p>
+            </div>
+            <i class="pi pi-wallet text-2xl text-purple-600 dark:text-purple-400" />
+          </div>
+        </template>
+      </Card>
+    </div>
+
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
         Магазин
@@ -86,12 +126,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useViewReady } from '../composables/ui';
+import { useUserStore } from '@/stores/user';
 import Card from 'primevue/card';
 import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
 import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
 
 // Skeleton control
 const { viewReady } = useViewReady();
+const userStore = useUserStore();
 
 const activeTab = ref<'subscription' | 'credits'>('subscription');
 
