@@ -82,6 +82,7 @@ import {
 import type { TooltipItem } from 'chart.js';
 import type { ReportItem } from '../../types';
 import { useUserStore } from '@/stores/user';
+import { useColorMode } from '@vueuse/core';
 import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -133,14 +134,12 @@ const sortedItems = computed(() => {
   return sorted;
 });
 
-// Detect dark mode
-const isDark = computed(() => {
-  // Check if the document has dark class or prefers dark color scheme
-  return (
-    document.documentElement.classList.contains('dark') ||
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-  );
+// Detect dark mode reactively
+const colorMode = useColorMode({
+  attribute: 'class',
+  selector: 'html',
 });
+const isDark = computed(() => colorMode.value === 'dark');
 
 const chartData = computed(() => {
   const labels: string[] = props.items.map(
