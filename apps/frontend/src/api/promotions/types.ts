@@ -18,6 +18,7 @@ export interface DetailParams {
 export interface ExcelParams {
   periodID: number;
   isRecovery?: boolean; // true = recovery mode, false = exclusion mode (default: true)
+  hasStarted?: boolean; // true = promotion already started, false = not started yet
 }
 
 export {

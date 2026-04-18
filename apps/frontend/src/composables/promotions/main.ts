@@ -84,7 +84,10 @@ export interface UsePromotionsReturn {
   refreshData: () => Promise<void>;
   fetchForDateRange: (startDate: Date, endDate: Date) => Promise<void>;
   handleShowDetails: (promoID: number) => Promise<void>;
-  handleShowParticipants: (promoID: number) => Promise<void>;
+  handleShowParticipants: (
+    promoID: number,
+    hasStarted?: boolean,
+  ) => Promise<void>;
   handleParticipantsRetry: () => Promise<void>;
   closeDetailDialog: () => void;
   closeParticipantsDialog: () => void;
@@ -198,10 +201,13 @@ export function usePromotions(
   /**
    * Show promotion participants
    */
-  async function handleShowParticipants(promoID: number): Promise<void> {
+  async function handleShowParticipants(
+    promoID: number,
+    hasStarted?: boolean,
+  ): Promise<void> {
     selectedPromotionId.value = promoID;
     showParticipantsDialog.value = true;
-    await promotionsStore.selectPromotionAndLoadExcel(promoID);
+    await promotionsStore.selectPromotionAndLoadExcel(promoID, true, hasStarted);
   }
 
   /**
