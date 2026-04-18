@@ -1,7 +1,7 @@
 /**
  * Primeval Theme Configuration
  * Crypto/Finance Dark Theme with Purple Accents
- * 
+ *
  * Color Palette from Image:
  * - Deep Dark Background: #0A0A0F - Almost black
  * - Card Background: #15151C - Dark cards
@@ -211,6 +211,12 @@ export const PrimevalPreset = definePreset(Aura, {
           background: '#FFFFFF',
           borderColor: '#E5E7EB',
           color: '#111827',
+          modal: {
+            background: '#FFFFFF',
+            borderColor: '#E5E7EB',
+            color: '#111827',
+            padding: '1.25rem',
+          },
         },
         secondary: {
           background: '#F3F4F6',
@@ -314,6 +320,12 @@ export const PrimevalPreset = definePreset(Aura, {
           background: '#15151C',
           borderColor: '#2A2A35',
           color: '#FFFFFF',
+          modal: {
+            background: '#15151C',
+            borderColor: '#2A2A35',
+            color: '#FFFFFF',
+            padding: '1.25rem',
+          },
         },
         secondary: {
           background: '#1E1E28',
@@ -447,6 +459,65 @@ export const PrimevalPreset = definePreset(Aura, {
           color: '#6B7280',
           focusColor: '#FFFFFF',
           activeColor: '#6A39F4',
+        },
+      },
+    },
+    // Popover styling
+    popover: {
+      background: '{color.card}',
+      borderColor: '{color.border}',
+      color: '{color.text}',
+      borderRadius: '14px',
+      shadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+      gutter: '10px',
+      arrowOffset: '1.25rem',
+    },
+    // Drawer styling
+    drawer: {
+      root: {
+        background: '{color.card}',
+        borderColor: '{color.border}',
+        color: '{color.text}',
+        shadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+      },
+      header: {
+        padding: '1rem',
+      },
+      content: {
+        padding: '0',
+      },
+    },
+    // Chip styling
+    chip: {
+      root: {
+        borderRadius: '10px',
+        paddingX: '0.625rem',
+        paddingY: '0.375rem',
+      },
+      colorScheme: {
+        light: {
+          root: {
+            background: '{color.elevated}',
+            color: '{color.text}',
+          },
+          icon: {
+            color: '{color.secondary}',
+          },
+          removeIcon: {
+            color: '{color.secondary}',
+          },
+        },
+        dark: {
+          root: {
+            background: '{color.elevated}',
+            color: '{color.text}',
+          },
+          icon: {
+            color: '{color.secondary}',
+          },
+          removeIcon: {
+            color: '{color.secondary}',
+          },
         },
       },
     },
