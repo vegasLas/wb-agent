@@ -11,8 +11,9 @@ import {
 import { TriggersListView } from '../views/triggers';
 import { PromotionsView } from '../views/promotions';
 import WBView from '../views/WBView.vue';
-import HomeView from '../views/HomeView.vue';
 import TasksView from '../views/TasksView.vue';
+import AdvertsView from '../views/adverts/AdvertsView.vue';
+import { RegionSalesView } from '@/components/report';
 
 // Define all routes
 const routes: RouteRecordRaw[] = [
@@ -66,11 +67,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        name: 'Home',
-        component: HomeView,
-        meta: {
-          title: 'Главная',
-        },
+        redirect: { name: 'Chat' },
       },
       {
         path: 'account',
@@ -98,10 +95,22 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'wb',
-        name: 'WB',
-        component: WBView,
+        redirect: { name: 'Promotions' },
+      },
+      {
+        path: 'adverts',
+        name: 'Adverts',
+        component: AdvertsView,
         meta: {
-          title: 'Wildberries',
+          title: 'Реклама',
+        },
+      },
+      {
+        path: 'region-sales',
+        name: 'RegionSales',
+        component: RegionSalesView,
+        meta: {
+          title: 'Продажи по регионам',
         },
       },
       {
