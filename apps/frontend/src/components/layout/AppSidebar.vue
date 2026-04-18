@@ -10,9 +10,7 @@
         <span class="text-white font-bold text-sm tracking-tight">WB</span>
       </div>
       <div>
-        <div class="font-semibold text-theme text-sm leading-none">
-          Agent
-        </div>
+        <div class="font-semibold text-theme text-sm leading-none">Agent</div>
         <div class="text-[11px] text-muted leading-none mt-1">
           Панель управления
         </div>
@@ -77,53 +75,56 @@
     </div>
 
     <!-- Bottom Actions -->
-    <div class="px-3 py-4 border-t border-deep-border space-y-1">
-      <!-- Theme Toggle -->
+    <div class="px-3 py-4 border-t border-deep-border">
+      <!-- Profile Dropdown -->
       <button
         class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-all duration-200 hover:translate-x-0.5"
-        @click="toggleTheme"
+        @click="toggleProfileMenu"
       >
         <i
-          :class="[
-            isDark ? 'pi pi-sun' : 'pi pi-moon',
-            'text-base transition-transform duration-200 group-hover:scale-110',
-          ]"
-        />
-        <span>{{ isDark ? 'Светлая тема' : 'Темная тема' }}</span>
-      </button>
-
-      <!-- Help -->
-      <button
-        class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-all duration-200 hover:translate-x-0.5"
-        @click="$emit('show-help')"
-      >
-        <i
-          class="pi pi-question-circle text-base transition-transform duration-200 group-hover:scale-110"
-        />
-        <span>Помощь</span>
-      </button>
-
-      <!-- Accounts Modal -->
-      <button
-        class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-all duration-200 hover:translate-x-0.5"
-        @click="$emit('show-accounts')"
-      >
-        <i
-          class="pi pi-users text-base transition-transform duration-200 group-hover:scale-110"
+          class="pi pi-user text-base transition-transform duration-200 group-hover:scale-110"
         />
         <span class="truncate">{{ accountLabel }}</span>
+        <i class="pi pi-chevron-down text-xs ml-auto" />
       </button>
+      <Popover ref="profileMenu">
+        <div class="flex flex-col gap-1 min-w-[180px]">
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
+            @click="handleHelp"
+          >
+            <i class="pi pi-question-circle text-base" />
+            <span>Помощь</span>
+          </button>
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
+            @click="handleTheme"
+          >
+            <i :class="[isDark ? 'pi pi-sun' : 'pi pi-moon', 'text-base']" />
+            <span>{{ isDark ? 'Светлая тема' : 'Темная тема' }}</span>
+          </button>
+          <div class="border-t border-deep-border my-1" />
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
+            @click="handleAccounts"
+          >
+            <i class="pi pi-users text-base" />
+            <span>Аккаунты</span>
+          </button>
+        </div>
+      </Popover>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
+import Popover from 'primevue/popover';
 import { useUserStore } from '@/stores/user';
 
-defineEmits<{
+const emit = defineEmits<{
   'show-help': [];
   'show-accounts': [];
 }>();
@@ -143,14 +144,45 @@ const toggleTheme = () => {
   colorMode.value = isDark.value ? 'light' : 'dark';
 };
 
+// Profile menu
+const profileMenu = ref<InstanceType<typeof Popover> | null>(null);
+
+const toggleProfileMenu = (event: MouseEvent) => {
+  profileMenu.value?.toggle(event);
+};
+
+const handleHelp = () => {
+  profileMenu.value?.hide();
+  emit('show-help');
+};
+
+const handleTheme = () => {
+  profileMenu.value?.hide();
+  toggleTheme();
+};
+
+const handleAccounts = () => {
+  profileMenu.value?.hide();
+  emit('show-accounts');
+};
+
 // Account label
 const accountLabel = computed(() => {
-  return userStore.activeSupplier?.supplierName || 'Аккаунты';
+  return userStore.activeSupplier?.supplierName || 'Профиль';
+});
+
+// Subscription label
+const subscriptionLabel = computed(() => {
+  if (userStore.subscriptionActive) {
+    return `${userStore.subscriptionRemainingDays} дн.`;
+  }
+  return 'Не активна';
 });
 
 // Primary navigation
 const primaryNav = [
-  { id: 'home', label: 'Главная', icon: 'pi pi-home', route: 'Home' },
+  { id: 'chat', label: 'AI Чат', icon: 'pi pi-comments', route: 'Chat' },
+  { id: 'tasks', label: 'Задачи', icon: 'pi pi-check-square', route: 'Tasks' },
   {
     id: 'autobooking',
     label: 'Автоброни',
@@ -166,16 +198,22 @@ const primaryNav = [
   { id: 'promotions', label: 'Акции', icon: 'pi pi-tags', route: 'Promotions' },
   { id: 'reports', label: 'Отчеты', icon: 'pi pi-chart-pie', route: 'Reports' },
   {
+    id: 'adverts',
+    label: 'Реклама',
+    icon: 'pi pi-megaphone',
+    route: 'Adverts',
+  },
+  {
+    id: 'regionSales',
+    label: 'Продажи по регионам',
+    icon: 'pi pi-map',
+    route: 'RegionSales',
+  },
+  {
     id: 'reschedules',
     label: 'Перепланирования',
     icon: 'pi pi-calendar-clock',
     route: 'ReschedulesList',
-  },
-  {
-    id: 'wb',
-    label: 'Wildberries',
-    icon: 'pi pi-shopping-bag',
-    route: 'WB',
   },
   {
     id: 'tariffs',
@@ -183,21 +221,22 @@ const primaryNav = [
     icon: 'pi pi-percentage',
     route: 'Tariffs',
   },
-  { id: 'mpstats', label: 'MPStats', icon: 'pi pi-chart-bar', route: 'MPStats' },
-  { id: 'tasks', label: 'Задачи', icon: 'pi pi-check-square', route: 'Tasks' },
-  { id: 'chat', label: 'AI Чат', icon: 'pi pi-comments', route: 'Chat' },
+  {
+    id: 'mpstats',
+    label: 'MPStats',
+    icon: 'pi pi-chart-bar',
+    route: 'MPStats',
+  },
 ];
 
 // Secondary navigation
 const secondaryNav = [
-  { id: 'store', label: 'Магазин', icon: 'pi pi-shopping-cart', route: 'Store' },
   {
     id: 'payments',
-    label: 'Платежи',
-    icon: 'pi pi-credit-card',
+    label: 'Магазин',
+    icon: 'pi pi-shopping-cart',
     route: 'Payments',
   },
-  { id: 'account', label: 'Профиль', icon: 'pi pi-user', route: 'Account' },
 ];
 
 // Active state check
@@ -205,18 +244,13 @@ function isActive(item: { id: string; route: string }): boolean {
   const routeName = route.name?.toString() ?? '';
   const routePath = route.path;
 
-  // Exact match for Home
-  if (item.id === 'home') {
-    return routeName === 'Home';
-  }
-
   // Match by route name prefix
   if (routeName.startsWith(item.id)) {
     return true;
   }
 
   // Fallback: match by path for routes that share a base path
-  if (routePath.startsWith(`/${item.id}`)) {
+  if (routePath.startsWith(`/${item.id.toLowerCase()}`)) {
     return true;
   }
 
