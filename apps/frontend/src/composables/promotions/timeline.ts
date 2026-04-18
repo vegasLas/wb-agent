@@ -1,19 +1,15 @@
 /**
  * usePromotionsTimeline Composable
  *
- * Handles all timeline-related logic for the promotions calendar view.
- * Includes date calculations, positioning, and grouping of promotions.
- *
- * @example
- * const timeline = usePromotionsTimeline(promotions, currentDate);
- *
- * // Access computed values
- * console.log(timeline.currentMonthDays.value); // days in current month
- * console.log(timeline.getPromotionStyle(promotion)); // { left: '100px', width: '200px' }
+ * Unified calendar + timeline logic for the promotions view.
+ * Handles month navigation, date calculations, pixel positioning,
+ * and promotion row grouping.
  */
 
-import { computed, type ComputedRef, type Ref } from 'vue';
+import { ref, computed, type ComputedRef, type Ref } from 'vue';
 import type { PromotionItem } from '@/types';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface MonthInfo {
   year: number;
@@ -25,6 +21,17 @@ export interface MonthInfo {
 export interface PromotionPosition {
   left: string;
   width?: string;
+}
+
+export interface DateRange {
+  start: Date;
+  end: Date;
+}
+
+export interface GroupedPromotions {
+  currentMonth: PromotionItem[];
+  nextMonth: PromotionItem[];
+  other: PromotionItem[];
 }
 
 export interface UsePromotionsTimelineReturn {
@@ -43,29 +50,88 @@ export interface UsePromotionsTimelineReturn {
   totalWidth: ComputedRef<number>;
   columnWidth: number;
 
+  // Calendar labels
+  currentMonthLabel: ComputedRef<string>;
+  todayLabel: ComputedRef<string>;
+  weekDays: string[];
+
+  // Navigation
+  navigateMonth: (direction: number) => void;
+  goToToday: () => void;
+
   // Utilities
   isToday: (monthDate: Date, day: number) => boolean;
   getPromotionStyle: (promotion: PromotionItem) => PromotionPosition;
   groupPromotionsIntoRows: (promotions: PromotionItem[]) => PromotionItem[][];
+
+  // Calendar grouping
+  groupByMonth: (promotions: PromotionItem[]) => GroupedPromotions;
+  getDateRange: () => DateRange;
+  formatDateRange: (startDate: string, endDate: string) => string;
 }
 
-// Column width in pixels
+// ─── Constants ──────────────────────────────────────────────────────────────
+
 const COLUMN_WIDTH = 40;
 
-/**
- * Composable for promotions timeline functionality
- */
-export function usePromotionsTimeline(
-  currentDate: Ref<Date>,
-): UsePromotionsTimelineReturn {
-  // Get month info
-  const currentMonthInfo = computed((): MonthInfo => {
-    const date = currentDate.value;
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    return { year, month, daysInMonth, date: new Date(date) };
+const WEEK_DAYS = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
+
+const MONTH_NAMES_GENITIVE = [
+  'января',
+  'февраля',
+  'марта',
+  'апреля',
+  'мая',
+  'июня',
+  'июля',
+  'августа',
+  'сентября',
+  'октября',
+  'ноября',
+  'декабря',
+];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function formatMonthLabel(date: Date): string {
+  return date.toLocaleDateString('ru-RU', {
+    month: 'long',
+    year: 'numeric',
   });
+}
+
+function getDaysInMonth(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+}
+
+function createMonthInfo(date: Date): MonthInfo {
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth(),
+    daysInMonth: getDaysInMonth(date),
+    date: new Date(date),
+  };
+}
+
+function parsePromotionDate(dateStr: string | undefined): Date | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return null;
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+// ─── Composable ─────────────────────────────────────────────────────────────
+
+export function usePromotionsTimeline(): UsePromotionsTimelineReturn {
+  const currentDate = ref(new Date());
+  const today = new Date();
+
+  // ── Month Info ───────────────────────────────────────────────────────────
+
+  const currentMonthInfo = computed((): MonthInfo =>
+    createMonthInfo(currentDate.value),
+  );
 
   const nextMonthInfo = computed((): MonthInfo => {
     const date = new Date(
@@ -73,55 +139,81 @@ export function usePromotionsTimeline(
       currentDate.value.getMonth() + 1,
       1,
     );
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    return { year, month, daysInMonth, date };
+    return createMonthInfo(date);
   });
 
   const visibleMonthsInfo = computed(() => [
     {
       key: 'current',
-      label: currentMonthInfo.value.date.toLocaleDateString('ru-RU', {
-        month: 'long',
-        year: 'numeric',
-      }),
+      label: formatMonthLabel(currentDate.value),
     },
     {
       key: 'next',
-      label: nextMonthInfo.value.date.toLocaleDateString('ru-RU', {
-        month: 'long',
-        year: 'numeric',
-      }),
+      label: formatMonthLabel(nextMonthInfo.value.date),
     },
   ]);
 
-  // Day lists for grid columns
+  // ── Calendar Labels ──────────────────────────────────────────────────────
+
+  const currentMonthLabel = computed(() => formatMonthLabel(currentDate.value));
+
+  const todayLabel = computed(() =>
+    today.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+    }),
+  );
+
+  // ── Day Lists ────────────────────────────────────────────────────────────
+
   const currentMonthDaysList = computed(() =>
-    Array.from({ length: currentMonthInfo.value.daysInMonth }, (_, i) => i + 1),
+    Array.from(
+      { length: currentMonthInfo.value.daysInMonth },
+      (_, i) => i + 1,
+    ),
   );
 
   const nextMonthDaysList = computed(() =>
-    Array.from({ length: nextMonthInfo.value.daysInMonth }, (_, i) => i + 1),
+    Array.from(
+      { length: nextMonthInfo.value.daysInMonth },
+      (_, i) => i + 1,
+    ),
   );
 
-  // Total timeline days
+  // ── Timeline Dimensions ──────────────────────────────────────────────────
+
   const totalTimelineDays = computed(
     () => currentMonthInfo.value.daysInMonth + nextMonthInfo.value.daysInMonth,
   );
 
-  // Timeline start date
   const timelineStartDate = computed(
     () =>
-      new Date(currentMonthInfo.value.year, currentMonthInfo.value.month, 1),
+      new Date(
+        currentMonthInfo.value.year,
+        currentMonthInfo.value.month,
+        1,
+      ),
   );
 
-  // Total width for the timeline container
   const totalWidth = computed(() => totalTimelineDays.value * COLUMN_WIDTH);
 
-  // Check if today
+  // ── Navigation ───────────────────────────────────────────────────────────
+
+  function navigateMonth(direction: number): void {
+    currentDate.value = new Date(
+      currentDate.value.getFullYear(),
+      currentDate.value.getMonth() + direction,
+      1,
+    );
+  }
+
+  function goToToday(): void {
+    currentDate.value = new Date();
+  }
+
+  // ── Today Check ──────────────────────────────────────────────────────────
+
   function isToday(monthDate: Date, day: number): boolean {
-    const today = new Date();
     return (
       today.getDate() === day &&
       today.getMonth() === monthDate.getMonth() &&
@@ -129,18 +221,8 @@ export function usePromotionsTimeline(
     );
   }
 
-  /**
-   * Parse and normalize a promotion date string to midnight local time
-   */
-  function parsePromotionDate(dateStr: string | undefined): Date | null {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return null;
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }
+  // ── Promotion Positioning ────────────────────────────────────────────────
 
-  // Calculate promotion position style using pixel-based positioning
   function getPromotionStyle(promotion: PromotionItem): PromotionPosition {
     const startDate = parsePromotionDate(promotion.startDate);
     const endDate = parsePromotionDate(promotion.endDate);
@@ -152,7 +234,6 @@ export function usePromotionsTimeline(
     const timelineStart = new Date(timelineStartDate.value);
     timelineStart.setHours(0, 0, 0, 0);
 
-    // Calculate days from timeline start
     const msPerDay = 1000 * 60 * 60 * 24;
     const startOffsetDays = Math.floor(
       (startDate.getTime() - timelineStart.getTime()) / msPerDay,
@@ -160,15 +241,11 @@ export function usePromotionsTimeline(
     const durationDays =
       Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
 
-    // Calculate pixel positions
     let leftPx = startOffsetDays * COLUMN_WIDTH;
     let widthPx = durationDays * COLUMN_WIDTH;
 
-    // Ensure minimum visibility (at least 1 day = 40px, max 3 days = 120px)
-    // to prevent excessive overlap while keeping content readable
     widthPx = Math.max(widthPx, COLUMN_WIDTH);
 
-    // Clamp to visible area
     if (leftPx < 0) {
       widthPx += leftPx;
       leftPx = 0;
@@ -184,11 +261,11 @@ export function usePromotionsTimeline(
     };
   }
 
-  // Group promotions into rows to avoid overlaps
+  // ── Row Grouping ─────────────────────────────────────────────────────────
+
   function groupPromotionsIntoRows(
     promotions: PromotionItem[],
   ): PromotionItem[][] {
-    // Pre-parse and normalize all dates to midnight for consistent comparison
     const dateMap = new Map<
       PromotionItem,
       { start: Date | null; end: Date | null }
@@ -201,7 +278,6 @@ export function usePromotionsTimeline(
       });
     }
 
-    // Sort by start date
     const sorted = [...promotions].sort((a, b) => {
       const aTime = dateMap.get(a)?.start?.getTime() ?? 0;
       const bTime = dateMap.get(b)?.start?.getTime() ?? 0;
@@ -215,21 +291,17 @@ export function usePromotionsTimeline(
       const start = dates?.start?.getTime() ?? 0;
       const end = dates?.end?.getTime() ?? 0;
 
-      // Skip promotions with invalid dates
       if (!start || !end || end < start) {
         rows.push([promotion]);
         continue;
       }
 
-      // Find a row where this promotion doesn't overlap with any existing one
       let placed = false;
       for (const row of rows) {
         const hasOverlap = row.some((existing) => {
           const existingDates = dateMap.get(existing);
           const existingStart = existingDates?.start?.getTime() ?? 0;
           const existingEnd = existingDates?.end?.getTime() ?? 0;
-
-          // Check for overlap (inclusive date ranges)
           return start <= existingEnd && end >= existingStart;
         });
 
@@ -240,7 +312,6 @@ export function usePromotionsTimeline(
         }
       }
 
-      // If no non-overlapping row found, create a new row
       if (!placed) {
         rows.push([promotion]);
       }
@@ -249,25 +320,102 @@ export function usePromotionsTimeline(
     return rows;
   }
 
+  // ── Month Grouping ───────────────────────────────────────────────────────
+
+  function isDateInMonth(dateString: string, monthDate: Date): boolean {
+    const date = new Date(dateString);
+    return (
+      date.getMonth() === monthDate.getMonth() &&
+      date.getFullYear() === monthDate.getFullYear()
+    );
+  }
+
+  function isCurrentMonth(date: Date): boolean {
+    return (
+      date.getMonth() === currentDate.value.getMonth() &&
+      date.getFullYear() === currentDate.value.getFullYear()
+    );
+  }
+
+  function isNextMonth(date: Date): boolean {
+    return (
+      date.getMonth() === nextMonthInfo.value.month &&
+      date.getFullYear() === nextMonthInfo.value.year
+    );
+  }
+
+  function filterByMonth(
+    promotions: PromotionItem[],
+    monthDate: Date,
+  ): PromotionItem[] {
+    return promotions.filter((p) => isDateInMonth(p.startDate, monthDate));
+  }
+
+  function groupByMonth(promotions: PromotionItem[]): GroupedPromotions {
+    return {
+      currentMonth: filterByMonth(promotions, currentDate.value),
+      nextMonth: filterByMonth(promotions, nextMonthInfo.value.date),
+      other: promotions.filter((p) => {
+        const date = new Date(p.startDate);
+        return !isCurrentMonth(date) && !isNextMonth(date);
+      }),
+    };
+  }
+
+  // ── Date Range ───────────────────────────────────────────────────────────
+
+  function getDateRange(): DateRange {
+    const start = new Date(
+      currentDate.value.getFullYear(),
+      currentDate.value.getMonth(),
+      1,
+    );
+    const end = new Date(
+      currentDate.value.getFullYear(),
+      currentDate.value.getMonth() + 2,
+      0,
+    );
+    return { start, end };
+  }
+
+  // ── Formatting ───────────────────────────────────────────────────────────
+
+  function formatShortDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = MONTH_NAMES_GENITIVE[date.getMonth()];
+    return `${day} ${month}`;
+  }
+
+  function formatDateRange(startDate: string, endDate: string): string {
+    const start = formatShortDate(startDate);
+    const end = formatShortDate(endDate);
+    return `${start} - ${end}`;
+  }
+
+  // ── Return ───────────────────────────────────────────────────────────────
+
   return {
-    // Month info
     currentMonthInfo,
     nextMonthInfo,
     visibleMonthsInfo,
-
-    // Days lists
     currentMonthDaysList,
     nextMonthDaysList,
-
-    // Timeline config
     totalTimelineDays,
     timelineStartDate,
     totalWidth,
     columnWidth: COLUMN_WIDTH,
-
-    // Utilities
+    currentMonthLabel,
+    todayLabel,
+    weekDays: WEEK_DAYS,
+    navigateMonth,
+    goToToday,
     isToday,
     getPromotionStyle,
     groupPromotionsIntoRows,
+    groupByMonth,
+    getDateRange,
+    formatDateRange,
   };
 }

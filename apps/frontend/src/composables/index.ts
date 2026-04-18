@@ -9,12 +9,11 @@ export {
 // Promotions
 export {
   usePromotions,
-  usePromotionsCalendar,
   usePromotionItem,
   usePromotionDetail,
   usePromotionsTimeline,
   usePromotionsUnified,
-  usePromotionDetailEnhanced,
+  usePromotionTableDisplay,
   isCurrentLevel,
   isPromotionStarted,
   isPromotionEditable,
@@ -26,14 +25,13 @@ export {
   type PromotionType,
   type Severity,
   type ParticipationCounts,
-  type TimelineMonthInfo,
   type PromotionPosition,
   type UsePromotionsTimelineReturn,
   type UsePromotionsUnifiedOptions,
   type UsePromotionsUnifiedReturn,
   type EmptyStateConfig,
   type RangingLevelDisplay,
-  type UsePromotionDetailEnhancedReturn,
+  type UsePromotionDetailReturn,
 } from './promotions';
 
 // Warehouse

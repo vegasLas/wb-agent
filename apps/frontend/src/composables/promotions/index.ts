@@ -6,13 +6,6 @@ export {
   type FilterTab,
 } from './main';
 
-// From calendar.ts
-export {
-  usePromotionsCalendar,
-  type MonthInfo,
-  type GroupedPromotions,
-} from './calendar';
-
 // From item.ts
 export {
   usePromotionItem,
@@ -24,14 +17,18 @@ export {
   type PromotionType,
   type Severity,
   type ParticipationCounts,
+  type UsePromotionItemReturn,
+  type UsePromotionDetailReturn,
+  type RangingLevelDisplay,
 } from './item';
 
 // From timeline.ts
 export {
   usePromotionsTimeline,
-  type MonthInfo as TimelineMonthInfo,
+  type MonthInfo,
   type PromotionPosition,
   type UsePromotionsTimelineReturn,
+  type GroupedPromotions,
 } from './timeline';
 
 // From unified.ts
@@ -42,12 +39,8 @@ export {
   type EmptyStateConfig,
 } from './unified';
 
-// From detailEnhanced.ts
-export {
-  usePromotionDetailEnhanced,
-  type RangingLevelDisplay,
-  type UsePromotionDetailEnhancedReturn,
-} from './detailEnhanced';
+// From tableDisplay.ts
+export { usePromotionTableDisplay } from './tableDisplay';
 
 // Re-export PromotionFilter from types since it's used across composables
 export type { PromotionFilter } from '@/types';

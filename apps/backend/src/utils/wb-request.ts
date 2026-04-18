@@ -58,6 +58,83 @@ export interface WBError {
   url?: string;
 }
 
+// ─── Retry Configuration ────────────────────────────────────────────────────
+
+export interface RetryOptions {
+  maxAttempts?: number;
+  baseDelayMs?: number;
+  maxDelayMs?: number;
+  retryableStatuses?: number[];
+}
+
+const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
+  maxAttempts: 3,
+  baseDelayMs: 500,
+  maxDelayMs: 5000,
+  retryableStatuses: [408, 429, 500, 502, 503, 504],
+};
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableError(error: unknown, opts: Required<RetryOptions>): boolean {
+  const wbError = error as WBError;
+  if (wbError.status && opts.retryableStatuses.includes(wbError.status)) {
+    return true;
+  }
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return (
+      msg.includes('timeout') ||
+      msg.includes('econnreset') ||
+      msg.includes('ENOTFOUND') ||
+      msg.includes('ECONNREFUSED')
+    );
+  }
+  return false;
+}
+
+/**
+ * Wrap an async function with exponential backoff retry logic.
+ */
+export function withRetry<TArgs extends unknown[], TReturn>(
+  fn: (...args: TArgs) => Promise<TReturn>,
+  options: RetryOptions = {},
+): (...args: TArgs) => Promise<TReturn> {
+  const opts = { ...DEFAULT_RETRY_OPTIONS, ...options };
+
+  return async (...args: TArgs): Promise<TReturn> => {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= opts.maxAttempts; attempt++) {
+      try {
+        return await fn(...args);
+      } catch (error) {
+        lastError = error;
+
+        if (attempt === opts.maxAttempts || !isRetryableError(error, opts)) {
+          throw error;
+        }
+
+        const delay = Math.min(
+          opts.baseDelayMs * Math.pow(2, attempt - 1),
+          opts.maxDelayMs,
+        );
+        logger.warn(
+          `Retryable error on attempt ${attempt}/${opts.maxAttempts}, retrying in ${delay}ms`,
+          { error: (error as Error).message },
+        );
+        await sleep(delay);
+      }
+    }
+
+    throw lastError;
+  };
+}
+
+// ─── Cookie String Builder ──────────────────────────────────────────────────
+
 /**
  * Builds a cookie string from Cookie array
  */
@@ -278,10 +355,9 @@ export async function wbRequest<T>({
 }
 
 /**
- * Makes a request to WB API using account-based authentication
- * Uses the provided accountId to get cookies directly
+ * Internal implementation of account-based WB request.
  */
-export async function wbAccountRequest<T>({
+async function wbAccountRequestImpl<T>({
   url,
   accountId,
   userAgent,
@@ -294,98 +370,95 @@ export async function wbAccountRequest<T>({
   order,
   parseResponse = true,
 }: WBAccountRequestParams): Promise<T> {
-  try {
-    const account = await prisma.account.findUnique({
-      where: { id: accountId },
-    });
+  const account = await prisma.account.findUnique({
+    where: { id: accountId },
+  });
 
-    if (!account?.wbCookies) {
-      throw new Error(`No cookies found for account ${accountId}`);
-    }
-
-    // Get cookies from account
-    const cookies = await getCookiesFromAccount(accountId);
-
-    // Build cookie string, optionally overriding supplier ID
-    let cookieString = buildCookieStringFromCookies(cookies);
-
-    // Override locale cookies to ru and supplierId if provided
-    const cookieEntries = cookieString.split('; ').filter(Boolean);
-    const filteredEntries = cookieEntries.filter(
-      (entry) =>
-        !entry.startsWith('external-locale') &&
-        !entry.startsWith('locale') &&
-        !entry.startsWith('x-supplier-id') &&
-        !entry.startsWith('x-supplier-id-external'),
-    );
-    filteredEntries.push('external-locale=ru');
-    filteredEntries.push('locale=ru');
-    if (supplierId) {
-      filteredEntries.push(`x-supplier-id=${supplierId}`);
-      filteredEntries.push(`x-supplier-id-external=${supplierId}`);
-    }
-    cookieString = filteredEntries.join('; ');
-
-    // Get WBTokenV3 for authorizev3 header
-    const wbTokenV3 = cookies.find((c) => c.name === 'WBTokenV3')?.value || '';
-
-    const requestHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Origin: 'https://seller.wildberries.ru',
-      Cookie: cookieString,
-      'User-Agent': userAgent,
-      ...(supplierId && {
-        'x-supplier-id': supplierId,
-        'x-supplier-id-external': supplierId,
-      }),
-      ...(wbTokenV3 && { authorizev3: wbTokenV3 }),
-      ...headers,
-    };
-
-    let requestBody: string | undefined = undefined;
-    if (body) {
-      if (isJsonRpc) {
-        requestBody = JSON.stringify(
-          buildJsonRpcBody(body as JsonRpcBody | JsonRpcBody[], order),
-        );
-      } else {
-        requestBody = JSON.stringify(body);
-      }
-    }
-
-    const responseData = await makeHttpRequest(
-      url,
-      method,
-      requestHeaders,
-      requestBody,
-      proxy,
-      parseResponse,
-    );
-
-    // Check for JSON-RPC error in response
-    const response = responseData as {
-      error?: { message: string; code: number };
-    };
-    if (response.error) {
-      const error: WBError = {
-        message: response.error.message || 'JSON-RPC error occurred',
-        status: response.error.code,
-        url,
-      };
-      throw error;
-    }
-
-    return responseData as T;
-  } catch (error) {
-    logger.error(`Error in wbAccountRequest for account ${accountId}:`, error);
-    if ((error as WBError).message) {
-      throw error;
-    }
-    // Handle unexpected errors
-    throw {
-      message: `Unexpected error during account request: ${(error as Error).message}`,
-      url,
-      method,
-    };
+  if (!account?.wbCookies) {
+    throw new Error(`No cookies found for account ${accountId}`);
   }
+
+  // Get cookies from account
+  const cookies = await getCookiesFromAccount(accountId);
+
+  // Build cookie string, optionally overriding supplier ID
+  let cookieString = buildCookieStringFromCookies(cookies);
+
+  // Override locale cookies to ru and supplierId if provided
+  const cookieEntries = cookieString.split('; ').filter(Boolean);
+  const filteredEntries = cookieEntries.filter(
+    (entry) =>
+      !entry.startsWith('external-locale') &&
+      !entry.startsWith('locale') &&
+      !entry.startsWith('x-supplier-id') &&
+      !entry.startsWith('x-supplier-id-external'),
+  );
+  filteredEntries.push('external-locale=ru');
+  filteredEntries.push('locale=ru');
+  if (supplierId) {
+    filteredEntries.push(`x-supplier-id=${supplierId}`);
+    filteredEntries.push(`x-supplier-id-external=${supplierId}`);
+  }
+  cookieString = filteredEntries.join('; ');
+
+  // Get WBTokenV3 for authorizev3 header
+  const wbTokenV3 = cookies.find((c) => c.name === 'WBTokenV3')?.value || '';
+
+  const requestHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Origin: 'https://seller.wildberries.ru',
+    Cookie: cookieString,
+    'User-Agent': userAgent,
+    ...(supplierId && {
+      'x-supplier-id': supplierId,
+      'x-supplier-id-external': supplierId,
+    }),
+    ...(wbTokenV3 && { authorizev3: wbTokenV3 }),
+    ...headers,
+  };
+
+  let requestBody: string | undefined = undefined;
+  if (body) {
+    if (isJsonRpc) {
+      requestBody = JSON.stringify(
+        buildJsonRpcBody(body as JsonRpcBody | JsonRpcBody[], order),
+      );
+    } else {
+      requestBody = JSON.stringify(body);
+    }
+  }
+
+  const responseData = await makeHttpRequest(
+    url,
+    method,
+    requestHeaders,
+    requestBody,
+    proxy,
+    parseResponse,
+  );
+
+  // Check for JSON-RPC error in response
+  const response = responseData as {
+    error?: { message: string; code: number };
+  };
+  if (response.error) {
+    const error: WBError = {
+      message: response.error.message || 'JSON-RPC error occurred',
+      status: response.error.code,
+      url,
+    };
+    throw error;
+  }
+
+  return responseData as T;
 }
+
+/**
+ * Makes a request to WB API using account-based authentication.
+ * Automatically retries on transient errors (5xx, timeouts, connection issues).
+ */
+export const wbAccountRequest = withRetry(wbAccountRequestImpl, {
+  maxAttempts: 3,
+  baseDelayMs: 500,
+  maxDelayMs: 4000,
+});

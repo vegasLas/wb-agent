@@ -351,7 +351,7 @@ import { computed, ref } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import { usePromotionDetailEnhanced } from '../../composables/promotions';
+import { usePromotionDetail } from '../../composables/promotions';
 import type { PromotionDetail } from '../../types';
 
 interface Props {
@@ -370,8 +370,8 @@ const emit = defineEmits<{
 
 const showRules = ref(false);
 
-// Use the enhanced composable for all display logic
-const d = usePromotionDetailEnhanced(() => props.detail);
+// Use the detail composable for all display logic
+const d = usePromotionDetail(() => props.detail);
 
 // Dialog visibility
 const visible = computed({
