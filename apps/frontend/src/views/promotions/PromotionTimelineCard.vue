@@ -70,8 +70,7 @@
             <span class="text-[10px] text-[var(--text-muted)]">
               Не участвуют:
               <strong>{{
-                promotion.participation.counts.available +
-                promotion.participation.counts.participatingOutOfStock
+                promotion.participation.counts.available
               }}</strong>
             </span>
           </div>
