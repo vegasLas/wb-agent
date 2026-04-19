@@ -407,7 +407,7 @@ export function isPromotionStarted(promotion: PromotionItem): boolean {
   today.setHours(0, 0, 0, 0);
   const startDate = new Date(promotion.startDate);
   startDate.setHours(0, 0, 0, 0);
-  return startDate < today;
+  return startDate <= today;
 }
 
 /**
