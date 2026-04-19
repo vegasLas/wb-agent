@@ -3,26 +3,38 @@
     v-model:visible="localVisible"
     position="left"
     :block-scroll="true"
-    :show-close-icon="true"
+    :show-close-icon="false"
     :pt="{
       root: { class: 'w-[260px] border-r border-deep-border' },
       content: { class: 'p-0 flex flex-col h-full' },
-      header: { class: 'hidden' },
     }"
   >
-    <!-- Brand -->
-    <div class="h-16 flex items-center gap-3 px-5 border-b border-deep-border shrink-0">
-      <div
-        class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg shadow-purple-900/20"
-      >
-        <span class="text-white font-bold text-sm tracking-tight">WB</span>
-      </div>
-      <div>
-        <div class="font-semibold text-theme text-sm leading-none">Agent</div>
-        <div class="text-[11px] text-muted leading-none mt-1">
-          Панель управления
+    <!-- Custom Header -->
+    <div
+      class="flex items-center justify-between px-4 py-3 border-b border-deep-border shrink-0"
+    >
+      <!-- Brand -->
+      <div class="flex items-center gap-3">
+        <div
+          class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg shadow-purple-900/20"
+        >
+          <span class="text-white font-bold text-sm tracking-tight">WB</span>
+        </div>
+        <div>
+          <div class="font-semibold text-theme text-sm leading-none">Agent</div>
+          <div class="text-[11px] text-muted leading-none mt-1">
+            Панель управления
+          </div>
         </div>
       </div>
+
+      <!-- Close -->
+      <button
+        class="flex items-center justify-center w-9 h-9 rounded-xl text-secondary hover:text-theme hover:bg-elevated transition-colors"
+        @click="closeDrawer"
+      >
+        <i class="pi pi-times text-lg" />
+      </button>
     </div>
 
     <!-- Primary Navigation -->
@@ -95,41 +107,8 @@
           class="pi pi-user text-base transition-transform duration-200 group-hover:scale-110"
         />
         <span class="truncate">{{ accountLabel }}</span>
-        <i class="pi pi-chevron-down text-xs ml-auto" />
       </button>
-      <Popover ref="profileMenu">
-        <div class="flex flex-col gap-1 min-w-[180px]">
-          <button
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
-            @click="handleHelp"
-          >
-            <i class="pi pi-question-circle text-base" />
-            <span>Помощь</span>
-          </button>
-          <button
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
-            @click="handleTheme"
-          >
-            <i :class="[isDark ? 'pi pi-sun' : 'pi pi-moon', 'text-base']" />
-            <span>{{ isDark ? 'Светлая тема' : 'Темная тема' }}</span>
-          </button>
-          <div class="border-t border-deep-border my-1" />
-          <button
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
-            @click="handleProfile"
-          >
-            <i class="pi pi-user text-base" />
-            <span>Профиль</span>
-          </button>
-          <button
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
-            @click="handleAccounts"
-          >
-            <i class="pi pi-users text-base" />
-            <span>Аккаунты</span>
-          </button>
-        </div>
-      </Popover>
+      <Menu ref="profileMenu" :model="profileMenuItems" :popup="true" />
     </div>
   </Sidebar>
 </template>
@@ -139,9 +118,10 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Sidebar from 'primevue/sidebar';
-import Popover from 'primevue/popover';
+import Menu from 'primevue/menu';
 import { useUserStore } from '@/stores/user';
 import { useNavigation } from '@/composables/useNavigation';
+import type { MenuItem } from 'primevue/menu';
 
 const props = defineProps<{
   visible: boolean;
@@ -180,31 +160,43 @@ const closeDrawer = () => {
 };
 
 // Profile menu
-const profileMenu = ref<InstanceType<typeof Popover> | null>(null);
+const profileMenu = ref<InstanceType<typeof Menu> | null>(null);
+
+const profileMenuItems = computed<MenuItem[]>(() => [
+  {
+    label: 'Помощь',
+    icon: 'pi pi-question-circle',
+    command: () => {
+      emit('show-help');
+    },
+  },
+  {
+    label: isDark.value ? 'Светлая тема' : 'Темная тема',
+    icon: isDark.value ? 'pi pi-sun' : 'pi pi-moon',
+    command: () => {
+      toggleTheme();
+    },
+  },
+  { separator: true },
+  {
+    label: 'Профиль',
+    icon: 'pi pi-user',
+    command: () => {
+      closeDrawer();
+      router.push({ name: 'Account' });
+    },
+  },
+  {
+    label: 'Аккаунты',
+    icon: 'pi pi-users',
+    command: () => {
+      emit('show-accounts');
+    },
+  },
+]);
 
 const toggleProfileMenu = (event: MouseEvent) => {
   profileMenu.value?.toggle(event);
-};
-
-const handleHelp = () => {
-  profileMenu.value?.hide();
-  emit('show-help');
-};
-
-const handleTheme = () => {
-  profileMenu.value?.hide();
-  toggleTheme();
-};
-
-const handleProfile = () => {
-  profileMenu.value?.hide();
-  closeDrawer();
-  router.push({ name: 'Account' });
-};
-
-const handleAccounts = () => {
-  profileMenu.value?.hide();
-  emit('show-accounts');
 };
 
 // Account label
