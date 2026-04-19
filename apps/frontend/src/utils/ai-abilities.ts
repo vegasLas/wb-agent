@@ -30,30 +30,6 @@ export const AI_ABILITIES: AIAbility[] = [
     prompt: 'Где заканчиваются остатки?',
     description: 'Покажет балансы и критические запасы',
   },
-  {
-    label: 'Акции и промо',
-    icon: 'pi pi-calendar',
-    prompt: 'На какие акции стоит добавить товары?',
-    description: 'Подскажет выгодные промо-акции',
-  },
-  {
-    label: 'Поставки',
-    icon: 'pi pi-truck',
-    prompt: 'Покажи мои текущие поставки',
-    description: 'Статус и детали всех поставок',
-  },
-  {
-    label: 'Карточки товаров',
-    icon: 'pi pi-shopping-bag',
-    prompt: 'Какие карточки товаров нужно доработать?',
-    description: 'Анализирует контент и выдаёт рекомендации',
-  },
-  {
-    label: 'MPStats аналитика',
-    icon: 'pi pi-chart-bar',
-    prompt: 'Проанализируй артикул по MPStats',
-    description: 'Быстрая аналитика по номенклатуре',
-  },
 ];
 
 export const ABILITY_PROMPTS = AI_ABILITIES.map((a) => a.prompt);

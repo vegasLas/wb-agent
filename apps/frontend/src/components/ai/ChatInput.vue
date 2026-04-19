@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import { useTypewriterPlaceholder } from '@/composables/ai/useTypewriterPlaceholder';
 import { ABILITY_PROMPTS } from '@/utils/ai-abilities';
@@ -12,22 +12,44 @@ const attachedFiles = ref<File[]>([]);
 const isDragOver = ref(false);
 const isFocused = ref(false);
 
-const { placeholder: dynamicPlaceholder } = useTypewriterPlaceholder(ABILITY_PROMPTS, {
+const {
+  placeholder: dynamicPlaceholder,
+  start: startTypewriter,
+  stop: stopTypewriter,
+} = useTypewriterPlaceholder(ABILITY_PROMPTS, {
   typingSpeed: 50,
   deleteSpeed: 25,
   pauseAfterType: 2500,
   pauseAfterDelete: 400,
 });
 
-const isLoading = computed(() => store.status === 'submitted' || store.status === 'streaming');
-const hasInput = computed(() => !!inputText.value.trim() || attachedFiles.value.length > 0);
+const isLoading = computed(
+  () => store.status === 'submitted' || store.status === 'streaming',
+);
+const hasInput = computed(
+  () => !!inputText.value.trim() || attachedFiles.value.length > 0,
+);
+const hasMessages = computed(() => store.messages.length > 0);
+
+watch(
+  hasMessages,
+  (has) => {
+    if (has) {
+      stopTypewriter();
+      dynamicPlaceholder.value = '';
+    } else {
+      startTypewriter();
+    }
+  },
+  { immediate: true },
+);
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_FILES = 3;
 const ACCEPTED_TYPES = ['.xlsx', '.xls', '.pdf'];
 
 function isAcceptedFile(file: File): boolean {
-  return ACCEPTED_TYPES.some(ext => file.name.toLowerCase().endsWith(ext));
+  return ACCEPTED_TYPES.some((ext) => file.name.toLowerCase().endsWith(ext));
 }
 
 function processFiles(files: FileList | null): File[] {
@@ -90,7 +112,11 @@ function removeFile(index: number) {
 }
 
 async function handleSubmit() {
-  if ((!inputText.value.trim() && attachedFiles.value.length === 0) || isLoading.value) return;
+  if (
+    (!inputText.value.trim() && attachedFiles.value.length === 0) ||
+    isLoading.value
+  )
+    return;
   const text = inputText.value.trim();
   inputText.value = '';
   const files = attachedFiles.value.length ? attachedFiles.value : undefined;
@@ -116,7 +142,8 @@ function adjustHeight() {
 }
 
 function getFileIcon(file: File): string {
-  if (file.name.match(/\.(xlsx|xls)$/i)) return 'pi pi-file-excel text-green-500';
+  if (file.name.match(/\.(xlsx|xls)$/i))
+    return 'pi pi-file-excel text-green-500';
   if (file.name.match(/\.pdf$/i)) return 'pi pi-file-pdf text-red-400';
   return 'pi pi-file text-secondary';
 }
@@ -147,8 +174,12 @@ function getFileIcon(file: File): string {
       v-model="inputText"
       rows="1"
       :disabled="isLoading"
-      class="w-full min-h-[48px] md:min-h-[72px] max-h-[240px] bg-transparent text-theme text-base resize-none outline-none border-none placeholder:text-secondary disabled:opacity-60"
-      :placeholder="isFocused ? 'Напишите задачу для ИИ...' : dynamicPlaceholder"
+      class="w-full min-h-[28px] md:min-h-[72px] max-h-[240px] bg-transparent text-theme text-base resize-none outline-none border-none placeholder:text-secondary disabled:opacity-60"
+      :placeholder="
+        isFocused || hasMessages
+          ? 'Напишите задачу для ИИ...'
+          : dynamicPlaceholder
+      "
       @keydown="handleKeydown"
       @input="adjustHeight"
       @focus="isFocused = true"
