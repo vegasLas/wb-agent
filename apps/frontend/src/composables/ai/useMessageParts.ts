@@ -140,7 +140,24 @@ function renderTextHtml(text: string, role: MessageRole): string {
   if (!text) return '';
   const safeText = role === 'assistant' ? sanitizeAssistantText(text) : text;
   const parsed = marked.parse(safeText, { breaks: true, gfm: true }) as string;
-  return DOMPurify.sanitize(parsed);
+  let html = DOMPurify.sanitize(parsed);
+  html = html
+    .replace(
+      /<table\b/g,
+      '<div class="table-wrapper">' +
+        '<div class="table-actions">' +
+        '<div class="table-export-dropdown">' +
+        '<button class="table-export-toggle" type="button" title="Скачать">↓ Скачать</button>' +
+        '<div class="table-export-menu">' +
+        '<button class="table-export-item" data-format="csv" type="button">CSV</button>' +
+        '<button class="table-export-item" data-format="xlsx" type="button">Excel</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="table-scroll"><table',
+    )
+    .replace(/<\/table>/g, '</table></div></div>');
+  return html;
 }
 
 export function useMessageParts(
