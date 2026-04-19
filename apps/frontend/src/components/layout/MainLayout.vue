@@ -9,23 +9,23 @@
 
     <!-- Main Content -->
     <main
-      class="flex-1 px-4 lg:px-8 lg:py-6 relative pb-24 lg:pb-6 min-h-screen"
+      class="flex-1 px-4 lg:px-8 lg:py-6 relative pb-6 min-h-screen"
     >
       <!-- Top Bar with Account (left) and Plus (right) buttons -->
       <!-- This is always visible once router is ready - not part of skeleton -->
       <div
         class="flex items-center justify-between lg:hidden sticky top-0 z-30 bg-deep-bg py-4 -mx-4 px-4"
       >
-        <!-- Account Button and Supplier Name (Left) -->
+        <!-- Burger and Supplier Name (Left) -->
         <div class="flex items-center gap-2">
           <Button
-            :severity="isAccountRoute ? 'primary' : 'secondary'"
+            severity="secondary"
             variant="outlined"
             class="rounded"
-            aria-label="Профиль"
-            @click="navigateToAccount"
+            aria-label="Меню"
+            @click="drawerVisible = true"
           >
-            <i class="pi pi-user" />
+            <i class="pi pi-bars" />
           </Button>
           <Button
             v-if="currentSupplierName"
@@ -81,8 +81,12 @@
       </div>
     </main>
 
-    <!-- Bottom Navigation (Mobile) -->
-    <BottomNavigation class="lg:hidden" />
+    <!-- Mobile Navigation Drawer -->
+    <MobileNavDrawer
+      v-model:visible="drawerVisible"
+      @show-help="showHelpModal = true"
+      @show-accounts="accountModalStore.showModal = true"
+    />
 
     <!-- Global Modals -->
     <MainHelpModal v-model="showHelpModal" />
@@ -102,7 +106,7 @@
 
 <script setup lang="ts">
 import { ref, inject, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
@@ -111,8 +115,8 @@ import { useUserStore } from '@/stores/user';
 import { MainHelpModal } from '../help';
 import { AccountManagementView } from '../account-management';
 import { useSkeleton } from '../../composables/ui';
-import BottomNavigation from '../BottomNavigation.vue';
 import AppSidebar from './AppSidebar.vue';
+import MobileNavDrawer from './MobileNavDrawer.vue';
 import AutobookingCreateDialog from '../autobooking/CreateDialog.vue';
 import TriggerCreateDialog from '../triggers/CreateDialog.vue';
 import type { MenuItem } from 'primevue/menu';
@@ -122,6 +126,7 @@ import { useTriggerStore } from '@/stores/triggers';
 const accountModalStore = useAccountSupplierModalStore();
 const userStore = useUserStore();
 const showHelpModal = ref(false);
+const drawerVisible = ref(false);
 
 // Theme toggle
 const colorMode = useColorMode({
@@ -147,12 +152,7 @@ const showContentSkeleton = computed(
   () => showSkeleton.value && !isRouterInitializing.value,
 );
 
-const route = useRoute();
 const router = useRouter();
-
-// Account navigation
-const isAccountRoute = computed(() => route.name === 'Account');
-const navigateToAccount = () => router.push({ name: 'Account' });
 
 // Add menu
 const addMenu = ref<InstanceType<typeof Menu> | null>(null);
