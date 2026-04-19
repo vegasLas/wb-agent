@@ -100,7 +100,7 @@ const emit = defineEmits<{
     <!-- Loading indicator -->
     <div v-if="isLoading" class="flex justify-start items-start gap-2">
       <div
-        class="w-8 h-8 rounded-full bg-purple-600/10 flex items-center justify-center shrink-0 mt-1"
+        class="w-8 h-8 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center shrink-0 mt-1"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
