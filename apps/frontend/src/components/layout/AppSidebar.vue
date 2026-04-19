@@ -106,6 +106,13 @@
           <div class="border-t border-deep-border my-1" />
           <button
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
+            @click="handleProfile"
+          >
+            <i class="pi pi-user text-base" />
+            <span>Профиль</span>
+          </button>
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
             @click="handleAccounts"
           >
             <i class="pi pi-users text-base" />
@@ -119,17 +126,19 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Popover from 'primevue/popover';
 import { useUserStore } from '@/stores/user';
+import { useNavigation } from '@/composables/useNavigation';
 
 const emit = defineEmits<{
   'show-help': [];
   'show-accounts': [];
 }>();
 
-const route = useRoute();
+const router = useRouter();
+const { primaryNav, secondaryNav, isActive } = useNavigation();
 const userStore = useUserStore();
 
 // Theme toggle
@@ -161,6 +170,11 @@ const handleTheme = () => {
   toggleTheme();
 };
 
+const handleProfile = () => {
+  profileMenu.value?.hide();
+  router.push({ name: 'Account' });
+};
+
 const handleAccounts = () => {
   profileMenu.value?.hide();
   emit('show-accounts');
@@ -178,84 +192,6 @@ const subscriptionLabel = computed(() => {
   }
   return 'Не активна';
 });
-
-// Primary navigation
-const primaryNav = [
-  { id: 'chat', label: 'AI Чат', icon: 'pi pi-comments', route: 'Chat' },
-  { id: 'tasks', label: 'Задачи', icon: 'pi pi-check-square', route: 'Tasks' },
-  {
-    id: 'autobooking',
-    label: 'Автоброни',
-    icon: 'pi pi-calendar',
-    route: 'AutobookingList',
-  },
-  {
-    id: 'triggers',
-    label: 'Таймслоты',
-    icon: 'pi pi-clock',
-    route: 'TriggersList',
-  },
-  { id: 'promotions', label: 'Акции', icon: 'pi pi-tags', route: 'Promotions' },
-  { id: 'reports', label: 'Отчеты', icon: 'pi pi-chart-pie', route: 'Reports' },
-  {
-    id: 'adverts',
-    label: 'Реклама',
-    icon: 'pi pi-megaphone',
-    route: 'Adverts',
-  },
-  {
-    id: 'regionSales',
-    label: 'Продажи по регионам',
-    icon: 'pi pi-map',
-    route: 'RegionSales',
-  },
-  {
-    id: 'reschedules',
-    label: 'Перепланирования',
-    icon: 'pi pi-calendar-clock',
-    route: 'ReschedulesList',
-  },
-  {
-    id: 'tariffs',
-    label: 'Тарифы',
-    icon: 'pi pi-percentage',
-    route: 'Tariffs',
-  },
-  {
-    id: 'mpstats',
-    label: 'MPStats',
-    icon: 'pi pi-chart-bar',
-    route: 'MPStats',
-  },
-];
-
-// Secondary navigation
-const secondaryNav = [
-  {
-    id: 'payments',
-    label: 'Магазин',
-    icon: 'pi pi-shopping-cart',
-    route: 'Payments',
-  },
-];
-
-// Active state check
-function isActive(item: { id: string; route: string }): boolean {
-  const routeName = route.name?.toString() ?? '';
-  const routePath = route.path;
-
-  // Match by route name prefix
-  if (routeName.startsWith(item.id)) {
-    return true;
-  }
-
-  // Fallback: match by path for routes that share a base path
-  if (routePath.startsWith(`/${item.id.toLowerCase()}`)) {
-    return true;
-  }
-
-  return false;
-}
 </script>
 
 <style scoped>
