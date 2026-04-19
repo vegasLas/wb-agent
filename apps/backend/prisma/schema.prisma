@@ -290,7 +290,6 @@ model AiConversation {
   updatedAt      DateTime    @updatedAt
 
   messages       AiMessage[]
-  pendingAction  AiPendingAction?
 
   @@index([userId, updatedAt])
 }
@@ -302,7 +301,6 @@ model AiMessage {
   content        String   @db.Text
   toolCalls      Json?
   toolResults    Json?
-  suggestions    String[] @default([])
   attachments    Json?
   createdAt      DateTime @default(now())
 
@@ -311,17 +309,3 @@ model AiMessage {
   @@index([conversationId, createdAt])
 }
 
-model AiPendingAction {
-  id             String   @id @default(uuid())
-  conversationId String   @unique
-  actionType     String
-  options        Json
-  context        Json     @default("{}")
-  expiresAt      DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  @@index([conversationId, expiresAt])
-}

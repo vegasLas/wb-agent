@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import { useChatScroll } from '@/composables/ai/useChatScroll';
-import { useQuickReplies, type QuickReply } from '@/composables/ai/useQuickReplies';
 import { AI_ABILITIES } from '@/utils/ai-abilities';
 import Button from 'primevue/button';
 import ChatMessage from './ChatMessage.vue';
@@ -18,17 +17,8 @@ const hasError = computed(() => !!store.error);
 const isEmpty = computed(() => safeMessages.value.length === 0);
 
 const { scrollContainer } = useChatScroll(() => safeMessages.value);
-const quickReplies = useQuickReplies(
-  () => safeMessages.value,
-  () => isLoading.value,
-);
-
 function handleRetry() {
   store.retry();
-}
-
-function handleQuickReply(reply: QuickReply) {
-  emit('send', reply.value);
 }
 
 const abilities = AI_ABILITIES;
@@ -82,21 +72,6 @@ const emit = defineEmits<{
       :key="message.id ?? `msg-${index}`"
       :message="message"
     />
-
-    <!-- Quick reply chips -->
-    <div v-if="quickReplies.length && !isLoading" class="flex justify-start">
-      <div class="max-w-[85%] flex flex-wrap gap-2">
-        <button
-          v-for="(reply, idx) in quickReplies"
-          :key="reply.value + reply.label"
-          class="px-3 py-1.5 rounded-full border border-purple-600/30 bg-purple-600/10 text-sm text-purple-700 dark:text-purple-300 hover:bg-purple-600/20 transition-colors"
-          @click="handleQuickReply(reply)"
-        >
-          <template v-if="reply.isNumbered">{{ idx + 1 }}.</template>
-          {{ reply.label }}
-        </button>
-      </div>
-    </div>
 
     <!-- Loading indicator -->
     <div v-if="isLoading" class="flex justify-start items-start gap-2">
