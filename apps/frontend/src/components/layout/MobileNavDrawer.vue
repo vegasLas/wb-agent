@@ -1,9 +1,17 @@
 <template>
-  <aside
-    class="w-[260px] h-screen sticky top-0 shrink-0 bg-card border-r border-deep-border flex flex-col"
+  <Sidebar
+    v-model:visible="localVisible"
+    position="left"
+    :block-scroll="true"
+    :show-close-icon="true"
+    :pt="{
+      root: { class: 'w-[260px] border-r border-deep-border' },
+      content: { class: 'p-0 flex flex-col h-full' },
+      header: { class: 'hidden' },
+    }"
   >
     <!-- Brand -->
-    <div class="h-16 flex items-center gap-3 px-5 border-b border-deep-border">
+    <div class="h-16 flex items-center gap-3 px-5 border-b border-deep-border shrink-0">
       <div
         class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg shadow-purple-900/20"
       >
@@ -30,6 +38,7 @@
               ? 'bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-md shadow-purple-900/20'
               : 'text-secondary hover:text-theme hover:bg-elevated hover:translate-x-0.5',
           ]"
+          @click="closeDrawer"
         >
           <i
             :class="[
@@ -61,6 +70,7 @@
               ? 'bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-md shadow-purple-900/20'
               : 'text-secondary hover:text-theme hover:bg-elevated hover:translate-x-0.5',
           ]"
+          @click="closeDrawer"
         >
           <i
             :class="[
@@ -75,7 +85,7 @@
     </div>
 
     <!-- Bottom Actions -->
-    <div class="px-3 py-4 border-t border-deep-border">
+    <div class="px-3 py-4 border-t border-deep-border shrink-0">
       <!-- Profile Dropdown -->
       <button
         class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-all duration-200 hover:translate-x-0.5"
@@ -121,18 +131,24 @@
         </div>
       </Popover>
     </div>
-  </aside>
+  </Sidebar>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
+import Sidebar from 'primevue/sidebar';
 import Popover from 'primevue/popover';
 import { useUserStore } from '@/stores/user';
 import { useNavigation } from '@/composables/useNavigation';
 
+const props = defineProps<{
+  visible: boolean;
+}>();
+
 const emit = defineEmits<{
+  'update:visible': [value: boolean];
   'show-help': [];
   'show-accounts': [];
 }>();
@@ -151,6 +167,16 @@ const isDark = computed(() => colorMode.value === 'dark');
 
 const toggleTheme = () => {
   colorMode.value = isDark.value ? 'light' : 'dark';
+};
+
+// Local visible wrapper
+const localVisible = computed({
+  get: () => props.visible,
+  set: (val) => emit('update:visible', val),
+});
+
+const closeDrawer = () => {
+  localVisible.value = false;
 };
 
 // Profile menu
@@ -172,6 +198,7 @@ const handleTheme = () => {
 
 const handleProfile = () => {
   profileMenu.value?.hide();
+  closeDrawer();
   router.push({ name: 'Account' });
 };
 
@@ -184,19 +211,4 @@ const handleAccounts = () => {
 const accountLabel = computed(() => {
   return userStore.activeSupplier?.supplierName || 'Профиль';
 });
-
-// Subscription label
-const subscriptionLabel = computed(() => {
-  if (userStore.subscriptionActive) {
-    return `${userStore.subscriptionRemainingDays} дн.`;
-  }
-  return 'Не активна';
-});
 </script>
-
-<style scoped>
-aside {
-  /* Ensure the sidebar stacks above any z-10 content overlays */
-  z-index: 20;
-}
-</style>

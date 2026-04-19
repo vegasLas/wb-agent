@@ -9,21 +9,6 @@
     @hide="$emit('hide')"
   >
     <div class="space-y-4">
-      <!-- Warehouse filter (UX context) -->
-      <div class="flex items-center gap-2">
-        <label class="text-sm text-gray-500">Склад:</label>
-        <Select
-          v-model="selectedWarehouse"
-          :options="warehouseOptions"
-          option-label="name"
-          option-value="id"
-          filter
-          show-clear
-          placeholder="Все склады"
-          class="w-full max-w-xs"
-        />
-      </div>
-
       <!-- Error -->
       <ErrorMessage
         v-if="error"
@@ -111,15 +96,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
 import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Select from 'primevue/select';
 import ErrorMessage from '@/components/common/ErrorMessage.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
-import { useWarehousesStore } from '@/stores/warehouses';
 import type { CommissionCategory, ContentCardTableItem } from '@/types';
 
 const props = defineProps<{
@@ -136,27 +119,5 @@ const emit = defineEmits<{
   'hide': [];
 }>();
 
-const warehouseStore = useWarehousesStore();
-const selectedWarehouse = ref<number | null>(null);
-
 const cardTitle = computed(() => props.card?.title || 'Карточка');
-
-const warehouseOptions = computed(() => {
-  const allOption = { id: null as number | null, name: 'Все склады' };
-  const list = warehouseStore.warehouses.map((w) => ({
-    id: w.ID,
-    name: w.name,
-  }));
-  return [allOption, ...list];
-});
-
-watch(
-  () => props.visible,
-  (isVisible) => {
-    if (isVisible) {
-      selectedWarehouse.value = null;
-      warehouseStore.fetchWarehouses();
-    }
-  },
-);
 </script>

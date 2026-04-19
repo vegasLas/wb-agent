@@ -4,58 +4,44 @@
   >
     <!-- Main Content Area -->
     <main
-      class="flex-1 container mx-auto px-4 py-6 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative pb-24"
+      class="flex-1 container mx-auto px-4 py-6 lg:mx-0 lg:max-w-none lg:px-8 lg:py-6 overflow-y-auto relative pb-6"
     >
       <!-- Top Bar Skeleton (matches MainLayout) -->
       <div class="flex items-center justify-between mb-4 lg:hidden">
-        <!-- Account Button Skeleton (Left) -->
-        <Skeleton
-          width="2.5rem"
-          height="2.5rem"
-          border-radius="0.375rem"
-        />
+        <!-- Burger + Supplier Name Skeleton (Left) -->
+        <div class="flex items-center gap-2">
+          <Skeleton
+            width="2.5rem"
+            height="2.5rem"
+            border-radius="0.375rem"
+          />
+          <Skeleton
+            width="6rem"
+            height="2.5rem"
+            border-radius="0.375rem"
+          />
+        </div>
 
-        <!-- Plus Button Skeleton (Right) -->
-        <Skeleton
-          width="2.5rem"
-          height="2.5rem"
-          border-radius="0.375rem"
-        />
+        <!-- Theme + Plus Button Skeleton (Right) -->
+        <div class="flex items-center gap-2">
+          <Skeleton
+            width="2.5rem"
+            height="2.5rem"
+            border-radius="0.375rem"
+          />
+          <Skeleton
+            width="2.5rem"
+            height="2.5rem"
+            border-radius="0.375rem"
+          />
+        </div>
       </div>
 
       <!-- Content Skeleton -->
       <slot />
     </main>
 
-    <!-- Bottom Navigation Skeleton (Mobile) -->
-    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 lg:hidden">
-      <div
-        class="bg-deep-card border border-deep-border rounded-full px-4 py-2 shadow-lg"
-      >
-        <div class="flex items-center gap-2">
-          <Skeleton
-            width="3rem"
-            height="2.5rem"
-            border-radius="0.5rem"
-          />
-          <Skeleton
-            width="3rem"
-            height="2.5rem"
-            border-radius="0.5rem"
-          />
-          <Skeleton
-            width="3rem"
-            height="2.5rem"
-            border-radius="0.5rem"
-          />
-          <Skeleton
-            width="3rem"
-            height="2.5rem"
-            border-radius="0.5rem"
-          />
-        </div>
-      </div>
-    </div>
+
   </div>
 </template>
 
