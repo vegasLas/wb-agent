@@ -8,9 +8,7 @@
     />
 
     <!-- Main Content -->
-    <main
-      class="flex-1 px-4 lg:px-8 lg:py-6 relative pb-6 min-h-screen"
-    >
+    <main class="flex-1 px-4 lg:px-8 lg:py-6 relative min-h-screen">
       <!-- Top Bar with Account (left) and Plus (right) buttons -->
       <!-- This is always visible once router is ready - not part of skeleton -->
       <div
