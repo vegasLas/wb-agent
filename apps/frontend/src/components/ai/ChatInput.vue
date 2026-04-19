@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
+import { useTypewriterPlaceholder } from '@/composables/ai/useTypewriterPlaceholder';
+import { ABILITY_PROMPTS } from '@/utils/ai-abilities';
 
 const store = useAIChatStore();
 const inputText = ref('');
@@ -8,6 +10,14 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const attachedFiles = ref<File[]>([]);
 const isDragOver = ref(false);
+const isFocused = ref(false);
+
+const { placeholder: dynamicPlaceholder } = useTypewriterPlaceholder(ABILITY_PROMPTS, {
+  typingSpeed: 50,
+  deleteSpeed: 25,
+  pauseAfterType: 2500,
+  pauseAfterDelete: 400,
+});
 
 const isLoading = computed(() => store.status === 'submitted' || store.status === 'streaming');
 const hasInput = computed(() => !!inputText.value.trim() || attachedFiles.value.length > 0);
@@ -138,9 +148,11 @@ function getFileIcon(file: File): string {
       rows="1"
       :disabled="isLoading"
       class="w-full min-h-[48px] md:min-h-[72px] max-h-[240px] bg-transparent text-theme text-base resize-none outline-none border-none placeholder:text-secondary disabled:opacity-60"
-      placeholder="Напишите задачу для ИИ..."
+      :placeholder="isFocused ? 'Напишите задачу для ИИ...' : dynamicPlaceholder"
       @keydown="handleKeydown"
       @input="adjustHeight"
+      @focus="isFocused = true"
+      @blur="isFocused = false"
     />
 
     <!-- Bottom toolbar -->

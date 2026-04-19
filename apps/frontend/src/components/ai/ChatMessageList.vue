@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import { useChatScroll } from '@/composables/ai/useChatScroll';
 import { useQuickReplies, type QuickReply } from '@/composables/ai/useQuickReplies';
+import { AI_ABILITIES } from '@/utils/ai-abilities';
 import Button from 'primevue/button';
 import ChatMessage from './ChatMessage.vue';
 import type { UIMessage } from 'ai';
@@ -30,11 +31,7 @@ function handleQuickReply(reply: QuickReply) {
   emit('send', reply.value);
 }
 
-const suggestions = [
-  'Создай автобронирование на завтра',
-  'Покажи мои таймслоты',
-  'Какие акции доступны?',
-];
+const abilities = AI_ABILITIES;
 
 const emit = defineEmits<{
   send: [text: string];
@@ -60,17 +57,21 @@ const emit = defineEmits<{
         <i class="pi pi-sparkles text-2xl text-purple-600" />
       </div>
       <h3 class="text-lg font-semibold mb-2">Чем могу помочь?</h3>
-      <p class="text-sm text-muted mb-6 max-w-xs">
-        Задавайте вопросы про автобронирования, таймслоты, отчеты и акции.
+      <p class="text-sm text-muted mb-6 max-w-sm">
+        Выберите одну из способностей или напишите свой вопрос
       </p>
-      <div class="space-y-2 w-full max-w-xs">
+      <div class="flex flex-wrap justify-center gap-3 w-full max-w-xl">
         <button
-          v-for="suggestion in suggestions"
-          :key="suggestion"
-          class="w-full text-left px-4 py-2.5 rounded-xl border border-deep-border text-sm text-secondary hover:bg-elevated hover:border-purple-600/30 transition-all"
-          @click="emit('send', suggestion)"
+          v-for="ability in abilities"
+          :key="ability.label"
+          class="flex flex-col items-start text-left gap-1 p-4 rounded-xl border border-deep-border bg-card hover:bg-elevated hover:border-purple-600/30 transition-all min-w-[140px] max-w-[180px] flex-1"
+          @click="emit('send', ability.prompt)"
         >
-          {{ suggestion }}
+          <div class="flex items-center gap-2">
+            <i :class="[ability.icon, 'text-purple-600']" />
+            <span class="text-sm font-medium text-theme">{{ ability.label }}</span>
+          </div>
+          <span class="text-xs text-secondary leading-tight">{{ ability.description }}</span>
         </button>
       </div>
     </div>

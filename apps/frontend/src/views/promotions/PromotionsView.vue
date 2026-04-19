@@ -204,7 +204,7 @@ const timelineParticipatingCount = computed(() => {
 const timelineNotParticipatingCount = computed(() => {
   const counts = p.selectedPromotion.value?.participation.counts;
   if (!counts) return 0;
-  return counts.available + counts.participatingOutOfStock;
+  return counts.available;
 });
 
 // Handle show participants with isRecovery flag

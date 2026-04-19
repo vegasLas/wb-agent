@@ -81,6 +81,24 @@ export const TOOL_LABELS: Record<string, { label: string; icon: string }> = {
     icon: 'pi pi-chart-bar',
   },
 
+  // Promotions
+  listPromotions: {
+    label: 'Получаем список акций',
+    icon: 'pi pi-calendar',
+  },
+  getPromotionDetail: {
+    label: 'Получаем детали акции',
+    icon: 'pi pi-info-circle',
+  },
+  getPromotionGoods: {
+    label: 'Получаем товары акции',
+    icon: 'pi pi-box',
+  },
+  managePromotionGoods: {
+    label: 'Изменяем участие товаров в акции',
+    icon: 'pi pi-pencil',
+  },
+
   // Content Cards
   getContentCardsTableList: {
     label: 'Получаем карточки товаров',

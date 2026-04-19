@@ -19,6 +19,7 @@ import { advertsTools } from './tools/adverts.tools';
 import { reportsTools } from './tools/reports.tools';
 import { contentCardsTools } from './tools/content-cards.tools';
 import { userContextTools } from './tools/user-context.tools';
+import { promotionsTools } from './tools/promotions.tools';
 import { resolvePendingOption, clearPendingAction } from './ai-pending-action.service';
 
 import type { AttachmentMeta } from './file-extraction.service';
@@ -113,6 +114,7 @@ export class AIChatService {
           reportsTools(userId),
           contentCardsTools(userId),
           userContextTools(userId),
+          promotionsTools(userId),
         );
 
     // 7. Stream
