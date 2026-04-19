@@ -4,10 +4,6 @@ import { autobookingService } from '@/services/domain/autobooking/autobooking.se
 import { wbSupplierService } from '@/services/external/wb/wb-supplier.service';
 import { safeTool, loggedTool } from './safe-tool.utils';
 import { resolveAccountContext } from './account-context.utils';
-import {
-  createPendingAction,
-  PendingOption,
-} from '../ai-pending-action.service';
 import { formatDraftOption, findBestDraftMatch } from './autobooking.utils';
 
 const supplyTypeEnum = z.enum(['BOX', 'MONOPALLETE', 'SUPERSAFE']);
@@ -241,25 +237,6 @@ If draftId is missing, the tool will look at the last 50 drafts. If there is exa
               if (best.match && best.confidence === 'high') {
                 const singleOption = formatDraftOption(0, best.match);
 
-                if (conversationId) {
-                  await createPendingAction(
-                    conversationId,
-                    'autobooking_draft_choice',
-                    [singleOption],
-                    {
-                      warehouseId: data.warehouseId,
-                      transitWarehouseId: data.transitWarehouseId,
-                      supplyType: data.supplyType,
-                      dateType: data.dateType,
-                      startDate: data.startDate,
-                      endDate: data.endDate,
-                      customDates: data.customDates,
-                      maxCoefficient: data.maxCoefficient,
-                      monopalletCount: data.monopalletCount,
-                    },
-                  );
-                }
-
                 return {
                   success: false,
                   needsChoice: true,
@@ -271,28 +248,9 @@ If draftId is missing, the tool will look at the last 50 drafts. If there is exa
               }
 
               // No clear match — present all drafts
-              const options: PendingOption[] = drafts.map((d: any, i: number) =>
+              const options = drafts.map((d: any, i: number) =>
                 formatDraftOption(i, d),
               );
-
-              if (conversationId) {
-                await createPendingAction(
-                  conversationId,
-                  'autobooking_draft_choice',
-                  options,
-                  {
-                    warehouseId: data.warehouseId,
-                    transitWarehouseId: data.transitWarehouseId,
-                    supplyType: data.supplyType,
-                    dateType: data.dateType,
-                    startDate: data.startDate,
-                    endDate: data.endDate,
-                    customDates: data.customDates,
-                    maxCoefficient: data.maxCoefficient,
-                    monopalletCount: data.monopalletCount,
-                  },
-                );
-              }
 
               return {
                 success: false,
