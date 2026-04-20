@@ -91,13 +91,7 @@
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import ProgressSpinner from 'primevue/progressspinner';
-
-interface ProcessResult {
-  processed: number;
-  posted: number;
-  skipped: number;
-  failed: number;
-}
+import type { ProcessResult } from '@/stores/feedbacks';
 
 interface Props {
   visible: boolean;
