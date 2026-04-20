@@ -350,6 +350,15 @@ model FeedbackAutoAnswer {
   trustFactor      String   @default("buyout") // buyout | rejected
   feedbackTextCons String?
   feedbackTextPros String?
+  productName      String?
+  productBrand     String?
+  productCategory  String?
+  supplierArticle  String?
+  userName         String?
+  purchaseDate     BigInt?
+  feedbackDate     BigInt?
+  photos           Json?
+  video            Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
