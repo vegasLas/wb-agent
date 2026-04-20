@@ -261,7 +261,7 @@ export class FeedbackReviewService {
     existingAutoAnswerMap: Map<string, { status: string }>,
     examplesByValuation: Map<
       number,
-      Array<{ feedbackText: string; answerText: string; valuation: number }>
+      Array<{ feedbackText: string; answerText: string; valuation: number; feedbackTextPros?: string | null; feedbackTextCons?: string | null }>
     >,
   ): Promise<'posted' | 'skipped' | 'pending'> {
     const nmId = feedback.productInfo?.wbArticle;
@@ -286,6 +286,9 @@ export class FeedbackReviewService {
     }
 
     const feedbackText = feedback.feedbackInfo?.feedbackText || '';
+    const feedbackTextPros = feedback.feedbackInfo?.feedbackTextPros || null;
+    const feedbackTextCons = feedback.feedbackInfo?.feedbackTextCons || null;
+    const trustFactor = feedback.trustFactor || 'buyout';
 
     // Use pre-fetched examples with the same valuation (zero API calls)
     const recentAnswers = examplesByValuation.get(feedback.valuation) || [];
@@ -316,6 +319,9 @@ export class FeedbackReviewService {
         answerText,
         valuation: feedback.valuation,
         status: 'PENDING',
+        trustFactor,
+        feedbackTextCons,
+        feedbackTextPros,
       },
       create: {
         userId,
@@ -326,6 +332,9 @@ export class FeedbackReviewService {
         answerText,
         valuation: feedback.valuation,
         status: 'PENDING',
+        trustFactor,
+        feedbackTextCons,
+        feedbackTextPros,
       },
     });
 
@@ -377,12 +386,12 @@ export class FeedbackReviewService {
   ): Promise<
     Map<
       number,
-      Array<{ feedbackText: string; answerText: string; valuation: number }>
+      Array<{ feedbackText: string; answerText: string; valuation: number; feedbackTextPros?: string | null; feedbackTextCons?: string | null }>
     >
   > {
     const result = new Map<
       number,
-      Array<{ feedbackText: string; answerText: string; valuation: number }>
+      Array<{ feedbackText: string; answerText: string; valuation: number; feedbackTextPros?: string | null; feedbackTextCons?: string | null }>
     >();
 
     for (const valuation of valuations) {
@@ -402,6 +411,8 @@ export class FeedbackReviewService {
         feedbackText: r.feedbackText,
         answerText: r.answerText,
         valuation: r.valuation,
+        feedbackTextPros: r.feedbackTextPros,
+        feedbackTextCons: r.feedbackTextCons,
       }));
 
       // Step B: WB API fallback if insufficient
@@ -416,6 +427,8 @@ export class FeedbackReviewService {
             feedbackText: string;
             answerText: string;
             valuation: number;
+            feedbackTextPros?: string | null;
+            feedbackTextCons?: string | null;
           }> = [];
           let cursor = '';
           let hasMore = true;
@@ -445,6 +458,8 @@ export class FeedbackReviewService {
                     feedbackText: f.feedbackInfo?.feedbackText || '',
                     answerText: f.answer?.answerText || '',
                     valuation: f.valuation,
+                    feedbackTextPros: f.feedbackInfo?.feedbackTextPros || null,
+                    feedbackTextCons: f.feedbackInfo?.feedbackTextCons || null,
                   });
                   if (wbAnswers.length >= fallbackThreshold) break;
                 }
@@ -470,6 +485,8 @@ export class FeedbackReviewService {
               feedbackText: wb.feedbackText,
               answerText: wb.answerText,
               valuation: wb.valuation,
+              feedbackTextPros: wb.feedbackTextPros,
+              feedbackTextCons: wb.feedbackTextCons,
             });
             if (examples.length >= limit) break;
           }
@@ -499,6 +516,8 @@ export class FeedbackReviewService {
       feedbackText: string;
       answerText: string;
       valuation: number;
+      feedbackTextPros?: string | null;
+      feedbackTextCons?: string | null;
     }>
   > {
     try {
@@ -519,6 +538,8 @@ export class FeedbackReviewService {
         feedbackText: r.feedbackText,
         answerText: r.answerText,
         valuation: r.valuation,
+        feedbackTextPros: r.feedbackTextPros,
+        feedbackTextCons: r.feedbackTextCons,
       }));
     } catch (error) {
       logger.error(`Error fetching posted answers for nmId ${nmId}:`, error);
@@ -542,12 +563,14 @@ export class FeedbackReviewService {
         feedbackText: string;
         answerText: string;
         valuation: number;
+        feedbackTextPros?: string | null;
+        feedbackTextCons?: string | null;
       }>
     >,
     fallbackThreshold = 20,
     targetValuation?: number,
   ): Promise<
-    Array<{ feedbackText: string; answerText: string; valuation: number }>
+    Array<{ feedbackText: string; answerText: string; valuation: number; feedbackTextPros?: string | null; feedbackTextCons?: string | null }>
   > {
     // 1. Get our own posted answers from cache or DB
     const postedAnswers =
@@ -566,6 +589,8 @@ export class FeedbackReviewService {
         feedbackText: a.feedbackText,
         answerText: a.answerText,
         valuation: a.valuation,
+        feedbackTextPros: a.feedbackTextPros,
+        feedbackTextCons: a.feedbackTextCons,
       }));
     }
 
@@ -583,6 +608,8 @@ export class FeedbackReviewService {
         feedbackText: string;
         answerText: string;
         valuation: number;
+        feedbackTextPros?: string | null;
+        feedbackTextCons?: string | null;
       }> = [];
       let cursor = '';
       let hasMore = true;
@@ -614,6 +641,8 @@ export class FeedbackReviewService {
                 feedbackText: f.feedbackInfo?.feedbackText || '',
                 answerText: f.answer?.answerText || '',
                 valuation: f.valuation,
+                feedbackTextPros: f.feedbackInfo?.feedbackTextPros || null,
+                feedbackTextCons: f.feedbackInfo?.feedbackTextCons || null,
               });
               if (wbAnswers.length >= fallbackThreshold) break;
             }
@@ -637,6 +666,8 @@ export class FeedbackReviewService {
         feedbackText: a.feedbackText,
         answerText: a.answerText,
         valuation: a.valuation,
+        feedbackTextPros: a.feedbackTextPros,
+        feedbackTextCons: a.feedbackTextCons,
       }));
 
       for (const wb of wbAnswers) {
@@ -645,6 +676,8 @@ export class FeedbackReviewService {
           feedbackText: wb.feedbackText,
           answerText: wb.answerText,
           valuation: wb.valuation,
+          feedbackTextPros: wb.feedbackTextPros,
+          feedbackTextCons: wb.feedbackTextCons,
         });
         if (merged.length >= limit) break;
       }
@@ -659,6 +692,8 @@ export class FeedbackReviewService {
         feedbackText: a.feedbackText,
         answerText: a.answerText,
         valuation: a.valuation,
+        feedbackTextPros: a.feedbackTextPros,
+        feedbackTextCons: a.feedbackTextCons,
       }));
     }
   }
@@ -672,6 +707,8 @@ export class FeedbackReviewService {
       feedbackText: string;
       answerText: string;
       valuation: number;
+      feedbackTextPros?: string | null;
+      feedbackTextCons?: string | null;
     }>,
     templates: FeedbackTemplate[],
   ): Promise<string> {
@@ -681,8 +718,11 @@ export class FeedbackReviewService {
     // Build context from recent posted answers
     const recentAnswersContext = recentAnswers
       .map(
-        (a) =>
-          `- Отзыв: "${a.feedbackText}" | Оценка: ${a.valuation}/5 | Ответ: "${a.answerText}"`,
+        (a) => {
+          const pros = a.feedbackTextPros ? ` | Достоинства: "${a.feedbackTextPros}"` : '';
+          const cons = a.feedbackTextCons ? ` | Недостатки: "${a.feedbackTextCons}"` : '';
+          return `- Отзыв: "${a.feedbackText}"${pros}${cons} | Оценка: ${a.valuation}/5 | Ответ: "${a.answerText}"`;
+        },
       )
       .join('\n');
 
@@ -794,6 +834,9 @@ ${recentAnswersContext || '(нет примеров)'}
     }
 
     const feedbackText = feedback.feedbackInfo?.feedbackText || '';
+    const feedbackTextPros = feedback.feedbackInfo?.feedbackTextPros || null;
+    const feedbackTextCons = feedback.feedbackInfo?.feedbackTextCons || null;
+    const trustFactor = feedback.trustFactor || 'buyout';
 
     // Fetch recent answered feedbacks with the same valuation for context
     const recentAnswers = await this.getRecentAnswersWithFallback(
@@ -826,6 +869,9 @@ ${recentAnswersContext || '(нет примеров)'}
         answerText,
         valuation: feedback.valuation,
         status: 'PENDING',
+        trustFactor,
+        feedbackTextCons,
+        feedbackTextPros,
       },
       create: {
         userId,
@@ -836,6 +882,9 @@ ${recentAnswersContext || '(нет примеров)'}
         answerText,
         valuation: feedback.valuation,
         status: 'PENDING',
+        trustFactor,
+        feedbackTextCons,
+        feedbackTextPros,
       },
     });
 
