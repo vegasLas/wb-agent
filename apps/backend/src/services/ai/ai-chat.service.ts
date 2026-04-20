@@ -20,6 +20,7 @@ import { reportsTools } from './tools/reports.tools';
 import { contentCardsTools } from './tools/content-cards.tools';
 import { userContextTools } from './tools/user-context.tools';
 import { promotionsTools } from './tools/promotions.tools';
+import { feedbackTools } from './tools/feedback.tools';
 
 import type { AttachmentMeta } from './file-extraction.service';
 
@@ -107,6 +108,7 @@ export class AIChatService {
           contentCardsTools(userId),
           userContextTools(userId),
           promotionsTools(userId),
+          feedbackTools(userId),
         );
 
     // 7. Stream
