@@ -55,10 +55,10 @@
 
     <!-- Generate Answer Dialog -->
     <GenerateAnswerDialog
-      v-model:visible="showGenerateDialog"
-      :feedback="selectedFeedback"
+      v-model:visible="dialog.showGenerateDialog.value"
+      :feedback="dialog.selectedFeedback.value"
       :loading="feedbacksStore.generateLoading"
-      :post-loading="postLoading"
+      :post-loading="dialog.postLoading.value"
       :answer-text="feedbacksStore.generatedAnswer?.answerText || null"
       :error="feedbacksStore.error"
       @accept="onAcceptAnswer"
@@ -67,10 +67,10 @@
 
     <!-- Answer All Confirm Dialog -->
     <AnswerAllConfirmDialog
-      v-model:visible="showAnswerAllDialog"
-      :count="unansweredCountForDialog"
+      v-model:visible="dialog.showAnswerAllDialog.value"
+      :count="dialog.unansweredCountForDialog.value"
       :loading="feedbacksStore.answerAllLoading"
-      :result="answerAllResult"
+      :result="dialog.answerAllResult.value"
       :error="feedbacksStore.error"
       @confirm="onConfirmAnswerAll"
     />
@@ -78,11 +78,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { computed, onMounted } from 'vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import { useFeedbacksStore } from '@/stores/feedbacks';
 import { useViewReady } from '@/composables/ui';
+import { useFeedbacksDialog } from '@/composables/feedbacks/useFeedbacksDialog';
 import {
   FeedbacksStatsCards,
   FeedbacksActionsBar,
@@ -95,19 +96,11 @@ import type { FeedbackItem } from '@/stores/feedbacks';
 
 const feedbacksStore = useFeedbacksStore();
 const { viewReady } = useViewReady();
-
-// Dialog state
-const showGenerateDialog = ref(false);
-const showAnswerAllDialog = ref(false);
-const selectedFeedback = ref<FeedbackItem | null>(null);
-const postLoading = ref(false);
-const answerAllResult = ref<{ processed: number; posted: number; skipped: number; failed: number } | null>(null);
-const unansweredCountForDialog = ref(0);
+const dialog = useFeedbacksDialog();
 
 // Tabs
 const activeTab = computed(() => feedbacksStore.activeTab);
 const activeTabIndex = computed(() => (activeTab.value === 'unanswered' ? 0 : 1));
-
 const unansweredCount = computed(() => feedbacksStore.unansweredFeedbacks.length);
 
 function onTabChange(index: number) {
@@ -119,66 +112,57 @@ function onTabChange(index: number) {
 async function onToggleAutoAnswer(value: boolean) {
   try {
     await feedbacksStore.updateSettings(value);
-  } catch (err) {
+  } catch {
     // Error handled in store
   }
 }
 
 async function onAnswerAll() {
-  // Fetch count first
   try {
     const count = await feedbacksStore.countUnansweredFeedbacks?.() ?? unansweredCount.value;
-    unansweredCountForDialog.value = count;
-    answerAllResult.value = null;
-    showAnswerAllDialog.value = true;
-  } catch (err) {
-    // Fallback to current count
-    unansweredCountForDialog.value = unansweredCount.value;
-    answerAllResult.value = null;
-    showAnswerAllDialog.value = true;
+    dialog.openAnswerAllDialog(count);
+  } catch {
+    dialog.openAnswerAllDialog(unansweredCount.value);
   }
 }
 
 async function onConfirmAnswerAll() {
   try {
     const result = await feedbacksStore.answerAllFeedbacks();
-    answerAllResult.value = result;
-  } catch (err) {
-    answerAllResult.value = null;
+    dialog.setAnswerAllResult(result);
+  } catch {
+    dialog.setAnswerAllResult(null);
   }
 }
 
 async function onGenerate(feedback: FeedbackItem) {
-  selectedFeedback.value = feedback;
-  showGenerateDialog.value = true;
+  dialog.openGenerateDialog(feedback);
   feedbacksStore.clearGeneratedAnswer();
 
   try {
     await feedbacksStore.generateAnswer(feedback.id);
-  } catch (err) {
+  } catch {
     // Error handled in store
   }
 }
 
 async function onAcceptAnswer(feedbackId: string) {
-  postLoading.value = true;
+  dialog.setPostLoading(true);
   try {
     await feedbacksStore.acceptAnswer(feedbackId);
-    showGenerateDialog.value = false;
-    selectedFeedback.value = null;
-  } catch (err) {
+    dialog.closeGenerateDialog();
+  } catch {
     // Error handled in store
   } finally {
-    postLoading.value = false;
+    dialog.setPostLoading(false);
   }
 }
 
 async function onRejectAnswer(feedbackId: string) {
   try {
     await feedbacksStore.rejectAnswer(feedbackId);
-    showGenerateDialog.value = false;
-    selectedFeedback.value = null;
-  } catch (err) {
+    dialog.closeGenerateDialog();
+  } catch {
     // Error handled in store
   }
 }

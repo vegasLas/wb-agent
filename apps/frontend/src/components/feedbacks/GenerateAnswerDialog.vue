@@ -2,7 +2,7 @@
   <Dialog
     :visible="visible"
     @update:visible="$emit('update:visible', $event)"
-    :header="dialogHeader"
+    header="Генерация ответа на отзыв"
     :style="{ width: '500px' }"
     :modal="true"
     :closable="!loading"
@@ -12,7 +12,7 @@
       <div class="p-3 bg-surface-100 dark:bg-surface-700 rounded-lg">
         <div class="flex items-center gap-3 mb-2">
           <img
-            :src="getWbImageUrl(feedback?.productInfo?.wbArticle)"
+            :src="imageUrl"
             class="w-10 h-10 object-cover rounded"
             @error="$event.target.src = '/placeholder-product.png'"
           />
@@ -74,6 +74,7 @@ import { computed } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import ProgressSpinner from 'primevue/progressspinner';
+import { getWbImageUrl } from '@/utils/feedbacks/image-url';
 import type { FeedbackItem } from '@/stores/feedbacks';
 
 interface Props {
@@ -93,9 +94,7 @@ const emit = defineEmits<{
   (e: 'reject', feedbackId: string): void;
 }>();
 
-const dialogHeader = computed(() => {
-  return 'Генерация ответа на отзыв';
-});
+const imageUrl = computed(() => getWbImageUrl(props.feedback?.productInfo?.wbArticle));
 
 function onAccept() {
   if (props.feedback) {
@@ -107,13 +106,5 @@ function onReject() {
   if (props.feedback) {
     emit('reject', props.feedback.id);
   }
-}
-
-function getWbImageUrl(wbArticle: number): string {
-  if (!wbArticle) return '/placeholder-product.png';
-  const articleStr = wbArticle.toString();
-  const first4 = articleStr.slice(0, 4);
-  const first6 = articleStr.slice(0, 6);
-  return `https://rst-basket-cdn-06.geobasket.ru/vol${first4}/part${first6}/${wbArticle}/images/tm/1.webp`;
 }
 </script>

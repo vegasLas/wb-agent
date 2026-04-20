@@ -1,6 +1,6 @@
 <template>
   <DataTable
-    :value="feedbacks"
+    :value="rows"
     scrollable
     scroll-height="flex"
     class="p-datatable-sm"
@@ -11,7 +11,7 @@
       <template #body="{ data }">
         <div class="flex items-center gap-3">
           <img
-            :src="getWbImageUrl(data.productInfo?.wbArticle)"
+            :src="data.imageUrl"
             :alt="data.productInfo?.name"
             class="w-12 h-12 object-cover rounded-lg"
             @error="$event.target.src = '/placeholder-product.png'"
@@ -94,7 +94,7 @@
     <Column field="createdDate" header="Дата" style="width: 120px">
       <template #body="{ data }">
         <span class="text-sm text-surface-500">
-          {{ formatDate(data.createdDate) }}
+          {{ data.formattedDate }}
         </span>
       </template>
     </Column>
@@ -135,36 +135,35 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
+import { getWbImageUrl } from '@/utils/feedbacks/image-url';
+import { formatDate } from '@/utils/feedbacks/date-format';
 import type { FeedbackItem } from '@/stores/feedbacks';
+
+interface TableRow extends FeedbackItem {
+  imageUrl: string;
+  formattedDate: string;
+}
 
 interface Props {
   feedbacks: FeedbackItem[];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'generate', feedback: FeedbackItem): void;
 }>();
 
-function getWbImageUrl(wbArticle: number): string {
-  if (!wbArticle) return '/placeholder-product.png';
-  const articleStr = wbArticle.toString();
-  const first4 = articleStr.slice(0, 4);
-  const first6 = articleStr.slice(0, 6);
-  return `https://rst-basket-cdn-06.geobasket.ru/vol${first4}/part${first6}/${wbArticle}/images/tm/1.webp`;
-}
-
-function formatDate(timestamp: number): string {
-  if (!timestamp) return '';
-  return new Date(timestamp).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
+const rows = computed<TableRow[]>(() =>
+  props.feedbacks.map((f) => ({
+    ...f,
+    imageUrl: getWbImageUrl(f.productInfo?.wbArticle),
+    formattedDate: formatDate(f.createdDate),
+  })),
+);
 </script>
