@@ -6,13 +6,15 @@
  * - Post feedback answer
  */
 
-import { prisma } from '@/config/database';
 import { wbAccountRequest } from '@/utils/wb-request';
-import type { ProxyConfig } from '@/utils/wb-request';
+import { resolveAccountContext } from '@/utils/supplier-resolver';
 import { createLogger } from '@/utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger('WBFeedback');
+
+const DEFAULT_PAGE_LIMIT = 100;
+const MAX_FEEDBACKS_FETCH = 5000;
 
 import type {
   FeedbackResponse,
@@ -22,61 +24,6 @@ import type {
   FeedbackTemplateData,
   FeedbackAnswerResponse,
 } from '@/types/wb';
-
-interface AccountContext {
-  accountId: string;
-  supplierId: string;
-  userAgent: string;
-  proxy: ProxyConfig | undefined;
-}
-
-/**
- * Resolve account, supplier, envInfo for a user
- */
-async function resolveAccountContext(userId: number): Promise<AccountContext> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      accounts: {
-        include: {
-          suppliers: true,
-        },
-      },
-    },
-  });
-
-  if (!user) {
-    throw new Error('User not found');
-  }
-
-  const account = user.accounts.find((a) => a.id === user.selectedAccountId);
-  if (!account) {
-    throw new Error('No account selected for user');
-  }
-
-  const supplierId =
-    account.selectedSupplierId || account.suppliers[0]?.supplierId;
-  if (!supplierId) {
-    throw new Error('No supplier found for account');
-  }
-
-  const envInfo = user.envInfo as unknown as {
-    userAgent?: string;
-    proxy?: ProxyConfig;
-  } | null;
-
-  const userAgent =
-    envInfo?.userAgent ||
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-  const proxy = envInfo?.proxy;
-
-  return {
-    accountId: account.id,
-    supplierId,
-    userAgent,
-    proxy,
-  };
-}
 
 export class WBFeedbackService {
   /**
@@ -155,7 +102,7 @@ export class WBFeedbackService {
       const data = await this.getFeedbacks({
         userId,
         isAnswered,
-        limit: 100,
+        limit: DEFAULT_PAGE_LIMIT,
         cursor,
         searchText,
         valuations,
@@ -172,8 +119,8 @@ export class WBFeedbackService {
       }
 
       // Safety break
-      if (allFeedbacks.length >= 5000) {
-        logger.warn(`Reached safety limit of 5000 feedbacks for user ${userId}`);
+      if (allFeedbacks.length >= MAX_FEEDBACKS_FETCH) {
+        logger.warn(`Reached safety limit of ${MAX_FEEDBACKS_FETCH} feedbacks for user ${userId}`);
         break;
       }
     }
