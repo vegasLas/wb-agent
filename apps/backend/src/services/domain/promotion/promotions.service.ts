@@ -11,14 +11,11 @@ import {
   type GetPromotionExcelParams,
   type PromotionExcelResult,
 } from './promotions.excel.service';
-import { createLogger } from '@/utils/logger';
 import { wbAccountRequest } from '@/utils/wb-request';
 import type {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
 } from '@/types/wb';
-
-const logger = createLogger('Promotions');
 
 // ─── Timeline ───────────────────────────────────────────────────────────────
 
