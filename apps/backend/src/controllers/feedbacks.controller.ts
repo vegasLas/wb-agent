@@ -1,509 +1,191 @@
 /**
  * Feedbacks Controller
- * HTTP request handlers for feedback endpoints
- * All operations are scoped to the user's selected supplier
+ * HTTP request handlers for feedback endpoints.
+ * Assumes authenticate + resolveSupplier middleware have already run.
  */
 
 import { Request, Response } from 'express';
-import {
-  feedbackReviewService,
-  resolveSupplierId,
-} from '@/services/domain/feedback/feedback-review.service';
+import { feedbackReviewService } from '@/services/domain/feedback/feedback-review.service';
+import { feedbackSettingsService } from '@/services/domain/feedback/feedback-settings.service';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
+import { successResponse } from '@/utils/response';
+import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
+
+function getUserId(req: Request): number {
+  return req.user!.id;
+}
+
+function getSupplierId(req: Request): string {
+  return req.supplierId!;
+}
 
 /**
  * GET /api/v1/feedbacks
- * Get feedbacks list for the authenticated user
  */
-export const fetchFeedbacks = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const fetchFeedbacks = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { isAnswered, limit, cursor, searchText } = req.query as {
+    isAnswered?: string;
+    limit?: string;
+    cursor?: string;
+    searchText?: string;
+  };
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
+  logger.info(`Fetching feedbacks for user ${userId}`);
 
-    const { isAnswered, limit, cursor, searchText } = req.query as {
-      isAnswered?: string;
-      limit?: string;
-      cursor?: string;
-      searchText?: string;
-    };
+  const data = await wbFeedbackService.getFeedbacks({
+    userId,
+    isAnswered: isAnswered === 'true',
+    limit: limit ? Number(limit) : 100,
+    cursor: cursor || '',
+    searchText: searchText || '',
+  });
 
-    logger.info(`Fetching feedbacks for user ${userId}`);
-
-    const data = await wbFeedbackService.getFeedbacks({
-      userId,
-      isAnswered: isAnswered === 'true',
-      limit: limit ? Number(limit) : 100,
-      cursor: cursor || '',
-      searchText: searchText || '',
-    });
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (error) {
-    logger.error('Error in fetchFeedbacks controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
-  }
+  successResponse(res, data);
 };
 
 /**
  * GET /api/v1/feedbacks/count-unanswered
- * Count total unanswered feedbacks
  */
-export const countUnansweredFeedbacks = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const countUnansweredFeedbacks = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  logger.info(`Counting unanswered feedbacks for user ${userId}`);
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    logger.info(`Counting unanswered feedbacks for user ${userId}`);
-
-    const count = await feedbackReviewService.countUnansweredFeedbacks(userId);
-
-    res.status(200).json({
-      success: true,
-      data: { count },
-    });
-  } catch (error) {
-    logger.error('Error in countUnansweredFeedbacks controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
-  }
+  const count = await feedbackReviewService.countUnansweredFeedbacks(userId);
+  successResponse(res, { count });
 };
 
 /**
  * POST /api/v1/feedbacks/answer-all
- * Batch process all unanswered feedbacks
  */
-export const answerAllFeedbacks = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const answerAllFeedbacks = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
+  logger.info(`Answering all feedbacks for user ${userId}, supplier ${supplierId}`);
 
-    const supplierId = await resolveSupplierId(userId);
-    logger.info(
-      `Answering all feedbacks for user ${userId}, supplier ${supplierId}`,
-    );
-
-    const result = await feedbackReviewService.processUnansweredFeedbacks(
-      userId,
-      supplierId,
-    );
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    logger.error('Error in answerAllFeedbacks controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
-  }
+  const result = await feedbackReviewService.processUnansweredFeedbacks(userId, supplierId);
+  successResponse(res, result);
 };
 
 /**
  * POST /api/v1/feedbacks/generate
- * Generate answer for a single feedback
  */
-export const generateFeedbackAnswer = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const generateFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { feedbackId } = req.body as { feedbackId: string };
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const { feedbackId } = req.body as { feedbackId: string };
-
-    if (!feedbackId) {
-      res.status(400).json({
-        success: false,
-        error: 'feedbackId is required',
-      });
-      return;
-    }
-
-    const supplierId = await resolveSupplierId(userId);
-    logger.info(
-      `Generating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`,
-    );
-
-    const answerText = await feedbackReviewService.generateAnswerForFeedback(
-      userId,
-      supplierId,
-      feedbackId,
-    );
-
-    res.status(200).json({
-      success: true,
-      data: { answerText, feedbackId },
-    });
-  } catch (error) {
-    logger.error('Error in generateFeedbackAnswer controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+  if (!feedbackId) {
+    throw ApiError.badRequest('feedbackId is required');
   }
+
+  logger.info(`Generating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+
+  const answerText = await feedbackReviewService.generateAnswerForFeedback(userId, supplierId, feedbackId);
+  successResponse(res, { answerText, feedbackId });
 };
 
 /**
  * POST /api/v1/feedbacks/accept
- * Accept and post a generated answer
  */
-export const acceptFeedbackAnswer = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const acceptFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { feedbackId } = req.body as { feedbackId: string };
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const { feedbackId } = req.body as { feedbackId: string };
-
-    if (!feedbackId) {
-      res.status(400).json({
-        success: false,
-        error: 'feedbackId is required',
-      });
-      return;
-    }
-
-    const supplierId = await resolveSupplierId(userId);
-    logger.info(
-      `Accepting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`,
-    );
-
-    await feedbackReviewService.acceptAnswer(userId, supplierId, feedbackId);
-
-    res.status(200).json({
-      success: true,
-      data: { posted: true },
-    });
-  } catch (error) {
-    logger.error('Error in acceptFeedbackAnswer controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+  if (!feedbackId) {
+    throw ApiError.badRequest('feedbackId is required');
   }
+
+  logger.info(`Accepting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+
+  await feedbackReviewService.acceptAnswer(userId, supplierId, feedbackId);
+  successResponse(res, { posted: true });
 };
 
 /**
  * POST /api/v1/feedbacks/reject
- * Reject a generated answer
  */
-export const rejectFeedbackAnswer = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const rejectFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { feedbackId } = req.body as { feedbackId: string };
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const { feedbackId } = req.body as { feedbackId: string };
-
-    if (!feedbackId) {
-      res.status(400).json({
-        success: false,
-        error: 'feedbackId is required',
-      });
-      return;
-    }
-
-    const supplierId = await resolveSupplierId(userId);
-    logger.info(
-      `Rejecting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`,
-    );
-
-    await feedbackReviewService.rejectAnswer(userId, supplierId, feedbackId);
-
-    res.status(200).json({
-      success: true,
-      data: { rejected: true },
-    });
-  } catch (error) {
-    logger.error('Error in rejectFeedbackAnswer controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+  if (!feedbackId) {
+    throw ApiError.badRequest('feedbackId is required');
   }
+
+  logger.info(`Rejecting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+
+  await feedbackReviewService.rejectAnswer(userId, supplierId, feedbackId);
+  successResponse(res, { rejected: true });
 };
 
 /**
  * GET /api/v1/feedbacks/statistics
- * Get auto-answer statistics
  */
-export const fetchFeedbackStatistics = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const fetchFeedbackStatistics = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const supplierId = await resolveSupplierId(userId);
-    const stats = await feedbackReviewService.getStatistics(userId, supplierId);
-
-    res.status(200).json({
-      success: true,
-      data: stats,
-    });
-  } catch (error) {
-    logger.error('Error in fetchFeedbackStatistics controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
-  }
+  const stats = await feedbackSettingsService.getStatistics(userId, supplierId);
+  successResponse(res, stats);
 };
 
 /**
  * GET /api/v1/feedbacks/settings
- * Get user feedback settings
  */
-export const fetchFeedbackSettings = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const fetchFeedbackSettings = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
+  const settings = await feedbackSettingsService.getSettings(userId, supplierId);
+  const productSettings = await feedbackSettingsService.getProductSettings(userId, supplierId);
 
-    const supplierId = await resolveSupplierId(userId);
-    const settings = await feedbackReviewService.getSettings(
-      userId,
-      supplierId,
-    );
-    const productSettings = await feedbackReviewService.getProductSettings(
-      userId,
-      supplierId,
-    );
-
-    res.status(200).json({
-      success: true,
-      data: {
-        settings,
-        productSettings,
-      },
-    });
-  } catch (error) {
-    logger.error('Error in fetchFeedbackSettings controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
-  }
+  successResponse(res, { settings, productSettings });
 };
 
 /**
  * PUT /api/v1/feedbacks/settings
- * Update global auto-answer setting
  */
-export const updateFeedbackSettings = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const updateFeedbackSettings = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { autoAnswerEnabled } = req.body as { autoAnswerEnabled: boolean };
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const { autoAnswerEnabled } = req.body as { autoAnswerEnabled: boolean };
-
-    if (typeof autoAnswerEnabled !== 'boolean') {
-      res.status(400).json({
-        success: false,
-        error: 'autoAnswerEnabled boolean is required',
-      });
-      return;
-    }
-
-    const supplierId = await resolveSupplierId(userId);
-    const settings = await feedbackReviewService.updateSettings(
-      userId,
-      supplierId,
-      autoAnswerEnabled,
-    );
-
-    res.status(200).json({
-      success: true,
-      data: settings,
-    });
-  } catch (error) {
-    logger.error('Error in updateFeedbackSettings controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+  if (typeof autoAnswerEnabled !== 'boolean') {
+    throw ApiError.badRequest('autoAnswerEnabled boolean is required');
   }
+
+  const settings = await feedbackSettingsService.updateSettings(userId, supplierId, autoAnswerEnabled);
+  successResponse(res, settings);
 };
 
 /**
  * PUT /api/v1/feedbacks/settings/product
- * Update per-product auto-answer setting
  */
-export const updateProductFeedbackSetting = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
+export const updateProductFeedbackSetting = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { nmId, autoAnswerEnabled } = req.body as { nmId: number; autoAnswerEnabled: boolean };
 
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const { nmId, autoAnswerEnabled } = req.body as {
-      nmId: number;
-      autoAnswerEnabled: boolean;
-    };
-
-    if (typeof nmId !== 'number' || typeof autoAnswerEnabled !== 'boolean') {
-      res.status(400).json({
-        success: false,
-        error: 'nmId and autoAnswerEnabled are required',
-      });
-      return;
-    }
-
-    const supplierId = await resolveSupplierId(userId);
-    const setting = await feedbackReviewService.updateProductSetting(
-      userId,
-      supplierId,
-      nmId,
-      autoAnswerEnabled,
-    );
-
-    res.status(200).json({
-      success: true,
-      data: setting,
-    });
-  } catch (error) {
-    logger.error('Error in updateProductFeedbackSetting controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
+  if (typeof nmId !== 'number' || typeof autoAnswerEnabled !== 'boolean') {
+    throw ApiError.badRequest('nmId and autoAnswerEnabled are required');
   }
+
+  const setting = await feedbackSettingsService.updateProductSetting(userId, supplierId, nmId, autoAnswerEnabled);
+  successResponse(res, setting);
 };
 
 /**
  * GET /api/v1/feedbacks/templates
- * Get seller feedback templates
  */
-export const fetchFeedbackTemplates = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const data = await wbFeedbackService.getFeedbackTemplates({ userId });
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (error) {
-    logger.error('Error in fetchFeedbackTemplates controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
-  }
+export const fetchFeedbackTemplates = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const data = await wbFeedbackService.getFeedbackTemplates({ userId });
+  successResponse(res, data);
 };
 
 export default {

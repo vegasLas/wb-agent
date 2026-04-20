@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+import { resolveSupplier, asyncHandler } from '@/middleware/feedback.middleware';
 import {
   fetchFeedbacks,
   countUnansweredFeedbacks,
@@ -20,90 +21,16 @@ import {
 
 const router = Router();
 
-/**
- * @route   GET /api/v1/feedbacks
- * @desc    Get feedbacks list
- * @query   isAnswered - Filter by answered status
- * @query   limit - Number of records (default: 100)
- * @query   cursor - Pagination cursor
- * @query   searchText - Search text
- * @access  Private
- */
-router.get('/', fetchFeedbacks);
-
-/**
- * @route   GET /api/v1/feedbacks/count-unanswered
- * @desc    Count total unanswered feedbacks
- * @access  Private
- */
-router.get('/count-unanswered', countUnansweredFeedbacks);
-
-/**
- * @route   POST /api/v1/feedbacks/answer-all
- * @desc    Batch process all unanswered feedbacks
- * @access  Private
- */
-router.post('/answer-all', answerAllFeedbacks);
-
-/**
- * @route   POST /api/v1/feedbacks/generate
- * @desc    Generate answer for a single feedback
- * @body    feedbackId
- * @access  Private
- */
-router.post('/generate', generateFeedbackAnswer);
-
-/**
- * @route   POST /api/v1/feedbacks/accept
- * @desc    Accept and post generated answer
- * @body    feedbackId
- * @access  Private
- */
-router.post('/accept', acceptFeedbackAnswer);
-
-/**
- * @route   POST /api/v1/feedbacks/reject
- * @desc    Reject generated answer
- * @body    feedbackId
- * @access  Private
- */
-router.post('/reject', rejectFeedbackAnswer);
-
-/**
- * @route   GET /api/v1/feedbacks/statistics
- * @desc    Get auto-answer statistics
- * @access  Private
- */
-router.get('/statistics', fetchFeedbackStatistics);
-
-/**
- * @route   GET /api/v1/feedbacks/settings
- * @desc    Get user feedback settings
- * @access  Private
- */
-router.get('/settings', fetchFeedbackSettings);
-
-/**
- * @route   PUT /api/v1/feedbacks/settings
- * @desc    Update global auto-answer setting
- * @body    autoAnswerEnabled
- * @access  Private
- */
-router.put('/settings', updateFeedbackSettings);
-
-/**
- * @route   PUT /api/v1/feedbacks/settings/product
- * @desc    Update per-product auto-answer setting
- * @body    nmId, autoAnswerEnabled
- * @access  Private
- */
-router.put('/settings/product', updateProductFeedbackSetting);
-
-/**
- * @route   GET /api/v1/feedbacks/templates
- * @desc    Get seller feedback templates
- * @access  Private
- */
-router.get('/templates', fetchFeedbackTemplates);
+router.get('/', asyncHandler(fetchFeedbacks));
+router.get('/count-unanswered', asyncHandler(countUnansweredFeedbacks));
+router.post('/answer-all', resolveSupplier, asyncHandler(answerAllFeedbacks));
+router.post('/generate', resolveSupplier, asyncHandler(generateFeedbackAnswer));
+router.post('/accept', resolveSupplier, asyncHandler(acceptFeedbackAnswer));
+router.post('/reject', resolveSupplier, asyncHandler(rejectFeedbackAnswer));
+router.get('/statistics', resolveSupplier, asyncHandler(fetchFeedbackStatistics));
+router.get('/settings', resolveSupplier, asyncHandler(fetchFeedbackSettings));
+router.put('/settings', resolveSupplier, asyncHandler(updateFeedbackSettings));
+router.put('/settings/product', resolveSupplier, asyncHandler(updateProductFeedbackSetting));
+router.get('/templates', asyncHandler(fetchFeedbackTemplates));
 
 export default router;
