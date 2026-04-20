@@ -53,6 +53,15 @@
       </template>
     </Column>
 
+    <!-- AI Answer (only for AI tabs) -->
+    <Column v-if="isAiTab" header="AI Ответ" style="min-width: 250px">
+      <template #body="{ data }">
+        <p class="text-sm text-surface-700 dark:text-surface-300 line-clamp-3">
+          {{ data.aiAnswer?.answerText || '' }}
+        </p>
+      </template>
+    </Column>
+
     <!-- Rating -->
     <Column field="valuation" header="Оценка" style="width: 100px">
       <template #body="{ data }">
@@ -100,35 +109,75 @@
     </Column>
 
     <!-- Status -->
-    <Column header="Статус" style="width: 120px">
+    <Column header="Статус" style="width: 140px">
       <template #body="{ data }">
         <Tag
+          v-if="tab === 'unanswered'"
           :severity="data.answer ? 'success' : 'warning'"
           :value="data.answer ? 'Отвечен' : 'Без ответа'"
+        />
+        <Tag
+          v-else-if="tab === 'ai-posted'"
+          severity="success"
+          value="Опубликован"
+        />
+        <Tag
+          v-else-if="tab === 'ai-pending'"
+          severity="warning"
+          value="На проверке"
         />
       </template>
     </Column>
 
     <!-- Actions -->
-    <Column header="Действия" style="width: 100px">
+    <Column header="Действия" style="width: 120px">
       <template #body="{ data }">
-        <Button
-          v-if="!data.answer"
-          icon="pi pi-sparkles"
-          severity="secondary"
-          text
-          rounded
-          v-tooltip.top="'Сгенерировать ответ'"
-          @click="$emit('generate', data)"
-        />
-        <Button
-          v-else
-          icon="pi pi-check-circle"
-          severity="success"
-          text
-          rounded
-          disabled
-        />
+        <div v-if="tab === 'unanswered'" class="flex gap-1">
+          <Button
+            v-if="!data.answer"
+            icon="pi pi-sparkles"
+            severity="secondary"
+            text
+            rounded
+            v-tooltip.top="'Сгенерировать ответ'"
+            @click="$emit('generate', data)"
+          />
+          <Button
+            v-else
+            icon="pi pi-check-circle"
+            severity="success"
+            text
+            rounded
+            disabled
+          />
+        </div>
+        <div v-else-if="tab === 'ai-pending'" class="flex gap-1">
+          <Button
+            icon="pi pi-check"
+            severity="success"
+            text
+            rounded
+            v-tooltip.top="'Опубликовать'"
+            @click="$emit('accept', data.id)"
+          />
+          <Button
+            icon="pi pi-times"
+            severity="danger"
+            text
+            rounded
+            v-tooltip.top="'Отклонить'"
+            @click="$emit('reject', data.id)"
+          />
+        </div>
+        <div v-else-if="tab === 'ai-posted'">
+          <Button
+            icon="pi pi-check-circle"
+            severity="success"
+            text
+            rounded
+            disabled
+          />
+        </div>
       </template>
     </Column>
   </DataTable>
@@ -142,7 +191,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import { getWbImageUrl } from '@/utils/feedbacks/image-url';
 import { formatDate } from '@/utils/feedbacks/date-format';
-import type { FeedbackItem } from '@/stores/feedbacks';
+import type { FeedbackItem, FeedbackTab } from '@/stores/feedbacks';
 
 interface TableRow extends FeedbackItem {
   imageUrl: string;
@@ -151,13 +200,18 @@ interface TableRow extends FeedbackItem {
 
 interface Props {
   feedbacks: FeedbackItem[];
+  tab: FeedbackTab;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'generate', feedback: FeedbackItem): void;
+  (e: 'accept', feedbackId: string): void;
+  (e: 'reject', feedbackId: string): void;
 }>();
+
+const isAiTab = computed(() => props.tab === 'ai-posted' || props.tab === 'ai-pending');
 
 const rows = computed<TableRow[]>(() =>
   props.feedbacks.map((f) => ({

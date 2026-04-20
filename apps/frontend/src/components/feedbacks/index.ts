@@ -18,6 +18,11 @@ export { default as FeedbacksActionsBar } from './FeedbacksActionsBar.vue';
 export { default as FeedbacksTable } from './FeedbacksTable.vue';
 
 // ---------------------------------------------------------------------------
+// Card Domain - Card layout components
+// ---------------------------------------------------------------------------
+export { default as FeedbacksCard } from './FeedbacksCard.vue';
+
+// ---------------------------------------------------------------------------
 // Dialog Domain - Modal/dialog components
 // ---------------------------------------------------------------------------
 export { default as GenerateAnswerDialog } from './GenerateAnswerDialog.vue';
