@@ -23,6 +23,7 @@ export const primaryNav: NavItem[] = [
     route: 'TriggersList',
   },
   { id: 'promotions', label: 'Акции', icon: 'pi pi-tags', route: 'Promotions' },
+  { id: 'feedbacks', label: 'Отзывы', icon: 'pi pi-star', route: 'Feedbacks' },
   { id: 'reports', label: 'Отчеты', icon: 'pi pi-chart-pie', route: 'Reports' },
   {
     id: 'adverts',
