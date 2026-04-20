@@ -27,20 +27,27 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const statsLoading = ref(false);
   const settingsLoading = ref(false);
   const error = ref<string | null>(null);
-  const cursor = ref<string>('');
-  const hasMore = ref(false);
+
+  // Per-tab pagination state
+  const cursors = ref<Record<FeedbackTab, string>>({
+    unanswered: '',
+    'ai-posted': '',
+    'ai-pending': '',
+  });
+  const hasMore = ref<Record<FeedbackTab, boolean>>({
+    unanswered: false,
+    'ai-posted': false,
+    'ai-pending': false,
+  });
 
   // Getters
   const hasFeedbacks = computed(() => feedbacks.value.length > 0);
-  const answeredFeedbacks = computed(() =>
-    feedbacks.value.filter((f) => f.answer !== null),
-  );
   const unansweredFeedbacks = computed(() =>
     feedbacks.value.filter((f) => f.answer === null),
   );
   const displayedFeedbacks = computed(() => {
-    if (activeTab.value === 'answered') return answeredFeedbacks.value;
-    return unansweredFeedbacks.value;
+    if (activeTab.value === 'unanswered') return unansweredFeedbacks.value;
+    return feedbacks.value;
   });
 
   function getProductSetting(nmId: number): boolean {
@@ -49,7 +56,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   }
 
   // Actions
-  async function fetchFeedbacks(isAnswered: boolean, reset = true) {
+  async function fetchFeedbacks(tab: FeedbackTab, reset = true) {
     if (!userStore.user?.selectedAccountId) {
       error.value = 'Необходимо выбрать аккаунт';
       return;
@@ -57,7 +64,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
 
     if (reset) {
       feedbacks.value = [];
-      cursor.value = '';
+      cursors.value[tab] = '';
     }
 
     loading.value = true;
@@ -65,9 +72,9 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
 
     try {
       const response = await feedbacksAPI.fetchFeedbacks({
-        isAnswered,
+        tab,
         limit: 100,
-        cursor: reset ? '' : cursor.value,
+        cursor: reset ? '' : cursors.value[tab],
       });
 
       if (reset) {
@@ -76,8 +83,8 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
         feedbacks.value.push(...(response.feedbacks || []));
       }
 
-      cursor.value = response.pages?.next || '';
-      hasMore.value = !!response.pages?.next;
+      cursors.value[tab] = response.pages?.next || '';
+      hasMore.value[tab] = !!response.pages?.next;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to fetch feedbacks';
@@ -85,6 +92,10 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     } finally {
       loading.value = false;
     }
+  }
+
+  async function loadMoreFeedbacks() {
+    await fetchFeedbacks(activeTab.value, false);
   }
 
   async function fetchStatistics() {
@@ -154,12 +165,12 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function generateAnswer(feedbackId: string) {
+  async function generateAnswer(feedbackId: string, feedback: unknown) {
     generateLoading.value = true;
     error.value = null;
 
     try {
-      const result = await feedbacksAPI.generateAnswer(feedbackId);
+      const result = await feedbacksAPI.generateAnswer(feedbackId, feedback);
       generatedAnswer.value = result;
       return result;
     } catch (err: unknown) {
@@ -220,7 +231,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
 
     try {
       const result = await feedbacksAPI.answerAllFeedbacks();
-      await fetchFeedbacks(false, true);
+      await fetchFeedbacks('unanswered', true);
       await fetchStatistics();
       return result;
     } catch (err: unknown) {
@@ -245,8 +256,8 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     feedbacks.value = [];
     generatedAnswer.value = null;
     error.value = null;
-    cursor.value = '';
-    hasMore.value = false;
+    cursors.value = { unanswered: '', 'ai-posted': '', 'ai-pending': '' };
+    hasMore.value = { unanswered: false, 'ai-posted': false, 'ai-pending': false };
   }
 
   return {
@@ -263,17 +274,17 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     statsLoading: readonly(statsLoading),
     settingsLoading: readonly(settingsLoading),
     error: readonly(error),
-    cursor: readonly(cursor),
+    cursors: readonly(cursors),
     hasMore: readonly(hasMore),
 
     // Getters
     hasFeedbacks,
-    answeredFeedbacks,
     unansweredFeedbacks,
     displayedFeedbacks,
 
     // Actions
     fetchFeedbacks,
+    loadMoreFeedbacks,
     fetchStatistics,
     countUnansweredFeedbacks,
     fetchSettings,
