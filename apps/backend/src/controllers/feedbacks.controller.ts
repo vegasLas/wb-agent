@@ -5,10 +5,13 @@
  */
 
 import { Request, Response } from 'express';
+import { prisma } from '@/config/database';
 import { feedbackReviewService } from '@/services/domain/feedback/feedback-review.service';
 import { feedbackSettingsService } from '@/services/domain/feedback/feedback-settings.service';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
+import { mapFeedbackItemToDTO } from '@/services/domain/feedback/feedback-mapper';
 import { successResponse } from '@/utils/response';
+import type { FeedbackItem } from '@/types/wb';
 import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
 
@@ -20,29 +23,132 @@ function getSupplierId(req: Request): string {
   return req.supplierId!;
 }
 
+function mapDbRowToFeedbackItemDTO(row: {
+  feedbackId: string;
+  feedbackDate: number | null;
+  valuation: number;
+  feedbackText: string;
+  feedbackTextPros: string | null;
+  feedbackTextCons: string | null;
+  photos: unknown;
+  video: unknown;
+  userName: string | null;
+  purchaseDate: bigint | null;
+  feedbackDate: bigint | null;
+  productName: string | null;
+  productBrand: string | null;
+  productCategory: string | null;
+  supplierArticle: string | null;
+  nmId: number;
+  answerText: string;
+  status: string;
+}) {
+  return {
+    id: row.feedbackId,
+    createdDate: row.feedbackDate ? Number(row.feedbackDate) : 0,
+    valuation: row.valuation,
+    trustFactor: 'buyout',
+    answer: null,
+    feedbackInfo: {
+      feedbackText: row.feedbackText,
+      feedbackTextPros: row.feedbackTextPros ?? '',
+      feedbackTextCons: row.feedbackTextCons ?? '',
+      photos: (row.photos as { fullSizeUrl: string; thumbUrl: string }[] | null) ?? null,
+      video: (row.video as { durationSec: number; link: string; previewImage: string } | null) ?? null,
+      userName: row.userName ?? '',
+      purchaseDate: row.purchaseDate ? Number(row.purchaseDate) : 0,
+      isHidden: false,
+    },
+    productInfo: {
+      brand: row.productBrand ?? '',
+      name: row.productName ?? '',
+      supplierArticle: row.supplierArticle ?? '',
+      wbArticle: row.nmId,
+      category: row.productCategory ?? '',
+    },
+    aiAnswer: {
+      answerText: row.answerText,
+      status: row.status,
+    },
+  };
+}
+
 /**
  * GET /api/v1/feedbacks
  */
 export const fetchFeedbacks = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
-  const { isAnswered, limit, cursor, searchText } = req.query as {
-    isAnswered?: string;
+  const supplierId = getSupplierId(req);
+  const { tab, limit, cursor, searchText } = req.query as {
+    tab?: string;
     limit?: string;
     cursor?: string;
     searchText?: string;
   };
 
-  logger.info(`Fetching feedbacks for user ${userId}`);
+  const pageLimit = limit ? Number(limit) : 100;
+  const pageCursor = cursor || '';
 
+  logger.info(`Fetching feedbacks for user ${userId}, tab=${tab}`);
+
+  if (tab === 'ai-posted' || tab === 'ai-pending') {
+    const status = tab === 'ai-posted' ? 'POSTED' : 'PENDING';
+    const skip = pageCursor ? Number(pageCursor) : 0;
+
+    const rows = await prisma.feedbackAutoAnswer.findMany({
+      where: {
+        userId,
+        supplierId,
+        status,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: pageLimit,
+      skip,
+    });
+
+    const totalCount = await prisma.feedbackAutoAnswer.count({
+      where: {
+        userId,
+        supplierId,
+        status,
+      },
+    });
+
+    const feedbacks = rows
+      .filter((row) => row.productName && row.feedbackText !== undefined)
+      .map(mapDbRowToFeedbackItemDTO);
+
+    const hasMore = skip + rows.length < totalCount;
+
+    successResponse(res, {
+      countUnanswered: 0,
+      feedbacks,
+      pages: {
+        last: '',
+        next: hasMore ? String(skip + pageLimit) : '',
+      },
+    });
+    return;
+  }
+
+  // Default: unanswered tab
   const data = await wbFeedbackService.getFeedbacks({
     userId,
-    isAnswered: isAnswered === 'true',
-    limit: limit ? Number(limit) : 100,
-    cursor: cursor || '',
+    isAnswered: true,
+    limit: pageLimit,
+    cursor: pageCursor,
     searchText: searchText || '',
   });
 
-  successResponse(res, data);
+  const filteredFeedbacks = (data.feedbacks || [])
+    .filter((f) => !f.answer)
+    .map(mapFeedbackItemToDTO);
+
+  successResponse(res, {
+    countUnanswered: data.countUnanswered,
+    feedbacks: filteredFeedbacks,
+    pages: data.pages,
+  });
 };
 
 /**
@@ -75,15 +181,18 @@ export const answerAllFeedbacks = async (req: Request, res: Response): Promise<v
 export const generateFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { feedbackId } = req.body as { feedbackId: string };
+  const { feedbackId, feedback } = req.body as { feedbackId: string; feedback: unknown };
 
   if (!feedbackId) {
     throw ApiError.badRequest('feedbackId is required');
   }
+  if (!feedback) {
+    throw ApiError.badRequest('feedback data is required');
+  }
 
   logger.info(`Generating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
 
-  const answerText = await feedbackReviewService.generateAnswerForFeedback(userId, supplierId, feedbackId);
+  const answerText = await feedbackReviewService.generateAnswerForFeedback(userId, supplierId, feedbackId, feedback as FeedbackItem);
   successResponse(res, { answerText, feedbackId });
 };
 

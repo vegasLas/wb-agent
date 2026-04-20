@@ -21,7 +21,7 @@ import {
 
 const router = Router();
 
-router.get('/', asyncHandler(fetchFeedbacks));
+router.get('/', resolveSupplier, asyncHandler(fetchFeedbacks));
 router.get('/count-unanswered', asyncHandler(countUnansweredFeedbacks));
 router.post('/answer-all', resolveSupplier, asyncHandler(answerAllFeedbacks));
 router.post('/generate', resolveSupplier, asyncHandler(generateFeedbackAnswer));
