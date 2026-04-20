@@ -1,74 +1,21 @@
-export interface FeedbackItem {
-  id: string;
-  answer: FeedbackAnswer | null;
-  createdDate: number;
-  feedbackInfo: FeedbackInfo;
-  productInfo: FeedbackProductInfo;
-  trustFactor: string;
-  valuation: number;
-  wasViewed: boolean;
-  parentFeedbackId?: string;
-  childFeedbackId?: string;
-}
+/**
+ * Feedbacks Store Types
+ * Domain types are re-exported from the API layer to maintain a single source of truth.
+ * Only store-specific types are defined here.
+ */
 
-export interface FeedbackAnswer {
-  answerText: string;
-  createdDate: number;
-  isEditable: boolean;
-  status: string;
-}
-
-export interface FeedbackInfo {
-  feedbackText: string;
-  feedbackTextPros: string;
-  feedbackTextCons: string;
-  badReasons: string[];
-  goodReasons: string[];
-  photos: FeedbackPhoto[] | null;
-  video: FeedbackVideo | null;
-  userName: string;
-  purchaseDate: number;
-  isHidden: boolean;
-}
-
-export interface FeedbackPhoto {
-  fullSizeUrl: string;
-  thumbUrl: string;
-}
-
-export interface FeedbackVideo {
-  durationSec: number;
-  link: string;
-  previewImage: string;
-}
-
-export interface FeedbackProductInfo {
-  brand: string;
-  brandId: number;
-  category: string;
-  name: string;
-  supplierArticle: string;
-  wbArticle: number;
-}
-
-export interface FeedbackStatistics {
-  today: number;
-  week: number;
-  allTime: number;
-}
-
-export interface FeedbackSettings {
-  id: string;
-  userId: number;
-  autoAnswerEnabled: boolean;
-}
-
-export interface FeedbackProductSetting {
-  id: string;
-  userId: number;
-  nmId: number;
-  autoAnswerEnabled: boolean;
-}
+export type {
+  FeedbackItem,
+  FeedbackAnswer,
+  FeedbackInfo,
+  FeedbackPhoto,
+  FeedbackVideo,
+  FeedbackProductInfo,
+  FeedbackStatistics,
+  FeedbackSettings,
+  FeedbackProductSetting,
+  ProcessResult,
+} from '@/api/feedbacks/types';
 
 export type FeedbackTab = 'answered' | 'unanswered';
 

@@ -175,14 +175,17 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   async function acceptAnswer(feedbackId: string) {
     try {
       await feedbacksAPI.acceptAnswer(feedbackId);
-      // Update local state
-      const fb = feedbacks.value.find((f) => f.id === feedbackId);
-      if (fb) {
-        fb.answer = {
-          answerText: generatedAnswer.value?.answerText || '',
-          createdDate: Date.now(),
-          isEditable: true,
-          status: 'POSTED',
+      // Update local state immutably
+      const index = feedbacks.value.findIndex((f) => f.id === feedbackId);
+      if (index !== -1) {
+        feedbacks.value[index] = {
+          ...feedbacks.value[index],
+          answer: {
+            answerText: generatedAnswer.value?.answerText || '',
+            createdDate: Date.now(),
+            isEditable: true,
+            status: 'POSTED',
+          },
         };
       }
       generatedAnswer.value = null;
