@@ -221,6 +221,9 @@ export class FeedbackReviewService {
     const feedbackTextCons = feedback.feedbackInfo?.feedbackTextCons || null;
     const trustFactor = feedback.trustFactor || 'buyout';
 
+    const productInfo = feedback.productInfo;
+    const feedbackInfo = feedback.feedbackInfo;
+
     const recentAnswers = examplesByValuation.get(feedback.valuation) || [];
 
     const answerText = await feedbackPromptService.generateAnswer(
@@ -250,6 +253,15 @@ export class FeedbackReviewService {
         trustFactor,
         feedbackTextCons,
         feedbackTextPros,
+        productName: productInfo?.name || null,
+        productBrand: productInfo?.brand || null,
+        productCategory: productInfo?.category || null,
+        supplierArticle: productInfo?.supplierArticle || null,
+        userName: feedbackInfo?.userName || null,
+        purchaseDate: feedbackInfo?.purchaseDate || null,
+        feedbackDate: feedback.createdDate || null,
+        photos: feedbackInfo?.photos || null,
+        video: feedbackInfo?.video || null,
       },
       create: {
         userId,
@@ -263,6 +275,15 @@ export class FeedbackReviewService {
         trustFactor,
         feedbackTextCons,
         feedbackTextPros,
+        productName: productInfo?.name || null,
+        productBrand: productInfo?.brand || null,
+        productCategory: productInfo?.category || null,
+        supplierArticle: productInfo?.supplierArticle || null,
+        userName: feedbackInfo?.userName || null,
+        purchaseDate: feedbackInfo?.purchaseDate || null,
+        feedbackDate: feedback.createdDate || null,
+        photos: feedbackInfo?.photos || null,
+        video: feedbackInfo?.video || null,
       },
     });
 
@@ -298,18 +319,14 @@ export class FeedbackReviewService {
 
   /**
    * Manually generate answer for a single feedback
-   * Searches efficiently across recent answered + unanswered pages
+   * Receives feedback data directly from frontend to avoid WB API lookup
    */
   async generateAnswerForFeedback(
     userId: number,
     supplierId: string,
     feedbackId: string,
+    feedback: FeedbackItem,
   ): Promise<string> {
-    const feedback = await this.findFeedbackById(userId, feedbackId);
-    if (!feedback) {
-      throw new Error('Feedback not found');
-    }
-
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
       throw new Error('Feedback has no nmId');
@@ -329,6 +346,8 @@ export class FeedbackReviewService {
     const feedbackTextPros = feedback.feedbackInfo?.feedbackTextPros || null;
     const feedbackTextCons = feedback.feedbackInfo?.feedbackTextCons || null;
     const trustFactor = feedback.trustFactor || 'buyout';
+    const productInfo = feedback.productInfo;
+    const feedbackInfo = feedback.feedbackInfo;
 
     const recentAnswers = await feedbackExampleService.getRecentAnswersWithFallback(
       userId,
@@ -361,6 +380,15 @@ export class FeedbackReviewService {
         trustFactor,
         feedbackTextCons,
         feedbackTextPros,
+        productName: productInfo?.name || null,
+        productBrand: productInfo?.brand || null,
+        productCategory: productInfo?.category || null,
+        supplierArticle: productInfo?.supplierArticle || null,
+        userName: feedbackInfo?.userName || null,
+        purchaseDate: feedbackInfo?.purchaseDate || null,
+        feedbackDate: feedback.createdDate || null,
+        photos: feedbackInfo?.photos || null,
+        video: feedbackInfo?.video || null,
       },
       create: {
         userId,
@@ -374,6 +402,15 @@ export class FeedbackReviewService {
         trustFactor,
         feedbackTextCons,
         feedbackTextPros,
+        productName: productInfo?.name || null,
+        productBrand: productInfo?.brand || null,
+        productCategory: productInfo?.category || null,
+        supplierArticle: productInfo?.supplierArticle || null,
+        userName: feedbackInfo?.userName || null,
+        purchaseDate: feedbackInfo?.purchaseDate || null,
+        feedbackDate: feedback.createdDate || null,
+        photos: feedbackInfo?.photos || null,
+        video: feedbackInfo?.video || null,
       },
     });
 
