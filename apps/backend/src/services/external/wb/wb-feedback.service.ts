@@ -93,23 +93,31 @@ export class WBFeedbackService {
     limit = 100,
     cursor = '',
     searchText = '',
+    valuations,
   }: {
     userId: number;
     isAnswered?: boolean;
     limit?: number;
     cursor?: string;
     searchText?: string;
+    valuations?: number[];
   }): Promise<FeedbackData> {
     const { accountId, supplierId, userAgent, proxy } =
       await resolveAccountContext(userId);
 
-    const url =
+    let url =
       `https://seller-reviews.wildberries.ru/ns/fa-seller-api/reviews-ext-seller-portal/api/v2/feedbacks` +
       `?cursor=${encodeURIComponent(cursor)}` +
       `&isAnswered=${isAnswered}` +
       `&limit=${limit}` +
       `&searchText=${encodeURIComponent(searchText)}` +
       `&sortOrder=dateDesc`;
+
+    if (valuations && valuations.length > 0) {
+      for (const v of valuations) {
+        url += `&valuations=${v}`;
+      }
+    }
 
     logger.info(`Fetching feedbacks for user ${userId}, isAnswered=${isAnswered}`);
 
@@ -132,10 +140,12 @@ export class WBFeedbackService {
     userId,
     isAnswered = false,
     searchText = '',
+    valuations,
   }: {
     userId: number;
     isAnswered?: boolean;
     searchText?: string;
+    valuations?: number[];
   }): Promise<FeedbackItem[]> {
     const allFeedbacks: FeedbackItem[] = [];
     let cursor = '';
@@ -148,6 +158,7 @@ export class WBFeedbackService {
         limit: 100,
         cursor,
         searchText,
+        valuations,
       });
 
       if (data.feedbacks && data.feedbacks.length > 0) {
