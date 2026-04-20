@@ -170,34 +170,16 @@ export class FeedbackReviewService {
         productSettingsMap.set(ps.nmId, ps.autoAnswerEnabled);
       }
 
-      // Batch fetch existing auto-answers and posted answers to avoid N+1 queries
+      // Batch fetch existing auto-answers to avoid N+1 queries
       const feedbackIds = unansweredFeedbacks.map((f) => f.id);
-      const nmIds = [
-        ...new Set(
-          unansweredFeedbacks
-            .map((f) => f.productInfo?.wbArticle)
-            .filter(Boolean),
-        ),
-      ];
 
-      const [existingAutoAnswers, postedAnswersRaw] = await Promise.all([
-        prisma.feedbackAutoAnswer.findMany({
-          where: {
-            userId,
-            supplierId,
-            feedbackId: { in: feedbackIds },
-          },
-        }),
-        prisma.feedbackAutoAnswer.findMany({
-          where: {
-            userId,
-            supplierId,
-            nmId: { in: nmIds as number[] },
-            status: 'POSTED',
-          },
-          orderBy: { createdAt: 'desc' },
-        }),
-      ]);
+      const existingAutoAnswers = await prisma.feedbackAutoAnswer.findMany({
+        where: {
+          userId,
+          supplierId,
+          feedbackId: { in: feedbackIds },
+        },
+      });
 
       const existingAutoAnswerMap = new Map<
         string,
@@ -207,22 +189,22 @@ export class FeedbackReviewService {
         existingAutoAnswerMap.set(row.feedbackId, row);
       }
 
-      const postedAnswersByNmId = new Map<
-        number,
-        Array<{ feedbackId: string; feedbackText: string; answerText: string; valuation: number }>
-      >();
-      for (const row of postedAnswersRaw) {
-        const list = postedAnswersByNmId.get(row.nmId) || [];
-        if (list.length < 50) {
-          list.push({
-            feedbackId: row.feedbackId,
-            feedbackText: row.feedbackText,
-            answerText: row.answerText,
-            valuation: row.valuation,
-          });
-          postedAnswersByNmId.set(row.nmId, list);
-        }
-      }
+      // Pre-fetch example answers by valuation for all unique ratings
+      // This avoids N API calls inside the per-feedback loop
+      const uniqueValuations = [
+        ...new Set(
+          unansweredFeedbacks
+            .map((f) => f.valuation)
+            .filter((v) => v !== undefined),
+        ),
+      ];
+      const examplesByValuation = await this.fetchExamplesByValuation(
+        userId,
+        supplierId,
+        uniqueValuations,
+        20,
+        10,
+      );
 
       // Process each feedback
       for (const feedback of unansweredFeedbacks) {
@@ -235,7 +217,7 @@ export class FeedbackReviewService {
             globalSettings,
             productSettingsMap,
             existingAutoAnswerMap,
-            postedAnswersByNmId,
+            examplesByValuation,
           );
 
           result.processed++;
@@ -277,9 +259,9 @@ export class FeedbackReviewService {
     settings: { autoAnswerEnabled: boolean },
     productSettingsMap: Map<number, boolean>,
     existingAutoAnswerMap: Map<string, { status: string }>,
-    postedAnswersByNmId: Map<
+    examplesByValuation: Map<
       number,
-      Array<{ feedbackId: string; feedbackText: string; answerText: string; valuation: number }>
+      Array<{ feedbackText: string; answerText: string; valuation: number }>
     >,
   ): Promise<'posted' | 'skipped' | 'pending'> {
     const nmId = feedback.productInfo?.wbArticle;
@@ -305,14 +287,8 @@ export class FeedbackReviewService {
 
     const feedbackText = feedback.feedbackInfo?.feedbackText || '';
 
-    // Fetch recent answers with fallback to WB API if our own cache is insufficient
-    const recentAnswers = await this.getRecentAnswersWithFallback(
-      userId,
-      supplierId,
-      nmId,
-      50,
-      postedAnswersByNmId,
-    );
+    // Use pre-fetched examples with the same valuation (zero API calls)
+    const recentAnswers = examplesByValuation.get(feedback.valuation) || [];
 
     // Generate AI answer
     const answerText = await this.generateAnswerWithAI(
@@ -388,13 +364,142 @@ export class FeedbackReviewService {
    * Get recent posted answers from our own DB for a specific product (nmId)
    * Uses FeedbackAutoAnswer table where status = 'POSTED' instead of fetching from WB API
    */
+  /**
+   * Pre-fetch example answers grouped by valuation for batch processing.
+   * Queries DB first, then falls back to WB API if fewer than fallbackThreshold examples.
+   */
+  private async fetchExamplesByValuation(
+    userId: number,
+    supplierId: string,
+    valuations: number[],
+    limit = 20,
+    fallbackThreshold = 10,
+  ): Promise<
+    Map<
+      number,
+      Array<{ feedbackText: string; answerText: string; valuation: number }>
+    >
+  > {
+    const result = new Map<
+      number,
+      Array<{ feedbackText: string; answerText: string; valuation: number }>
+    >();
+
+    for (const valuation of valuations) {
+      // Step A: DB first — all posted answers with this valuation for this user+supplier
+      const dbRows = await prisma.feedbackAutoAnswer.findMany({
+        where: {
+          userId,
+          supplierId,
+          status: 'POSTED',
+          valuation,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+
+      const examples = dbRows.map((r) => ({
+        feedbackText: r.feedbackText,
+        answerText: r.answerText,
+        valuation: r.valuation,
+      }));
+
+      // Step B: WB API fallback if insufficient
+      if (examples.length < fallbackThreshold) {
+        logger.info(
+          `DB examples insufficient for valuation ${valuation} (${examples.length} < ${fallbackThreshold}), fetching from WB API`,
+        );
+
+        try {
+          const wbAnswers: Array<{
+            feedbackId: string;
+            feedbackText: string;
+            answerText: string;
+            valuation: number;
+          }> = [];
+          let cursor = '';
+          let hasMore = true;
+          let pagesFetched = 0;
+          const maxPages = 3;
+
+          while (
+            hasMore &&
+            wbAnswers.length < fallbackThreshold &&
+            pagesFetched < maxPages
+          ) {
+            const data = await wbFeedbackService.getFeedbacks({
+              userId,
+              isAnswered: true,
+              limit: 100,
+              cursor,
+              valuations: [valuation],
+            });
+
+            pagesFetched++;
+
+            if (data.feedbacks && data.feedbacks.length > 0) {
+              for (const f of data.feedbacks) {
+                if (f.answer) {
+                  wbAnswers.push({
+                    feedbackId: f.id,
+                    feedbackText: f.feedbackInfo?.feedbackText || '',
+                    answerText: f.answer?.answerText || '',
+                    valuation: f.valuation,
+                  });
+                  if (wbAnswers.length >= fallbackThreshold) break;
+                }
+              }
+            }
+
+            if (data.pages?.next) {
+              cursor = data.pages.next;
+            } else {
+              hasMore = false;
+            }
+          }
+
+          logger.info(
+            `Fetched ${wbAnswers.length} answered feedbacks for valuation ${valuation} from WB API (${pagesFetched} page(s))`,
+          );
+
+          // Merge: DB first, then WB deduplicated
+          const seenIds = new Set(dbRows.map((r) => r.feedbackId));
+          for (const wb of wbAnswers) {
+            if (seenIds.has(wb.feedbackId)) continue;
+            examples.push({
+              feedbackText: wb.feedbackText,
+              answerText: wb.answerText,
+              valuation: wb.valuation,
+            });
+            if (examples.length >= limit) break;
+          }
+        } catch (error) {
+          logger.warn(
+            `Fallback WB API fetch failed for valuation ${valuation}, using DB only:`,
+            error,
+          );
+        }
+      }
+
+      result.set(valuation, examples.slice(0, limit));
+    }
+
+    return result;
+  }
+
   private async getRecentPostedAnswers(
     userId: number,
     supplierId: string,
     nmId: number,
-    limit = 50,
+    limit = 20,
+    valuation?: number,
   ): Promise<
-    Array<{ feedbackId: string; feedbackText: string; answerText: string; valuation: number }>
+    Array<{
+      feedbackId: string;
+      feedbackText: string;
+      answerText: string;
+      valuation: number;
+    }>
   > {
     try {
       const rows = await prisma.feedbackAutoAnswer.findMany({
@@ -403,6 +508,7 @@ export class FeedbackReviewService {
           supplierId,
           nmId,
           status: 'POSTED',
+          ...(valuation !== undefined ? { valuation } : {}),
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -428,17 +534,31 @@ export class FeedbackReviewService {
     userId: number,
     supplierId: string,
     nmId: number,
-    limit = 50,
+    limit = 20,
     postedAnswersByNmId?: Map<
       number,
-      Array<{ feedbackId: string; feedbackText: string; answerText: string; valuation: number }>
+      Array<{
+        feedbackId: string;
+        feedbackText: string;
+        answerText: string;
+        valuation: number;
+      }>
     >,
     fallbackThreshold = 20,
-  ): Promise<Array<{ feedbackText: string; answerText: string; valuation: number }>> {
+    targetValuation?: number,
+  ): Promise<
+    Array<{ feedbackText: string; answerText: string; valuation: number }>
+  > {
     // 1. Get our own posted answers from cache or DB
     const postedAnswers =
       postedAnswersByNmId?.get(nmId) ||
-      (await this.getRecentPostedAnswers(userId, supplierId, nmId, limit));
+      (await this.getRecentPostedAnswers(
+        userId,
+        supplierId,
+        nmId,
+        limit,
+        targetValuation,
+      ));
 
     // 2. If enough context, return early (steady state)
     if (postedAnswers.length >= fallbackThreshold) {
@@ -452,11 +572,12 @@ export class FeedbackReviewService {
     // 3. Not enough — fetch from WB API to supplement (cold start / warm-up)
     // We can search by wbArticle (nmId) via searchText param
     logger.info(
-      `Posted answers insufficient for nmId ${nmId} (${postedAnswers.length} < ${fallbackThreshold}), fetching from WB API`,
+      `Posted answers insufficient for nmId ${nmId} valuation=${targetValuation ?? 'any'} (${postedAnswers.length} < ${fallbackThreshold}), fetching from WB API`,
     );
 
     try {
-      // Fetch page-by-page using cursor, stop early when we have enough
+      // Fetch page-by-page using cursor, stop early when we have enough ANSWERED feedbacks
+      // Note: even with isAnswered=true, some returned feedbacks may not have an answer field
       const wbAnswers: Array<{
         feedbackId: string;
         feedbackText: string;
@@ -468,13 +589,19 @@ export class FeedbackReviewService {
       let pagesFetched = 0;
       const maxPages = 3; // up to 300 feedbacks max
 
-      while (hasMore && wbAnswers.length < limit && pagesFetched < maxPages) {
+      while (
+        hasMore &&
+        wbAnswers.length < fallbackThreshold &&
+        pagesFetched < maxPages
+      ) {
         const data = await wbFeedbackService.getFeedbacks({
           userId,
           isAnswered: true,
           searchText: nmId.toString(),
           limit: 100,
           cursor,
+          valuations:
+            targetValuation !== undefined ? [targetValuation] : undefined,
         });
 
         pagesFetched++;
@@ -488,7 +615,7 @@ export class FeedbackReviewService {
                 answerText: f.answer?.answerText || '',
                 valuation: f.valuation,
               });
-              if (wbAnswers.length >= limit) break;
+              if (wbAnswers.length >= fallbackThreshold) break;
             }
           }
         }
@@ -501,7 +628,7 @@ export class FeedbackReviewService {
       }
 
       logger.info(
-        `Fetched ${wbAnswers.length} answered feedbacks for nmId ${nmId} from WB API (${pagesFetched} page(s))`,
+        `Fetched ${wbAnswers.length} answered feedbacks for nmId ${nmId} valuation=${targetValuation ?? 'any'} from WB API (${pagesFetched} page(s))`,
       );
 
       // 4. Merge: posted answers first, then WB answers that aren't duplicates
@@ -525,7 +652,7 @@ export class FeedbackReviewService {
       return merged;
     } catch (error) {
       logger.warn(
-        `Fallback WB API fetch failed for nmId ${nmId}, using posted answers only:`,
+        `Fallback WB API fetch failed for nmId ${nmId} valuation=${targetValuation ?? 'any'}, using posted answers only:`,
         error,
       );
       return postedAnswers.map((a) => ({
@@ -541,7 +668,11 @@ export class FeedbackReviewService {
    */
   async generateAnswerWithAI(
     feedback: FeedbackItem,
-    recentAnswers: Array<{ feedbackText: string; answerText: string; valuation: number }>,
+    recentAnswers: Array<{
+      feedbackText: string;
+      answerText: string;
+      valuation: number;
+    }>,
     templates: FeedbackTemplate[],
   ): Promise<string> {
     const productInfo = feedback.productInfo;
@@ -549,7 +680,10 @@ export class FeedbackReviewService {
 
     // Build context from recent posted answers
     const recentAnswersContext = recentAnswers
-      .map((a) => `- Отзыв: "${a.feedbackText}" | Оценка: ${a.valuation}/5 | Ответ: "${a.answerText}"`)
+      .map(
+        (a) =>
+          `- Отзыв: "${a.feedbackText}" | Оценка: ${a.valuation}/5 | Ответ: "${a.answerText}"`,
+      )
       .join('\n');
 
     // Build context from templates
@@ -598,7 +732,7 @@ ${mediaContext}
 ШАБЛОНЫ ОТВЕТОВ ПРОДАВЦА (используй как референс стиля):
 ${templatesContext || '(шаблоны не заданы)'}
 
-ПРИМЕРЫ ПОСЛЕДНИХ ОТВЕТОВ НА ЭТОТ ТОВАР (используй как референс тона):
+ПРИМЕРЫ ОТВЕТОВ НА ОТЗЫВЫ С ОЦЕНКОЙ ${feedback.valuation}/5 (используй как референс тона и стиля для этой оценки):
 ${recentAnswersContext || '(нет примеров)'}
 
 ПРАВИЛА:
@@ -661,21 +795,16 @@ ${recentAnswersContext || '(нет примеров)'}
 
     const feedbackText = feedback.feedbackInfo?.feedbackText || '';
 
-    // Fetch answered feedbacks for this specific nmId via searchText
-    const answeredFeedbacks = await wbFeedbackService.getAllFeedbacks({
+    // Fetch recent answered feedbacks with the same valuation for context
+    const recentAnswers = await this.getRecentAnswersWithFallback(
       userId,
-      isAnswered: true,
-      searchText: nmId.toString(),
-    });
-
-    const recentAnswers = answeredFeedbacks
-      .filter((f) => f.answer)
-      .slice(0, 50)
-      .map((f) => ({
-        feedbackText: f.feedbackInfo?.feedbackText || '',
-        answerText: f.answer?.answerText || '',
-        valuation: f.valuation,
-      }));
+      supplierId,
+      nmId,
+      20,
+      undefined,
+      20,
+      feedback.valuation,
+    );
 
     const answerText = await this.generateAnswerWithAI(
       feedback,
