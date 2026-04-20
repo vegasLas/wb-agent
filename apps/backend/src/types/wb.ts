@@ -1234,3 +1234,139 @@ export interface ContentCardCategory {
   kgvpSupplierExpress: number;
   kgvpPickup: number;
 }
+
+// ============ Feedback / Review Types ============
+
+export interface FeedbackResponse {
+  additionalErrors: null;
+  data: FeedbackData;
+  error: boolean;
+  errorText: string;
+}
+
+export interface FeedbackData {
+  countUnanswered: number;
+  feedbacks: FeedbackItem[];
+  pages: FeedbackPages;
+}
+
+export interface FeedbackPages {
+  last: string;
+  next: string;
+}
+
+export interface FeedbackItem {
+  answer: FeedbackAnswer | null;
+  brandAnswer: null;
+  createdDate: number;
+  feedbackInfo: FeedbackInfo;
+  id: string;
+  productInfo: FeedbackProductInfo;
+  returnProductOption: ReturnProductOption;
+  supplierComplaints: SupplierComplaints;
+  trustFactor: string;
+  valuation: number;
+  wasViewed: boolean;
+  parentFeedbackId?: string;
+  childFeedbackId?: string;
+}
+
+export interface SupplierComplaints {
+  feedbackComplaint: FeedbackComplaint;
+  productComplaint: FeedbackComplaint;
+}
+
+export interface FeedbackComplaint {
+  id: null;
+  isAvailable: boolean;
+  status: string;
+  text: null;
+}
+
+export interface ReturnProductOption {
+  isAvailable: boolean;
+  wasRequested: boolean;
+}
+
+export interface FeedbackProductInfo {
+  brand: string;
+  brandId: number;
+  category: string;
+  name: string;
+  supplierArticle: string;
+  wbArticle: number;
+}
+
+export interface FeedbackInfo {
+  bableReasons: string[] | null;
+  badReasons: string[];
+  barcode: string;
+  buyerID: number;
+  color: string;
+  excludeFromRating: string;
+  excludedFromRating: string[] | null;
+  feedbackText: string;
+  feedbackTextCons: string;
+  feedbackTextPros: string;
+  goodReasons: string[];
+  isHidden: boolean;
+  photos: FeedbackPhoto[] | null;
+  purchaseDate: number;
+  rid: string;
+  size: null;
+  userName: string;
+  video: FeedbackVideo | null;
+}
+
+export interface FeedbackVideo {
+  durationSec: number;
+  link: string;
+  previewImage: string;
+}
+
+export interface FeedbackPhoto {
+  fullSizeUrl: string;
+  thumbUrl: string;
+}
+
+export interface FeedbackAnswer {
+  answerText: string;
+  createdDate: number;
+  generation: null;
+  isEditable: boolean;
+  metadata: null;
+  rejectReason: number;
+  status: string;
+  updatedDate: number;
+}
+
+export interface FeedbackTemplateResponse {
+  additionalErrors: null;
+  data: FeedbackTemplateData;
+  error: boolean;
+  errorText: string;
+}
+
+export interface FeedbackTemplateData {
+  templates: FeedbackTemplate[];
+}
+
+export interface FeedbackTemplate {
+  content: string;
+  id: string;
+  name: string;
+}
+
+export interface FeedbackAnswerRequest {
+  requestId: string;
+  answerText: string;
+  feedbackId: string;
+  nmId: number;
+}
+
+export interface FeedbackAnswerResponse {
+  additionalErrors: null;
+  data: Record<string, never>;
+  error: boolean;
+  errorText: string;
+}
