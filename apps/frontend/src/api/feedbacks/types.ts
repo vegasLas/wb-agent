@@ -10,9 +10,15 @@ export interface FeedbackItem {
   productInfo: FeedbackProductInfo;
   trustFactor: string;
   valuation: number;
-  wasViewed: boolean;
   parentFeedbackId?: string;
   childFeedbackId?: string;
+}
+
+export interface AiFeedbackItem extends FeedbackItem {
+  aiAnswer: {
+    answerText: string;
+    status: string;
+  };
 }
 
 export interface FeedbackAnswer {
@@ -26,8 +32,6 @@ export interface FeedbackInfo {
   feedbackText: string;
   feedbackTextPros: string;
   feedbackTextCons: string;
-  badReasons: string[];
-  goodReasons: string[];
   photos: FeedbackPhoto[] | null;
   video: FeedbackVideo | null;
   userName: string;
@@ -48,7 +52,6 @@ export interface FeedbackVideo {
 
 export interface FeedbackProductInfo {
   brand: string;
-  brandId: number;
   category: string;
   name: string;
   supplierArticle: string;
@@ -111,7 +114,7 @@ export interface ProcessResult {
 }
 
 export interface FetchFeedbacksParams {
-  isAnswered?: boolean;
+  tab?: 'unanswered' | 'ai-posted' | 'ai-pending';
   limit?: number;
   cursor?: string;
   searchText?: string;

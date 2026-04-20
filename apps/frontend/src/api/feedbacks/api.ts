@@ -55,10 +55,10 @@ export const feedbacksAPI = {
    * POST /api/v1/feedbacks/generate
    * Generate answer for a single feedback
    */
-  async generateAnswer(feedbackId: string): Promise<GenerateAnswerResponse> {
+  async generateAnswer(feedbackId: string, feedback: unknown): Promise<GenerateAnswerResponse> {
     const response = await apiClient.post<{ data: GenerateAnswerResponse }>(
       '/feedbacks/generate',
-      { feedbackId },
+      { feedbackId, feedback },
     );
     return response.data.data;
   },

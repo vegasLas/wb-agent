@@ -6,6 +6,7 @@
 
 export type {
   FeedbackItem,
+  AiFeedbackItem,
   FeedbackAnswer,
   FeedbackInfo,
   FeedbackPhoto,
@@ -17,7 +18,7 @@ export type {
   ProcessResult,
 } from '@/api/feedbacks/types';
 
-export type FeedbackTab = 'answered' | 'unanswered';
+export type FeedbackTab = 'unanswered' | 'ai-posted' | 'ai-pending';
 
 export interface GeneratedAnswer {
   feedbackId: string;
