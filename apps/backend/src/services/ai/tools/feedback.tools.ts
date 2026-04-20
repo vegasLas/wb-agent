@@ -52,12 +52,14 @@ Required: nmId (product WB article number).`,
       }),
       execute: safeTool('getRecentFeedbacks', async ({ nmId, limit = 20 }) => {
         return loggedTool('getRecentFeedbacks', userId, async () => {
-          const allAnswered = await wbFeedbackService.getAllFeedbacks({
+          const data = await wbFeedbackService.getFeedbacks({
             userId,
             isAnswered: true,
+            searchText: nmId.toString(),
+            limit: 100,
           });
 
-          const filtered = allAnswered
+          const filtered = (data.feedbacks || [])
             .filter((f) => f.productInfo?.wbArticle === nmId && f.answer)
             .slice(0, limit)
             .map((f) => ({
@@ -74,18 +76,19 @@ Required: nmId (product WB article number).`,
     }),
 
     getUnansweredFeedbacks: tool({
-      description: `Get all unanswered feedbacks for the user's account.
+      description: `Get recent unanswered feedbacks for the user's account.
 Call this when the user wants to see which reviews need a response.
 Required: none.`,
       inputSchema: z.object({}),
       execute: safeTool('getUnansweredFeedbacks', async () => {
         return loggedTool('getUnansweredFeedbacks', userId, async () => {
-          const data = await wbFeedbackService.getAllFeedbacks({
+          const data = await wbFeedbackService.getFeedbacks({
             userId,
             isAnswered: false,
+            limit: 100,
           });
 
-          const mapped = data.map((f) => ({
+          const mapped = (data.feedbacks || []).map((f) => ({
             feedbackId: f.id,
             productName: f.productInfo?.name,
             brand: f.productInfo?.brand,

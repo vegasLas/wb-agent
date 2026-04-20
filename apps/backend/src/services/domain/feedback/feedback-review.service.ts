@@ -13,6 +13,7 @@ import { createLogger } from '@/utils/logger';
 const logger = createLogger('FeedbackReview');
 
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
+import type { FeedbackExample } from './feedback-example.service';
 
 export interface ProcessResult {
   processed: number;
@@ -194,7 +195,7 @@ export class FeedbackReviewService {
     settings: { autoAnswerEnabled: boolean },
     productSettingsMap: Map<number, boolean>,
     existingAutoAnswerMap: Map<string, { status: string }>,
-    examplesByValuation: Map<number, import('./feedback-example.service').FeedbackExample[]>,
+    examplesByValuation: Map<number, FeedbackExample[]>,
   ): Promise<'posted' | 'skipped' | 'pending'> {
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
@@ -297,18 +298,14 @@ export class FeedbackReviewService {
 
   /**
    * Manually generate answer for a single feedback
+   * Searches efficiently across recent answered + unanswered pages
    */
   async generateAnswerForFeedback(
     userId: number,
     supplierId: string,
     feedbackId: string,
   ): Promise<string> {
-    const allFeedbacks = await wbFeedbackService.getAllFeedbacks({
-      userId,
-      isAnswered: false,
-    });
-
-    const feedback = allFeedbacks.find((f) => f.id === feedbackId);
+    const feedback = await this.findFeedbackById(userId, feedbackId);
     if (!feedback) {
       throw new Error('Feedback not found');
     }
@@ -381,6 +378,45 @@ export class FeedbackReviewService {
     });
 
     return answerText;
+  }
+
+  /**
+   * Find a specific feedback by ID without fetching all pages.
+   * Searches recent answered + unanswered pages (up to 3 pages each).
+   */
+  private async findFeedbackById(
+    userId: number,
+    feedbackId: string,
+  ): Promise<FeedbackItem | undefined> {
+    const maxPages = 3;
+
+    for (const isAnswered of [false, true]) {
+      let cursor = '';
+      let hasMore = true;
+      let pagesFetched = 0;
+
+      while (hasMore && pagesFetched < maxPages) {
+        const data = await wbFeedbackService.getFeedbacks({
+          userId,
+          isAnswered,
+          limit: 100,
+          cursor,
+        });
+
+        pagesFetched++;
+
+        const found = data.feedbacks?.find((f) => f.id === feedbackId);
+        if (found) return found;
+
+        if (data.pages?.next) {
+          cursor = data.pages.next;
+        } else {
+          hasMore = false;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   /**
