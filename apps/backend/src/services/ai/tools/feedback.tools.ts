@@ -1,32 +1,9 @@
 import { tool, Tool } from 'ai';
 import { z } from 'zod';
-import { prisma } from '@/config/database';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
 import { feedbackReviewService } from '@/services/domain/feedback/feedback-review.service';
+import { resolveSupplierId } from '@/utils/supplier-resolver';
 import { safeTool, loggedTool, cachedExecute } from './safe-tool.utils';
-
-async function resolveSupplierId(userId: number): Promise<string> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      accounts: {
-        include: {
-          suppliers: true,
-        },
-      },
-    },
-  });
-
-  if (!user) throw new Error('User not found');
-
-  const account = user.accounts.find((a) => a.id === user.selectedAccountId);
-  if (!account) throw new Error('No account selected');
-
-  const supplierId = account.selectedSupplierId || account.suppliers[0]?.supplierId;
-  if (!supplierId) throw new Error('No supplier found');
-
-  return supplierId;
-}
 
 export function feedbackTools(userId: number): Record<string, Tool> {
   return {
