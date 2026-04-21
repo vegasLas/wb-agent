@@ -1,13 +1,13 @@
 /**
  * useFeedbacksDialog
- * Encapsulates dialog state and actions for the feedbacks view.
+ * Encapsulates drawer state and actions for the feedbacks view.
  */
 
 import { ref, computed } from 'vue';
 import type { FeedbackItem, ProcessResult } from '@/stores/feedbacks';
 
 export function useFeedbacksDialog() {
-  const showGenerateDialog = ref(false);
+  const showGenerateDrawer = ref(false);
   const showAnswerAllDialog = ref(false);
   const selectedFeedback = ref<FeedbackItem | null>(null);
   const postLoading = ref(false);
@@ -16,13 +16,13 @@ export function useFeedbacksDialog() {
 
   const hasSelectedFeedback = computed(() => selectedFeedback.value !== null);
 
-  function openGenerateDialog(feedback: FeedbackItem) {
+  function openGenerateDrawer(feedback: FeedbackItem) {
     selectedFeedback.value = feedback;
-    showGenerateDialog.value = true;
+    showGenerateDrawer.value = true;
   }
 
-  function closeGenerateDialog() {
-    showGenerateDialog.value = false;
+  function closeGenerateDrawer() {
+    showGenerateDrawer.value = false;
     selectedFeedback.value = null;
   }
 
@@ -47,7 +47,7 @@ export function useFeedbacksDialog() {
 
   return {
     // State (readonly in consuming component)
-    showGenerateDialog,
+    showGenerateDrawer,
     showAnswerAllDialog,
     selectedFeedback,
     postLoading,
@@ -56,8 +56,8 @@ export function useFeedbacksDialog() {
     hasSelectedFeedback,
 
     // Actions
-    openGenerateDialog,
-    closeGenerateDialog,
+    openGenerateDrawer,
+    closeGenerateDrawer,
     openAnswerAllDialog,
     closeAnswerAllDialog,
     setPostLoading,

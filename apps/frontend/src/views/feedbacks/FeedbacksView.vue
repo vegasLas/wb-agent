@@ -103,9 +103,9 @@
       </TabPanel>
     </TabView>
 
-    <!-- Generate Answer Dialog -->
-    <GenerateAnswerDialog
-      v-model:visible="dialog.showGenerateDialog.value"
+    <!-- Generate Answer Drawer -->
+    <GenerateAnswerDrawer
+      v-model:visible="dialog.showGenerateDrawer.value"
       :feedback="dialog.selectedFeedback.value"
       :loading="feedbacksStore.generateLoading"
       :post-loading="dialog.postLoading.value"
@@ -140,7 +140,7 @@ import {
   FeedbacksStatsCards,
   FeedbacksActionsBar,
   FeedbacksCard,
-  GenerateAnswerDialog,
+  GenerateAnswerDrawer,
   AnswerAllConfirmDialog,
 } from '@/components/feedbacks';
 import { ErrorMessage, LoadingSpinner, EmptyState } from '@/components/common';
@@ -194,7 +194,7 @@ async function onConfirmAnswerAll() {
 }
 
 async function onGenerate(feedback: FeedbackItem) {
-  dialog.openGenerateDialog(feedback);
+  dialog.openGenerateDrawer(feedback);
   feedbacksStore.clearGeneratedAnswer();
 
   try {
@@ -208,7 +208,9 @@ async function onAcceptAnswer(feedbackId: string) {
   dialog.setPostLoading(true);
   try {
     await feedbacksStore.acceptAnswer(feedbackId);
-    dialog.closeGenerateDialog();
+    await feedbacksStore.fetchStatistics();
+    await feedbacksStore.fetchFeedbacks(activeTab.value, true);
+    dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store
   } finally {
@@ -219,7 +221,9 @@ async function onAcceptAnswer(feedbackId: string) {
 async function onRejectAnswer(feedbackId: string, userFeedback?: string) {
   try {
     await feedbacksStore.rejectAnswer(feedbackId, userFeedback);
-    dialog.closeGenerateDialog();
+    await feedbacksStore.fetchStatistics();
+    await feedbacksStore.fetchFeedbacks(activeTab.value, true);
+    dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store
   }

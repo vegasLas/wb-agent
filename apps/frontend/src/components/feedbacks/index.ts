@@ -25,5 +25,5 @@ export { default as FeedbacksCard } from './FeedbacksCard.vue';
 // ---------------------------------------------------------------------------
 // Dialog Domain - Modal/dialog components
 // ---------------------------------------------------------------------------
-export { default as GenerateAnswerDialog } from './GenerateAnswerDialog.vue';
+export { default as GenerateAnswerDrawer } from './GenerateAnswerDrawer.vue';
 export { default as AnswerAllConfirmDialog } from './AnswerAllConfirmDialog.vue';
