@@ -14,6 +14,7 @@ export interface RejectedAnswerContext {
   aiAnalysis: string | null;
   mistakeCategory: string | null;
   productCategory: string | null;
+  userFeedback: string | null;
 }
 
 const CATEGORY_RULES: Record<string, string> = {
@@ -50,6 +51,7 @@ export class FeedbackRejectedService {
     productName?: string | null;
     aiAnalysis?: string | null;
     mistakeCategory?: string | null;
+    userFeedback?: string | null;
   }): Promise<void> {
     try {
       await prisma.feedbackRejectedAnswer.create({
@@ -63,6 +65,7 @@ export class FeedbackRejectedService {
           valuation: params.valuation,
           productCategory: params.productCategory ?? null,
           productName: params.productName ?? null,
+          userFeedback: params.userFeedback ?? null,
         },
       });
       logger.info(
@@ -83,11 +86,16 @@ export class FeedbackRejectedService {
   async getRecentRejectedAnswers(
     userId: number,
     supplierId: string,
-    limit = 20,
+    limit = 30,
+    productCategory?: string,
   ): Promise<RejectedAnswerContext[]> {
     try {
       const rows = await prisma.feedbackRejectedAnswer.findMany({
-        where: { userId, supplierId },
+        where: {
+          userId,
+          supplierId,
+          ...(productCategory ? { productCategory } : {}),
+        },
         orderBy: { createdAt: 'desc' },
         take: limit,
       });
@@ -98,6 +106,7 @@ export class FeedbackRejectedService {
         aiAnalysis: row.aiAnalysis,
         mistakeCategory: row.mistakeCategory,
         productCategory: row.productCategory,
+        userFeedback: row.userFeedback,
       }));
     } catch (error) {
       logger.error(

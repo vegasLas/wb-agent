@@ -136,23 +136,31 @@ export class FeedbackReviewService {
             .filter((v) => v !== undefined),
         ),
       ];
-      const examplesByValuation = await feedbackExampleService.fetchExamplesByValuation(
-        userId,
-        supplierId,
-        uniqueValuations,
-        5,
-        3,
-      );
+      const examplesByValuation =
+        await feedbackExampleService.fetchExamplesByValuation(
+          userId,
+          supplierId,
+          uniqueValuations,
+          10,
+          3,
+        );
 
       // Fetch rejected answers once per batch (shared context)
-      const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
-        userId,
-        supplierId,
-        20,
-      );
+      const allRejectedAnswers =
+        await feedbackRejectedService.getRecentRejectedAnswers(
+          userId,
+          supplierId,
+          30,
+        );
 
       for (const feedback of unansweredFeedbacks) {
         try {
+          // Filter rejected answers by the current feedback's category
+          const category = feedback.productInfo?.category;
+          const rejectedAnswers = category
+            ? allRejectedAnswers.filter((r) => r.productCategory === category)
+            : allRejectedAnswers;
+
           const processResult = await this.processSingleFeedback(
             userId,
             supplierId,
@@ -171,22 +179,22 @@ export class FeedbackReviewService {
         } catch (error) {
           result.failed++;
           logger.error(
-            `Failed to process feedback ${feedback.id} for user ${userId}, supplier ${supplierId}:`
-            , error,
+            `Failed to process feedback ${feedback.id} for user ${userId}, supplier ${supplierId}:`,
+            error,
           );
         }
       }
 
       logger.info(
-        `Completed processing for user ${userId}, supplier ${supplierId}:`
-        , result,
+        `Completed processing for user ${userId}, supplier ${supplierId}:`,
+        result,
       );
 
       return result;
     } catch (error) {
       logger.error(
-        `Error processing unanswered feedbacks for user ${userId}, supplier ${supplierId}:`
-        , error,
+        `Error processing unanswered feedbacks for user ${userId}, supplier ${supplierId}:`,
+        error,
       );
       throw error;
     }
@@ -360,20 +368,23 @@ export class FeedbackReviewService {
     const productInfo = feedback.productInfo;
     const feedbackInfo = feedback.feedbackInfo;
 
-    const recentAnswers = await feedbackExampleService.getRecentAnswersWithFallback(
-      userId,
-      supplierId,
-      nmId,
-      5,
-      3,
-      feedback.valuation,
-    );
+    const recentAnswers =
+      await feedbackExampleService.getRecentAnswersWithFallback(
+        userId,
+        supplierId,
+        nmId,
+        20,
+        3,
+        feedback.valuation,
+      );
 
-    const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
-      userId,
-      supplierId,
-      20,
-    );
+    const rejectedAnswers =
+      await feedbackRejectedService.getRecentRejectedAnswers(
+        userId,
+        supplierId,
+        20,
+        feedback.productInfo?.category,
+      );
 
     const answerText = await feedbackPromptService.generateAnswer(
       feedback,
@@ -381,7 +392,6 @@ export class FeedbackReviewService {
       templates,
       rejectedAnswers,
     );
-
     await prisma.feedbackAutoAnswer.upsert({
       where: {
         userId_supplierId_feedbackId: {
@@ -444,6 +454,7 @@ export class FeedbackReviewService {
     supplierId: string,
     feedbackId: string,
     feedback: FeedbackItem,
+    userFeedback?: string,
   ): Promise<string> {
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
@@ -474,11 +485,10 @@ export class FeedbackReviewService {
           valuation: existing.valuation,
           productCategory: existing.productCategory,
           productName: existing.productName,
+          userFeedback,
         });
 
-        logger.info(
-          `Saved rejected answer for feedback ${feedbackId}`,
-        );
+        logger.info(`Saved rejected answer for feedback ${feedbackId}`);
       } catch (err) {
         // Don't block regeneration if save fails
         logger.error(
@@ -489,7 +499,12 @@ export class FeedbackReviewService {
     }
 
     // Generate fresh answer (will include rejected history)
-    return this.generateAnswerForFeedback(userId, supplierId, feedbackId, feedback);
+    return this.generateAnswerForFeedback(
+      userId,
+      supplierId,
+      feedbackId,
+      feedback,
+    );
   }
 
   /**
@@ -584,6 +599,7 @@ export class FeedbackReviewService {
     userId: number,
     supplierId: string,
     feedbackId: string,
+    userFeedback?: string,
   ): Promise<void> {
     const autoAnswer = await prisma.feedbackAutoAnswer.findUnique({
       where: {
@@ -607,6 +623,7 @@ export class FeedbackReviewService {
           valuation: autoAnswer.valuation,
           productCategory: autoAnswer.productCategory,
           productName: autoAnswer.productName,
+          userFeedback,
         });
 
         logger.info(

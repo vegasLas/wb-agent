@@ -221,7 +221,7 @@ export const acceptFeedbackAnswer = async (req: Request, res: Response): Promise
 export const rejectFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { feedbackId } = req.body as { feedbackId: string };
+  const { feedbackId, userFeedback } = req.body as { feedbackId: string; userFeedback?: string };
 
   if (!feedbackId) {
     throw ApiError.badRequest('feedbackId is required');
@@ -229,7 +229,7 @@ export const rejectFeedbackAnswer = async (req: Request, res: Response): Promise
 
   logger.info(`Rejecting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
 
-  await feedbackReviewService.rejectAnswer(userId, supplierId, feedbackId);
+  await feedbackReviewService.rejectAnswer(userId, supplierId, feedbackId, userFeedback);
   successResponse(res, { rejected: true });
 };
 
@@ -239,7 +239,7 @@ export const rejectFeedbackAnswer = async (req: Request, res: Response): Promise
 export const regenerateFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { feedbackId, feedback } = req.body as { feedbackId: string; feedback: unknown };
+  const { feedbackId, feedback, userFeedback } = req.body as { feedbackId: string; feedback: unknown; userFeedback?: string };
 
   if (!feedbackId) {
     throw ApiError.badRequest('feedbackId is required');
@@ -255,6 +255,7 @@ export const regenerateFeedbackAnswer = async (req: Request, res: Response): Pro
     supplierId,
     feedbackId,
     feedback as FeedbackItem,
+    userFeedback,
   );
   successResponse(res, { answerText, feedbackId });
 };
@@ -269,7 +270,7 @@ export const fetchRejectedAnswers = async (req: Request, res: Response): Promise
   const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
     userId,
     supplierId,
-    20,
+    30,
   );
   successResponse(res, { rejectedAnswers });
 };
