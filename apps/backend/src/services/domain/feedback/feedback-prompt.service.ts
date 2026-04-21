@@ -15,11 +15,11 @@ import type { FeedbackExample } from './feedback-example.service';
 import type { RejectedAnswerContext } from './feedback-rejected.service';
 
 const VALUATION_LABELS: Record<number, string> = {
-  1: 'негативная (оставлена с оценкой)',
-  2: 'плохая',
-  3: 'неудовлетворительная',
-  4: 'хорошая',
-  5: 'максимальная',
+  1: 'negative (rated 1 star)',
+  2: 'bad',
+  3: 'unsatisfactory',
+  4: 'good',
+  5: 'excellent',
 };
 
 export class FeedbackPromptService {
@@ -39,7 +39,10 @@ export class FeedbackPromptService {
     const templatesContext = this.buildTemplatesContext(templates);
     const mediaContext = this.buildMediaContext(feedbackInfo);
     const valuationLabel = VALUATION_LABELS[feedback.valuation] || 'не указана';
-    const rejectedContext = this.buildRejectedContext(rejectedAnswers);
+    const rejectedContext = this.buildRejectedContext(
+      rejectedAnswers,
+      productInfo.category,
+    );
 
     const prompt = this.buildPrompt({
       productInfo,
@@ -67,23 +70,23 @@ export class FeedbackPromptService {
   }
 
   private buildExamplesContext(examples: FeedbackExample[]): string {
-    if (examples.length === 0) return '(нет примеров)';
+    if (examples.length === 0) return '(no examples)';
 
     return examples
       .map((a) => {
         const pros = a.feedbackTextPros
-          ? ` | Достоинства: "${a.feedbackTextPros}"`
+          ? ` | Pros: "${a.feedbackTextPros}"`
           : '';
         const cons = a.feedbackTextCons
-          ? ` | Недостатки: "${a.feedbackTextCons}"`
+          ? ` | Cons: "${a.feedbackTextCons}"`
           : '';
-        return `- Отзыв: "${a.feedbackText}"${pros}${cons} | Оценка: ${a.valuation}/5 | Ответ: "${a.answerText}"`;
+        return `- Review: "${a.feedbackText}"${pros}${cons} | Rating: ${a.valuation}/5 | Answer: "${a.answerText}"`;
       })
       .join('\n');
   }
 
   private buildTemplatesContext(templates: FeedbackTemplate[]): string {
-    if (templates.length === 0) return '(шаблоны не заданы)';
+    if (templates.length === 0) return '(no templates set)';
     return templates.map((t) => `- ${t.name}: "${t.content}"`).join('\n');
   }
 
@@ -95,22 +98,32 @@ export class FeedbackPromptService {
 
     const parts: string[] = [];
     if (hasPhotos)
-      parts.push(`Покупатель приложил ${feedbackInfo.photos?.length} фото.`);
-    if (hasVideo) parts.push('Покупатель приложил видео.');
+      parts.push(`Customer attached ${feedbackInfo.photos?.length} photos.`);
+    if (hasVideo) parts.push('Customer attached a video.');
 
     return parts.length > 0 ? '\n' + parts.join(' ') : '';
   }
 
   private buildRejectedContext(
     rejectedAnswers: RejectedAnswerContext[],
+    category?: string,
   ): string {
     if (rejectedAnswers.length === 0) return '';
 
     const lines = rejectedAnswers
-      .map((r) => `- "${r.rejectedAnswerText}"`)
+      .map((r) => {
+        const reason = r.userFeedback
+          ? ` | Причина отклонения: "${r.userFeedback}"`
+          : '';
+        return `- Ответ: "${r.rejectedAnswerText}"${reason}`;
+      })
       .join('\n');
 
-    return `\nОТВЕТЫ, КОТОРЫЕ НЕЛЬЗЯ ПОВТОРЯТЬ (ранее отклонённые):\n${lines}\n`;
+    const categoryNote = category
+      ? ` for category "${category}"`
+      : '';
+
+    return `\nANSWERS THAT MUST NOT BE REPEATED (previously rejected${categoryNote}):\n${lines}\n`;
   }
 
   private buildPrompt(params: {
@@ -123,40 +136,42 @@ export class FeedbackPromptService {
     recentAnswersContext: string;
     rejectedContext: string;
   }): string {
-    return `Ты — профессиональный менеджер по работе с отзывами на маркетплейсе Wildberries.
-Твоя задача — написать персонализированный, тёплый и профессиональный ответ на отзыв покупателя.
+    return `You are a professional review manager for the Wildberries marketplace.
+Your task is to write a personalized, warm, and professional response to a customer review.
+Respond in Russian language only.
 
-ИНФОРМАЦИЯ О ТОВАРЕ:
-- Название: ${params.productInfo.name}
-- Бренд: ${params.productInfo.brand}
-- Категория: ${params.productInfo.category}
-- Артикул поставщика: ${params.productInfo.supplierArticle}
+PRODUCT INFORMATION:
+- Name: ${params.productInfo.name}
+- Brand: ${params.productInfo.brand}
+- Category: ${params.productInfo.category}
+- Supplier article: ${params.productInfo.supplierArticle}
 
-ОТЗЫВ ПОКУПАТЕЛЯ:
-- Имя: ${params.feedbackInfo.userName}
-- Текст: ${params.feedbackInfo.feedbackText || '(без текста)'}
-- Достоинства: ${params.feedbackInfo.feedbackTextPros || '(не указаны)'}
-- Недостатки: ${params.feedbackInfo.feedbackTextCons || '(не указаны)'}
-- Оценка: ${params.valuation} из 5 (${params.valuationLabel})${params.mediaContext}
+CUSTOMER REVIEW:
+- Name: ${params.feedbackInfo.userName}
+- Text: ${params.feedbackInfo.feedbackText || '(no text)'}
+- Pros: ${params.feedbackInfo.feedbackTextPros || '(not specified)'}
+- Cons: ${params.feedbackInfo.feedbackTextCons || '(not specified)'}
+- Rating: ${params.valuation} out of 5 (${params.valuationLabel})${params.mediaContext}
 
-ШАБЛОНЫ ОТВЕТОВ ПРОДАВЦА (используй как референс стиля):
+SELLER ANSWER TEMPLATES (use as style reference):
 ${params.templatesContext}
 
-ПРИМЕРЫ ОТВЕТОВ НА ОТЗЫВЫ С ОЦЕНКОЙ ${params.valuation}/5 (используй как референс тона и стиля для этой оценки):
+EXAMPLE ANSWERS FOR ${params.valuation}/5 RATED REVIEWS (use as tone and style reference):
 ${params.recentAnswersContext}${params.rejectedContext}
-ПРАВИЛА:
-1. Обращайся к покупателю по имени (${params.feedbackInfo.userName}).
-2. Поблагодари за покупку и отзыв.
-3. Если есть достоинства — поблагодари за них.
-4. Если есть недостатки — извинись, объясни ситуацию мягко.
-5. Упомяни бренд "${params.productInfo.brand}".
-6. Длина ответа: 100-300 символов.
-7. Тон: дружелюбный, профессиональный.
-8. Не используй шаблонные фразы — пиши живо.
-9. Учитывай ошибки из отклонённых ответов.
-10. Ответь ТОЛЬКО текстом ответа, без пояснений.
+RULES:
+1. Address the customer by name (${params.feedbackInfo.userName}).
+2. Thank them for the purchase and the review.
+3. If there are pros — thank them for mentioning them.
+4. If there are cons — apologize and gently explain the situation.
+5. Mention the brand "${params.productInfo.brand}".
+6. Answer length: 100-300 characters.
+7. Tone: friendly, professional.
+8. Avoid template phrases — write naturally and vividly.
+9. Use examples as a reference for structure and tone, but do not copy their text — every answer must be original and unique.
+10. Consider mistakes from rejected answers and user feedback (rejection reasons).
+11. Respond ONLY with the answer text, no explanations.
 
-Ответ:`;
+Answer:`
   }
 }
 
