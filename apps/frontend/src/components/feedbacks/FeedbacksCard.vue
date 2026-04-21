@@ -1,154 +1,159 @@
 <template>
-  <div class="bg-surface-0 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 space-y-3">
-    <!-- Top row: image + product info + rating/date -->
-    <div class="flex gap-4">
-      <!-- Product Image -->
-      <div class="flex-shrink-0">
-        <img
-          :src="imageUrl"
-          :alt="feedback.productInfo?.name"
-          class="w-20 h-20 object-cover rounded-lg"
-          @error="$event.target.src = '/placeholder-product.png'"
-        />
-      </div>
-
-      <!-- Product Info -->
-      <div class="flex-1 min-w-0">
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-base font-semibold text-surface-900 dark:text-surface-0 truncate">
-              {{ feedback.productInfo?.name }}
-            </h3>
-            <p class="text-xs text-surface-500 mt-0.5">
-              {{ feedback.productInfo?.supplierArticle }} · {{ feedback.productInfo?.wbArticle }} · {{ feedbackInfo.color || feedback.productInfo?.category }}
-            </p>
-            <Tag
-              v-if="trustFactorLabel"
-              :value="trustFactorLabel"
-              severity="success"
-              class="text-xs mt-1.5"
+  <Card>
+    <template #content>
+      <div class="space-y-3">
+        <!-- Top row: image + product info + rating/date -->
+        <div class="flex gap-4">
+          <!-- Product Image -->
+          <div class="flex-shrink-0">
+            <img
+              :src="imageUrl"
+              :alt="feedback.productInfo?.name"
+              class="w-20 h-20 object-cover rounded-lg"
+              @error="$event.target.src = '/placeholder-product.png'"
             />
           </div>
 
-          <!-- Rating & Date -->
-          <div class="flex-shrink-0 text-right">
-            <div class="flex items-center gap-0.5">
-              <i
-                v-for="n in 5"
-                :key="n"
-                class="pi pi-star-fill text-sm"
-                :class="n <= feedback.valuation ? 'text-yellow-500' : 'text-surface-300 dark:text-surface-600'"
-              />
+          <!-- Product Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-semibold text-surface-900 dark:text-surface-0 truncate">
+                  {{ feedback.productInfo?.name }}
+                </h3>
+                <p class="text-xs text-surface-500 mt-0.5">
+                  {{ feedback.productInfo?.supplierArticle }} · {{ feedback.productInfo?.wbArticle }} · {{ feedbackInfo.color || feedback.productInfo?.category }}
+                </p>
+                <Tag
+                  v-if="trustFactorLabel"
+                  :value="trustFactorLabel"
+                  severity="success"
+                  class="text-xs mt-1.5"
+                />
+              </div>
+
+              <!-- Rating & Date -->
+              <div class="flex-shrink-0 text-right">
+                <div class="flex items-center gap-0.5">
+                  <i
+                    v-for="n in 5"
+                    :key="n"
+                    class="pi pi-star-fill text-sm"
+                    :class="n <= feedback.valuation ? 'text-yellow-500' : 'text-surface-300 dark:text-surface-600'"
+                  />
+                </div>
+                <p class="text-xs text-surface-500 mt-1">
+                  {{ formattedDate }}
+                </p>
+              </div>
             </div>
-            <p class="text-xs text-surface-500 mt-1">
-              {{ formattedDate }}
-            </p>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Feedback Text -->
-    <div class="space-y-2">
-      <div v-if="feedbackInfo.feedbackTextCons" class="flex gap-1">
-        <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Минусы:</span>
-        <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedbackInfo.feedbackTextCons }}</span>
-      </div>
-      <div v-if="feedbackInfo.feedbackTextPros" class="flex gap-1">
-        <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Плюсы:</span>
-        <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedbackInfo.feedbackTextPros }}</span>
-      </div>
-      <div class="flex gap-1">
-        <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Комментарий:</span>
-        <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedbackInfo.feedbackText || '(Без текста)' }}</span>
-      </div>
-    </div>
+        <!-- Feedback Text -->
+        <div class="space-y-2">
+          <div v-if="feedbackInfo.feedbackTextCons" class="flex gap-1">
+            <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Минусы:</span>
+            <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedbackInfo.feedbackTextCons }}</span>
+          </div>
+          <div v-if="feedbackInfo.feedbackTextPros" class="flex gap-1">
+            <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Плюсы:</span>
+            <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedbackInfo.feedbackTextPros }}</span>
+          </div>
+          <div class="flex gap-1">
+            <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Комментарий:</span>
+            <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedbackInfo.feedbackText || '(Без текста)' }}</span>
+          </div>
+        </div>
 
-    <!-- Media Tags -->
-    <div v-if="hasMedia" class="flex gap-2">
-      <Tag
-        v-if="feedbackInfo.photos?.length"
-        severity="info"
-        :value="`${feedbackInfo.photos.length} фото`"
-        class="text-xs"
-      />
-      <Tag
-        v-if="feedbackInfo.video"
-        severity="info"
-        value="Видео"
-        class="text-xs"
-      />
-    </div>
+        <!-- Media Tags -->
+        <div v-if="hasMedia" class="flex gap-2">
+          <Tag
+            v-if="feedbackInfo.photos?.length"
+            severity="info"
+            :value="`${feedbackInfo.photos.length} фото`"
+            class="text-xs"
+          />
+          <Tag
+            v-if="feedbackInfo.video"
+            severity="info"
+            value="Видео"
+            class="text-xs"
+          />
+        </div>
 
-    <!-- Customer Name -->
-    <div class="text-sm text-surface-500">
-      {{ feedbackInfo.userName }}
-    </div>
+        <!-- Customer Name -->
+        <div class="text-sm text-surface-500">
+          {{ feedbackInfo.userName }}
+        </div>
 
-    <!-- Answer Card (if exists) -->
-    <div
-      v-if="showAnswer && feedback.answer"
-      class="bg-surface-100 dark:bg-surface-700 rounded-lg p-3 space-y-2"
-    >
-      <div class="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400">
-        <i class="pi pi-check-circle text-success" />
-        <span>Опубликован для всех</span>
+        <!-- Answer Card (if exists) -->
+        <div
+          v-if="showAnswer && feedback.answer"
+          class="bg-surface-100 dark:bg-surface-700 rounded-lg p-3 space-y-2"
+        >
+          <div class="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400">
+            <i class="pi pi-check-circle text-success" />
+            <span>Опубликован для всех</span>
+          </div>
+          <p class="text-sm text-surface-800 dark:text-surface-200">
+            {{ feedback.answer.answerText }}
+          </p>
+        </div>
+
+        <!-- AI Answer Card (for AI tabs) -->
+        <div
+          v-if="isAiTab && 'aiAnswer' in feedback"
+          class="bg-surface-100 dark:bg-surface-700 rounded-lg p-3 space-y-2"
+        >
+          <div class="flex items-center gap-2 text-sm">
+            <i
+              class="pi"
+              :class="aiStatusIcon"
+            />
+            <span :class="aiStatusClass">{{ aiStatusLabel }}</span>
+          </div>
+          <p class="text-sm text-surface-800 dark:text-surface-200">
+            {{ feedback.aiAnswer.answerText }}
+          </p>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-2 pt-1 justify-end">
+          <Button
+            v-if="tab === 'unanswered' && !feedback.answer"
+            label="Сгенерировать ответ"
+            icon="pi pi-sparkles"
+            severity="secondary"
+            size="small"
+            @click="$emit('generate', feedback)"
+          />
+          <Button
+            v-if="tab === 'ai-pending'"
+            label="Опубликовать"
+            icon="pi pi-check"
+            severity="success"
+            size="small"
+            @click="$emit('accept', feedback.id)"
+          />
+          <Button
+            v-if="tab === 'ai-pending'"
+            label="Отклонить"
+            icon="pi pi-times"
+            severity="danger"
+            size="small"
+            text
+            @click="$emit('reject', feedback.id)"
+          />
+        </div>
       </div>
-      <p class="text-sm text-surface-800 dark:text-surface-200">
-        {{ feedback.answer.answerText }}
-      </p>
-    </div>
-
-    <!-- AI Answer Card (for AI tabs) -->
-    <div
-      v-if="isAiTab && 'aiAnswer' in feedback"
-      class="bg-surface-100 dark:bg-surface-700 rounded-lg p-3 space-y-2"
-    >
-      <div class="flex items-center gap-2 text-sm">
-        <i
-          class="pi"
-          :class="aiStatusIcon"
-        />
-        <span :class="aiStatusClass">{{ aiStatusLabel }}</span>
-      </div>
-      <p class="text-sm text-surface-800 dark:text-surface-200">
-        {{ feedback.aiAnswer.answerText }}
-      </p>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex gap-2 pt-1">
-      <Button
-        v-if="tab === 'unanswered' && !feedback.answer"
-        label="Сгенерировать ответ"
-        icon="pi pi-sparkles"
-        severity="secondary"
-        size="small"
-        @click="$emit('generate', feedback)"
-      />
-      <Button
-        v-if="tab === 'ai-pending'"
-        label="Опубликовать"
-        icon="pi pi-check"
-        severity="success"
-        size="small"
-        @click="$emit('accept', feedback.id)"
-      />
-      <Button
-        v-if="tab === 'ai-pending'"
-        label="Отклонить"
-        icon="pi pi-times"
-        severity="danger"
-        size="small"
-        text
-        @click="$emit('reject', feedback.id)"
-      />
-    </div>
-  </div>
+    </template>
+  </Card>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import { getWbImageUrl } from '@/utils/feedbacks/image-url';
