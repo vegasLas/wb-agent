@@ -113,6 +113,7 @@
       :error="feedbacksStore.error"
       @accept="onAcceptAnswer"
       @reject="onRejectAnswer"
+      @regenerate="onRegenerateAnswer"
     />
 
     <!-- Answer All Confirm Dialog -->
@@ -219,6 +220,17 @@ async function onRejectAnswer(feedbackId: string) {
   try {
     await feedbacksStore.rejectAnswer(feedbackId);
     dialog.closeGenerateDialog();
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onRegenerateAnswer(feedbackId: string) {
+  const feedback = dialog.selectedFeedback.value;
+  if (!feedback) return;
+
+  try {
+    await feedbacksStore.regenerateAnswer(feedbackId, feedback);
   } catch {
     // Error handled in store
   }

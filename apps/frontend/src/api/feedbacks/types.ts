@@ -106,6 +106,19 @@ export interface GenerateAnswerResponse {
   feedbackId: string;
 }
 
+export interface RegenerateAnswerResponse {
+  answerText: string;
+  feedbackId: string;
+}
+
+export interface RejectedAnswerContext {
+  feedbackText: string;
+  rejectedAnswerText: string;
+  aiAnalysis: string | null;
+  mistakeCategory: string | null;
+  productCategory: string | null;
+}
+
 export interface ProcessResult {
   processed: number;
   posted: number;

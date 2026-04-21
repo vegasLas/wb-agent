@@ -7,6 +7,8 @@ import type {
   FeedbackProductSetting,
   FeedbackTemplatesResponse,
   GenerateAnswerResponse,
+  RegenerateAnswerResponse,
+  RejectedAnswerContext,
   ProcessResult,
   FetchFeedbacksParams,
 } from './types';
@@ -77,6 +79,29 @@ export const feedbacksAPI = {
    */
   async rejectAnswer(feedbackId: string): Promise<void> {
     await apiClient.post('/feedbacks/reject', { feedbackId });
+  },
+
+  /**
+   * POST /api/v1/feedbacks/regenerate
+   * Regenerate answer for a feedback
+   */
+  async regenerateAnswer(feedbackId: string, feedback: unknown): Promise<RegenerateAnswerResponse> {
+    const response = await apiClient.post<{ data: RegenerateAnswerResponse }>(
+      '/feedbacks/regenerate',
+      { feedbackId, feedback },
+    );
+    return response.data.data;
+  },
+
+  /**
+   * GET /api/v1/feedbacks/rejected
+   * Get recent rejected answers
+   */
+  async fetchRejectedAnswers(): Promise<{ rejectedAnswers: RejectedAnswerContext[] }> {
+    const response = await apiClient.get<{ data: { rejectedAnswers: RejectedAnswerContext[] } }>(
+      '/feedbacks/rejected',
+    );
+    return response.data.data;
   },
 
   /**

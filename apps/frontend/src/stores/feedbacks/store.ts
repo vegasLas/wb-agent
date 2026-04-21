@@ -220,6 +220,24 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
+  async function regenerateAnswer(feedbackId: string, feedback: unknown) {
+    generateLoading.value = true;
+    error.value = null;
+
+    try {
+      const result = await feedbacksAPI.regenerateAnswer(feedbackId, feedback);
+      generatedAnswer.value = result;
+      return result;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to regenerate answer';
+      error.value = errorMsg;
+      throw err;
+    } finally {
+      generateLoading.value = false;
+    }
+  }
+
   async function answerAllFeedbacks(): Promise<{
     processed: number;
     posted: number;
@@ -293,6 +311,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     generateAnswer,
     acceptAnswer,
     rejectAnswer,
+    regenerateAnswer,
     answerAllFeedbacks,
     setActiveTab,
     clearGeneratedAnswer,

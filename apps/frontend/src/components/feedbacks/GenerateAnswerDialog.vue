@@ -18,11 +18,16 @@
           />
           <div>
             <p class="text-sm font-medium">{{ feedback?.productInfo?.name }}</p>
-            <p class="text-xs text-surface-500">{{ feedback?.feedbackInfo?.userName }}</p>
+            <p class="text-xs text-surface-500">
+              {{ feedback?.feedbackInfo?.userName }}
+            </p>
           </div>
         </div>
-        <p class="text-sm text-surface-700 dark:text-surface-300 italic">
-          "{{ feedback?.feedbackInfo?.feedbackText }}"
+        <p
+          v-if="feedback?.feedbackInfo?.feedbackText"
+          class="text-sm text-surface-700 dark:text-surface-300 italic"
+        >
+          {{ feedback?.feedbackInfo?.feedbackText }}
         </p>
       </div>
 
@@ -35,13 +40,18 @@
       <!-- Generated Answer -->
       <div v-else-if="answerText" class="flex flex-col gap-3">
         <label class="text-sm font-medium">Сгенерированный ответ:</label>
-        <div class="p-4 bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-600 rounded-lg">
+        <div
+          class="p-4 bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-600 rounded-lg"
+        >
           <p class="text-sm leading-relaxed">{{ answerText }}</p>
         </div>
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
+      <div
+        v-else-if="error"
+        class="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm"
+      >
         {{ error }}
       </div>
     </div>
@@ -55,6 +65,13 @@
           text
           :disabled="loading || !answerText"
           @click="onReject"
+        />
+        <Button
+          label="Перегенерировать"
+          icon="pi pi-refresh"
+          severity="secondary"
+          :disabled="loading || !answerText"
+          @click="onRegenerate"
         />
         <Button
           label="Опубликовать"
@@ -92,9 +109,12 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
   (e: 'accept', feedbackId: string): void;
   (e: 'reject', feedbackId: string): void;
+  (e: 'regenerate', feedbackId: string): void;
 }>();
 
-const imageUrl = computed(() => getWbImageUrl(props.feedback?.productInfo?.wbArticle));
+const imageUrl = computed(() =>
+  getWbImageUrl(props.feedback?.productInfo?.wbArticle),
+);
 
 function onAccept() {
   if (props.feedback) {
@@ -105,6 +125,12 @@ function onAccept() {
 function onReject() {
   if (props.feedback) {
     emit('reject', props.feedback.id);
+  }
+}
+
+function onRegenerate() {
+  if (props.feedback) {
+    emit('regenerate', props.feedback.id);
   }
 }
 </script>
