@@ -11,7 +11,9 @@
   >
     <div class="flex flex-col h-full">
       <!-- Header -->
-      <div class="flex items-start gap-3 p-4 border-b border-[var(--color-border)] shrink-0">
+      <div
+        class="flex items-start gap-3 p-4 border-b border-[var(--color-border)] shrink-0"
+      >
         <img
           :src="imageUrl"
           :alt="feedback?.productInfo?.name"
@@ -19,20 +21,16 @@
           @error="$event.target.src = '/placeholder-product.png'"
         />
         <div class="flex-1 min-w-0">
-          <h3 class="text-base font-semibold text-surface-900 dark:text-surface-0 truncate">
+          <h3
+            class="text-base font-semibold text-surface-900 dark:text-surface-0 truncate"
+          >
             {{ feedback?.productInfo?.name }}
           </h3>
           <p class="text-xs text-surface-500 mt-0.5">
-            {{ feedback?.productInfo?.supplierArticle }} · {{ feedback?.productInfo?.wbArticle }} · {{ colorOrCategory }}
+            {{ feedback?.productInfo?.supplierArticle }} ·
+            {{ feedback?.productInfo?.wbArticle }} · {{ colorOrCategory }}
           </p>
         </div>
-        <Button
-          icon="pi pi-times"
-          text
-          rounded
-          class="flex-shrink-0"
-          @click="closeDrawer"
-        />
       </div>
 
       <!-- Scrollable Content -->
@@ -40,13 +38,16 @@
         <!-- Customer & Rating -->
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
-            <p class="text-base font-semibold text-surface-900 dark:text-surface-0">
+            <p
+              class="text-base font-semibold text-surface-900 dark:text-surface-0"
+            >
               {{ feedback?.feedbackInfo?.userName }}
             </p>
             <p class="text-xs text-surface-500 mt-0.5">
               {{ formattedDate }}
-              <span v-if="formattedPurchaseDate">· Покупка: {{ formattedPurchaseDate }}</span>
-              <span class="text-primary cursor-pointer">· Ещё</span>
+              <span v-if="formattedPurchaseDate"
+                >· Покупка: {{ formattedPurchaseDate }}</span
+              >
             </p>
           </div>
           <div class="flex items-center gap-0.5 flex-shrink-0">
@@ -54,24 +55,49 @@
               v-for="n in 5"
               :key="n"
               class="pi pi-star-fill text-sm"
-              :class="n <= (feedback?.valuation || 0) ? 'text-yellow-500' : 'text-surface-300 dark:text-surface-600'"
+              :class="
+                n <= (feedback?.valuation || 0)
+                  ? 'text-yellow-500'
+                  : 'text-surface-300 dark:text-surface-600'
+              "
             />
           </div>
         </div>
 
         <!-- Feedback Text -->
         <div class="space-y-2">
-          <div v-if="feedback?.feedbackInfo?.feedbackTextCons" class="flex gap-1">
-            <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Минусы:</span>
-            <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedback.feedbackInfo.feedbackTextCons }}</span>
+          <div
+            v-if="feedback?.feedbackInfo?.feedbackTextCons"
+            class="flex gap-1"
+          >
+            <span
+              class="text-sm font-medium text-surface-700 dark:text-surface-300"
+              >Минусы:</span
+            >
+            <span class="text-sm text-surface-700 dark:text-surface-300">{{
+              feedback.feedbackInfo.feedbackTextCons
+            }}</span>
           </div>
-          <div v-if="feedback?.feedbackInfo?.feedbackTextPros" class="flex gap-1">
-            <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Плюсы:</span>
-            <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedback.feedbackInfo.feedbackTextPros }}</span>
+          <div
+            v-if="feedback?.feedbackInfo?.feedbackTextPros"
+            class="flex gap-1"
+          >
+            <span
+              class="text-sm font-medium text-surface-700 dark:text-surface-300"
+              >Плюсы:</span
+            >
+            <span class="text-sm text-surface-700 dark:text-surface-300">{{
+              feedback.feedbackInfo.feedbackTextPros
+            }}</span>
           </div>
           <div class="flex gap-1">
-            <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Комментарий:</span>
-            <span class="text-sm text-surface-700 dark:text-surface-300">{{ feedback?.feedbackInfo?.feedbackText || '(Без текста)' }}</span>
+            <span
+              class="text-sm font-medium text-surface-700 dark:text-surface-300"
+              >Комментарий:</span
+            >
+            <span class="text-sm text-surface-700 dark:text-surface-300">{{
+              feedback?.feedbackInfo?.feedbackText || '(Без текста)'
+            }}</span>
           </div>
         </div>
 
@@ -102,7 +128,8 @@
             class="w-full"
           />
           <p class="text-xs text-surface-500">
-            Ваши пожелания помогут ИИ генерировать более точные ответы в будущем.
+            Ваши пожелания помогут ИИ генерировать более точные ответы в
+            будущем.
           </p>
         </div>
 
@@ -200,7 +227,7 @@ import Tag from 'primevue/tag';
 import Textarea from 'primevue/textarea';
 import ProgressSpinner from 'primevue/progressspinner';
 import { getWbImageUrl } from '@/utils/feedbacks/image-url';
-import { formatDate } from '@/utils/feedbacks/date-format';
+import { formatDate, formatDateTime } from '@/utils/feedbacks/date-format';
 import type { FeedbackItem } from '@/stores/feedbacks';
 
 interface Props {
@@ -231,11 +258,15 @@ const imageUrl = computed(() =>
 
 const colorOrCategory = computed(() => {
   // @ts-expect-runtime color may exist at runtime even if not in types
-  return (props.feedback?.feedbackInfo as unknown as { color?: string })?.color || props.feedback?.productInfo?.category || '';
+  return (
+    (props.feedback?.feedbackInfo as unknown as { color?: string })?.color ||
+    props.feedback?.productInfo?.category ||
+    ''
+  );
 });
 
 const formattedDate = computed(() =>
-  props.feedback ? formatDate(props.feedback.createdDate) : '',
+  props.feedback ? formatDateTime(props.feedback.createdDate) : '',
 );
 
 const formattedPurchaseDate = computed(() =>
