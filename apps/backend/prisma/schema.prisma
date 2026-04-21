@@ -367,3 +367,25 @@ model FeedbackAutoAnswer {
   @@index([status])
   @@index([createdAt])
 }
+
+model FeedbackRejectedAnswer {
+  id                 String   @id @default(uuid())
+  userId             Int
+  supplierId         String
+  feedbackId         String
+  nmId               Int
+  feedbackText       String   @default("")
+  rejectedAnswerText String
+  valuation          Int      @default(5)
+  productCategory    String?
+  productName        String?
+  aiAnalysis         String?
+  mistakeCategory    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId, supplierId])
+  @@index([feedbackId])
+  @@index([productCategory])
+  @@index([createdAt])
+}
