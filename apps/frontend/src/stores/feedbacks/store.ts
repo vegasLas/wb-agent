@@ -183,22 +183,18 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
+  function removeFeedback(feedbackId: string) {
+    const index = feedbacks.value.findIndex((f) => f.id === feedbackId);
+    if (index !== -1) {
+      feedbacks.value.splice(index, 1);
+    }
+  }
+
   async function acceptAnswer(feedbackId: string) {
     try {
       await feedbacksAPI.acceptAnswer(feedbackId);
-      // Update local state immutably
-      const index = feedbacks.value.findIndex((f) => f.id === feedbackId);
-      if (index !== -1) {
-        feedbacks.value[index] = {
-          ...feedbacks.value[index],
-          answer: {
-            answerText: generatedAnswer.value?.answerText || '',
-            createdDate: Date.now(),
-            isEditable: true,
-            status: 'POSTED',
-          },
-        };
-      }
+      // Optimistically remove from list — avoids stale data from WB API caching
+      removeFeedback(feedbackId);
       generatedAnswer.value = null;
     } catch (err: unknown) {
       const errorMsg =
@@ -317,5 +313,6 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     clearGeneratedAnswer,
     clearFeedbacks,
     getProductSetting,
+    removeFeedback,
   };
 });

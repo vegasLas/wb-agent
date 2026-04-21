@@ -209,7 +209,6 @@ async function onAcceptAnswer(feedbackId: string) {
   try {
     await feedbacksStore.acceptAnswer(feedbackId);
     await feedbacksStore.fetchStatistics();
-    await feedbacksStore.fetchFeedbacks(activeTab.value, true);
     dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store
@@ -221,8 +220,11 @@ async function onAcceptAnswer(feedbackId: string) {
 async function onRejectAnswer(feedbackId: string, userFeedback?: string) {
   try {
     await feedbacksStore.rejectAnswer(feedbackId, userFeedback);
+    // On ai-pending tab, the rejected item should disappear from the list
+    if (activeTab.value === 'ai-pending') {
+      feedbacksStore.removeFeedback(feedbackId);
+    }
     await feedbacksStore.fetchStatistics();
-    await feedbacksStore.fetchFeedbacks(activeTab.value, true);
     dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store

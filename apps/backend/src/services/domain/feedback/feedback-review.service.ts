@@ -29,11 +29,15 @@ export class FeedbackReviewService {
    */
   async countUnansweredFeedbacks(userId: number): Promise<number> {
     try {
-      const allFeedbacks = await wbFeedbackService.getAllFeedbacks({
-        userId,
-        isAnswered: false,
-      });
-      return allFeedbacks.length;
+      const [answeredRaw, unansweredRaw] = await Promise.all([
+        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
+        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
+      ]);
+      // Merge: answered overwrites unanswered to avoid stale data from WB API
+      const merged = new Map<string, typeof answeredRaw[0]>();
+      for (const f of unansweredRaw) merged.set(f.id, f);
+      for (const f of answeredRaw) merged.set(f.id, f);
+      return Array.from(merged.values()).filter((f) => !f.answer).length;
     } catch (error) {
       logger.error(
         `Error counting unanswered feedbacks for user ${userId}:`,

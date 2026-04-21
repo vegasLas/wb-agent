@@ -133,22 +133,51 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
   }
 
   // Default: unanswered tab
-  const data = await wbFeedbackService.getFeedbacks({
-    userId,
-    isAnswered: true,
-    limit: pageLimit,
-    cursor: pageCursor,
-    searchText: searchText || '',
-  });
+  // WB API isAnswered filter is unreliable; fetch both and filter client-side
+  const [answeredRes, unansweredRes] = await Promise.all([
+    wbFeedbackService.getFeedbacks({
+      userId,
+      isAnswered: true,
+      limit: pageLimit,
+      cursor: pageCursor,
+      searchText: searchText || '',
+    }),
+    wbFeedbackService.getFeedbacks({
+      userId,
+      isAnswered: false,
+      limit: pageLimit,
+      cursor: pageCursor,
+      searchText: searchText || '',
+    }),
+  ]);
 
-  const filteredFeedbacks = (data.feedbacks || [])
+  // Merge and deduplicate by id
+  // Unanswered first, then answered — answered wins if a feedback
+  // appears in both (WB API may return stale data after an answer is posted)
+  const merged = new Map<string, FeedbackItem>();
+  for (const f of unansweredRes.feedbacks || []) {
+    merged.set(f.id, f);
+  }
+  for (const f of answeredRes.feedbacks || []) {
+    merged.set(f.id, f);
+  }
+
+  // Filter: only feedbacks that genuinely have no answer
+  const filteredFeedbacks = Array.from(merged.values())
     .filter((f) => !f.answer)
+    .sort((a, b) => b.createdDate - a.createdDate)
+    .slice(0, pageLimit)
     .map(mapFeedbackItemToDTO);
 
+  const hasMore = (answeredRes.pages?.next || unansweredRes.pages?.next) !== '';
+
   successResponse(res, {
-    countUnanswered: data.countUnanswered,
+    countUnanswered: unansweredRes.countUnanswered,
     feedbacks: filteredFeedbacks,
-    pages: data.pages,
+    pages: {
+      last: '',
+      next: hasMore ? (pageCursor ? String(Number(pageCursor) + pageLimit) : String(pageLimit)) : '',
+    },
   });
 };
 
