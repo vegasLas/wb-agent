@@ -7,6 +7,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '@/config/database';
 import { feedbackReviewService } from '@/services/domain/feedback/feedback-review.service';
+import { feedbackRejectedService } from '@/services/domain/feedback/feedback-rejected.service';
 import { feedbackSettingsService } from '@/services/domain/feedback/feedback-settings.service';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
 import { mapFeedbackItemToDTO } from '@/services/domain/feedback/feedback-mapper';
@@ -233,6 +234,47 @@ export const rejectFeedbackAnswer = async (req: Request, res: Response): Promise
 };
 
 /**
+ * POST /api/v1/feedbacks/regenerate
+ */
+export const regenerateFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { feedbackId, feedback } = req.body as { feedbackId: string; feedback: unknown };
+
+  if (!feedbackId) {
+    throw ApiError.badRequest('feedbackId is required');
+  }
+  if (!feedback) {
+    throw ApiError.badRequest('feedback data is required');
+  }
+
+  logger.info(`Regenerating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+
+  const answerText = await feedbackReviewService.regenerateAnswer(
+    userId,
+    supplierId,
+    feedbackId,
+    feedback as FeedbackItem,
+  );
+  successResponse(res, { answerText, feedbackId });
+};
+
+/**
+ * GET /api/v1/feedbacks/rejected
+ */
+export const fetchRejectedAnswers = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
+    userId,
+    supplierId,
+    20,
+  );
+  successResponse(res, { rejectedAnswers });
+};
+
+/**
  * GET /api/v1/feedbacks/statistics
  */
 export const fetchFeedbackStatistics = async (req: Request, res: Response): Promise<void> => {
@@ -304,6 +346,8 @@ export default {
   generateFeedbackAnswer,
   acceptFeedbackAnswer,
   rejectFeedbackAnswer,
+  regenerateFeedbackAnswer,
+  fetchRejectedAnswers,
   fetchFeedbackStatistics,
   fetchFeedbackSettings,
   updateFeedbackSettings,

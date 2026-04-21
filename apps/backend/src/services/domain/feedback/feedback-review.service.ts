@@ -8,6 +8,7 @@ import { prisma } from '@/config/database';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
 import { feedbackPromptService } from './feedback-prompt.service';
 import { feedbackExampleService } from './feedback-example.service';
+import { feedbackRejectedService } from './feedback-rejected.service';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('FeedbackReview');
@@ -139,8 +140,15 @@ export class FeedbackReviewService {
         userId,
         supplierId,
         uniqueValuations,
+        5,
+        3,
+      );
+
+      // Fetch rejected answers once per batch (shared context)
+      const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
+        userId,
+        supplierId,
         20,
-        10,
       );
 
       for (const feedback of unansweredFeedbacks) {
@@ -154,6 +162,7 @@ export class FeedbackReviewService {
             productSettingsMap,
             existingAutoAnswerMap,
             examplesByValuation,
+            rejectedAnswers,
           );
 
           result.processed++;
@@ -196,6 +205,7 @@ export class FeedbackReviewService {
     productSettingsMap: Map<number, boolean>,
     existingAutoAnswerMap: Map<string, { status: string }>,
     examplesByValuation: Map<number, FeedbackExample[]>,
+    rejectedAnswers: import('./feedback-rejected.service').RejectedAnswerContext[] = [],
   ): Promise<'posted' | 'skipped' | 'pending'> {
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
@@ -230,6 +240,7 @@ export class FeedbackReviewService {
       feedback,
       recentAnswers,
       templates,
+      rejectedAnswers,
     );
 
     if (!answerText) {
@@ -353,15 +364,22 @@ export class FeedbackReviewService {
       userId,
       supplierId,
       nmId,
-      20,
-      20,
+      5,
+      3,
       feedback.valuation,
+    );
+
+    const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
+      userId,
+      supplierId,
+      20,
     );
 
     const answerText = await feedbackPromptService.generateAnswer(
       feedback,
       recentAnswers,
       templates,
+      rejectedAnswers,
     );
 
     await prisma.feedbackAutoAnswer.upsert({
@@ -415,6 +433,63 @@ export class FeedbackReviewService {
     });
 
     return answerText;
+  }
+
+  /**
+   * Regenerate answer for a feedback.
+   * Saves the old answer as rejected, analyzes it, then generates a new one.
+   */
+  async regenerateAnswer(
+    userId: number,
+    supplierId: string,
+    feedbackId: string,
+    feedback: FeedbackItem,
+  ): Promise<string> {
+    const nmId = feedback.productInfo?.wbArticle;
+    if (!nmId) {
+      throw new Error('Feedback has no nmId');
+    }
+
+    // Find existing auto-answer to get the old answer text
+    const existing = await prisma.feedbackAutoAnswer.findUnique({
+      where: {
+        userId_supplierId_feedbackId: {
+          userId,
+          supplierId,
+          feedbackId,
+        },
+      },
+    });
+
+    if (existing && existing.answerText) {
+      // Save the old answer as rejected
+      try {
+        await feedbackRejectedService.saveRejectedAnswer({
+          userId,
+          supplierId,
+          feedbackId,
+          nmId,
+          feedbackText: existing.feedbackText,
+          rejectedAnswerText: existing.answerText,
+          valuation: existing.valuation,
+          productCategory: existing.productCategory,
+          productName: existing.productName,
+        });
+
+        logger.info(
+          `Saved rejected answer for feedback ${feedbackId}`,
+        );
+      } catch (err) {
+        // Don't block regeneration if save fails
+        logger.error(
+          `Failed to save rejected answer for feedback ${feedbackId}:`,
+          err,
+        );
+      }
+    }
+
+    // Generate fresh answer (will include rejected history)
+    return this.generateAnswerForFeedback(userId, supplierId, feedbackId, feedback);
   }
 
   /**
@@ -502,13 +577,49 @@ export class FeedbackReviewService {
   }
 
   /**
-   * Reject a generated answer
+   * Reject a generated answer.
+   * Saves the rejected answer before marking as rejected.
    */
   async rejectAnswer(
     userId: number,
     supplierId: string,
     feedbackId: string,
   ): Promise<void> {
+    const autoAnswer = await prisma.feedbackAutoAnswer.findUnique({
+      where: {
+        userId_supplierId_feedbackId: {
+          userId,
+          supplierId,
+          feedbackId,
+        },
+      },
+    });
+
+    if (autoAnswer && autoAnswer.answerText) {
+      try {
+        await feedbackRejectedService.saveRejectedAnswer({
+          userId,
+          supplierId,
+          feedbackId,
+          nmId: autoAnswer.nmId,
+          feedbackText: autoAnswer.feedbackText,
+          rejectedAnswerText: autoAnswer.answerText,
+          valuation: autoAnswer.valuation,
+          productCategory: autoAnswer.productCategory,
+          productName: autoAnswer.productName,
+        });
+
+        logger.info(
+          `Saved rejected answer on reject for feedback ${feedbackId}`,
+        );
+      } catch (err) {
+        logger.error(
+          `Failed to save rejected answer on reject for feedback ${feedbackId}:`,
+          err,
+        );
+      }
+    }
+
     await prisma.feedbackAutoAnswer.update({
       where: {
         userId_supplierId_feedbackId: {

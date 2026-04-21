@@ -12,6 +12,8 @@ import {
   generateFeedbackAnswer,
   acceptFeedbackAnswer,
   rejectFeedbackAnswer,
+  regenerateFeedbackAnswer,
+  fetchRejectedAnswers,
   fetchFeedbackStatistics,
   fetchFeedbackSettings,
   updateFeedbackSettings,
@@ -27,6 +29,8 @@ router.post('/answer-all', resolveSupplier, asyncHandler(answerAllFeedbacks));
 router.post('/generate', resolveSupplier, asyncHandler(generateFeedbackAnswer));
 router.post('/accept', resolveSupplier, asyncHandler(acceptFeedbackAnswer));
 router.post('/reject', resolveSupplier, asyncHandler(rejectFeedbackAnswer));
+router.post('/regenerate', resolveSupplier, asyncHandler(regenerateFeedbackAnswer));
+router.get('/rejected', resolveSupplier, asyncHandler(fetchRejectedAnswers));
 router.get('/statistics', resolveSupplier, asyncHandler(fetchFeedbackStatistics));
 router.get('/settings', resolveSupplier, asyncHandler(fetchFeedbackSettings));
 router.put('/settings', resolveSupplier, asyncHandler(updateFeedbackSettings));
