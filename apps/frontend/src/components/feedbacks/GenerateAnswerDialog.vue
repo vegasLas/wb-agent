@@ -37,6 +37,23 @@
         <p class="text-sm text-surface-500">ИИ генерирует ответ...</p>
       </div>
 
+      <!-- User Feedback Form -->
+      <div v-else-if="showFeedbackForm" class="flex flex-col gap-3">
+        <label class="text-sm font-medium">
+          Что вам не понравилось в ответе? Что бы вы хотели изменить?
+        </label>
+        <Textarea
+          v-model="userFeedback"
+          rows="4"
+          auto-resize
+          placeholder="Например: слишком формально, хочу более тёплый тон; или не упомянул бренд; или слишком длинно..."
+          class="w-full"
+        />
+        <p class="text-xs text-surface-500">
+          Ваши пожелания помогут ИИ генерировать более точные ответы в будущем.
+        </p>
+      </div>
+
       <!-- Generated Answer -->
       <div v-else-if="answerText" class="flex flex-col gap-3">
         <label class="text-sm font-medium">Сгенерированный ответ:</label>
@@ -58,38 +75,67 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button
-          label="Отклонить"
-          icon="pi pi-times"
-          severity="secondary"
-          text
-          :disabled="loading || !answerText"
-          @click="onReject"
-        />
-        <Button
-          label="Перегенерировать"
-          icon="pi pi-refresh"
-          severity="secondary"
-          :disabled="loading || !answerText"
-          @click="onRegenerate"
-        />
-        <Button
-          label="Опубликовать"
-          icon="pi pi-check"
-          severity="success"
-          :disabled="loading || !answerText"
-          :loading="postLoading"
-          @click="onAccept"
-        />
+        <!-- Feedback form buttons -->
+        <template v-if="showFeedbackForm">
+          <Button
+            label="Отмена"
+            icon="pi pi-arrow-left"
+            severity="secondary"
+            text
+            @click="cancelFeedbackForm"
+          />
+          <Button
+            label="Отправить и отклонить"
+            v-if="feedbackAction === 'reject'"
+            icon="pi pi-times"
+            severity="danger"
+            @click="submitReject"
+          />
+          <Button
+            label="Отправить и перегенерировать"
+            v-else-if="feedbackAction === 'regenerate'"
+            icon="pi pi-refresh"
+            severity="primary"
+            @click="submitRegenerate"
+          />
+        </template>
+
+        <!-- Normal action buttons -->
+        <template v-else>
+          <Button
+            label="Отклонить"
+            icon="pi pi-times"
+            severity="secondary"
+            text
+            :disabled="loading || !answerText"
+            @click="onReject"
+          />
+          <Button
+            label="Перегенерировать"
+            icon="pi pi-refresh"
+            severity="secondary"
+            :disabled="loading || !answerText"
+            @click="onRegenerate"
+          />
+          <Button
+            label="Опубликовать"
+            icon="pi pi-check"
+            severity="success"
+            :disabled="loading || !answerText"
+            :loading="postLoading"
+            @click="onAccept"
+          />
+        </template>
       </div>
     </template>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
+import Textarea from 'primevue/textarea';
 import ProgressSpinner from 'primevue/progressspinner';
 import { getWbImageUrl } from '@/utils/feedbacks/image-url';
 import type { FeedbackItem } from '@/stores/feedbacks';
@@ -108,12 +154,26 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
   (e: 'accept', feedbackId: string): void;
-  (e: 'reject', feedbackId: string): void;
-  (e: 'regenerate', feedbackId: string): void;
+  (e: 'reject', feedbackId: string, userFeedback: string): void;
+  (e: 'regenerate', feedbackId: string, userFeedback: string): void;
 }>();
+
+const showFeedbackForm = ref(false);
+const userFeedback = ref('');
+const feedbackAction = ref<'reject' | 'regenerate' | null>(null);
 
 const imageUrl = computed(() =>
   getWbImageUrl(props.feedback?.productInfo?.wbArticle),
+);
+
+// Reset form state when dialog opens/closes or answer changes
+watch(
+  () => [props.visible, props.answerText],
+  () => {
+    showFeedbackForm.value = false;
+    userFeedback.value = '';
+    feedbackAction.value = null;
+  },
 );
 
 function onAccept() {
@@ -123,14 +183,30 @@ function onAccept() {
 }
 
 function onReject() {
-  if (props.feedback) {
-    emit('reject', props.feedback.id);
-  }
+  feedbackAction.value = 'reject';
+  showFeedbackForm.value = true;
 }
 
 function onRegenerate() {
+  feedbackAction.value = 'regenerate';
+  showFeedbackForm.value = true;
+}
+
+function cancelFeedbackForm() {
+  showFeedbackForm.value = false;
+  userFeedback.value = '';
+  feedbackAction.value = null;
+}
+
+function submitReject() {
   if (props.feedback) {
-    emit('regenerate', props.feedback.id);
+    emit('reject', props.feedback.id, userFeedback.value.trim());
+  }
+}
+
+function submitRegenerate() {
+  if (props.feedback) {
+    emit('regenerate', props.feedback.id, userFeedback.value.trim());
   }
 }
 </script>

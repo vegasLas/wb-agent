@@ -216,21 +216,21 @@ async function onAcceptAnswer(feedbackId: string) {
   }
 }
 
-async function onRejectAnswer(feedbackId: string) {
+async function onRejectAnswer(feedbackId: string, userFeedback?: string) {
   try {
-    await feedbacksStore.rejectAnswer(feedbackId);
+    await feedbacksStore.rejectAnswer(feedbackId, userFeedback);
     dialog.closeGenerateDialog();
   } catch {
     // Error handled in store
   }
 }
 
-async function onRegenerateAnswer(feedbackId: string) {
+async function onRegenerateAnswer(feedbackId: string, userFeedback?: string) {
   const feedback = dialog.selectedFeedback.value;
   if (!feedback) return;
 
   try {
-    await feedbacksStore.regenerateAnswer(feedbackId, feedback);
+    await feedbacksStore.regenerateAnswer(feedbackId, feedback, userFeedback);
   } catch {
     // Error handled in store
   }

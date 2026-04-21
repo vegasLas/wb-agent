@@ -77,18 +77,18 @@ export const feedbacksAPI = {
    * POST /api/v1/feedbacks/reject
    * Reject generated answer
    */
-  async rejectAnswer(feedbackId: string): Promise<void> {
-    await apiClient.post('/feedbacks/reject', { feedbackId });
+  async rejectAnswer(feedbackId: string, userFeedback?: string): Promise<void> {
+    await apiClient.post('/feedbacks/reject', { feedbackId, userFeedback });
   },
 
   /**
    * POST /api/v1/feedbacks/regenerate
    * Regenerate answer for a feedback
    */
-  async regenerateAnswer(feedbackId: string, feedback: unknown): Promise<RegenerateAnswerResponse> {
+  async regenerateAnswer(feedbackId: string, feedback: unknown, userFeedback?: string): Promise<RegenerateAnswerResponse> {
     const response = await apiClient.post<{ data: RegenerateAnswerResponse }>(
       '/feedbacks/regenerate',
-      { feedbackId, feedback },
+      { feedbackId, feedback, userFeedback },
     );
     return response.data.data;
   },

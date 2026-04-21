@@ -208,9 +208,9 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function rejectAnswer(feedbackId: string) {
+  async function rejectAnswer(feedbackId: string, userFeedback?: string) {
     try {
-      await feedbacksAPI.rejectAnswer(feedbackId);
+      await feedbacksAPI.rejectAnswer(feedbackId, userFeedback);
       generatedAnswer.value = null;
     } catch (err: unknown) {
       const errorMsg =
@@ -220,12 +220,12 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function regenerateAnswer(feedbackId: string, feedback: unknown) {
+  async function regenerateAnswer(feedbackId: string, feedback: unknown, userFeedback?: string) {
     generateLoading.value = true;
     error.value = null;
 
     try {
-      const result = await feedbacksAPI.regenerateAnswer(feedbackId, feedback);
+      const result = await feedbacksAPI.regenerateAnswer(feedbackId, feedback, userFeedback);
       generatedAnswer.value = result;
       return result;
     } catch (err: unknown) {
