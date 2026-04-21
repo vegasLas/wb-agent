@@ -12,6 +12,7 @@ const logger = createLogger('FeedbackPrompt');
 
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
+import type { RejectedAnswerContext } from './feedback-rejected.service';
 
 const VALUATION_LABELS: Record<number, string> = {
   1: 'негативная (оставлена с оценкой)',
@@ -29,6 +30,7 @@ export class FeedbackPromptService {
     feedback: FeedbackItem,
     recentAnswers: FeedbackExample[],
     templates: FeedbackTemplate[],
+    rejectedAnswers: RejectedAnswerContext[] = [],
   ): Promise<string> {
     const productInfo = feedback.productInfo;
     const feedbackInfo = feedback.feedbackInfo;
@@ -37,6 +39,7 @@ export class FeedbackPromptService {
     const templatesContext = this.buildTemplatesContext(templates);
     const mediaContext = this.buildMediaContext(feedbackInfo);
     const valuationLabel = VALUATION_LABELS[feedback.valuation] || 'не указана';
+    const rejectedContext = this.buildRejectedContext(rejectedAnswers);
 
     const prompt = this.buildPrompt({
       productInfo,
@@ -46,8 +49,8 @@ export class FeedbackPromptService {
       mediaContext,
       templatesContext,
       recentAnswersContext,
+      rejectedContext,
     });
-
     try {
       const { text } = await generateText({
         model: deepseek('deepseek-chat'),
@@ -68,8 +71,12 @@ export class FeedbackPromptService {
 
     return examples
       .map((a) => {
-        const pros = a.feedbackTextPros ? ` | Достоинства: "${a.feedbackTextPros}"` : '';
-        const cons = a.feedbackTextCons ? ` | Недостатки: "${a.feedbackTextCons}"` : '';
+        const pros = a.feedbackTextPros
+          ? ` | Достоинства: "${a.feedbackTextPros}"`
+          : '';
+        const cons = a.feedbackTextCons
+          ? ` | Недостатки: "${a.feedbackTextCons}"`
+          : '';
         return `- Отзыв: "${a.feedbackText}"${pros}${cons} | Оценка: ${a.valuation}/5 | Ответ: "${a.answerText}"`;
       })
       .join('\n');
@@ -80,15 +87,30 @@ export class FeedbackPromptService {
     return templates.map((t) => `- ${t.name}: "${t.content}"`).join('\n');
   }
 
-  private buildMediaContext(feedbackInfo: FeedbackItem['feedbackInfo']): string {
+  private buildMediaContext(
+    feedbackInfo: FeedbackItem['feedbackInfo'],
+  ): string {
     const hasPhotos = (feedbackInfo.photos?.length || 0) > 0;
     const hasVideo = !!feedbackInfo.video;
 
     const parts: string[] = [];
-    if (hasPhotos) parts.push(`Покупатель приложил ${feedbackInfo.photos?.length} фото.`);
+    if (hasPhotos)
+      parts.push(`Покупатель приложил ${feedbackInfo.photos?.length} фото.`);
     if (hasVideo) parts.push('Покупатель приложил видео.');
 
     return parts.length > 0 ? '\n' + parts.join(' ') : '';
+  }
+
+  private buildRejectedContext(
+    rejectedAnswers: RejectedAnswerContext[],
+  ): string {
+    if (rejectedAnswers.length === 0) return '';
+
+    const lines = rejectedAnswers
+      .map((r) => `- "${r.rejectedAnswerText}"`)
+      .join('\n');
+
+    return `\nОТВЕТЫ, КОТОРЫЕ НЕЛЬЗЯ ПОВТОРЯТЬ (ранее отклонённые):\n${lines}\n`;
   }
 
   private buildPrompt(params: {
@@ -99,6 +121,7 @@ export class FeedbackPromptService {
     mediaContext: string;
     templatesContext: string;
     recentAnswersContext: string;
+    rejectedContext: string;
   }): string {
     return `Ты — профессиональный менеджер по работе с отзывами на маркетплейсе Wildberries.
 Твоя задача — написать персонализированный, тёплый и профессиональный ответ на отзыв покупателя.
@@ -120,8 +143,7 @@ export class FeedbackPromptService {
 ${params.templatesContext}
 
 ПРИМЕРЫ ОТВЕТОВ НА ОТЗЫВЫ С ОЦЕНКОЙ ${params.valuation}/5 (используй как референс тона и стиля для этой оценки):
-${params.recentAnswersContext}
-
+${params.recentAnswersContext}${params.rejectedContext}
 ПРАВИЛА:
 1. Обращайся к покупателю по имени (${params.feedbackInfo.userName}).
 2. Поблагодари за покупку и отзыв.
@@ -131,7 +153,8 @@ ${params.recentAnswersContext}
 6. Длина ответа: 100-300 символов.
 7. Тон: дружелюбный, профессиональный.
 8. Не используй шаблонные фразы — пиши живо.
-9. Ответь ТОЛЬКО текстом ответа, без пояснений.
+9. Учитывай ошибки из отклонённых ответов.
+10. Ответь ТОЛЬКО текстом ответа, без пояснений.
 
 Ответ:`;
   }

@@ -33,8 +33,8 @@ export class FeedbackExampleService {
     userId: number,
     supplierId: string,
     valuations: number[],
-    limit = 20,
-    fallbackThreshold = 10,
+    limit = 5,
+    fallbackThreshold = 3,
   ): Promise<Map<number, FeedbackExample[]>> {
     const result = new Map<number, FeedbackExample[]>();
 
@@ -121,8 +121,8 @@ export class FeedbackExampleService {
     userId: number,
     supplierId: string,
     nmId: number,
-    limit = 20,
-    fallbackThreshold = 20,
+    limit = 5,
+    fallbackThreshold = 3,
     targetValuation?: number,
   ): Promise<FeedbackExample[]> {
     const postedAnswers = await this.getRecentPostedAnswers(
