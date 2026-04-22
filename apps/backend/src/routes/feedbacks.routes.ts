@@ -31,7 +31,9 @@ import {
   fetchFeedbackTemplates,
   fetchGoodsByCategory,
   fetchProductRules,
+  createProductRule,
   updateProductRule,
+  deleteProductRule,
 } from '@/controllers/feedbacks.controller';
 
 const router = Router();
@@ -114,10 +116,26 @@ router.get('/templates', asyncHandler(fetchFeedbackTemplates));
 // Goods & rules endpoints
 router.get('/goods', resolveSupplier, asyncHandler(fetchGoodsByCategory));
 router.get('/rules', resolveSupplier, asyncHandler(fetchProductRules));
-router.put(
-  '/rules/:nmId',
+router.post(
+  '/rules',
   resolveSupplier,
-  param('nmId').isInt({ min: 1 }).withMessage('nmId must be a positive integer'),
+  body('nmIds').isArray({ min: 1 }).withMessage('nmIds must contain at least one item'),
+  body('nmIds.*').isInt().withMessage('Each nmId must be an integer'),
+  body('minRating').optional().isInt({ min: 1, max: 5 }).withMessage('minRating must be 1-5'),
+  body('maxRating').optional().isInt({ min: 1, max: 5 }).withMessage('maxRating must be 1-5'),
+  body('excludeKeywords').optional().isArray().withMessage('excludeKeywords must be an array'),
+  body('excludeKeywords.*').optional().isString(),
+  body('requireApproval').optional().isBoolean(),
+  body('enabled').optional().isBoolean(),
+  validationMiddleware,
+  asyncHandler(createProductRule),
+);
+router.put(
+  '/rules/:id',
+  resolveSupplier,
+  param('id').notEmpty().withMessage('id is required'),
+  body('nmIds').optional().isArray({ min: 1 }).withMessage('nmIds must contain at least one item'),
+  body('nmIds.*').optional().isInt().withMessage('Each nmId must be an integer'),
   body('minRating').optional().isInt({ min: 1, max: 5 }).withMessage('minRating must be 1-5'),
   body('maxRating').optional().isInt({ min: 1, max: 5 }).withMessage('maxRating must be 1-5'),
   body('excludeKeywords').optional().isArray().withMessage('excludeKeywords must be an array'),
@@ -126,6 +144,13 @@ router.put(
   body('enabled').optional().isBoolean(),
   validationMiddleware,
   asyncHandler(updateProductRule),
+);
+router.delete(
+  '/rules/:id',
+  resolveSupplier,
+  param('id').notEmpty().withMessage('id is required'),
+  validationMiddleware,
+  asyncHandler(deleteProductRule),
 );
 
 export default router;

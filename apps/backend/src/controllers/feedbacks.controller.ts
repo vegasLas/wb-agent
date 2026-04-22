@@ -429,28 +429,66 @@ export const fetchProductRules = async (req: Request, res: Response): Promise<vo
 };
 
 /**
- * PUT /api/v1/feedbacks/rules/:nmId
+ * POST /api/v1/feedbacks/rules
  */
-export const updateProductRule = async (req: Request, res: Response): Promise<void> => {
+export const createProductRule = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const nmId = Number(req.params.nmId);
-  const body = req.body as FeedbackProductRuleInput;
+  const body = req.body as FeedbackProductRuleInput & { nmIds: number[] };
 
-  if (!nmId || isNaN(nmId)) {
-    throw ApiError.badRequest('nmId is required');
-  }
+  logger.info(`Creating product rule for user ${userId}, supplier ${supplierId}`);
 
-  logger.info(`Updating product rule for user ${userId}, supplier ${supplierId}, nmId ${nmId}`);
-
-  const rule = await feedbackSettingsService.updateProductRule(userId, supplierId, nmId, {
+  const rule = await feedbackSettingsService.createRule(userId, supplierId, {
+    nmIds: body.nmIds,
     minRating: body.minRating,
     maxRating: body.maxRating,
     excludeKeywords: body.excludeKeywords,
     requireApproval: body.requireApproval,
     enabled: body.enabled,
   });
-  successResponse(res, rule);
+  successResponse(res, { rule });
+};
+
+/**
+ * PUT /api/v1/feedbacks/rules/:id
+ */
+export const updateProductRule = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+  const body = req.body as FeedbackProductRuleInput;
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  logger.info(`Updating product rule ${id} for user ${userId}`);
+
+  const rule = await feedbackSettingsService.updateRule(id, userId, {
+    nmIds: body.nmIds,
+    minRating: body.minRating,
+    maxRating: body.maxRating,
+    excludeKeywords: body.excludeKeywords,
+    requireApproval: body.requireApproval,
+    enabled: body.enabled,
+  });
+  successResponse(res, { rule });
+};
+
+/**
+ * DELETE /api/v1/feedbacks/rules/:id
+ */
+export const deleteProductRule = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  logger.info(`Deleting product rule ${id} for user ${userId}`);
+
+  await feedbackSettingsService.deleteRule(id, userId);
+  successResponse(res, { deleted: true });
 };
 
 /**
@@ -577,5 +615,7 @@ export default {
   fetchFeedbackTemplates,
   fetchGoodsByCategory,
   fetchProductRules,
+  createProductRule,
   updateProductRule,
+  deleteProductRule,
 };
