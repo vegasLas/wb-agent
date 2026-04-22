@@ -130,15 +130,27 @@
     </div>
 
     <!-- Rejected View -->
-    <div v-else>
+    <div v-else-if="viewMode === 'rejected'">
       <RejectedFeedbackManager
         :rejected-answers="feedbacksStore.rejectedAnswers"
         :rejected-loading="feedbacksStore.rejectedLoading"
         :goods-by-category="feedbacksStore.goodsByCategory"
         @update-note="onUpdateRejectedNote"
-        @update-nmids="onUpdateRejectedNmIds"
         @delete="onDeleteRejected"
         @refresh="feedbacksStore.fetchRejectedAnswers"
+      />
+    </div>
+
+    <!-- Groups View -->
+    <div v-else-if="viewMode === 'groups'">
+      <GoodsGroupsView
+        :goods-by-category="feedbacksStore.goodsByCategory"
+        :goods-groups="feedbacksStore.goodsGroups"
+        :goods-loading="feedbacksStore.goodsLoading"
+        :groups-loading="feedbacksStore.goodsGroupsLoading"
+        @merge="onMergeGoods"
+        @delete-group="onDeleteGoodsGroup"
+        @remove-from-group="onRemoveFromGroup"
       />
     </div>
 
@@ -195,6 +207,7 @@ import {
   GenerateAnswerDrawer,
   AnswerAllConfirmDialog,
   RejectedFeedbackManager,
+  GoodsGroupsView,
   FeedbackRulesSection,
   AutoAnswersDrawer,
 } from '@/components/feedbacks';
@@ -208,10 +221,11 @@ const dialog = useFeedbacksDialog();
 const tabs: FeedbackTab[] = ['unanswered', 'ai-posted', 'ai-pending'];
 
 // View mode
-const viewMode = ref<'answers' | 'rejected'>('answers');
+const viewMode = ref<'answers' | 'rejected' | 'groups'>('answers');
 const viewModeOptions = [
   { label: 'Ответы', value: 'answers' },
   { label: 'Правки', value: 'rejected' },
+  { label: 'Группы', value: 'groups' },
 ];
 
 // Tabs
@@ -317,17 +331,34 @@ async function onUpdateRejectedNote(id: string, note: string) {
   }
 }
 
-async function onUpdateRejectedNmIds(id: string, nmIds: number[]) {
+async function onDeleteRejected(id: string) {
   try {
-    await feedbacksStore.updateRejectedNmIds(id, nmIds);
+    await feedbacksStore.deleteRejectedAnswer(id);
   } catch {
     // Error handled in store
   }
 }
 
-async function onDeleteRejected(id: string) {
+// Groups handlers
+async function onMergeGoods(sourceNmId: number, targetNmId: number) {
   try {
-    await feedbacksStore.deleteRejectedAnswer(id);
+    await feedbacksStore.mergeGoods(sourceNmId, targetNmId);
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onDeleteGoodsGroup(id: string) {
+  try {
+    await feedbacksStore.deleteGoodsGroup(id);
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onRemoveFromGroup(groupId: string, nmId: number) {
+  try {
+    await feedbacksStore.removeNmIdFromGroup(groupId, nmId);
   } catch {
     // Error handled in store
   }
@@ -359,6 +390,7 @@ onMounted(async () => {
       feedbacksStore.fetchGoods(),
       feedbacksStore.fetchRules(),
       feedbacksStore.fetchRejectedAnswers(),
+      feedbacksStore.fetchGoodsGroups(),
     ]);
   } finally {
     viewReady();
