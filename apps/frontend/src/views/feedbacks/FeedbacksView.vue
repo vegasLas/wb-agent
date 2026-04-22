@@ -19,6 +19,7 @@
         :options="viewModeOptions"
         option-label="label"
         option-value="value"
+        :allow-empty="false"
         size="small"
         class="text-sm"
       />
@@ -210,7 +211,7 @@ const tabs: FeedbackTab[] = ['unanswered', 'ai-posted', 'ai-pending'];
 const viewMode = ref<'answers' | 'rejected'>('answers');
 const viewModeOptions = [
   { label: 'Ответы', value: 'answers' },
-  { label: 'Отклоненные', value: 'rejected' },
+  { label: 'Правки', value: 'rejected' },
 ];
 
 // Tabs
