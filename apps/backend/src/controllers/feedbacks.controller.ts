@@ -15,6 +15,7 @@ import { successResponse } from '@/utils/response';
 import type { FeedbackItem } from '@/types/wb';
 import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
+import type { FeedbackProductRuleInput } from '@/services/domain/feedback/feedback-settings.service';
 
 function getUserId(req: Request): number {
   return req.user!.id;
@@ -299,9 +300,43 @@ export const fetchRejectedAnswers = async (req: Request, res: Response): Promise
   const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
     userId,
     supplierId,
-    30,
+    100,
   );
   successResponse(res, { rejectedAnswers });
+};
+
+/**
+ * PUT /api/v1/feedbacks/rejected/:id
+ */
+export const updateRejectedAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+  const { userFeedback, nmIds } = req.body as { userFeedback?: string; nmIds?: number[] };
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  await feedbackRejectedService.updateRejectedAnswer(id, userId, {
+    userFeedback,
+    nmIds,
+  });
+  successResponse(res, { updated: true });
+};
+
+/**
+ * DELETE /api/v1/feedbacks/rejected/:id
+ */
+export const deleteRejectedAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  await feedbackRejectedService.deleteRejectedAnswer(id, userId);
+  successResponse(res, { deleted: true });
 };
 
 /**
@@ -369,6 +404,93 @@ export const fetchFeedbackTemplates = async (req: Request, res: Response): Promi
   successResponse(res, data);
 };
 
+/**
+ * GET /api/v1/feedbacks/goods
+ */
+export const fetchGoodsByCategory = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  logger.info(`Fetching goods by category for user ${userId}, supplier ${supplierId}`);
+
+  const goodsByCategory = await feedbackSettingsService.getGoodsByCategory(userId, supplierId);
+  successResponse(res, { goodsByCategory });
+};
+
+/**
+ * GET /api/v1/feedbacks/category-stats
+ */
+export const fetchCategoryStats = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  logger.info(`Fetching category stats for user ${userId}, supplier ${supplierId}`);
+
+  const stats = await feedbackSettingsService.getCategoryStats(userId, supplierId);
+  successResponse(res, { stats });
+};
+
+/**
+ * PUT /api/v1/feedbacks/settings/category
+ */
+export const updateCategoryFeedbackSetting = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { category, autoAnswerEnabled } = req.body as { category: string; autoAnswerEnabled: boolean };
+
+  if (!category || typeof autoAnswerEnabled !== 'boolean') {
+    throw ApiError.badRequest('category and autoAnswerEnabled are required');
+  }
+
+  logger.info(`Updating category setting for user ${userId}, supplier ${supplierId}, category ${category}`);
+
+  const setting = await feedbackSettingsService.updateCategorySetting(
+    userId,
+    supplierId,
+    category,
+    autoAnswerEnabled,
+  );
+  successResponse(res, setting);
+};
+
+/**
+ * GET /api/v1/feedbacks/rules
+ */
+export const fetchProductRules = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  logger.info(`Fetching product rules for user ${userId}, supplier ${supplierId}`);
+
+  const rules = await feedbackSettingsService.getProductRules(userId, supplierId);
+  successResponse(res, { rules });
+};
+
+/**
+ * PUT /api/v1/feedbacks/rules/:nmId
+ */
+export const updateProductRule = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const nmId = Number(req.params.nmId);
+  const body = req.body as FeedbackProductRuleInput;
+
+  if (!nmId || isNaN(nmId)) {
+    throw ApiError.badRequest('nmId is required');
+  }
+
+  logger.info(`Updating product rule for user ${userId}, supplier ${supplierId}, nmId ${nmId}`);
+
+  const rule = await feedbackSettingsService.updateProductRule(userId, supplierId, nmId, {
+    minRating: body.minRating,
+    maxRating: body.maxRating,
+    excludeKeywords: body.excludeKeywords,
+    requireApproval: body.requireApproval,
+    enabled: body.enabled,
+  });
+  successResponse(res, rule);
+};
+
 export default {
   fetchFeedbacks,
   countUnansweredFeedbacks,
@@ -378,9 +500,16 @@ export default {
   rejectFeedbackAnswer,
   regenerateFeedbackAnswer,
   fetchRejectedAnswers,
+  updateRejectedAnswer,
+  deleteRejectedAnswer,
   fetchFeedbackStatistics,
   fetchFeedbackSettings,
   updateFeedbackSettings,
   updateProductFeedbackSetting,
   fetchFeedbackTemplates,
+  fetchGoodsByCategory,
+  fetchCategoryStats,
+  updateCategoryFeedbackSetting,
+  fetchProductRules,
+  updateProductRule,
 };
