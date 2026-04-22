@@ -162,7 +162,7 @@ const emit = defineEmits<{
 
 function getProductSetting(nmId: number): boolean {
   const setting = props.productSettings.find((s) => s.nmId === nmId);
-  return setting?.autoAnswerEnabled ?? true;
+  return setting?.autoAnswerEnabled ?? false;
 }
 
 const searchQuery = ref('');

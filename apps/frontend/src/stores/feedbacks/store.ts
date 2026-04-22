@@ -65,7 +65,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
 
   function getProductSetting(nmId: number): boolean {
     const setting = productSettings.value.find((s) => s.nmId === nmId);
-    return setting?.autoAnswerEnabled ?? true;
+    return setting?.autoAnswerEnabled ?? false;
   }
 
   function getProductRule(nmId: number): FeedbackProductRule | undefined {
