@@ -7,7 +7,7 @@
     <EmptyState
       v-else-if="groupedRejected.length === 0"
       icon="pi pi-ban"
-      message="Нет отклоненных ответов"
+      message="Нет правок"
     />
 
     <!-- Search -->
@@ -41,19 +41,32 @@
           <div class="flex items-center gap-2 min-w-0">
             <i
               class="pi text-xs text-surface-500 shrink-0"
-              :class="expandedGroups.has(group.nmId) ? 'pi-chevron-down' : 'pi-chevron-right'"
+              :class="
+                expandedGroups.has(group.nmId)
+                  ? 'pi-chevron-down'
+                  : 'pi-chevron-right'
+              "
             />
             <div class="flex items-center gap-1.5 min-w-0 overflow-hidden">
-              <template v-for="[code, count] in getVendorCodeCountsForGroup(group.items)" :key="code">
+              <template
+                v-for="[code, count] in getVendorCodeCountsForGroup(
+                  group.items,
+                )"
+                :key="code"
+              >
                 <div class="flex items-center gap-1 shrink-0">
-                  <Chip
-                    :label="code"
-                    class="text-xs py-0 px-1.5"
+                  <Chip :label="code" class="text-xs py-0 px-1.5" />
+                  <Badge
+                    :value="String(count)"
+                    severity="secondary"
+                    class="text-xs"
                   />
-                  <Badge :value="String(count)" severity="secondary" class="text-xs" />
                 </div>
               </template>
-              <span v-if="getVendorCodeCountsForGroup(group.items).size === 0" class="text-xs text-surface-500">
+              <span
+                v-if="getVendorCodeCountsForGroup(group.items).size === 0"
+                class="text-xs text-surface-500"
+              >
                 nmID: {{ group.nmId }}
               </span>
             </div>
@@ -61,109 +74,45 @@
         </div>
 
         <!-- Group items -->
-        <div v-show="expandedGroups.has(group.nmId)" class="border-t border-surface-200 dark:border-surface-700">
+        <div
+          v-show="expandedGroups.has(group.nmId)"
+          class="border-t border-surface-200 dark:border-surface-700"
+        >
           <div
             v-for="item in group.items"
             :key="item.id"
             class="p-2 space-y-1.5"
           >
-            <!-- Expandable feedback + answer (PrimeVue Inplace) -->
+            <!-- Expandable texts -->
             <div class="space-y-1">
-              <!-- Feedback text -->
-              <Inplace
-                v-if="item.feedbackText?.trim()"
-                v-model:active="expandedFeedback[item.id]"
-                class="text-xs"
-              >
+              <!-- Generated answer text -->
+              <Inplace v-model:active="expandedAnswer[item.id]" class="text-xs">
                 <template #display>
-                  <span class="text-surface-400">
-                    <span class="font-medium">Отзыв:</span>
-                    {{ truncate(item.feedbackText, 80) }}
-                    <span class="text-surface-500 underline ml-1">Ещё</span>
-                  </span>
-                </template>
-                <template #content>
-                  <span class="text-surface-300 cursor-pointer" @click="expandedFeedback[item.id] = false">
-                    <span class="font-medium">Отзыв:</span>
-                    {{ item.feedbackText }}
-                    <span class="text-surface-500 underline ml-1">Скрыть</span>
-                  </span>
-                </template>
-              </Inplace>
-              <div v-else class="text-xs text-surface-500 italic">
-                <span class="font-medium">Отзыв:</span> текст отсутствует
-              </div>
-
-              <!-- Rejected answer text -->
-              <Inplace
-                v-model:active="expandedAnswer[item.id]"
-                class="text-xs"
-              >
-                <template #display>
-                  <span class="text-red-400">
-                    <span class="font-medium">Ответ:</span>
+                  <span class="text-red-400 cursor-pointer hover:opacity-80 transition-opacity">
+                    <span class="font-medium">Сгенерированный ответ:</span>
                     {{ truncate(item.rejectedAnswerText, 80) }}
-                    <span class="text-red-500 underline ml-1">Ещё</span>
                   </span>
                 </template>
                 <template #content>
-                  <span class="text-red-300 cursor-pointer" @click="expandedAnswer[item.id] = false">
-                    <span class="font-medium">Ответ:</span>
+                  <span
+                    class="text-red-300 cursor-pointer hover:opacity-80 transition-opacity"
+                    @click="expandedAnswer[item.id] = false"
+                  >
+                    <span class="font-medium">Сгенерированный ответ:</span>
                     {{ item.rejectedAnswerText }}
-                    <span class="text-red-500 underline ml-1">Скрыть</span>
                   </span>
                 </template>
               </Inplace>
-            </div>
 
-            <!-- Compact nmIds MultiSelect -->
-            <MultiSelect
-              :model-value="item.nmIds || []"
-              :options="goodsOptions"
-              option-label="title"
-              option-value="nmID"
-              filter
-              placeholder="Товары"
-              class="w-full text-sm"
-              display="chip"
-              :max-selected-labels="2"
-              selected-items-label="Выбрано {0}"
-              empty-filter-message="Ничего не найдено"
-              empty-message="Нет товаров"
-              @update:model-value="(val) => onNmIdsChange(item.id, val as number[])"
-            >
-              <template #option="slotProps">
-                <div class="flex items-center gap-2">
-                  <img
-                    v-if="slotProps.option.thumbnail"
-                    :src="slotProps.option.thumbnail"
-                    alt=""
-                    class="w-6 h-6 object-cover rounded"
-                  />
-                  <div v-else class="w-6 h-6 bg-surface-200 dark:bg-surface-700 rounded flex items-center justify-center">
-                    <i class="pi pi-image text-surface-400 text-xs" />
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-xs">{{ slotProps.option.title }}</span>
-                    <span class="text-xs text-surface-500">nmID: {{ slotProps.option.nmID }}</span>
-                  </div>
-                </div>
-              </template>
-              <template #chip="slotProps">
-                <Chip
-                  :label="goodsMap.get(slotProps.value as number)?.vendorCode ?? String(slotProps.value)"
-                  class="text-xs py-0 px-1.5"
-                />
-              </template>
-            </MultiSelect>
-
-            <!-- Compact note row -->
-            <div class="flex items-center gap-1.5">
-              <div v-if="editingId === item.id && editingField === 'note'" class="flex gap-1 flex-1">
+              <!-- User feedback / note -->
+              <div
+                v-if="editingId === item.id && editingField === 'note'"
+                class="flex gap-1"
+              >
                 <InputText
                   v-model="editValue"
                   class="flex-1 text-xs py-1"
-                  placeholder="Примечание"
+                  placeholder="Замечание"
                 />
                 <Button
                   icon="pi pi-check"
@@ -182,9 +131,9 @@
                   @click="cancelEdit"
                 />
               </div>
-              <div v-else class="flex items-center gap-1.5 flex-1 min-w-0">
-                <span class="text-xs text-surface-500 shrink-0">Примечание:</span>
-                <span class="text-xs text-surface-700 dark:text-surface-300 truncate">
+              <div v-else class="flex items-center gap-1.5 text-xs">
+                <span class="text-surface-500 shrink-0">Замечание:</span>
+                <span class="text-surface-300 truncate flex-1">
                   {{ item.userFeedback || '—' }}
                 </span>
                 <Button
@@ -192,16 +141,71 @@
                   severity="secondary"
                   text
                   size="small"
-                  class="p-1 shrink-0 ml-auto"
+                  class="p-1 shrink-0"
                   @click="startEditNote(item)"
                 />
               </div>
+            </div>
+
+            <!-- Compact nmIds MultiSelect -->
+            <MultiSelect
+              :model-value="item.nmIds || []"
+              :options="goodsOptions"
+              option-label="title"
+              option-value="nmID"
+              filter
+              placeholder="Товары"
+              class="w-full text-sm"
+              display="chip"
+              :max-selected-labels="2"
+              selected-items-label="Выбрано {0}"
+              empty-filter-message="Ничего не найдено"
+              empty-message="Нет товаров"
+              @update:model-value="
+                (val) => onNmIdsChange(item.id, val as number[])
+              "
+            >
+              <template #option="slotProps">
+                <div class="flex items-center gap-2">
+                  <img
+                    v-if="slotProps.option.thumbnail"
+                    :src="slotProps.option.thumbnail"
+                    alt=""
+                    class="w-6 h-6 object-cover rounded"
+                  />
+                  <div
+                    v-else
+                    class="w-6 h-6 bg-surface-200 dark:bg-surface-700 rounded flex items-center justify-center"
+                  >
+                    <i class="pi pi-image text-surface-400 text-xs" />
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-xs">{{ slotProps.option.title }}</span>
+                    <span class="text-xs text-surface-500"
+                      >nmID: {{ slotProps.option.nmID }}</span
+                    >
+                  </div>
+                </div>
+              </template>
+              <template #chip="slotProps">
+                <Chip
+                  :label="
+                    goodsMap.get(slotProps.value as number)?.vendorCode ??
+                    String(slotProps.value)
+                  "
+                  class="text-xs py-0 px-1.5"
+                />
+              </template>
+            </MultiSelect>
+
+            <!-- Delete button -->
+            <div class="flex justify-end">
               <Button
                 icon="pi pi-trash"
                 severity="danger"
                 text
                 size="small"
-                class="p-1 shrink-0"
+                class="p-1"
                 @click="$emit('delete', item.id)"
               />
             </div>
@@ -281,7 +285,9 @@ function getVendorCodesForNmIds(nmIds: number[] | undefined): string[] {
   return codes;
 }
 
-function getVendorCodeCountsForGroup(items: RejectedAnswerContext[]): Map<string, number> {
+function getVendorCodeCountsForGroup(
+  items: RejectedAnswerContext[],
+): Map<string, number> {
   const counts = new Map<string, number>();
   for (const item of items) {
     const codes = getVendorCodesForNmIds(item.nmIds);
