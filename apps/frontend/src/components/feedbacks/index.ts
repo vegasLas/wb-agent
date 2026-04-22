@@ -43,6 +43,7 @@ export { default as GoodsMergeDialog } from './GoodsMergeDialog.vue';
 // Rules Domain - Product rules editor
 // ---------------------------------------------------------------------------
 export { default as FeedbackRulesSection } from './FeedbackRulesSection.vue';
+export { default as RuleEditDialog } from './RuleEditDialog.vue';
 
 // ---------------------------------------------------------------------------
 // Drawer Domain - Auto answers drawer
