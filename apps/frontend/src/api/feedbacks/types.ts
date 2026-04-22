@@ -126,8 +126,17 @@ export interface RejectedAnswerContext {
   mistakeCategory: string | null;
   productCategory: string | null;
   userFeedback: string | null;
+  nmId: number;
+  createdAt: string;
+}
+
+export interface FeedbackGoodsGroup {
+  id: string;
+  userId: number;
+  supplierId: string;
   nmIds: number[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProcessResult {

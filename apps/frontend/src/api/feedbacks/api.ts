@@ -9,6 +9,7 @@ import type {
   GenerateAnswerResponse,
   RegenerateAnswerResponse,
   RejectedAnswerContext,
+  FeedbackGoodsGroup,
   ProcessResult,
   FetchFeedbacksParams,
   GoodsItem,
@@ -113,9 +114,71 @@ export const feedbacksAPI = {
   async updateRejected(
     id: string,
     userFeedback?: string,
-    nmIds?: number[],
   ): Promise<void> {
-    await apiClient.put(`/feedbacks/rejected/${id}`, { userFeedback, nmIds });
+    await apiClient.put(`/feedbacks/rejected/${id}`, { userFeedback });
+  },
+
+  /**
+   * GET /api/v1/feedbacks/goods-groups
+   * Get goods groups
+   */
+  async fetchGoodsGroups(): Promise<FeedbackGoodsGroup[]> {
+    const response = await apiClient.get<{ data: { groups: FeedbackGoodsGroup[] } }>(
+      '/feedbacks/goods-groups',
+    );
+    return response.data.data.groups;
+  },
+
+  /**
+   * POST /api/v1/feedbacks/goods-groups
+   * Create a goods group
+   */
+  async createGoodsGroup(nmIds: number[]): Promise<FeedbackGoodsGroup> {
+    const response = await apiClient.post<{ data: { group: FeedbackGoodsGroup } }>(
+      '/feedbacks/goods-groups',
+      { nmIds },
+    );
+    return response.data.data.group;
+  },
+
+  /**
+   * PUT /api/v1/feedbacks/goods-groups/:id
+   * Update a goods group
+   */
+  async updateGoodsGroup(id: string, nmIds: number[]): Promise<FeedbackGoodsGroup> {
+    const response = await apiClient.put<{ data: { group: FeedbackGoodsGroup } }>(
+      `/feedbacks/goods-groups/${id}`,
+      { nmIds },
+    );
+    return response.data.data.group;
+  },
+
+  /**
+   * DELETE /api/v1/feedbacks/goods-groups/:id
+   * Delete a goods group
+   */
+  async deleteGoodsGroup(id: string): Promise<void> {
+    await apiClient.delete(`/feedbacks/goods-groups/${id}`);
+  },
+
+  /**
+   * POST /api/v1/feedbacks/goods-groups/merge
+   * Merge two goods
+   */
+  async mergeGoods(sourceNmId: number, targetNmId: number): Promise<FeedbackGoodsGroup> {
+    const response = await apiClient.post<{ data: { group: FeedbackGoodsGroup } }>(
+      '/feedbacks/goods-groups/merge',
+      { sourceNmId, targetNmId },
+    );
+    return response.data.data.group;
+  },
+
+  /**
+   * POST /api/v1/feedbacks/goods-groups/:id/remove
+   * Remove a nmId from a group
+   */
+  async removeNmIdFromGroup(groupId: string, nmId: number): Promise<void> {
+    await apiClient.post(`/feedbacks/goods-groups/${groupId}/remove`, { nmId });
   },
 
   /**
