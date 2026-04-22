@@ -13,6 +13,7 @@ import type {
   RejectedAnswerContext,
   FeedbackGoodsGroup,
   GoodsItem,
+  CreateProductRuleInput,
 } from './types';
 
 export const useFeedbacksStore = defineStore('feedbacks', () => {
@@ -421,19 +422,45 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function updateRule(nmId: number, rule: Partial<FeedbackProductRule>) {
+  async function createRule(input: CreateProductRuleInput) {
     try {
-      const updated = await feedbacksAPI.updateProductRule(nmId, rule);
-      const idx = productRules.value.findIndex((r) => r.nmId === nmId);
+      const created = await feedbacksAPI.createProductRule(input);
+      productRules.value.push(created);
+      return created;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to create product rule';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function updateRule(id: string, input: Partial<CreateProductRuleInput>) {
+    try {
+      const updated = await feedbacksAPI.updateProductRule(id, input);
+      const idx = productRules.value.findIndex((r) => r.id === id);
       if (idx >= 0) {
         productRules.value[idx] = updated;
-      } else {
-        productRules.value.push(updated);
       }
       return updated;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to update product rule';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function deleteRule(id: string) {
+    try {
+      await feedbacksAPI.deleteProductRule(id);
+      const idx = productRules.value.findIndex((r) => r.id === id);
+      if (idx >= 0) {
+        productRules.value.splice(idx, 1);
+      }
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to delete product rule';
       error.value = errorMsg;
       throw err;
     }
@@ -506,7 +533,9 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     getProductRule,
     removeFeedback,
     fetchRules,
+    createRule,
     updateRule,
+    deleteRule,
     fetchRejectedAnswers,
     updateRejectedNote,
     deleteRejectedAnswer,
