@@ -213,7 +213,9 @@
       :goods-loading="feedbacksStore.goodsLoading"
       :goods-by-category="feedbacksStore.goodsByCategory"
       :product-stats="feedbacksStore.productStats"
+      :product-settings="feedbacksStore.productSettings"
       @update:auto-answer="onToggleAutoAnswer"
+      @toggle-product="onToggleProduct"
     />
   </div>
 </template>
@@ -374,6 +376,7 @@ async function onDeleteRejected(id: string) {
 async function onMergeGoods(sourceNmId: number, targetNmId: number) {
   try {
     await feedbacksStore.mergeGoods(sourceNmId, targetNmId);
+    await feedbacksStore.fetchStatistics();
   } catch {
     // Error handled in store
   }
@@ -382,6 +385,7 @@ async function onMergeGoods(sourceNmId: number, targetNmId: number) {
 async function onDeleteGoodsGroup(id: string) {
   try {
     await feedbacksStore.deleteGoodsGroup(id);
+    await feedbacksStore.fetchStatistics();
   } catch {
     // Error handled in store
   }
@@ -390,6 +394,7 @@ async function onDeleteGoodsGroup(id: string) {
 async function onRemoveFromGroup(groupId: string, nmId: number) {
   try {
     await feedbacksStore.removeNmIdFromGroup(groupId, nmId);
+    await feedbacksStore.fetchStatistics();
   } catch {
     // Error handled in store
   }

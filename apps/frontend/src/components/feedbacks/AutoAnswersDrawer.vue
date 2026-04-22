@@ -82,9 +82,10 @@
             </div>
             <!-- Compliance toggle -->
             <ToggleSwitch
-              :model-value="product.compliant"
-              disabled
+              :model-value="product.autoAnswerEnabled"
+              :disabled="!product.compliant"
               size="small"
+              @update:model-value="(val) => $emit('toggle-product', product.nmId, val)"
             />
           </div>
         </div>
@@ -109,6 +110,7 @@ interface ProductCompliance {
   postedCount: number;
   rejectedCount: number;
   compliant: boolean;
+  autoAnswerEnabled: boolean;
 }
 
 interface Props {
@@ -119,6 +121,7 @@ interface Props {
   goodsLoading: boolean;
   goodsByCategory: Record<string, GoodsItem[]>;
   productStats: Record<number, { postedCount: number; rejectedCount: number }>;
+  productSettings: { nmId: number; autoAnswerEnabled: boolean }[];
 }
 
 const props = defineProps<Props>();
@@ -126,6 +129,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
   (e: 'update:auto-answer', value: boolean): void;
+  (e: 'toggle-product', nmId: number, enabled: boolean): void;
 }>();
 
 const visible = computed({
@@ -146,13 +150,17 @@ const productComplianceList = computed<ProductCompliance[]>(() => {
     const stat = props.productStats[goods.nmID];
     const postedCount = stat?.postedCount ?? 0;
     const rejectedCount = stat?.rejectedCount ?? 0;
+    const compliant = postedCount >= 30 || rejectedCount >= 20;
+    const setting = props.productSettings.find((s) => s.nmId === goods.nmID);
+    const autoAnswerEnabled = setting?.autoAnswerEnabled ?? false;
     return {
       nmId: goods.nmID,
       vendorCode: goods.vendorCode,
       thumbnail: goods.thumbnail,
       postedCount,
       rejectedCount,
-      compliant: postedCount >= 30 || rejectedCount >= 20,
+      compliant,
+      autoAnswerEnabled: compliant ? autoAnswerEnabled : false,
     };
   });
 });
