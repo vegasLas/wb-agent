@@ -373,7 +373,7 @@ model FeedbackRejectedAnswer {
   userId             Int
   supplierId         String
   feedbackId         String
-  nmId               Int
+  nmIds              Int[]
   feedbackText       String   @default("")
   rejectedAnswerText String
   valuation          Int      @default(5)
@@ -389,4 +389,38 @@ model FeedbackRejectedAnswer {
   @@index([feedbackId])
   @@index([productCategory])
   @@index([createdAt])
+}
+
+model FeedbackCategorySetting {
+  id                String   @id @default(uuid())
+  userId            Int
+  supplierId        String
+  category          String
+  autoAnswerEnabled Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, supplierId, category])
+  @@index([userId])
+  @@index([supplierId])
+  @@index([category])
+}
+
+model FeedbackProductRule {
+  id              String   @id @default(uuid())
+  userId          Int
+  supplierId      String
+  nmId            Int
+  minRating       Int?
+  maxRating       Int?
+  excludeKeywords String[]
+  requireApproval Boolean  @default(false)
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, supplierId, nmId])
+  @@index([userId])
+  @@index([supplierId])
+  @@index([nmId])
 }
