@@ -37,6 +37,7 @@ export interface GoodsItem {
 }
 
 export interface FeedbackProductRuleInput {
+  nmIds?: number[];
   minRating?: number | null;
   maxRating?: number | null;
   excludeKeywords?: string[];
@@ -313,33 +314,25 @@ export class FeedbackSettingsService {
   }
 
   /**
-   * Upsert a product rule for a specific nmId.
+   * Create a new product rule. Validates no nmId overlap with existing rules.
    */
-  async updateProductRule(
+  async createRule(
     userId: number,
     supplierId: string,
-    nmId: number,
-    input: FeedbackProductRuleInput,
+    input: FeedbackProductRuleInput & { nmIds: number[] },
   ) {
-    return prisma.feedbackProductRule.upsert({
-      where: {
-        userId_supplierId_nmId: {
-          userId,
-          supplierId,
-          nmId,
-        },
-      },
-      update: {
-        minRating: input.minRating ?? null,
-        maxRating: input.maxRating ?? null,
-        excludeKeywords: input.excludeKeywords ?? [],
-        requireApproval: input.requireApproval ?? false,
-        enabled: input.enabled ?? true,
-      },
-      create: {
+    const uniqueNmIds = [...new Set(input.nmIds)];
+    if (uniqueNmIds.length === 0) {
+      throw new Error('Rule must contain at least one product');
+    }
+
+    await this._ensureNoOverlap(userId, supplierId, uniqueNmIds);
+
+    const rule = await prisma.feedbackProductRule.create({
+      data: {
         userId,
         supplierId,
-        nmId,
+        nmIds: uniqueNmIds,
         minRating: input.minRating ?? null,
         maxRating: input.maxRating ?? null,
         excludeKeywords: input.excludeKeywords ?? [],
@@ -347,6 +340,107 @@ export class FeedbackSettingsService {
         enabled: input.enabled ?? true,
       },
     });
+
+    logger.info(
+      `Created rule ${rule.id} for user ${userId} with nmIds: [${uniqueNmIds.join(', ')}]`,
+    );
+    return rule;
+  }
+
+  /**
+   * Update an existing product rule by ID.
+   * Validates no nmId overlap with other rules (excluding self).
+   */
+  async updateRule(
+    id: string,
+    userId: number,
+    input: FeedbackProductRuleInput,
+  ) {
+    const existing = await prisma.feedbackProductRule.findFirst({
+      where: { id, userId },
+    });
+    if (!existing) {
+      throw new Error('Rule not found');
+    }
+
+    const updateData: Partial<{
+      nmIds: number[];
+      minRating: number | null;
+      maxRating: number | null;
+      excludeKeywords: string[];
+      requireApproval: boolean;
+      enabled: boolean;
+    }> = {};
+
+    if (input.nmIds !== undefined) {
+      const uniqueNmIds = [...new Set(input.nmIds)];
+      if (uniqueNmIds.length === 0) {
+        throw new Error('Rule must contain at least one product');
+      }
+      await this._ensureNoOverlap(userId, existing.supplierId, uniqueNmIds, id);
+      updateData.nmIds = uniqueNmIds;
+    }
+    if (input.minRating !== undefined) updateData.minRating = input.minRating ?? null;
+    if (input.maxRating !== undefined) updateData.maxRating = input.maxRating ?? null;
+    if (input.excludeKeywords !== undefined) updateData.excludeKeywords = input.excludeKeywords ?? [];
+    if (input.requireApproval !== undefined) updateData.requireApproval = input.requireApproval;
+    if (input.enabled !== undefined) updateData.enabled = input.enabled;
+
+    const rule = await prisma.feedbackProductRule.update({
+      where: { id },
+      data: updateData,
+    });
+
+    logger.info(`Updated rule ${id} for user ${userId}`);
+    return rule;
+  }
+
+  /**
+   * Delete a product rule by ID.
+   */
+  async deleteRule(id: string, userId: number) {
+    const result = await prisma.feedbackProductRule.deleteMany({
+      where: { id, userId },
+    });
+
+    if (result.count === 0) {
+      throw new Error('Rule not found');
+    }
+
+    logger.info(`Deleted rule ${id} for user ${userId}`);
+  }
+
+  /**
+   * Check that none of the given nmIds already belong to another rule.
+   */
+  private async _ensureNoOverlap(
+    userId: number,
+    supplierId: string,
+    nmIds: number[],
+    excludeRuleId?: string,
+  ): Promise<void> {
+    const conflicts = await prisma.feedbackProductRule.findMany({
+      where: {
+        userId,
+        supplierId,
+        nmIds: { hasSome: nmIds },
+        ...(excludeRuleId ? { id: { not: excludeRuleId } } : {}),
+      },
+    });
+
+    if (conflicts.length > 0) {
+      const conflictingNmIds = new Set<number>();
+      for (const rule of conflicts) {
+        for (const nmId of rule.nmIds) {
+          if (nmIds.includes(nmId)) {
+            conflictingNmIds.add(nmId);
+          }
+        }
+      }
+      throw new Error(
+        `Some products are already in other rules: [${Array.from(conflictingNmIds).join(', ')}]`,
+      );
+    }
   }
 }
 
