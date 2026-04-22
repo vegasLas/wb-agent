@@ -14,6 +14,7 @@ import type {
   FetchFeedbacksParams,
   GoodsItem,
   FeedbackProductRule,
+  CreateProductRuleInput,
 } from './types';
 
 /**
@@ -274,17 +275,37 @@ export const feedbacksAPI = {
   },
 
   /**
-   * PUT /api/v1/feedbacks/rules/:nmId
-   * Upsert product rule
+   * POST /api/v1/feedbacks/rules
+   * Create a product rule
+   */
+  async createProductRule(input: CreateProductRuleInput): Promise<FeedbackProductRule> {
+    const response = await apiClient.post<{ data: { rule: FeedbackProductRule } }>(
+      '/feedbacks/rules',
+      input,
+    );
+    return response.data.data.rule;
+  },
+
+  /**
+   * PUT /api/v1/feedbacks/rules/:id
+   * Update a product rule
    */
   async updateProductRule(
-    nmId: number,
-    rule: Partial<FeedbackProductRule>,
+    id: string,
+    input: Partial<CreateProductRuleInput>,
   ): Promise<FeedbackProductRule> {
-    const response = await apiClient.put<{ data: FeedbackProductRule }>(
-      `/feedbacks/rules/${nmId}`,
-      rule,
+    const response = await apiClient.put<{ data: { rule: FeedbackProductRule } }>(
+      `/feedbacks/rules/${id}`,
+      input,
     );
-    return response.data.data;
+    return response.data.data.rule;
+  },
+
+  /**
+   * DELETE /api/v1/feedbacks/rules/:id
+   * Delete a product rule
+   */
+  async deleteProductRule(id: string): Promise<void> {
+    await apiClient.delete(`/feedbacks/rules/${id}`);
   },
 };

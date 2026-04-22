@@ -167,10 +167,19 @@ export interface FeedbackProductRule {
   id: string;
   userId: number;
   supplierId: string;
-  nmId: number;
+  nmIds: number[];
   minRating: number | null;
   maxRating: number | null;
   excludeKeywords: string[];
   requireApproval: boolean;
   enabled: boolean;
+}
+
+export interface CreateProductRuleInput {
+  nmIds: number[];
+  minRating?: number | null;
+  maxRating?: number | null;
+  excludeKeywords?: string[];
+  requireApproval?: boolean;
+  enabled?: boolean;
 }
