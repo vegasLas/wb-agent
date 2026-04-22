@@ -79,7 +79,7 @@
               text
               size="small"
               class="p-1 w-7 h-7"
-              @click="$emit('delete-rule', rule.id)"
+              @click="confirmDelete(rule)"
             />
           </div>
         </div>
@@ -129,6 +129,7 @@ import { ref, computed } from 'vue';
 import Button from 'primevue/button';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { LoadingSpinner, EmptyState } from '@/components/common';
+import { confirmPromise } from '@/utils/ui/confirm';
 import RuleEditDialog from './RuleEditDialog.vue';
 import type { FeedbackProductRule, GoodsItem } from '@/api/feedbacks/types';
 
@@ -177,6 +178,18 @@ function openCreateDialog() {
 function openEditDialog(rule: FeedbackProductRule) {
   editingRule.value = rule;
   dialogVisible.value = true;
+}
+
+async function confirmDelete(rule: FeedbackProductRule) {
+  const confirmed = await confirmPromise({
+    header: 'Удалить правило?',
+    message: 'Это действие нельзя отменить.',
+    acceptLabel: 'Удалить',
+    rejectLabel: 'Отмена',
+  });
+  if (confirmed) {
+    emit('delete-rule', rule.id);
+  }
 }
 
 function onDialogSave(payload: Partial<FeedbackProductRule> & { nmIds?: number[] }) {
