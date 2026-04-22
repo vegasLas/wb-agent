@@ -141,18 +141,6 @@
             />
           </div>
         </TabPanel>
-
-        <TabPanel header="Правила">
-          <FeedbackRulesSection
-            :goods-by-category="feedbacksStore.goodsByCategory"
-            :product-rules="feedbacksStore.productRules"
-            :product-settings="feedbacksStore.productSettings"
-            :goods-loading="feedbacksStore.goodsLoading"
-            :rules-loading="feedbacksStore.rulesLoading"
-            @update-rule="onUpdateRule"
-            @toggle-product="onToggleProduct"
-          />
-        </TabPanel>
       </TabView>
     </div>
 
@@ -165,6 +153,19 @@
         @update-note="onUpdateRejectedNote"
         @delete="onDeleteRejected"
         @refresh="feedbacksStore.fetchRejectedAnswers"
+      />
+    </div>
+
+    <!-- Rules View -->
+    <div v-else-if="viewMode === 'rules'">
+      <FeedbackRulesSection
+        :goods-by-category="feedbacksStore.goodsByCategory"
+        :product-rules="feedbacksStore.productRules"
+        :product-settings="feedbacksStore.productSettings"
+        :goods-loading="feedbacksStore.goodsLoading"
+        :rules-loading="feedbacksStore.rulesLoading"
+        @update-rule="onUpdateRule"
+        @toggle-product="onToggleProduct"
       />
     </div>
 
@@ -250,11 +251,12 @@ const dialog = useFeedbacksDialog();
 const tabs: FeedbackTab[] = ['unanswered', 'ai-posted', 'ai-pending'];
 
 // View mode
-const viewMode = ref<'answers' | 'rejected' | 'groups'>('answers');
+const viewMode = ref<'answers' | 'rejected' | 'groups' | 'rules'>('answers');
 const viewModeOptions = [
   { label: 'Отзывы', value: 'answers' },
   { label: 'Правки', value: 'rejected' },
   { label: 'Группы', value: 'groups' },
+  { label: 'Правила', value: 'rules' },
 ];
 
 // Tabs
