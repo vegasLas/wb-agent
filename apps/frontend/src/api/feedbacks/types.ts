@@ -124,7 +124,6 @@ export interface RejectedAnswerContext {
   rejectedAnswerText: string;
   aiAnalysis: string | null;
   mistakeCategory: string | null;
-  productCategory: string | null;
   userFeedback: string | null;
   nmId: number;
   createdAt: string;
@@ -162,22 +161,6 @@ export interface GoodsItem {
   feedbackRating: number;
   vendorCode: string;
   thumbnail: string | null;
-}
-
-export interface CategoryStat {
-  category: string;
-  postedCount: number;
-  rejectedCount: number;
-  canEnableCategory: boolean;
-  canEnableProduct: boolean;
-}
-
-export interface FeedbackCategorySetting {
-  id: string;
-  userId: number;
-  supplierId: string;
-  category: string;
-  autoAnswerEnabled: boolean;
 }
 
 export interface FeedbackProductRule {
