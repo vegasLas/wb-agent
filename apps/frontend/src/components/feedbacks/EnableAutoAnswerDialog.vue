@@ -20,7 +20,7 @@
           <span class="font-medium">{{ categoryStat.postedCount }}</span>
         </div>
         <div class="flex justify-between">
-          <span>Отклонено:</span>
+          <span>Правки:</span>
           <span class="font-medium">{{ categoryStat.rejectedCount }}</span>
         </div>
       </div>

@@ -178,9 +178,9 @@ function getProgressText(category: string): string {
   const stat = getCategoryStat(category);
   if (!stat) return 'Нет данных';
   if (stat.canEnableCategory) {
-    return `${stat.postedCount} опубл., ${stat.rejectedCount} откл.`;
+    return `${stat.postedCount} опубл., ${stat.rejectedCount} прав.`;
   }
-  return `${stat.postedCount} опубл., ${stat.rejectedCount} откл.`;
+  return `${stat.postedCount} опубл., ${stat.rejectedCount} прав.`;
 }
 
 function getProgressSeverity(category: string): string {
@@ -194,9 +194,9 @@ function getProgressSeverity(category: string): string {
 function getThresholdTooltip(category: string): string {
   const stat = getCategoryStat(category);
   if (!stat) {
-    return 'Недостаточно данных. Необходимо ≥ 30 опубликованных или ≥ 20 отклоненных отзывов.';
+    return 'Недостаточно данных. Необходимо ≥ 30 опубликованных или ≥ 20 правок.';
   }
-  return `Для включения необходимо: ≥ 30 опубликованных или ≥ 20 отклоненных отзывов. Сейчас: ${stat.postedCount} опубликовано, ${stat.rejectedCount} отклонено.`;
+  return `Для включения необходимо: ≥ 30 опубликованных или ≥ 20 правок. Сейчас: ${stat.postedCount} опубликовано, ${stat.rejectedCount} правок.`;
 }
 
 function getProductThresholdTooltip(category: string): string {
