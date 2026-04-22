@@ -11,6 +11,7 @@ import type {
   GeneratedAnswer,
   FeedbackProductRule,
   RejectedAnswerContext,
+  FeedbackGoodsGroup,
   GoodsItem,
 } from './types';
 
@@ -25,6 +26,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const productSettings = ref<FeedbackProductSetting[]>([]);
   const productRules = ref<FeedbackProductRule[]>([]);
   const rejectedAnswers = ref<RejectedAnswerContext[]>([]);
+  const goodsGroups = ref<FeedbackGoodsGroup[]>([]);
   const goodsByCategory = ref<Record<string, GoodsItem[]>>({});
   const activeTab = ref<FeedbackTab>('unanswered');
   const generatedAnswer = ref<GeneratedAnswer | null>(null);
@@ -35,6 +37,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const settingsLoading = ref(false);
   const rulesLoading = ref(false);
   const rejectedLoading = ref(false);
+  const goodsGroupsLoading = ref(false);
   const goodsLoading = ref(false);
   const error = ref<string | null>(null);
 
@@ -306,16 +309,86 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function updateRejectedNmIds(id: string, nmIds: number[]) {
+  // Goods groups
+  async function fetchGoodsGroups() {
+    goodsGroupsLoading.value = true;
     try {
-      await feedbacksAPI.updateRejected(id, undefined, nmIds);
-      const idx = rejectedAnswers.value.findIndex((r) => r.id === id);
+      goodsGroups.value = await feedbacksAPI.fetchGoodsGroups();
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch goods groups';
+      error.value = errorMsg;
+      console.error('Failed to fetch goods groups:', err);
+    } finally {
+      goodsGroupsLoading.value = false;
+    }
+  }
+
+  async function createGoodsGroup(nmIds: number[]) {
+    try {
+      const group = await feedbacksAPI.createGoodsGroup(nmIds);
+      goodsGroups.value.push(group);
+      return group;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to create goods group';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function updateGoodsGroup(id: string, nmIds: number[]) {
+    try {
+      const group = await feedbacksAPI.updateGoodsGroup(id, nmIds);
+      const idx = goodsGroups.value.findIndex((g) => g.id === id);
       if (idx >= 0) {
-        rejectedAnswers.value[idx] = { ...rejectedAnswers.value[idx], nmIds };
+        goodsGroups.value[idx] = group;
+      }
+      return group;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to update goods group';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function deleteGoodsGroup(id: string) {
+    try {
+      await feedbacksAPI.deleteGoodsGroup(id);
+      const idx = goodsGroups.value.findIndex((g) => g.id === id);
+      if (idx >= 0) {
+        goodsGroups.value.splice(idx, 1);
       }
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : 'Failed to update rejected nmIds';
+        err instanceof Error ? err.message : 'Failed to delete goods group';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function mergeGoods(sourceNmId: number, targetNmId: number) {
+    try {
+      const group = await feedbacksAPI.mergeGoods(sourceNmId, targetNmId);
+      // Refresh groups to ensure consistency
+      await fetchGoodsGroups();
+      return group;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to merge goods';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function removeNmIdFromGroup(groupId: string, nmId: number) {
+    try {
+      await feedbacksAPI.removeNmIdFromGroup(groupId, nmId);
+      await fetchGoodsGroups();
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to remove good from group';
       error.value = errorMsg;
       throw err;
     }
@@ -391,6 +464,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     productSettings: readonly(productSettings),
     productRules: readonly(productRules),
     rejectedAnswers: readonly(rejectedAnswers),
+    goodsGroups: readonly(goodsGroups),
     goodsByCategory: readonly(goodsByCategory),
     activeTab: readonly(activeTab),
     generatedAnswer: readonly(generatedAnswer),
@@ -401,6 +475,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     settingsLoading: readonly(settingsLoading),
     rulesLoading: readonly(rulesLoading),
     rejectedLoading: readonly(rejectedLoading),
+    goodsGroupsLoading: readonly(goodsGroupsLoading),
     goodsLoading: readonly(goodsLoading),
     error: readonly(error),
     cursors: readonly(cursors),
@@ -434,8 +509,13 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     updateRule,
     fetchRejectedAnswers,
     updateRejectedNote,
-    updateRejectedNmIds,
     deleteRejectedAnswer,
+    fetchGoodsGroups,
+    createGoodsGroup,
+    updateGoodsGroup,
+    deleteGoodsGroup,
+    mergeGoods,
+    removeNmIdFromGroup,
     fetchGoods,
   };
 

@@ -18,6 +18,7 @@ export type {
   ProcessResult,
   FeedbackProductRule,
   RejectedAnswerContext,
+  FeedbackGoodsGroup,
 } from '@/api/feedbacks/types';
 
 export type FeedbackTab = 'unanswered' | 'ai-posted' | 'ai-pending';
