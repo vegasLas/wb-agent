@@ -9,12 +9,15 @@ import { createLogger } from '@/utils/logger';
 const logger = createLogger('FeedbackRejected');
 
 export interface RejectedAnswerContext {
+  id: string;
   feedbackText: string;
   rejectedAnswerText: string;
   aiAnalysis: string | null;
   mistakeCategory: string | null;
   productCategory: string | null;
   userFeedback: string | null;
+  nmIds: number[];
+  createdAt: Date;
 }
 
 const CATEGORY_RULES: Record<string, string> = {
@@ -43,7 +46,7 @@ export class FeedbackRejectedService {
     userId: number;
     supplierId: string;
     feedbackId: string;
-    nmId: number;
+    nmIds: number[];
     feedbackText: string;
     rejectedAnswerText: string;
     valuation: number;
@@ -59,7 +62,7 @@ export class FeedbackRejectedService {
           userId: params.userId,
           supplierId: params.supplierId,
           feedbackId: params.feedbackId,
-          nmId: params.nmId,
+          nmIds: params.nmIds,
           feedbackText: params.feedbackText,
           rejectedAnswerText: params.rejectedAnswerText,
           valuation: params.valuation,
@@ -69,7 +72,7 @@ export class FeedbackRejectedService {
         },
       });
       logger.info(
-        `Saved rejected answer for feedback ${params.feedbackId}, user ${params.userId}`,
+        `Saved rejected answer for feedback ${params.feedbackId}, user ${params.userId}, nmIds: [${params.nmIds.join(', ')}]`,
       );
     } catch (error) {
       logger.error(
@@ -82,11 +85,13 @@ export class FeedbackRejectedService {
 
   /**
    * Get recent rejected answers for a user to include in AI prompt context.
+   * Filters by nmId (the array contains the target nmId).
    */
   async getRecentRejectedAnswers(
     userId: number,
     supplierId: string,
     limit = 30,
+    nmId?: number,
     productCategory?: string,
   ): Promise<RejectedAnswerContext[]> {
     try {
@@ -94,6 +99,7 @@ export class FeedbackRejectedService {
         where: {
           userId,
           supplierId,
+          ...(nmId !== undefined ? { nmIds: { has: nmId } } : {}),
           ...(productCategory ? { productCategory } : {}),
         },
         orderBy: { createdAt: 'desc' },
@@ -101,12 +107,15 @@ export class FeedbackRejectedService {
       });
 
       return rows.map((row) => ({
+        id: row.id,
         feedbackText: row.feedbackText,
         rejectedAnswerText: row.rejectedAnswerText,
         aiAnalysis: row.aiAnalysis,
         mistakeCategory: row.mistakeCategory,
         productCategory: row.productCategory,
         userFeedback: row.userFeedback,
+        nmIds: row.nmIds,
+        createdAt: row.createdAt,
       }));
     } catch (error) {
       logger.error(
@@ -114,6 +123,44 @@ export class FeedbackRejectedService {
         , error,
       );
       return [];
+    }
+  }
+
+  /**
+   * Update a rejected answer's userFeedback and/or nmIds.
+   */
+  async updateRejectedAnswer(
+    id: string,
+    userId: number,
+    updates: { userFeedback?: string; nmIds?: number[] },
+  ): Promise<void> {
+    try {
+      await prisma.feedbackRejectedAnswer.updateMany({
+        where: { id, userId },
+        data: {
+          ...(updates.userFeedback !== undefined && { userFeedback: updates.userFeedback }),
+          ...(updates.nmIds !== undefined && { nmIds: updates.nmIds }),
+        },
+      });
+      logger.info(`Updated rejected answer ${id} for user ${userId}`);
+    } catch (error) {
+      logger.error(`Failed to update rejected answer ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a rejected answer.
+   */
+  async deleteRejectedAnswer(id: string, userId: number): Promise<void> {
+    try {
+      await prisma.feedbackRejectedAnswer.deleteMany({
+        where: { id, userId },
+      });
+      logger.info(`Deleted rejected answer ${id} for user ${userId}`);
+    } catch (error) {
+      logger.error(`Failed to delete rejected answer ${id}:`, error);
+      throw error;
     }
   }
 }
