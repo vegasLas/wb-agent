@@ -191,8 +191,8 @@ const goodsMap = computed(() => {
 
 const defaultForm = (): FormState => ({
   nmIds: [],
-  minRating: null,
-  maxRating: null,
+  minRating: 1,
+  maxRating: 5,
   excludeKeywords: [],
   requireApproval: false,
   enabled: true,
@@ -220,8 +220,8 @@ watch(
     if (rule) {
       form.value = {
         nmIds: [...rule.nmIds],
-        minRating: rule.minRating,
-        maxRating: rule.maxRating,
+        minRating: rule.minRating ?? 1,
+        maxRating: rule.maxRating ?? 5,
         excludeKeywords: [...rule.excludeKeywords],
         requireApproval: rule.requireApproval,
         enabled: rule.enabled,
@@ -242,25 +242,17 @@ const validationErrors = computed<Record<string, string>>(() => {
     e.nmIds = 'Выберите хотя бы один товар';
   }
 
-  if (form.value.minRating !== null) {
-    const val = form.value.minRating;
-    if (!Number.isInteger(val) || val < 1 || val > 5) {
-      e.minRating = 'Должно быть целое число от 1 до 5';
-    }
+  const minVal = form.value.minRating;
+  if (minVal === null || !Number.isInteger(minVal) || minVal < 1 || minVal > 5) {
+    e.minRating = 'Должно быть целое число от 1 до 5';
   }
 
-  if (form.value.maxRating !== null) {
-    const val = form.value.maxRating;
-    if (!Number.isInteger(val) || val < 1 || val > 5) {
-      e.maxRating = 'Должно быть целое число от 1 до 5';
-    }
+  const maxVal = form.value.maxRating;
+  if (maxVal === null || !Number.isInteger(maxVal) || maxVal < 1 || maxVal > 5) {
+    e.maxRating = 'Должно быть целое число от 1 до 5';
   }
 
-  if (
-    form.value.minRating !== null &&
-    form.value.maxRating !== null &&
-    form.value.minRating > form.value.maxRating
-  ) {
+  if (minVal !== null && maxVal !== null && minVal > maxVal) {
     e.minRating = 'Мин. рейтинг не может быть больше макс.';
   }
 
@@ -272,10 +264,14 @@ const isValid = computed(() => Object.keys(validationErrors.value).length === 0)
 function submit() {
   if (!isValid.value) return;
 
+  // Default null ratings to 1-5 to prevent backend validation errors
+  const minRating = form.value.minRating ?? 1;
+  const maxRating = form.value.maxRating ?? 5;
+
   const payload: Partial<FormState> & { nmIds?: number[] } = {
     nmIds: form.value.nmIds,
-    minRating: form.value.minRating,
-    maxRating: form.value.maxRating,
+    minRating,
+    maxRating,
     excludeKeywords: keywordTags.value,
     requireApproval: form.value.requireApproval,
     enabled: form.value.enabled,
