@@ -40,7 +40,6 @@ function mapDbRowToFeedbackItemDTO(row: {
   feedbackDate: bigint | null;
   productName: string | null;
   productBrand: string | null;
-  productCategory: string | null;
   supplierArticle: string | null;
   nmId: number;
   answerText: string;
@@ -67,7 +66,6 @@ function mapDbRowToFeedbackItemDTO(row: {
       name: row.productName ?? '',
       supplierArticle: row.supplierArticle ?? '',
       wbArticle: row.nmId,
-      category: row.productCategory ?? '',
     },
     aiAnswer: {
       answerText: row.answerText,
@@ -418,42 +416,6 @@ export const fetchGoodsByCategory = async (req: Request, res: Response): Promise
 };
 
 /**
- * GET /api/v1/feedbacks/category-stats
- */
-export const fetchCategoryStats = async (req: Request, res: Response): Promise<void> => {
-  const userId = getUserId(req);
-  const supplierId = getSupplierId(req);
-
-  logger.info(`Fetching category stats for user ${userId}, supplier ${supplierId}`);
-
-  const stats = await feedbackSettingsService.getCategoryStats(userId, supplierId);
-  successResponse(res, { stats });
-};
-
-/**
- * PUT /api/v1/feedbacks/settings/category
- */
-export const updateCategoryFeedbackSetting = async (req: Request, res: Response): Promise<void> => {
-  const userId = getUserId(req);
-  const supplierId = getSupplierId(req);
-  const { category, autoAnswerEnabled } = req.body as { category: string; autoAnswerEnabled: boolean };
-
-  if (!category || typeof autoAnswerEnabled !== 'boolean') {
-    throw ApiError.badRequest('category and autoAnswerEnabled are required');
-  }
-
-  logger.info(`Updating category setting for user ${userId}, supplier ${supplierId}, category ${category}`);
-
-  const setting = await feedbackSettingsService.updateCategorySetting(
-    userId,
-    supplierId,
-    category,
-    autoAnswerEnabled,
-  );
-  successResponse(res, setting);
-};
-
-/**
  * GET /api/v1/feedbacks/rules
  */
 export const fetchProductRules = async (req: Request, res: Response): Promise<void> => {
@@ -614,8 +576,6 @@ export default {
   updateProductFeedbackSetting,
   fetchFeedbackTemplates,
   fetchGoodsByCategory,
-  fetchCategoryStats,
-  updateCategoryFeedbackSetting,
   fetchProductRules,
   updateProductRule,
 };
