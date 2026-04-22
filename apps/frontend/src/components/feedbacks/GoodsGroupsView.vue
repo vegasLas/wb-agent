@@ -30,13 +30,22 @@
                   :key="nmId"
                   class="inline-flex items-center gap-0.5 bg-surface-200 dark:bg-surface-700 rounded-full pl-2.5 pr-1 py-0.5"
                 >
-                  <span class="text-xs text-surface-700 dark:text-surface-300">{{ getGoodsLabel(nmId) }}</span>
+                  <span
+                    class="text-xs text-surface-700 dark:text-surface-300"
+                    >{{ getGoodsLabel(nmId) }}</span
+                  >
                   <Button
                     icon="pi pi-times"
                     severity="danger"
                     text
                     class="p-0 w-5 h-5 min-w-0"
-                    @click="confirmRemoveFromGroup(group.id, nmId, getGoodsLabel(nmId))"
+                    @click="
+                      confirmRemoveFromGroup(
+                        group.id,
+                        nmId,
+                        getGoodsLabel(nmId),
+                      )
+                    "
                   />
                 </div>
               </div>
@@ -89,13 +98,22 @@
               </div>
 
               <div class="flex-1 min-w-0">
-                <div class="text-sm font-semibold text-surface-900 dark:text-surface-0 truncate">
+                <div
+                  class="text-sm font-semibold text-surface-900 dark:text-surface-0 truncate"
+                >
                   {{ goods.title || goods.vendorCode || 'Товар' }}
                 </div>
                 <div class="text-xs text-surface-500">
                   {{ goods.vendorCode }} · nmID: {{ goods.nmID }}
                 </div>
               </div>
+
+              <Tag
+                v-if="getGroupSize(goods.nmID) > 1"
+                :value="`В группе: ${getGroupSize(goods.nmID)}`"
+                severity="info"
+                class="text-xs shrink-0"
+              />
 
               <Button
                 icon="pi pi-link"
@@ -127,7 +145,6 @@
       @merge="onMerge"
       @remove-from-group="onRemoveFromGroup"
     />
-
   </div>
 </template>
 
@@ -188,6 +205,15 @@ function getGoodsLabel(nmId: number): string {
     }
   }
   return String(nmId);
+}
+
+function getGroupSize(nmId: number): number {
+  for (const group of props.goodsGroups) {
+    if (group.nmIds.includes(nmId)) {
+      return group.nmIds.length;
+    }
+  }
+  return 1;
 }
 
 function openMergeDialog(nmId: number) {
