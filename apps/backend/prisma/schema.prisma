@@ -404,7 +404,7 @@ model FeedbackProductRule {
   id              String   @id @default(uuid())
   userId          Int
   supplierId      String
-  nmId            Int
+  nmIds           Int[]
   minRating       Int?
   maxRating       Int?
   excludeKeywords String[]
@@ -413,8 +413,6 @@ model FeedbackProductRule {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@unique([userId, supplierId, nmId])
   @@index([userId])
   @@index([supplierId])
-  @@index([nmId])
 }
