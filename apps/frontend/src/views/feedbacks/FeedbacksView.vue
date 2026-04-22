@@ -26,10 +26,7 @@
     </div>
 
     <!-- Error Message -->
-    <ErrorMessage
-      v-if="feedbacksStore.error"
-      :message="feedbacksStore.error"
-    />
+    <ErrorMessage v-if="feedbacksStore.error" :message="feedbacksStore.error" />
 
     <!-- Answers View -->
     <div v-if="viewMode === 'answers'">
@@ -38,8 +35,13 @@
         @update:active-index="onTabChange"
       >
         <TabPanel header="Без ответа">
-          <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'unanswered'" />
-          <div v-else-if="feedbacksStore.unansweredFeedbacks.length > 0" class="space-y-3">
+          <LoadingSpinner
+            v-if="feedbacksStore.loading && activeTab === 'unanswered'"
+          />
+          <div
+            v-else-if="feedbacksStore.unansweredFeedbacks.length > 0"
+            class="space-y-3"
+          >
             <FeedbacksCard
               v-for="feedback in feedbacksStore.unansweredFeedbacks"
               :key="feedback.id"
@@ -53,7 +55,12 @@
             icon="pi pi-inbox"
             message="Нет отзывов без ответа"
           />
-          <div v-if="feedbacksStore.hasMore['unanswered'] && !feedbacksStore.loading" class="flex justify-center mt-4">
+          <div
+            v-if="
+              feedbacksStore.hasMore['unanswered'] && !feedbacksStore.loading
+            "
+            class="flex justify-center mt-4"
+          >
             <Button
               label="Загрузить ещё"
               icon="pi pi-chevron-down"
@@ -64,8 +71,13 @@
         </TabPanel>
 
         <TabPanel header="Опубликованные AI">
-          <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'ai-posted'" />
-          <div v-else-if="feedbacksStore.feedbacks.length > 0" class="space-y-3">
+          <LoadingSpinner
+            v-if="feedbacksStore.loading && activeTab === 'ai-posted'"
+          />
+          <div
+            v-else-if="feedbacksStore.feedbacks.length > 0"
+            class="space-y-3"
+          >
             <FeedbacksCard
               v-for="feedback in feedbacksStore.feedbacks"
               :key="feedback.id"
@@ -78,7 +90,12 @@
             icon="pi pi-check-circle"
             message="Нет опубликованных AI-ответов"
           />
-          <div v-if="feedbacksStore.hasMore['ai-posted'] && !feedbacksStore.loading" class="flex justify-center mt-4">
+          <div
+            v-if="
+              feedbacksStore.hasMore['ai-posted'] && !feedbacksStore.loading
+            "
+            class="flex justify-center mt-4"
+          >
             <Button
               label="Загрузить ещё"
               icon="pi pi-chevron-down"
@@ -89,8 +106,13 @@
         </TabPanel>
 
         <TabPanel header="Не опубликованы AI">
-          <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'ai-pending'" />
-          <div v-else-if="feedbacksStore.feedbacks.length > 0" class="space-y-3">
+          <LoadingSpinner
+            v-if="feedbacksStore.loading && activeTab === 'ai-pending'"
+          />
+          <div
+            v-else-if="feedbacksStore.feedbacks.length > 0"
+            class="space-y-3"
+          >
             <FeedbacksCard
               v-for="feedback in feedbacksStore.feedbacks"
               :key="feedback.id"
@@ -105,7 +127,12 @@
             icon="pi pi-inbox"
             message="Нет неопубликованных AI-ответов"
           />
-          <div v-if="feedbacksStore.hasMore['ai-pending'] && !feedbacksStore.loading" class="flex justify-center mt-4">
+          <div
+            v-if="
+              feedbacksStore.hasMore['ai-pending'] && !feedbacksStore.loading
+            "
+            class="flex justify-center mt-4"
+          >
             <Button
               label="Загрузить ещё"
               icon="pi pi-chevron-down"
@@ -223,7 +250,7 @@ const tabs: FeedbackTab[] = ['unanswered', 'ai-posted', 'ai-pending'];
 // View mode
 const viewMode = ref<'answers' | 'rejected' | 'groups'>('answers');
 const viewModeOptions = [
-  { label: 'Ответы', value: 'answers' },
+  { label: 'Отзывы', value: 'answers' },
   { label: 'Правки', value: 'rejected' },
   { label: 'Группы', value: 'groups' },
 ];
@@ -231,7 +258,9 @@ const viewModeOptions = [
 // Tabs
 const activeTab = computed(() => feedbacksStore.activeTab);
 const activeTabIndex = computed(() => tabs.indexOf(activeTab.value));
-const unansweredCount = computed(() => feedbacksStore.unansweredFeedbacks.length);
+const unansweredCount = computed(
+  () => feedbacksStore.unansweredFeedbacks.length,
+);
 
 // Drawer visibility
 const showAutoAnswersDrawer = ref(false);
@@ -256,7 +285,9 @@ async function onToggleAutoAnswer(value: boolean) {
 
 async function onAnswerAll() {
   try {
-    const count = await feedbacksStore.countUnansweredFeedbacks?.() ?? unansweredCount.value;
+    const count =
+      (await feedbacksStore.countUnansweredFeedbacks?.()) ??
+      unansweredCount.value;
     dialog.openAnswerAllDialog(count);
   } catch {
     dialog.openAnswerAllDialog(unansweredCount.value);
