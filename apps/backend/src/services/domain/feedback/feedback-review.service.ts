@@ -444,7 +444,7 @@ export class FeedbackReviewService {
         userId,
         supplierId,
         20,
-        feedback.productInfo?.category,
+        nmId,
       );
 
     const productRule = await prisma.feedbackProductRule.findUnique({
