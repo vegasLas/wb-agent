@@ -7,7 +7,9 @@
   >
     <div class="space-y-4">
       <!-- Global toggle -->
-      <div class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-900 rounded-lg">
+      <div
+        class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-900 rounded-lg"
+      >
         <div class="flex flex-col">
           <span class="text-sm font-medium">Глобальные автоответы</span>
           <span class="text-xs text-surface-500">
@@ -21,10 +23,13 @@
         />
       </div>
 
-      <!-- Info -->
-      <div class="text-xs text-surface-500">
-        Правила: товар допускается к автоответам, если ≥ 30 ответов опубликовано ИЛИ ≥ 20 отклонено.
-      </div>
+      <!-- Alert explaining the rules -->
+      <Message severity="info" :closable="false" class="text-xs">
+        Товар допускается к автоответам, если опубликовано ≥ 30 ответов или
+        накоплено ≥ 20 правок. Пока условия не выполнены — автоответы для этого
+        товара будут отключены. Это делается для того, чтобы сгенерированные
+        ответы были наиболее корректными, спасибо за понимание ❤️
+      </Message>
 
       <!-- Loading -->
       <LoadingSpinner v-if="goodsLoading || statsLoading" />
@@ -43,12 +48,19 @@
               alt=""
               class="w-8 h-8 object-cover rounded shrink-0"
             />
-            <div v-else class="w-8 h-8 bg-surface-200 dark:bg-surface-700 rounded flex items-center justify-center shrink-0">
+            <div
+              v-else
+              class="w-8 h-8 bg-surface-200 dark:bg-surface-700 rounded flex items-center justify-center shrink-0"
+            >
               <i class="pi pi-image text-surface-400 text-xs" />
             </div>
             <div class="flex flex-col min-w-0">
-              <span class="text-sm font-medium truncate">{{ product.vendorCode }}</span>
-              <span class="text-xs text-surface-500">nmID: {{ product.nmId }}</span>
+              <span class="text-sm font-medium truncate">{{
+                product.vendorCode
+              }}</span>
+              <span class="text-xs text-surface-500"
+                >nmID: {{ product.nmId }}</span
+              >
             </div>
           </div>
 
@@ -65,15 +77,14 @@
                 :value="String(product.rejectedCount)"
                 :severity="product.rejectedCount >= 20 ? 'danger' : 'secondary'"
                 class="text-xs"
-                title="Отклонено"
+                title="Правки"
               />
             </div>
-            <!-- Compliance checkbox -->
-            <Checkbox
+            <!-- Compliance toggle -->
+            <ToggleSwitch
               :model-value="product.compliant"
-              :binary="true"
               disabled
-              :pt="{ box: { class: product.compliant ? 'bg-green-500 border-green-500' : 'bg-surface-300 border-surface-300' } }"
+              size="small"
             />
           </div>
         </div>
@@ -87,7 +98,7 @@ import { computed } from 'vue';
 import Drawer from 'primevue/drawer';
 import ToggleSwitch from 'primevue/toggleswitch';
 import Badge from 'primevue/badge';
-import Checkbox from 'primevue/checkbox';
+import Message from 'primevue/message';
 import { LoadingSpinner } from '@/components/common';
 import type { GoodsItem } from '@/api/feedbacks/types';
 
