@@ -5,6 +5,7 @@
 
 import { prisma } from '@/config/database';
 import { createLogger } from '@/utils/logger';
+import { feedbackGoodsGroupService } from './feedback-goods-group.service';
 
 const logger = createLogger('FeedbackRejected');
 
@@ -16,7 +17,7 @@ export interface RejectedAnswerContext {
   mistakeCategory: string | null;
   productCategory: string | null;
   userFeedback: string | null;
-  nmIds: number[];
+  nmId: number;
   createdAt: Date;
 }
 
@@ -46,7 +47,7 @@ export class FeedbackRejectedService {
     userId: number;
     supplierId: string;
     feedbackId: string;
-    nmIds: number[];
+    nmId: number;
     feedbackText: string;
     rejectedAnswerText: string;
     valuation: number;
@@ -62,7 +63,7 @@ export class FeedbackRejectedService {
           userId: params.userId,
           supplierId: params.supplierId,
           feedbackId: params.feedbackId,
-          nmIds: params.nmIds,
+          nmId: params.nmId,
           feedbackText: params.feedbackText,
           rejectedAnswerText: params.rejectedAnswerText,
           valuation: params.valuation,
@@ -72,7 +73,7 @@ export class FeedbackRejectedService {
         },
       });
       logger.info(
-        `Saved rejected answer for feedback ${params.feedbackId}, user ${params.userId}, nmIds: [${params.nmIds.join(', ')}]`,
+        `Saved rejected answer for feedback ${params.feedbackId}, user ${params.userId}, nmId: ${params.nmId}`,
       );
     } catch (error) {
       logger.error(
@@ -85,7 +86,7 @@ export class FeedbackRejectedService {
 
   /**
    * Get recent rejected answers for a user to include in AI prompt context.
-   * Filters by nmId (the array contains the target nmId).
+   * If nmId is provided, also includes rejected answers from goods in the same group.
    */
   async getRecentRejectedAnswers(
     userId: number,
@@ -95,11 +96,18 @@ export class FeedbackRejectedService {
     productCategory?: string,
   ): Promise<RejectedAnswerContext[]> {
     try {
+      let targetNmIds: number[] | undefined;
+
+      if (nmId !== undefined) {
+        const related = await feedbackGoodsGroupService.getGroupNmIds(userId, supplierId, nmId);
+        targetNmIds = [nmId, ...related];
+      }
+
       const rows = await prisma.feedbackRejectedAnswer.findMany({
         where: {
           userId,
           supplierId,
-          ...(nmId !== undefined ? { nmIds: { has: nmId } } : {}),
+          ...(targetNmIds ? { nmId: { in: targetNmIds } } : {}),
           ...(productCategory ? { productCategory } : {}),
         },
         orderBy: { createdAt: 'desc' },
@@ -114,7 +122,7 @@ export class FeedbackRejectedService {
         mistakeCategory: row.mistakeCategory,
         productCategory: row.productCategory,
         userFeedback: row.userFeedback,
-        nmIds: row.nmIds,
+        nmId: row.nmId,
         createdAt: row.createdAt,
       }));
     } catch (error) {
@@ -127,19 +135,18 @@ export class FeedbackRejectedService {
   }
 
   /**
-   * Update a rejected answer's userFeedback and/or nmIds.
+   * Update a rejected answer's userFeedback.
    */
   async updateRejectedAnswer(
     id: string,
     userId: number,
-    updates: { userFeedback?: string; nmIds?: number[] },
+    updates: { userFeedback?: string },
   ): Promise<void> {
     try {
       await prisma.feedbackRejectedAnswer.updateMany({
         where: { id, userId },
         data: {
           ...(updates.userFeedback !== undefined && { userFeedback: updates.userFeedback }),
-          ...(updates.nmIds !== undefined && { nmIds: updates.nmIds }),
         },
       });
       logger.info(`Updated rejected answer ${id} for user ${userId}`);

@@ -101,7 +101,7 @@ export class FeedbackSettingsService {
           supplierId,
         },
         select: {
-          nmIds: true,
+          nmId: true,
         },
       }),
     ]);
@@ -115,9 +115,7 @@ export class FeedbackSettingsService {
     // Build rejected counts map
     const rejectedMap = new Map<number, number>();
     for (const answer of rejectedAnswers) {
-      for (const nmId of answer.nmIds) {
-        rejectedMap.set(nmId, (rejectedMap.get(nmId) || 0) + 1);
-      }
+      rejectedMap.set(answer.nmId, (rejectedMap.get(answer.nmId) || 0) + 1);
     }
 
     // Merge all unique nmIds
