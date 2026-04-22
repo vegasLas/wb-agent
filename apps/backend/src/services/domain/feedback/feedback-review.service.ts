@@ -9,12 +9,14 @@ import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
 import { feedbackPromptService } from './feedback-prompt.service';
 import { feedbackExampleService } from './feedback-example.service';
 import { feedbackRejectedService } from './feedback-rejected.service';
+
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('FeedbackReview');
 
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
+import type { FeedbackProductRule } from '@prisma/client';
 
 export interface ProcessResult {
   processed: number;
@@ -116,6 +118,14 @@ export class FeedbackReviewService {
         productSettingsMap.set(ps.nmId, ps.autoAnswerEnabled);
       }
 
+      const allProductRules = await prisma.feedbackProductRule.findMany({
+        where: { userId, supplierId },
+      });
+      const productRulesMap = new Map<number, FeedbackProductRule>();
+      for (const pr of allProductRules) {
+        productRulesMap.set(pr.nmId, pr);
+      }
+
       const feedbackIds = unansweredFeedbacks.map((f) => f.id);
       const existingAutoAnswers = await prisma.feedbackAutoAnswer.findMany({
         where: {
@@ -149,21 +159,17 @@ export class FeedbackReviewService {
           3,
         );
 
-      // Fetch rejected answers once per batch (shared context)
-      const allRejectedAnswers =
-        await feedbackRejectedService.getRecentRejectedAnswers(
-          userId,
-          supplierId,
-          30,
-        );
-
       for (const feedback of unansweredFeedbacks) {
         try {
-          // Filter rejected answers by the current feedback's category
-          const category = feedback.productInfo?.category;
-          const rejectedAnswers = category
-            ? allRejectedAnswers.filter((r) => r.productCategory === category)
-            : allRejectedAnswers;
+          const nmId = feedback.productInfo?.wbArticle;
+          const rejectedAnswers = nmId
+            ? await feedbackRejectedService.getRecentRejectedAnswers(
+                userId,
+                supplierId,
+                30,
+                nmId,
+              )
+            : [];
 
           const processResult = await this.processSingleFeedback(
             userId,
@@ -172,6 +178,7 @@ export class FeedbackReviewService {
             templates,
             globalSettings,
             productSettingsMap,
+            productRulesMap,
             existingAutoAnswerMap,
             examplesByValuation,
             rejectedAnswers,
@@ -215,6 +222,7 @@ export class FeedbackReviewService {
     templates: FeedbackTemplate[],
     settings: { autoAnswerEnabled: boolean },
     productSettingsMap: Map<number, boolean>,
+    productRulesMap: Map<number, FeedbackProductRule>,
     existingAutoAnswerMap: Map<string, { status: string }>,
     examplesByValuation: Map<number, FeedbackExample[]>,
     rejectedAnswers: import('./feedback-rejected.service').RejectedAnswerContext[] = [],
@@ -230,12 +238,58 @@ export class FeedbackReviewService {
       return 'skipped';
     }
 
+    // 1. Global settings already checked in caller
+    // 2. Extract nmId
+
+    // 3. Product setting check
     const productEnabled = productSettingsMap.get(nmId) ?? true;
     if (!productEnabled) {
       logger.debug(
         `Product ${nmId} auto-answer disabled for user ${userId}, supplier ${supplierId}`,
       );
       return 'skipped';
+    }
+
+    // 5-7. Product rule checks
+    const rule = productRulesMap.get(nmId);
+    if (rule) {
+      if (!rule.enabled) {
+        logger.debug(
+          `Product ${nmId} rule disabled for user ${userId}, supplier ${supplierId}`,
+        );
+        return 'skipped';
+      }
+
+      if (rule.minRating !== null && rule.minRating !== undefined) {
+        if (feedback.valuation < rule.minRating) {
+          logger.debug(
+            `Feedback ${feedback.id} rating ${feedback.valuation} < minRating ${rule.minRating}, skipping`,
+          );
+          return 'skipped';
+        }
+      }
+
+      if (rule.maxRating !== null && rule.maxRating !== undefined) {
+        if (feedback.valuation > rule.maxRating) {
+          logger.debug(
+            `Feedback ${feedback.id} rating ${feedback.valuation} > maxRating ${rule.maxRating}, skipping`,
+          );
+          return 'skipped';
+        }
+      }
+
+      if (rule.excludeKeywords && rule.excludeKeywords.length > 0) {
+        const text = (feedback.feedbackInfo?.feedbackText || '').toLowerCase();
+        const matchedKeyword = rule.excludeKeywords.find((kw) =>
+          text.includes(kw.toLowerCase()),
+        );
+        if (matchedKeyword) {
+          logger.debug(
+            `Feedback ${feedback.id} contains excluded keyword "${matchedKeyword}", skipping`,
+          );
+          return 'skipped';
+        }
+      }
     }
 
     const feedbackText = feedback.feedbackInfo?.feedbackText || '';
@@ -253,6 +307,7 @@ export class FeedbackReviewService {
       recentAnswers,
       templates,
       rejectedAnswers,
+      rule,
     );
 
     if (!answerText) {
@@ -310,8 +365,10 @@ export class FeedbackReviewService {
       },
     });
 
+    // 10. Auto-post only if global+product enabled AND rule.requireApproval is false
     const autoPostEnabled = productSettingsMap.get(nmId) ?? true;
-    if (settings.autoAnswerEnabled && autoPostEnabled) {
+    const ruleRequiresApproval = rule?.requireApproval ?? false;
+    if (settings.autoAnswerEnabled && autoPostEnabled && !ruleRequiresApproval) {
       try {
         await wbFeedbackService.answerFeedback({
           userId,
@@ -390,11 +447,22 @@ export class FeedbackReviewService {
         feedback.productInfo?.category,
       );
 
+    const productRule = await prisma.feedbackProductRule.findUnique({
+      where: {
+        userId_supplierId_nmId: {
+          userId,
+          supplierId,
+          nmId,
+        },
+      },
+    });
+
     const answerText = await feedbackPromptService.generateAnswer(
       feedback,
       recentAnswers,
       templates,
       rejectedAnswers,
+      productRule,
     );
     await prisma.feedbackAutoAnswer.upsert({
       where: {
@@ -483,7 +551,7 @@ export class FeedbackReviewService {
           userId,
           supplierId,
           feedbackId,
-          nmId,
+          nmIds: [nmId],
           feedbackText: existing.feedbackText,
           rejectedAnswerText: existing.answerText,
           valuation: existing.valuation,
@@ -621,7 +689,7 @@ export class FeedbackReviewService {
           userId,
           supplierId,
           feedbackId,
-          nmId: autoAnswer.nmId,
+          nmIds: [autoAnswer.nmId],
           feedbackText: autoAnswer.feedbackText,
           rejectedAnswerText: autoAnswer.answerText,
           valuation: autoAnswer.valuation,

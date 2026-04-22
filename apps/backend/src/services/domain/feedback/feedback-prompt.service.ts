@@ -13,6 +13,7 @@ const logger = createLogger('FeedbackPrompt');
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
 import type { RejectedAnswerContext } from './feedback-rejected.service';
+import type { FeedbackProductRule } from '@prisma/client';
 
 const VALUATION_LABELS: Record<number, string> = {
   1: 'negative (rated 1 star)',
@@ -31,6 +32,7 @@ export class FeedbackPromptService {
     recentAnswers: FeedbackExample[],
     templates: FeedbackTemplate[],
     rejectedAnswers: RejectedAnswerContext[] = [],
+    productRule?: FeedbackProductRule | null,
   ): Promise<string> {
     const productInfo = feedback.productInfo;
     const feedbackInfo = feedback.feedbackInfo;
@@ -43,6 +45,7 @@ export class FeedbackPromptService {
       rejectedAnswers,
       productInfo.category,
     );
+    const ruleContext = this.buildRuleContext(productRule);
 
     const prompt = this.buildPrompt({
       productInfo,
@@ -53,6 +56,7 @@ export class FeedbackPromptService {
       templatesContext,
       recentAnswersContext,
       rejectedContext,
+      ruleContext,
     });
     try {
       const { text } = await generateText({
@@ -126,6 +130,27 @@ export class FeedbackPromptService {
     return `\nANSWERS THAT MUST NOT BE REPEATED (previously rejected${categoryNote}):\n${lines}\n`;
   }
 
+  private buildRuleContext(rule?: FeedbackProductRule | null): string {
+    if (!rule || !rule.enabled) return '';
+
+    const parts: string[] = [];
+    if (rule.minRating !== null && rule.minRating !== undefined) {
+      parts.push(`- Only answer reviews with rating >= ${rule.minRating}`);
+    }
+    if (rule.maxRating !== null && rule.maxRating !== undefined) {
+      parts.push(`- Only answer reviews with rating <= ${rule.maxRating}`);
+    }
+    if (rule.excludeKeywords && rule.excludeKeywords.length > 0) {
+      parts.push(`- NEVER answer reviews containing these keywords: ${rule.excludeKeywords.join(', ')}`);
+    }
+    if (rule.requireApproval) {
+      parts.push(`- This product requires manual approval before posting answers.`);
+    }
+
+    if (parts.length === 0) return '';
+    return `\nPRODUCT-SPECIFIC STRICT RULES:\n${parts.join('\n')}\n`;
+  }
+
   private buildPrompt(params: {
     productInfo: FeedbackItem['productInfo'];
     feedbackInfo: FeedbackItem['feedbackInfo'];
@@ -135,6 +160,7 @@ export class FeedbackPromptService {
     templatesContext: string;
     recentAnswersContext: string;
     rejectedContext: string;
+    ruleContext: string;
   }): string {
     return `You are a professional review manager for the Wildberries marketplace.
 Your task is to write a personalized, warm, and professional response to a customer review.
@@ -157,7 +183,7 @@ SELLER ANSWER TEMPLATES (use as style reference):
 ${params.templatesContext}
 
 EXAMPLE ANSWERS FOR ${params.valuation}/5 RATED REVIEWS (use as tone and style reference):
-${params.recentAnswersContext}${params.rejectedContext}
+${params.recentAnswersContext}${params.rejectedContext}${params.ruleContext}
 RULES:
 1. Address the customer by name (${params.feedbackInfo.userName}).
 2. Thank them for the purchase and the review.
