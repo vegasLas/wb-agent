@@ -11,6 +11,8 @@ import type {
   RejectedAnswerContext,
   ProcessResult,
   FetchFeedbacksParams,
+  GoodsItem,
+  FeedbackProductRule,
 } from './types';
 
 /**
@@ -97,11 +99,31 @@ export const feedbacksAPI = {
    * GET /api/v1/feedbacks/rejected
    * Get recent rejected answers
    */
-  async fetchRejectedAnswers(): Promise<{ rejectedAnswers: RejectedAnswerContext[] }> {
+  async fetchRejectedAnswers(): Promise<RejectedAnswerContext[]> {
     const response = await apiClient.get<{ data: { rejectedAnswers: RejectedAnswerContext[] } }>(
       '/feedbacks/rejected',
     );
-    return response.data.data;
+    return response.data.data.rejectedAnswers;
+  },
+
+  /**
+   * PUT /api/v1/feedbacks/rejected/:id
+   * Update a rejected answer
+   */
+  async updateRejected(
+    id: string,
+    userFeedback?: string,
+    nmIds?: number[],
+  ): Promise<void> {
+    await apiClient.put(`/feedbacks/rejected/${id}`, { userFeedback, nmIds });
+  },
+
+  /**
+   * DELETE /api/v1/feedbacks/rejected/:id
+   * Delete a rejected answer
+   */
+  async deleteRejected(id: string): Promise<void> {
+    await apiClient.delete(`/feedbacks/rejected/${id}`);
   },
 
   /**
@@ -160,6 +182,45 @@ export const feedbacksAPI = {
   async fetchTemplates(): Promise<FeedbackTemplatesResponse> {
     const response = await apiClient.get<{ data: FeedbackTemplatesResponse }>(
       '/feedbacks/templates',
+    );
+    return response.data.data;
+  },
+
+
+
+  /**
+   * GET /api/v1/feedbacks/goods
+   * Get account goods grouped by category
+   */
+  async fetchGoodsByCategory(): Promise<Record<string, GoodsItem[]>> {
+    const response = await apiClient.get<{ data: { goodsByCategory: Record<string, GoodsItem[]> } }>(
+      '/feedbacks/goods',
+    );
+    return response.data.data.goodsByCategory;
+  },
+
+  /**
+   * GET /api/v1/feedbacks/rules
+   * Get all product rules
+   */
+  async fetchProductRules(): Promise<FeedbackProductRule[]> {
+    const response = await apiClient.get<{ data: { rules: FeedbackProductRule[] } }>(
+      '/feedbacks/rules',
+    );
+    return response.data.data.rules;
+  },
+
+  /**
+   * PUT /api/v1/feedbacks/rules/:nmId
+   * Upsert product rule
+   */
+  async updateProductRule(
+    nmId: number,
+    rule: Partial<FeedbackProductRule>,
+  ): Promise<FeedbackProductRule> {
+    const response = await apiClient.put<{ data: FeedbackProductRule }>(
+      `/feedbacks/rules/${nmId}`,
+      rule,
     );
     return response.data.data;
   },
