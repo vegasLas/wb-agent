@@ -161,11 +161,10 @@
       <FeedbackRulesSection
         :goods-by-category="feedbacksStore.goodsByCategory"
         :product-rules="feedbacksStore.productRules"
-        :product-settings="feedbacksStore.productSettings"
-        :goods-loading="feedbacksStore.goodsLoading"
         :rules-loading="feedbacksStore.rulesLoading"
+        @create-rule="onCreateRule"
         @update-rule="onUpdateRule"
-        @toggle-product="onToggleProduct"
+        @delete-rule="onDeleteRule"
       />
     </div>
 
@@ -403,9 +402,25 @@ async function onRemoveFromGroup(groupId: string, nmId: number) {
 }
 
 // Rules handlers
-async function onUpdateRule(nmId: number, rule: Record<string, unknown>) {
+async function onCreateRule(rule: Record<string, unknown> & { nmIds: number[] }) {
   try {
-    await feedbacksStore.updateRule(nmId, rule);
+    await feedbacksStore.createRule(rule);
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onUpdateRule(id: string, rule: Record<string, unknown>) {
+  try {
+    await feedbacksStore.updateRule(id, rule);
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onDeleteRule(id: string) {
+  try {
+    await feedbacksStore.deleteRule(id);
   } catch {
     // Error handled in store
   }
