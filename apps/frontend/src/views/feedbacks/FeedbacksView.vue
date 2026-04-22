@@ -1,17 +1,28 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-3">
     <!-- Stats Cards -->
     <FeedbacksStatsCards :stats="feedbacksStore.stats" />
 
     <!-- Actions Bar -->
     <FeedbacksActionsBar
-      :auto-answer-enabled="feedbacksStore.settings?.autoAnswerEnabled ?? false"
       :settings-loading="feedbacksStore.settingsLoading"
       :answer-all-loading="feedbacksStore.answerAllLoading"
       :unanswered-count="unansweredCount"
-      @update:auto-answer="onToggleAutoAnswer"
+      @open-auto-answers="showAutoAnswersDrawer = true"
       @answer-all="onAnswerAll"
     />
+
+    <!-- View Mode Switch -->
+    <div class="flex justify-center">
+      <SelectButton
+        v-model="viewMode"
+        :options="viewModeOptions"
+        option-label="label"
+        option-value="value"
+        size="small"
+        class="text-sm"
+      />
+    </div>
 
     <!-- Error Message -->
     <ErrorMessage
@@ -19,89 +30,116 @@
       :message="feedbacksStore.error"
     />
 
-    <!-- Tabs -->
-    <TabView
-      :active-index="activeTabIndex"
-      @update:active-index="onTabChange"
-    >
-      <TabPanel header="Без ответа">
-        <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'unanswered'" />
-        <div v-else-if="feedbacksStore.unansweredFeedbacks.length > 0" class="space-y-3">
-          <FeedbacksCard
-            v-for="feedback in feedbacksStore.unansweredFeedbacks"
-            :key="feedback.id"
-            :feedback="feedback"
-            tab="unanswered"
-            @generate="onGenerate"
+    <!-- Answers View -->
+    <div v-if="viewMode === 'answers'">
+      <TabView
+        :active-index="activeTabIndex"
+        @update:active-index="onTabChange"
+      >
+        <TabPanel header="Без ответа">
+          <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'unanswered'" />
+          <div v-else-if="feedbacksStore.unansweredFeedbacks.length > 0" class="space-y-3">
+            <FeedbacksCard
+              v-for="feedback in feedbacksStore.unansweredFeedbacks"
+              :key="feedback.id"
+              :feedback="feedback"
+              tab="unanswered"
+              @generate="onGenerate"
+            />
+          </div>
+          <EmptyState
+            v-else
+            icon="pi pi-inbox"
+            message="Нет отзывов без ответа"
           />
-        </div>
-        <EmptyState
-          v-else
-          icon="pi pi-inbox"
-          message="Нет отзывов без ответа"
-        />
-        <div v-if="feedbacksStore.hasMore['unanswered'] && !feedbacksStore.loading" class="flex justify-center mt-4">
-          <Button
-            label="Загрузить ещё"
-            icon="pi pi-chevron-down"
-            severity="secondary"
-            @click="onLoadMore"
-          />
-        </div>
-      </TabPanel>
+          <div v-if="feedbacksStore.hasMore['unanswered'] && !feedbacksStore.loading" class="flex justify-center mt-4">
+            <Button
+              label="Загрузить ещё"
+              icon="pi pi-chevron-down"
+              severity="secondary"
+              @click="onLoadMore"
+            />
+          </div>
+        </TabPanel>
 
-      <TabPanel header="Опубликованные AI">
-        <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'ai-posted'" />
-        <div v-else-if="feedbacksStore.feedbacks.length > 0" class="space-y-3">
-          <FeedbacksCard
-            v-for="feedback in feedbacksStore.feedbacks"
-            :key="feedback.id"
-            :feedback="feedback"
-            tab="ai-posted"
+        <TabPanel header="Опубликованные AI">
+          <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'ai-posted'" />
+          <div v-else-if="feedbacksStore.feedbacks.length > 0" class="space-y-3">
+            <FeedbacksCard
+              v-for="feedback in feedbacksStore.feedbacks"
+              :key="feedback.id"
+              :feedback="feedback"
+              tab="ai-posted"
+            />
+          </div>
+          <EmptyState
+            v-else
+            icon="pi pi-check-circle"
+            message="Нет опубликованных AI-ответов"
           />
-        </div>
-        <EmptyState
-          v-else
-          icon="pi pi-check-circle"
-          message="Нет опубликованных AI-ответов"
-        />
-        <div v-if="feedbacksStore.hasMore['ai-posted'] && !feedbacksStore.loading" class="flex justify-center mt-4">
-          <Button
-            label="Загрузить ещё"
-            icon="pi pi-chevron-down"
-            severity="secondary"
-            @click="onLoadMore"
-          />
-        </div>
-      </TabPanel>
+          <div v-if="feedbacksStore.hasMore['ai-posted'] && !feedbacksStore.loading" class="flex justify-center mt-4">
+            <Button
+              label="Загрузить ещё"
+              icon="pi pi-chevron-down"
+              severity="secondary"
+              @click="onLoadMore"
+            />
+          </div>
+        </TabPanel>
 
-      <TabPanel header="Не опубликованы AI">
-        <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'ai-pending'" />
-        <div v-else-if="feedbacksStore.feedbacks.length > 0" class="space-y-3">
-          <FeedbacksCard
-            v-for="feedback in feedbacksStore.feedbacks"
-            :key="feedback.id"
-            :feedback="feedback"
-            tab="ai-pending"
-            @accept="onAcceptAnswer"
-            @reject="onRejectAnswer"
+        <TabPanel header="Не опубликованы AI">
+          <LoadingSpinner v-if="feedbacksStore.loading && activeTab === 'ai-pending'" />
+          <div v-else-if="feedbacksStore.feedbacks.length > 0" class="space-y-3">
+            <FeedbacksCard
+              v-for="feedback in feedbacksStore.feedbacks"
+              :key="feedback.id"
+              :feedback="feedback"
+              tab="ai-pending"
+              @accept="onAcceptAnswer"
+              @reject="onRejectAnswer"
+            />
+          </div>
+          <EmptyState
+            v-else
+            icon="pi pi-inbox"
+            message="Нет неопубликованных AI-ответов"
           />
-        </div>
-        <EmptyState
-          v-else
-          icon="pi pi-inbox"
-          message="Нет неопубликованных AI-ответов"
-        />
-        <div v-if="feedbacksStore.hasMore['ai-pending'] && !feedbacksStore.loading" class="flex justify-center mt-4">
-          <Button
-            label="Загрузить ещё"
-            icon="pi pi-chevron-down"
-            severity="secondary"
-            @click="onLoadMore"
+          <div v-if="feedbacksStore.hasMore['ai-pending'] && !feedbacksStore.loading" class="flex justify-center mt-4">
+            <Button
+              label="Загрузить ещё"
+              icon="pi pi-chevron-down"
+              severity="secondary"
+              @click="onLoadMore"
+            />
+          </div>
+        </TabPanel>
+
+        <TabPanel header="Правила">
+          <FeedbackRulesSection
+            :goods-by-category="feedbacksStore.goodsByCategory"
+            :product-rules="feedbacksStore.productRules"
+            :product-settings="feedbacksStore.productSettings"
+            :goods-loading="feedbacksStore.goodsLoading"
+            :rules-loading="feedbacksStore.rulesLoading"
+            @update-rule="onUpdateRule"
+            @toggle-product="onToggleProduct"
           />
-        </div>
-      </TabPanel>
-    </TabView>
+        </TabPanel>
+      </TabView>
+    </div>
+
+    <!-- Rejected View -->
+    <div v-else>
+      <RejectedFeedbackManager
+        :rejected-answers="feedbacksStore.rejectedAnswers"
+        :rejected-loading="feedbacksStore.rejectedLoading"
+        :goods-by-category="feedbacksStore.goodsByCategory"
+        @update-note="onUpdateRejectedNote"
+        @update-nmids="onUpdateRejectedNmIds"
+        @delete="onDeleteRejected"
+        @refresh="feedbacksStore.fetchRejectedAnswers"
+      />
+    </div>
 
     <!-- Generate Answer Drawer -->
     <GenerateAnswerDrawer
@@ -125,14 +163,27 @@
       :error="feedbacksStore.error"
       @confirm="onConfirmAnswerAll"
     />
+
+    <!-- Auto Answers Drawer -->
+    <AutoAnswersDrawer
+      v-model:visible="showAutoAnswersDrawer"
+      :auto-answer-enabled="feedbacksStore.settings?.autoAnswerEnabled ?? false"
+      :settings-loading="feedbacksStore.settingsLoading"
+      :stats-loading="feedbacksStore.statsLoading"
+      :goods-loading="feedbacksStore.goodsLoading"
+      :goods-by-category="feedbacksStore.goodsByCategory"
+      :product-stats="feedbacksStore.productStats"
+      @update:auto-answer="onToggleAutoAnswer"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Button from 'primevue/button';
+import SelectButton from 'primevue/selectbutton';
 import { useFeedbacksStore } from '@/stores/feedbacks';
 import { useViewReady } from '@/composables/ui';
 import { useFeedbacksDialog } from '@/composables/feedbacks/useFeedbacksDialog';
@@ -142,6 +193,9 @@ import {
   FeedbacksCard,
   GenerateAnswerDrawer,
   AnswerAllConfirmDialog,
+  RejectedFeedbackManager,
+  FeedbackRulesSection,
+  AutoAnswersDrawer,
 } from '@/components/feedbacks';
 import { ErrorMessage, LoadingSpinner, EmptyState } from '@/components/common';
 import type { FeedbackItem, FeedbackTab } from '@/stores/feedbacks';
@@ -152,10 +206,20 @@ const dialog = useFeedbacksDialog();
 
 const tabs: FeedbackTab[] = ['unanswered', 'ai-posted', 'ai-pending'];
 
+// View mode
+const viewMode = ref<'answers' | 'rejected'>('answers');
+const viewModeOptions = [
+  { label: 'Ответы', value: 'answers' },
+  { label: 'Отклоненные', value: 'rejected' },
+];
+
 // Tabs
 const activeTab = computed(() => feedbacksStore.activeTab);
 const activeTabIndex = computed(() => tabs.indexOf(activeTab.value));
 const unansweredCount = computed(() => feedbacksStore.unansweredFeedbacks.length);
+
+// Drawer visibility
+const showAutoAnswersDrawer = ref(false);
 
 function onTabChange(index: number) {
   const tab = tabs[index];
@@ -209,6 +273,7 @@ async function onAcceptAnswer(feedbackId: string) {
   try {
     await feedbacksStore.acceptAnswer(feedbackId);
     await feedbacksStore.fetchStatistics();
+    await feedbacksStore.fetchRejectedAnswers();
     dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store
@@ -220,11 +285,11 @@ async function onAcceptAnswer(feedbackId: string) {
 async function onRejectAnswer(feedbackId: string, userFeedback?: string) {
   try {
     await feedbacksStore.rejectAnswer(feedbackId, userFeedback);
-    // On ai-pending tab, the rejected item should disappear from the list
     if (activeTab.value === 'ai-pending') {
       feedbacksStore.removeFeedback(feedbackId);
     }
     await feedbacksStore.fetchStatistics();
+    await feedbacksStore.fetchRejectedAnswers();
     dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store
@@ -242,12 +307,57 @@ async function onRegenerateAnswer(feedbackId: string, userFeedback?: string) {
   }
 }
 
+// Rejected feedback handlers
+async function onUpdateRejectedNote(id: string, note: string) {
+  try {
+    await feedbacksStore.updateRejectedNote(id, note);
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onUpdateRejectedNmIds(id: string, nmIds: number[]) {
+  try {
+    await feedbacksStore.updateRejectedNmIds(id, nmIds);
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onDeleteRejected(id: string) {
+  try {
+    await feedbacksStore.deleteRejectedAnswer(id);
+  } catch {
+    // Error handled in store
+  }
+}
+
+// Rules handlers
+async function onUpdateRule(nmId: number, rule: Record<string, unknown>) {
+  try {
+    await feedbacksStore.updateRule(nmId, rule);
+  } catch {
+    // Error handled in store
+  }
+}
+
+async function onToggleProduct(nmId: number, enabled: boolean) {
+  try {
+    await feedbacksStore.updateProductSetting(nmId, enabled);
+  } catch {
+    // Error handled in store
+  }
+}
+
 onMounted(async () => {
   try {
     await Promise.all([
       feedbacksStore.fetchStatistics(),
       feedbacksStore.fetchSettings(),
       feedbacksStore.fetchFeedbacks('unanswered', true),
+      feedbacksStore.fetchGoods(),
+      feedbacksStore.fetchRules(),
+      feedbacksStore.fetchRejectedAnswers(),
     ]);
   } finally {
     viewReady();
