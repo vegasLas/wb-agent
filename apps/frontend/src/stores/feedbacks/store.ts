@@ -9,6 +9,9 @@ import type {
   FeedbackProductSetting,
   FeedbackTab,
   GeneratedAnswer,
+  FeedbackProductRule,
+  RejectedAnswerContext,
+  GoodsItem,
 } from './types';
 
 export const useFeedbacksStore = defineStore('feedbacks', () => {
@@ -16,9 +19,13 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
 
   // State
   const feedbacks = ref<FeedbackItem[]>([]);
-  const stats = ref<FeedbackStatistics>({ today: 0, week: 0, allTime: 0 });
+  const stats = ref<FeedbackStatistics>({ today: 0, week: 0, allTime: 0, products: [] });
+  const productStats = ref<Record<number, { postedCount: number; rejectedCount: number }>>({});
   const settings = ref<FeedbackSettings | null>(null);
   const productSettings = ref<FeedbackProductSetting[]>([]);
+  const productRules = ref<FeedbackProductRule[]>([]);
+  const rejectedAnswers = ref<RejectedAnswerContext[]>([]);
+  const goodsByCategory = ref<Record<string, GoodsItem[]>>({});
   const activeTab = ref<FeedbackTab>('unanswered');
   const generatedAnswer = ref<GeneratedAnswer | null>(null);
   const loading = ref(false);
@@ -26,6 +33,9 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const generateLoading = ref(false);
   const statsLoading = ref(false);
   const settingsLoading = ref(false);
+  const rulesLoading = ref(false);
+  const rejectedLoading = ref(false);
+  const goodsLoading = ref(false);
   const error = ref<string | null>(null);
 
   // Per-tab pagination state
@@ -53,6 +63,10 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   function getProductSetting(nmId: number): boolean {
     const setting = productSettings.value.find((s) => s.nmId === nmId);
     return setting?.autoAnswerEnabled ?? true;
+  }
+
+  function getProductRule(nmId: number): FeedbackProductRule | undefined {
+    return productRules.value.find((r) => r.nmId === nmId);
   }
 
   // Actions
@@ -101,7 +115,14 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   async function fetchStatistics() {
     statsLoading.value = true;
     try {
-      stats.value = await feedbacksAPI.fetchStatistics();
+      const data = await feedbacksAPI.fetchStatistics();
+      stats.value = data;
+      // Build productStats map
+      const map: Record<number, { postedCount: number; rejectedCount: number }> = {};
+      for (const p of data.products) {
+        map[p.nmId] = { postedCount: p.postedCount, rejectedCount: p.rejectedCount };
+      }
+      productStats.value = map;
     } catch (err: unknown) {
       console.error('Failed to fetch feedback statistics:', err);
     } finally {
@@ -258,6 +279,93 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
+  // Rejected answers
+  async function fetchRejectedAnswers() {
+    rejectedLoading.value = true;
+    try {
+      rejectedAnswers.value = await feedbacksAPI.fetchRejectedAnswers();
+    } catch (err: unknown) {
+      console.error('Failed to fetch rejected answers:', err);
+    } finally {
+      rejectedLoading.value = false;
+    }
+  }
+
+  async function updateRejectedNote(id: string, userFeedback: string) {
+    try {
+      await feedbacksAPI.updateRejected(id, userFeedback);
+      const idx = rejectedAnswers.value.findIndex((r) => r.id === id);
+      if (idx >= 0) {
+        rejectedAnswers.value[idx] = { ...rejectedAnswers.value[idx], userFeedback };
+      }
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to update rejected answer';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function updateRejectedNmIds(id: string, nmIds: number[]) {
+    try {
+      await feedbacksAPI.updateRejected(id, undefined, nmIds);
+      const idx = rejectedAnswers.value.findIndex((r) => r.id === id);
+      if (idx >= 0) {
+        rejectedAnswers.value[idx] = { ...rejectedAnswers.value[idx], nmIds };
+      }
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to update rejected nmIds';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  async function deleteRejectedAnswer(id: string) {
+    try {
+      await feedbacksAPI.deleteRejected(id);
+      const idx = rejectedAnswers.value.findIndex((r) => r.id === id);
+      if (idx >= 0) {
+        rejectedAnswers.value.splice(idx, 1);
+      }
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to delete rejected answer';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
+  // Rules
+  async function fetchRules() {
+    rulesLoading.value = true;
+    try {
+      productRules.value = await feedbacksAPI.fetchProductRules();
+    } catch (err: unknown) {
+      console.error('Failed to fetch product rules:', err);
+    } finally {
+      rulesLoading.value = false;
+    }
+  }
+
+  async function updateRule(nmId: number, rule: Partial<FeedbackProductRule>) {
+    try {
+      const updated = await feedbacksAPI.updateProductRule(nmId, rule);
+      const idx = productRules.value.findIndex((r) => r.nmId === nmId);
+      if (idx >= 0) {
+        productRules.value[idx] = updated;
+      } else {
+        productRules.value.push(updated);
+      }
+      return updated;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to update product rule';
+      error.value = errorMsg;
+      throw err;
+    }
+  }
+
   function setActiveTab(tab: FeedbackTab) {
     activeTab.value = tab;
   }
@@ -278,8 +386,12 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     // State
     feedbacks: readonly(feedbacks),
     stats: readonly(stats),
+    productStats: readonly(productStats),
     settings: readonly(settings),
     productSettings: readonly(productSettings),
+    productRules: readonly(productRules),
+    rejectedAnswers: readonly(rejectedAnswers),
+    goodsByCategory: readonly(goodsByCategory),
     activeTab: readonly(activeTab),
     generatedAnswer: readonly(generatedAnswer),
     loading: readonly(loading),
@@ -287,6 +399,9 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     generateLoading: readonly(generateLoading),
     statsLoading: readonly(statsLoading),
     settingsLoading: readonly(settingsLoading),
+    rulesLoading: readonly(rulesLoading),
+    rejectedLoading: readonly(rejectedLoading),
+    goodsLoading: readonly(goodsLoading),
     error: readonly(error),
     cursors: readonly(cursors),
     hasMore: readonly(hasMore),
@@ -313,6 +428,25 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     clearGeneratedAnswer,
     clearFeedbacks,
     getProductSetting,
+    getProductRule,
     removeFeedback,
+    fetchRules,
+    updateRule,
+    fetchRejectedAnswers,
+    updateRejectedNote,
+    updateRejectedNmIds,
+    deleteRejectedAnswer,
+    fetchGoods,
   };
+
+  async function fetchGoods() {
+    goodsLoading.value = true;
+    try {
+      goodsByCategory.value = await feedbacksAPI.fetchGoodsByCategory();
+    } catch (err: unknown) {
+      console.error('Failed to fetch goods:', err);
+    } finally {
+      goodsLoading.value = false;
+    }
+  }
 });
