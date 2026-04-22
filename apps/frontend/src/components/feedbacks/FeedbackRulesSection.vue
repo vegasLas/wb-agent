@@ -79,8 +79,8 @@
         <Column header="Правило включено">
           <template #body="{ data }">
             <ToggleSwitch
-              :model-value="getRule(data.nmID)?.enabled ?? true"
-              @update:model-value="(val) => updateRuleField(data.nmID, 'enabled', val)"
+              :model-value="getDisplayValue(data.nmID, 'enabled') ?? true"
+              @update:model-value="(val) => setPending(data.nmID, 'enabled', val)"
             />
           </template>
         </Column>
@@ -88,12 +88,12 @@
         <Column header="Мин. рейтинг">
           <template #body="{ data }">
             <InputNumber
-              :model-value="getRule(data.nmID)?.minRating ?? null"
+              :model-value="getDisplayValue(data.nmID, 'minRating') ?? null"
               :min="1"
               :max="5"
               placeholder="1-5"
-              class="w-16"
-              @update:model-value="(val) => updateRuleField(data.nmID, 'minRating', val)"
+              class="w-20"
+              @update:model-value="(val) => setPending(data.nmID, 'minRating', val)"
             />
           </template>
         </Column>
@@ -101,23 +101,25 @@
         <Column header="Макс. рейтинг">
           <template #body="{ data }">
             <InputNumber
-              :model-value="getRule(data.nmID)?.maxRating ?? null"
+              :model-value="getDisplayValue(data.nmID, 'maxRating') ?? null"
               :min="1"
               :max="5"
               placeholder="1-5"
-              class="w-16"
-              @update:model-value="(val) => updateRuleField(data.nmID, 'maxRating', val)"
+              class="w-20"
+              @update:model-value="(val) => setPending(data.nmID, 'maxRating', val)"
             />
           </template>
         </Column>
 
         <Column header="Исключить ключевые слова">
           <template #body="{ data }">
-            <InputText
-              :model-value="formatKeywords(getRule(data.nmID)?.excludeKeywords)"
-              placeholder="через запятую"
-              class="w-40"
-              @update:model-value="(val) => updateKeywords(data.nmID, val)"
+            <Button
+              :label="keywordsButtonLabel(data.nmID)"
+              :icon="keywordsButtonIcon(data.nmID)"
+              size="small"
+              severity="secondary"
+              outlined
+              @click="openKeywordsDialog(data.nmID)"
             />
           </template>
         </Column>
@@ -125,13 +127,89 @@
         <Column header="Требовать подтверждения">
           <template #body="{ data }">
             <ToggleSwitch
-              :model-value="getRule(data.nmID)?.requireApproval ?? false"
-              @update:model-value="(val) => updateRuleField(data.nmID, 'requireApproval', val)"
+              :model-value="getDisplayValue(data.nmID, 'requireApproval') ?? false"
+              @update:model-value="(val) => setPending(data.nmID, 'requireApproval', val)"
             />
+          </template>
+        </Column>
+
+        <Column
+          header=""
+          class="w-24"
+        >
+          <template #body="{ data }">
+            <div
+              v-if="isDirty(data.nmID)"
+              class="flex items-center gap-1"
+            >
+              <Button
+                icon="pi pi-check"
+                size="small"
+                severity="success"
+                title="Сохранить"
+                @click="saveRow(data.nmID)"
+              />
+              <Button
+                icon="pi pi-times"
+                size="small"
+                severity="secondary"
+                title="Отмена"
+                @click="cancelRow(data.nmID)"
+              />
+            </div>
           </template>
         </Column>
       </DataTable>
     </div>
+
+    <!-- Keywords Dialog -->
+    <Dialog
+      v-model:visible="keywordsDialogOpen"
+      header="Ключевые слова"
+      modal
+      :style="{ width: '25rem' }"
+    >
+      <div class="space-y-3">
+        <p class="text-sm text-surface-500">
+          Введите ключевые слова через запятую. Отзывы, содержащие эти слова, будут исключены из автоответа.
+        </p>
+        <Textarea
+          v-model="editingKeywords"
+          rows="5"
+          class="w-full"
+          placeholder="плохой, брак, сломан"
+        />
+        <div
+          v-if="editingKeywordTags.length > 0"
+          class="flex flex-wrap gap-1"
+        >
+          <span
+            v-for="(tag, idx) in editingKeywordTags"
+            :key="idx"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-surface-200 dark:bg-surface-700"
+          >
+            {{ tag }}
+            <i
+              class="pi pi-times cursor-pointer text-surface-500 hover:text-red-500"
+              @click="removeKeywordTag(idx)"
+            />
+          </span>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Отмена"
+            severity="secondary"
+            @click="closeKeywordsDialog"
+          />
+          <Button
+            label="Сохранить"
+            @click="saveKeywordsDialog"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -142,7 +220,11 @@ import Column from 'primevue/column';
 import ToggleSwitch from 'primevue/toggleswitch';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
+import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
+import Textarea from 'primevue/textarea';
 import { LoadingSpinner, EmptyState } from '@/components/common';
+import { toastHelpers } from '@/utils/ui/toast';
 import type { GoodsItem, FeedbackProductRule } from '@/api/feedbacks/types';
 
 interface Props {
@@ -190,24 +272,133 @@ function getRule(nmId: number): FeedbackProductRule | undefined {
   return props.productRules.find((r) => r.nmId === nmId);
 }
 
-function formatKeywords(keywords: string[] | undefined): string {
-  if (!keywords || keywords.length === 0) return '';
-  return keywords.join(', ');
+// ── Dirty state tracking ─────────────────────────────────────────────
+
+const pendingChanges = ref<Map<number, Partial<FeedbackProductRule>>>(new Map());
+
+function isDirty(nmId: number): boolean {
+  return pendingChanges.value.has(nmId);
 }
 
-function updateRuleField(
+function getDisplayValue<K extends keyof FeedbackProductRule>(
   nmId: number,
-  field: keyof FeedbackProductRule,
-  value: unknown,
-) {
-  emit('update-rule', nmId, { [field]: value });
+  field: K,
+): FeedbackProductRule[K] | undefined {
+  const pending = pendingChanges.value.get(nmId)?.[field];
+  if (pending !== undefined) return pending as FeedbackProductRule[K];
+  return getRule(nmId)?.[field];
 }
 
-function updateKeywords(nmId: number, value: string) {
-  const keywords = value
+function setPending<K extends keyof FeedbackProductRule>(
+  nmId: number,
+  field: K,
+  value: FeedbackProductRule[K],
+) {
+  const current = pendingChanges.value.get(nmId) ?? {};
+  pendingChanges.value.set(nmId, { ...current, [field]: value });
+}
+
+function saveRow(nmId: number) {
+  const raw = pendingChanges.value.get(nmId);
+  if (!raw) return;
+
+  // Strip nulls so backend optional() validator doesn't choke on them
+  const changes: Partial<FeedbackProductRule> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (value !== null && value !== undefined) {
+      (changes as Record<string, unknown>)[key] = value;
+    }
+  }
+
+  // Validate rating ranges
+  const minRating = (changes as Record<string, unknown>).minRating as number | undefined;
+  const maxRating = (changes as Record<string, unknown>).maxRating as number | undefined;
+
+  if (minRating !== undefined) {
+    if (minRating < 1 || minRating > 5 || !Number.isInteger(minRating)) {
+      toastHelpers.error('Ошибка валидации', 'Мин. рейтинг должен быть целым числом от 1 до 5');
+      return;
+    }
+  }
+  if (maxRating !== undefined) {
+    if (maxRating < 1 || maxRating > 5 || !Number.isInteger(maxRating)) {
+      toastHelpers.error('Ошибка валидации', 'Макс. рейтинг должен быть целым числом от 1 до 5');
+      return;
+    }
+  }
+  if (minRating !== undefined && maxRating !== undefined) {
+    if (minRating > maxRating) {
+      toastHelpers.error('Ошибка валидации', 'Мин. рейтинг не может быть больше макс. рейтинга');
+      return;
+    }
+  }
+
+  emit('update-rule', nmId, changes);
+  pendingChanges.value.delete(nmId);
+}
+
+function cancelRow(nmId: number) {
+  pendingChanges.value.delete(nmId);
+}
+
+// ── Keywords dialog ──────────────────────────────────────────────────
+
+const keywordsDialogOpen = ref(false);
+const editingNmId = ref<number | null>(null);
+const editingKeywords = ref('');
+
+const editingKeywordTags = computed(() => {
+  return editingKeywords.value
     .split(',')
     .map((k) => k.trim())
     .filter((k) => k.length > 0);
-  emit('update-rule', nmId, { excludeKeywords: keywords });
+});
+
+function keywordsButtonLabel(nmId: number): string {
+  const keywords = getDisplayValue(nmId, 'excludeKeywords');
+  if (!keywords || keywords.length === 0) return 'Добавить слова';
+  const count = keywords.length;
+  // Russian pluralization
+  const word =
+    count % 10 === 1 && count % 100 !== 11
+      ? 'слово'
+      : [2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)
+        ? 'слова'
+        : 'слов';
+  return `${count} ${word}`;
+}
+
+function keywordsButtonIcon(nmId: number): string {
+  const keywords = getDisplayValue(nmId, 'excludeKeywords');
+  return !keywords || keywords.length === 0 ? 'pi pi-plus' : 'pi pi-pencil';
+}
+
+function openKeywordsDialog(nmId: number) {
+  editingNmId.value = nmId;
+  const keywords = getDisplayValue(nmId, 'excludeKeywords');
+  editingKeywords.value = keywords?.join(', ') ?? '';
+  keywordsDialogOpen.value = true;
+}
+
+function closeKeywordsDialog() {
+  keywordsDialogOpen.value = false;
+  editingNmId.value = null;
+  editingKeywords.value = '';
+}
+
+function saveKeywordsDialog() {
+  if (editingNmId.value === null) return;
+  const keywords = editingKeywords.value
+    .split(',')
+    .map((k) => k.trim())
+    .filter((k) => k.length > 0);
+  setPending(editingNmId.value, 'excludeKeywords', keywords);
+  closeKeywordsDialog();
+}
+
+function removeKeywordTag(index: number) {
+  const tags = [...editingKeywordTags.value];
+  tags.splice(index, 1);
+  editingKeywords.value = tags.join(', ');
 }
 </script>
