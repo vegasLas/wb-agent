@@ -41,10 +41,7 @@ export class FeedbackPromptService {
     const templatesContext = this.buildTemplatesContext(templates);
     const mediaContext = this.buildMediaContext(feedbackInfo);
     const valuationLabel = VALUATION_LABELS[feedback.valuation] || 'не указана';
-    const rejectedContext = this.buildRejectedContext(
-      rejectedAnswers,
-      productInfo.category,
-    );
+    const rejectedContext = this.buildRejectedContext(rejectedAnswers);
     const ruleContext = this.buildRuleContext(productRule);
 
     const prompt = this.buildPrompt({
@@ -110,7 +107,6 @@ export class FeedbackPromptService {
 
   private buildRejectedContext(
     rejectedAnswers: RejectedAnswerContext[],
-    category?: string,
   ): string {
     if (rejectedAnswers.length === 0) return '';
 
@@ -123,11 +119,7 @@ export class FeedbackPromptService {
       })
       .join('\n');
 
-    const categoryNote = category
-      ? ` for category "${category}"`
-      : '';
-
-    return `\nANSWERS THAT MUST NOT BE REPEATED (previously rejected${categoryNote}):\n${lines}\n`;
+    return `\nANSWERS THAT MUST NOT BE REPEATED (previously rejected):\n${lines}\n`;
   }
 
   private buildRuleContext(rule?: FeedbackProductRule | null): string {
@@ -169,7 +161,6 @@ Respond in Russian language only.
 PRODUCT INFORMATION:
 - Name: ${params.productInfo.name}
 - Brand: ${params.productInfo.brand}
-- Category: ${params.productInfo.category}
 - Supplier article: ${params.productInfo.supplierArticle}
 
 CUSTOMER REVIEW:

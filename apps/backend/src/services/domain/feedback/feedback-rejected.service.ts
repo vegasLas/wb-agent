@@ -15,7 +15,6 @@ export interface RejectedAnswerContext {
   rejectedAnswerText: string;
   aiAnalysis: string | null;
   mistakeCategory: string | null;
-  productCategory: string | null;
   userFeedback: string | null;
   nmId: number;
   createdAt: Date;
@@ -51,7 +50,6 @@ export class FeedbackRejectedService {
     feedbackText: string;
     rejectedAnswerText: string;
     valuation: number;
-    productCategory?: string | null;
     productName?: string | null;
     aiAnalysis?: string | null;
     mistakeCategory?: string | null;
@@ -67,7 +65,6 @@ export class FeedbackRejectedService {
           feedbackText: params.feedbackText,
           rejectedAnswerText: params.rejectedAnswerText,
           valuation: params.valuation,
-          productCategory: params.productCategory ?? null,
           productName: params.productName ?? null,
           userFeedback: params.userFeedback ?? null,
         },
@@ -93,7 +90,6 @@ export class FeedbackRejectedService {
     supplierId: string,
     limit = 30,
     nmId?: number,
-    productCategory?: string,
   ): Promise<RejectedAnswerContext[]> {
     try {
       let targetNmIds: number[] | undefined;
@@ -108,7 +104,6 @@ export class FeedbackRejectedService {
           userId,
           supplierId,
           ...(targetNmIds ? { nmId: { in: targetNmIds } } : {}),
-          ...(productCategory ? { productCategory } : {}),
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -120,7 +115,6 @@ export class FeedbackRejectedService {
         rejectedAnswerText: row.rejectedAnswerText,
         aiAnalysis: row.aiAnalysis,
         mistakeCategory: row.mistakeCategory,
-        productCategory: row.productCategory,
         userFeedback: row.userFeedback,
         nmId: row.nmId,
         createdAt: row.createdAt,
