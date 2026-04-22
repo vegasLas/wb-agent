@@ -147,56 +147,14 @@
               </div>
             </div>
 
-            <!-- Compact nmIds MultiSelect -->
-            <MultiSelect
-              :model-value="item.nmIds || []"
-              :options="goodsOptions"
-              option-label="title"
-              option-value="nmID"
-              filter
-              placeholder="Товары"
-              class="w-full text-sm"
-              display="chip"
-              :max-selected-labels="2"
-              selected-items-label="Выбрано {0}"
-              empty-filter-message="Ничего не найдено"
-              empty-message="Нет товаров"
-              @update:model-value="
-                (val) => onNmIdsChange(item.id, val as number[])
-              "
-            >
-              <template #option="slotProps">
-                <div class="flex items-center gap-2">
-                  <img
-                    v-if="slotProps.option.thumbnail"
-                    :src="slotProps.option.thumbnail"
-                    alt=""
-                    class="w-6 h-6 object-cover rounded"
-                  />
-                  <div
-                    v-else
-                    class="w-6 h-6 bg-surface-200 dark:bg-surface-700 rounded flex items-center justify-center"
-                  >
-                    <i class="pi pi-image text-surface-400 text-xs" />
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-xs">{{ slotProps.option.title }}</span>
-                    <span class="text-xs text-surface-500"
-                      >nmID: {{ slotProps.option.nmID }}</span
-                    >
-                  </div>
-                </div>
-              </template>
-              <template #chip="slotProps">
-                <Chip
-                  :label="
-                    goodsMap.get(slotProps.value as number)?.vendorCode ??
-                    String(slotProps.value)
-                  "
-                  class="text-xs py-0 px-1.5"
-                />
-              </template>
-            </MultiSelect>
+            <!-- nmId chip -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs text-surface-500">Товар:</span>
+              <Chip
+                :label="getVendorCodeForNmId(item.nmId) || String(item.nmId)"
+                class="text-xs py-0 px-1.5"
+              />
+            </div>
 
             <!-- Delete button -->
             <div class="flex justify-end">
@@ -222,7 +180,6 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Badge from 'primevue/badge';
 import Chip from 'primevue/chip';
-import MultiSelect from 'primevue/multiselect';
 import Inplace from 'primevue/inplace';
 import { LoadingSpinner, EmptyState } from '@/components/common';
 import type { RejectedAnswerContext, GoodsItem } from '@/api/feedbacks/types';
@@ -237,7 +194,6 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'update-note', id: string, note: string): void;
-  (e: 'update-nmids', id: string, nmIds: number[]): void;
   (e: 'delete', id: string): void;
   (e: 'refresh'): void;
 }>();
@@ -247,21 +203,12 @@ const editingId = ref<string | null>(null);
 const editingField = ref<'note' | null>(null);
 const editValue = ref('');
 const expandedGroups = ref<Set<number>>(new Set());
-const expandedFeedback = ref<Record<string, boolean>>({});
 const expandedAnswer = ref<Record<string, boolean>>({});
 
 interface GroupedRejected {
   nmId: number;
   items: RejectedAnswerContext[];
 }
-
-const goodsOptions = computed(() => {
-  const result: GoodsItem[] = [];
-  for (const goods of Object.values(props.goodsByCategory)) {
-    result.push(...goods);
-  }
-  return result.sort((a, b) => a.nmID - b.nmID);
-});
 
 const goodsMap = computed(() => {
   const map = new Map<number, GoodsItem>();
@@ -273,16 +220,8 @@ const goodsMap = computed(() => {
   return map;
 });
 
-function getVendorCodesForNmIds(nmIds: number[] | undefined): string[] {
-  if (!nmIds || nmIds.length === 0) return [];
-  const codes: string[] = [];
-  for (const nmId of nmIds) {
-    const goods = goodsMap.value.get(nmId);
-    if (goods?.vendorCode) {
-      codes.push(goods.vendorCode);
-    }
-  }
-  return codes;
+function getVendorCodeForNmId(nmId: number): string | undefined {
+  return goodsMap.value.get(nmId)?.vendorCode;
 }
 
 function getVendorCodeCountsForGroup(
@@ -290,8 +229,8 @@ function getVendorCodeCountsForGroup(
 ): Map<string, number> {
   const counts = new Map<string, number>();
   for (const item of items) {
-    const codes = getVendorCodesForNmIds(item.nmIds);
-    for (const code of codes) {
+    const code = getVendorCodeForNmId(item.nmId);
+    if (code) {
       counts.set(code, (counts.get(code) || 0) + 1);
     }
   }
@@ -314,12 +253,12 @@ const groupedRejected = computed<GroupedRejected[]>(() => {
   const groupMap = new Map<number, RejectedAnswerContext[]>();
 
   for (const item of filtered) {
-    const primaryNmId = (item.nmIds || [])[0];
-    if (!primaryNmId) continue;
+    const nmId = item.nmId;
+    if (!nmId) continue;
 
-    const existing = groupMap.get(primaryNmId) || [];
+    const existing = groupMap.get(nmId) || [];
     existing.push(item);
-    groupMap.set(primaryNmId, existing);
+    groupMap.set(nmId, existing);
   }
 
   const result: GroupedRejected[] = [];
@@ -354,10 +293,6 @@ function cancelEdit() {
 function saveNote(id: string) {
   emit('update-note', id, editValue.value);
   cancelEdit();
-}
-
-function onNmIdsChange(id: string, nmIds: number[]) {
-  emit('update-nmids', id, nmIds);
 }
 
 function truncate(text: string, maxLength: number): string {
