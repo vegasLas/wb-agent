@@ -123,7 +123,9 @@ export class FeedbackReviewService {
       });
       const productRulesMap = new Map<number, FeedbackProductRule>();
       for (const pr of allProductRules) {
-        productRulesMap.set(pr.nmId, pr);
+        for (const nmId of pr.nmIds) {
+          productRulesMap.set(nmId, pr);
+        }
       }
 
       const feedbackIds = unansweredFeedbacks.map((f) => f.id);
