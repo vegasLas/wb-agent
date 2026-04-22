@@ -18,6 +18,12 @@ import {
   fetchRejectedAnswers,
   updateRejectedAnswer,
   deleteRejectedAnswer,
+  fetchGoodsGroups,
+  createGoodsGroup,
+  updateGoodsGroup,
+  deleteGoodsGroup,
+  mergeGoods,
+  removeNmIdFromGroup,
   fetchFeedbackStatistics,
   fetchFeedbackSettings,
   updateFeedbackSettings,
@@ -47,8 +53,6 @@ router.put(
   resolveSupplier,
   param('id').notEmpty().withMessage('id is required'),
   body('userFeedback').optional().isString(),
-  body('nmIds').optional().isArray().withMessage('nmIds must be an array'),
-  body('nmIds.*').optional().isInt(),
   validationMiddleware,
   asyncHandler(updateRejectedAnswer),
 );
@@ -58,6 +62,49 @@ router.delete(
   param('id').notEmpty().withMessage('id is required'),
   validationMiddleware,
   asyncHandler(deleteRejectedAnswer),
+);
+
+// Goods groups
+router.get('/goods-groups', resolveSupplier, asyncHandler(fetchGoodsGroups));
+router.post(
+  '/goods-groups',
+  resolveSupplier,
+  body('nmIds').isArray({ min: 2 }).withMessage('nmIds must be an array with at least 2 items'),
+  body('nmIds.*').isInt().withMessage('Each nmId must be an integer'),
+  validationMiddleware,
+  asyncHandler(createGoodsGroup),
+);
+router.put(
+  '/goods-groups/:id',
+  resolveSupplier,
+  param('id').notEmpty().withMessage('id is required'),
+  body('nmIds').isArray({ min: 2 }).withMessage('nmIds must be an array with at least 2 items'),
+  body('nmIds.*').isInt().withMessage('Each nmId must be an integer'),
+  validationMiddleware,
+  asyncHandler(updateGoodsGroup),
+);
+router.delete(
+  '/goods-groups/:id',
+  resolveSupplier,
+  param('id').notEmpty().withMessage('id is required'),
+  validationMiddleware,
+  asyncHandler(deleteGoodsGroup),
+);
+router.post(
+  '/goods-groups/merge',
+  resolveSupplier,
+  body('sourceNmId').isInt().withMessage('sourceNmId must be an integer'),
+  body('targetNmId').isInt().withMessage('targetNmId must be an integer'),
+  validationMiddleware,
+  asyncHandler(mergeGoods),
+);
+router.post(
+  '/goods-groups/:id/remove',
+  resolveSupplier,
+  param('id').notEmpty().withMessage('id is required'),
+  body('nmId').isInt().withMessage('nmId must be an integer'),
+  validationMiddleware,
+  asyncHandler(removeNmIdFromGroup),
 );
 
 router.get('/statistics', resolveSupplier, asyncHandler(fetchFeedbackStatistics));
