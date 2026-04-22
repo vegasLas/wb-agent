@@ -8,7 +8,9 @@
     <div class="space-y-4">
       <!-- Products -->
       <div class="space-y-1">
-        <label class="text-sm font-medium">Товары</label>
+        <label class="text-sm font-medium">
+          Товары <span class="text-red-500">*</span>
+        </label>
         <MultiSelect
           v-model="form.nmIds"
           :options="goodsOptions"
@@ -54,7 +56,9 @@
       <!-- Ratings -->
       <div class="flex gap-4">
         <div class="flex-1 space-y-1">
-          <label class="text-sm font-medium">Мин. рейтинг</label>
+          <label class="text-sm font-medium">
+            Мин. рейтинг <span class="text-red-500">*</span>
+          </label>
           <InputNumber
             v-model="form.minRating"
             :min="1"
@@ -65,7 +69,9 @@
           <small v-if="validationErrors.minRating" class="text-red-500">{{ validationErrors.minRating }}</small>
         </div>
         <div class="flex-1 space-y-1">
-          <label class="text-sm font-medium">Макс. рейтинг</label>
+          <label class="text-sm font-medium">
+            Макс. рейтинг <span class="text-red-500">*</span>
+          </label>
           <InputNumber
             v-model="form.maxRating"
             :min="1"
@@ -79,13 +85,18 @@
 
       <!-- Keywords -->
       <div class="space-y-1">
-        <label class="text-sm font-medium">Исключить ключевые слова</label>
+        <label class="text-sm font-medium">
+          Исключить ключевые слова <span class="text-red-500">*</span>
+        </label>
         <Textarea
           v-model="keywordsRaw"
           rows="3"
           class="w-full"
           placeholder="через запятую"
         />
+        <small v-if="validationErrors.excludeKeywords" class="text-red-500">
+          {{ validationErrors.excludeKeywords }}
+        </small>
         <div v-if="keywordTags.length > 0" class="flex flex-wrap gap-1 mt-1">
           <Tag
             v-for="(tag, idx) in keywordTags"
@@ -254,6 +265,10 @@ const validationErrors = computed<Record<string, string>>(() => {
 
   if (minVal !== null && maxVal !== null && minVal > maxVal) {
     e.minRating = 'Мин. рейтинг не может быть больше макс.';
+  }
+
+  if (keywordTags.value.length === 0) {
+    e.excludeKeywords = 'Добавьте хотя бы одно ключевое слово';
   }
 
   return e;
