@@ -34,6 +34,12 @@ export { default as AnswerAllConfirmDialog } from './AnswerAllConfirmDialog.vue'
 export { default as RejectedFeedbackManager } from './RejectedFeedbackManager.vue';
 
 // ---------------------------------------------------------------------------
+// Groups Domain - Goods grouping manager
+// ---------------------------------------------------------------------------
+export { default as GoodsGroupsView } from './GoodsGroupsView.vue';
+export { default as GoodsMergeDialog } from './GoodsMergeDialog.vue';
+
+// ---------------------------------------------------------------------------
 // Rules Domain - Product rules editor
 // ---------------------------------------------------------------------------
 export { default as FeedbackRulesSection } from './FeedbackRulesSection.vue';
