@@ -138,7 +138,7 @@
           />
           <Button
             v-if="tab === 'ai-pending'"
-            label="Отклонить"
+            label="Исправить"
             icon="pi pi-times"
             severity="danger"
             size="small"

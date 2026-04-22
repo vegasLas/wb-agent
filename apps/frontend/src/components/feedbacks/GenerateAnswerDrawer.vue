@@ -170,7 +170,7 @@
               icon="pi pi-times"
               severity="danger"
               rounded
-              v-tooltip.top="'Отправить и отклонить'"
+              v-tooltip.top="'Отправить и исправить'"
               @click="submitReject"
             />
             <Button
@@ -190,7 +190,7 @@
               severity="secondary"
               text
               rounded
-              v-tooltip.top="'Отклонить'"
+              v-tooltip.top="'Исправить'"
               :disabled="loading || !answerText"
               @click="onReject"
             />
