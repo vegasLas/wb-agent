@@ -48,7 +48,7 @@
             />
           </template>
         </MultiSelect>
-        <small v-if="errors.nmIds" class="text-red-500">{{ errors.nmIds }}</small>
+        <small v-if="validationErrors.nmIds" class="text-red-500">{{ validationErrors.nmIds }}</small>
       </div>
 
       <!-- Ratings -->
@@ -62,7 +62,7 @@
             placeholder="1-5"
             class="w-full"
           />
-          <small v-if="errors.minRating" class="text-red-500">{{ errors.minRating }}</small>
+          <small v-if="validationErrors.minRating" class="text-red-500">{{ validationErrors.minRating }}</small>
         </div>
         <div class="flex-1 space-y-1">
           <label class="text-sm font-medium">Макс. рейтинг</label>
@@ -73,7 +73,7 @@
             placeholder="1-5"
             class="w-full"
           />
-          <small v-if="errors.maxRating" class="text-red-500">{{ errors.maxRating }}</small>
+          <small v-if="validationErrors.maxRating" class="text-red-500">{{ validationErrors.maxRating }}</small>
         </div>
       </div>
 
@@ -121,7 +121,11 @@
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button label="Отмена" severity="secondary" @click="close" />
-        <Button :label="isEdit ? 'Сохранить' : 'Создать'" @click="submit" />
+        <Button
+          :label="isEdit ? 'Сохранить' : 'Создать'"
+          :disabled="!isValid"
+          @click="submit"
+        />
       </div>
     </template>
   </Dialog>
@@ -196,7 +200,6 @@ const defaultForm = (): FormState => ({
 
 const form = ref<FormState>(defaultForm());
 const keywordsRaw = ref('');
-const errors = ref<Record<string, string>>({});
 
 const keywordTags = computed(() => {
   return keywordsRaw.value
@@ -228,12 +231,11 @@ watch(
       form.value = defaultForm();
       keywordsRaw.value = '';
     }
-    errors.value = {};
   },
   { immediate: true },
 );
 
-function validate(): boolean {
+const validationErrors = computed<Record<string, string>>(() => {
   const e: Record<string, string> = {};
 
   if (form.value.nmIds.length === 0) {
@@ -262,12 +264,13 @@ function validate(): boolean {
     e.minRating = 'Мин. рейтинг не может быть больше макс.';
   }
 
-  errors.value = e;
-  return Object.keys(e).length === 0;
-}
+  return e;
+});
+
+const isValid = computed(() => Object.keys(validationErrors.value).length === 0);
 
 function submit() {
-  if (!validate()) return;
+  if (!isValid.value) return;
 
   const payload: Partial<FormState> & { nmIds?: number[] } = {
     nmIds: form.value.nmIds,
