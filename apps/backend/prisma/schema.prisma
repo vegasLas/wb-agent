@@ -373,7 +373,7 @@ model FeedbackRejectedAnswer {
   userId             Int
   supplierId         String
   feedbackId         String
-  nmIds              Int[]
+  nmId               Int
   feedbackText       String   @default("")
   rejectedAnswerText String
   valuation          Int      @default(5)
@@ -389,6 +389,18 @@ model FeedbackRejectedAnswer {
   @@index([feedbackId])
   @@index([productCategory])
   @@index([createdAt])
+  @@index([nmId])
+}
+
+model FeedbackGoodsGroup {
+  id         String   @id @default(uuid())
+  userId     Int
+  supplierId String
+  nmIds      Int[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, supplierId])
 }
 
 model FeedbackCategorySetting {
