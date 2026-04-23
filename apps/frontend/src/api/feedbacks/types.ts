@@ -67,10 +67,17 @@ export interface FeedbacksResponse {
   };
 }
 
+export interface ProductStat {
+  nmId: number;
+  postedCount: number;
+  rejectedCount: number;
+}
+
 export interface FeedbackStatistics {
   today: number;
   week: number;
   allTime: number;
+  products: ProductStat[];
 }
 
 export interface FeedbackSettings {
@@ -112,11 +119,23 @@ export interface RegenerateAnswerResponse {
 }
 
 export interface RejectedAnswerContext {
+  id: string;
   feedbackText: string;
   rejectedAnswerText: string;
   aiAnalysis: string | null;
   mistakeCategory: string | null;
-  productCategory: string | null;
+  userFeedback: string | null;
+  nmId: number;
+  createdAt: string;
+}
+
+export interface FeedbackGoodsGroup {
+  id: string;
+  userId: number;
+  supplierId: string;
+  nmIds: number[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProcessResult {
@@ -131,4 +150,38 @@ export interface FetchFeedbacksParams {
   limit?: number;
   cursor?: string;
   searchText?: string;
+}
+
+export interface GoodsItem {
+  title: string;
+  nmID: number;
+  currentPrice: number | null;
+  stocks: number;
+  subject: string;
+  feedbackRating: number;
+  vendorCode: string;
+  thumbnail: string | null;
+}
+
+export interface FeedbackRule {
+  id: string;
+  userId: number;
+  supplierId: string;
+  nmIds: number[];
+  minRating: number | null;
+  maxRating: number | null;
+  keywords: string[];
+  instruction: string | null;
+  autoAnswer: boolean;
+  enabled: boolean;
+}
+
+export interface CreateFeedbackRuleInput {
+  nmIds: number[];
+  minRating?: number | null;
+  maxRating?: number | null;
+  keywords?: string[];
+  instruction?: string | null;
+  autoAnswer?: boolean;
+  enabled?: boolean;
 }

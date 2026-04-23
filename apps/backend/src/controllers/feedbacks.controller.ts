@@ -8,6 +8,7 @@ import { Request, Response } from 'express';
 import { prisma } from '@/config/database';
 import { feedbackReviewService } from '@/services/domain/feedback/feedback-review.service';
 import { feedbackRejectedService } from '@/services/domain/feedback/feedback-rejected.service';
+import { feedbackGoodsGroupService } from '@/services/domain/feedback/feedback-goods-group.service';
 import { feedbackSettingsService } from '@/services/domain/feedback/feedback-settings.service';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
 import { mapFeedbackItemToDTO } from '@/services/domain/feedback/feedback-mapper';
@@ -15,6 +16,7 @@ import { successResponse } from '@/utils/response';
 import type { FeedbackItem } from '@/types/wb';
 import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
+import type { FeedbackRuleInput } from '@/services/domain/feedback/feedback-settings.service';
 
 function getUserId(req: Request): number {
   return req.user!.id;
@@ -38,7 +40,6 @@ function mapDbRowToFeedbackItemDTO(row: {
   feedbackDate: bigint | null;
   productName: string | null;
   productBrand: string | null;
-  productCategory: string | null;
   supplierArticle: string | null;
   nmId: number;
   answerText: string;
@@ -65,7 +66,6 @@ function mapDbRowToFeedbackItemDTO(row: {
       name: row.productName ?? '',
       supplierArticle: row.supplierArticle ?? '',
       wbArticle: row.nmId,
-      category: row.productCategory ?? '',
     },
     aiAnswer: {
       answerText: row.answerText,
@@ -299,9 +299,42 @@ export const fetchRejectedAnswers = async (req: Request, res: Response): Promise
   const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
     userId,
     supplierId,
-    30,
+    100,
   );
   successResponse(res, { rejectedAnswers });
+};
+
+/**
+ * PUT /api/v1/feedbacks/rejected/:id
+ */
+export const updateRejectedAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+  const { userFeedback } = req.body as { userFeedback?: string };
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  await feedbackRejectedService.updateRejectedAnswer(id, userId, {
+    userFeedback,
+  });
+  successResponse(res, { updated: true });
+};
+
+/**
+ * DELETE /api/v1/feedbacks/rejected/:id
+ */
+export const deleteRejectedAnswer = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  await feedbackRejectedService.deleteRejectedAnswer(id, userId);
+  successResponse(res, { deleted: true });
 };
 
 /**
@@ -369,6 +402,197 @@ export const fetchFeedbackTemplates = async (req: Request, res: Response): Promi
   successResponse(res, data);
 };
 
+/**
+ * GET /api/v1/feedbacks/goods
+ */
+export const fetchGoodsByCategory = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  logger.info(`Fetching goods by category for user ${userId}, supplier ${supplierId}`);
+
+  const goodsByCategory = await feedbackSettingsService.getGoodsByCategory(userId, supplierId);
+  successResponse(res, { goodsByCategory });
+};
+
+/**
+ * GET /api/v1/feedbacks/rules
+ */
+export const fetchFeedbackRules = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  logger.info(`Fetching feedback rules for user ${userId}, supplier ${supplierId}`);
+
+  const rules = await feedbackSettingsService.getFeedbackRules(userId, supplierId);
+  successResponse(res, { rules });
+};
+
+/**
+ * POST /api/v1/feedbacks/rules
+ */
+export const createFeedbackRule = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const body = req.body as FeedbackRuleInput & { nmIds: number[] };
+
+  logger.info(`Creating feedback rule for user ${userId}, supplier ${supplierId}`);
+
+  const rule = await feedbackSettingsService.createFeedbackRule(userId, supplierId, {
+    nmIds: body.nmIds,
+    minRating: body.minRating,
+    maxRating: body.maxRating,
+    keywords: body.keywords,
+    instruction: body.instruction,
+    autoAnswer: body.autoAnswer,
+    enabled: body.enabled,
+  });
+  successResponse(res, { rule });
+};
+
+/**
+ * PUT /api/v1/feedbacks/rules/:id
+ */
+export const updateFeedbackRule = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+  const body = req.body as FeedbackRuleInput;
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  logger.info(`Updating feedback rule ${id} for user ${userId}`);
+
+  const rule = await feedbackSettingsService.updateFeedbackRule(id, userId, {
+    nmIds: body.nmIds,
+    minRating: body.minRating,
+    maxRating: body.maxRating,
+    keywords: body.keywords,
+    instruction: body.instruction,
+    autoAnswer: body.autoAnswer,
+    enabled: body.enabled,
+  });
+  successResponse(res, { rule });
+};
+
+/**
+ * DELETE /api/v1/feedbacks/rules/:id
+ */
+export const deleteFeedbackRule = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+
+  if (!id) {
+    throw ApiError.badRequest('id is required');
+  }
+
+  logger.info(`Deleting feedback rule ${id} for user ${userId}`);
+
+  await feedbackSettingsService.deleteFeedbackRule(id, userId);
+  successResponse(res, { deleted: true });
+};
+
+/**
+ * GET /api/v1/feedbacks/goods-groups
+ */
+export const fetchGoodsGroups = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  const groups = await feedbackGoodsGroupService.getGroups(userId, supplierId);
+  successResponse(res, { groups });
+};
+
+/**
+ * POST /api/v1/feedbacks/goods-groups
+ */
+export const createGoodsGroup = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { nmIds } = req.body as { nmIds: number[] };
+
+  const group = await feedbackGoodsGroupService.createGroup(userId, supplierId, nmIds);
+  successResponse(res, { group });
+};
+
+/**
+ * PUT /api/v1/feedbacks/goods-groups/:id
+ */
+export const updateGoodsGroup = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const { id } = req.params;
+  const { nmIds } = req.body as { nmIds: number[] };
+
+  const group = await feedbackGoodsGroupService.updateGroup(id, userId, nmIds);
+  successResponse(res, { group });
+};
+
+/**
+ * DELETE /api/v1/feedbacks/goods-groups/:id
+ */
+export const deleteGoodsGroup = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { id } = req.params;
+
+  await feedbackGoodsGroupService.deleteGroup(id, userId, supplierId);
+  successResponse(res, { deleted: true });
+};
+
+/**
+ * POST /api/v1/feedbacks/goods-groups/merge
+ */
+export const mergeGoods = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { sourceNmId, targetNmId } = req.body as {
+    sourceNmId: number;
+    targetNmId: number;
+  };
+
+  logger.info(
+    `mergeGoods called: user=${userId}, supplier=${supplierId}, source=${sourceNmId}, target=${targetNmId}`,
+  );
+
+  try {
+    const group = await feedbackGoodsGroupService.mergeGoods(
+      userId,
+      supplierId,
+      sourceNmId,
+      targetNmId,
+    );
+    logger.info(
+      `mergeGoods success: group=${group.id}, nmIds=[${group.nmIds.join(', ')}]`,
+    );
+    successResponse(res, { group });
+  } catch (error) {
+    logger.error(
+      `mergeGoods FAILED: user=${userId}, source=${sourceNmId}, target=${targetNmId}`,
+      error,
+    );
+    throw error;
+  }
+};
+
+/**
+ * POST /api/v1/feedbacks/goods-groups/:id/remove
+ */
+export const removeNmIdFromGroup = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+  const { id } = req.params;
+  const { nmId } = req.body as { nmId: number };
+
+  const result = await feedbackGoodsGroupService.removeNmIdFromGroup(
+    id,
+    userId,
+    supplierId,
+    nmId,
+  );
+  successResponse(res, { success: true, group: result || null });
+};
+
 export default {
   fetchFeedbacks,
   countUnansweredFeedbacks,
@@ -378,9 +602,22 @@ export default {
   rejectFeedbackAnswer,
   regenerateFeedbackAnswer,
   fetchRejectedAnswers,
+  updateRejectedAnswer,
+  deleteRejectedAnswer,
+  fetchGoodsGroups,
+  createGoodsGroup,
+  updateGoodsGroup,
+  deleteGoodsGroup,
+  mergeGoods,
+  removeNmIdFromGroup,
   fetchFeedbackStatistics,
   fetchFeedbackSettings,
   updateFeedbackSettings,
   updateProductFeedbackSetting,
   fetchFeedbackTemplates,
+  fetchGoodsByCategory,
+  fetchFeedbackRules,
+  createFeedbackRule,
+  updateFeedbackRule,
+  deleteFeedbackRule,
 };

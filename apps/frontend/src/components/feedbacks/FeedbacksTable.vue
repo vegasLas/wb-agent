@@ -165,7 +165,7 @@
             severity="danger"
             text
             rounded
-            v-tooltip.top="'Отклонить'"
+            v-tooltip.top="'Исправить'"
             @click="$emit('reject', data.id)"
           />
         </div>

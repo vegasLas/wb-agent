@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { body, query } from 'express-validator';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import {
   fetchPromotionsTimeline,
   fetchPromotionDetail,
@@ -27,7 +27,7 @@ const wbOperationLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => String(req.user?.id ?? req.ip),
+  keyGenerator: (req) => String(req.user?.id ?? ipKeyGenerator(req)),
 });
 
 /**

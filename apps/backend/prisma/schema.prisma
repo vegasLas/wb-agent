@@ -352,7 +352,6 @@ model FeedbackAutoAnswer {
   feedbackTextPros String?
   productName      String?
   productBrand     String?
-  productCategory  String?
   supplierArticle  String?
   userName         String?
   purchaseDate     BigInt?
@@ -377,7 +376,6 @@ model FeedbackRejectedAnswer {
   feedbackText       String   @default("")
   rejectedAnswerText String
   valuation          Int      @default(5)
-  productCategory    String?
   productName        String?
   aiAnalysis         String?
   mistakeCategory    String?
@@ -387,6 +385,35 @@ model FeedbackRejectedAnswer {
 
   @@index([userId, supplierId])
   @@index([feedbackId])
-  @@index([productCategory])
   @@index([createdAt])
+  @@index([nmId])
+}
+
+model FeedbackGoodsGroup {
+  id         String   @id @default(uuid())
+  userId     Int
+  supplierId String
+  nmIds      Int[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, supplierId])
+}
+
+model FeedbackRule {
+  id          String   @id @default(uuid())
+  userId      Int
+  supplierId  String
+  nmIds       Int[]
+  minRating   Int?
+  maxRating   Int?
+  keywords    String[]
+  instruction String?
+  autoAnswer  Boolean  @default(true)
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([supplierId])
 }

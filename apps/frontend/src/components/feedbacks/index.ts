@@ -27,3 +27,25 @@ export { default as FeedbacksCard } from './FeedbacksCard.vue';
 // ---------------------------------------------------------------------------
 export { default as GenerateAnswerDrawer } from './GenerateAnswerDrawer.vue';
 export { default as AnswerAllConfirmDialog } from './AnswerAllConfirmDialog.vue';
+
+// ---------------------------------------------------------------------------
+// Rejected Domain - Rejected feedback manager
+// ---------------------------------------------------------------------------
+export { default as RejectedFeedbackManager } from './RejectedFeedbackManager.vue';
+
+// ---------------------------------------------------------------------------
+// Groups Domain - Goods grouping manager
+// ---------------------------------------------------------------------------
+export { default as GoodsGroupsView } from './GoodsGroupsView.vue';
+export { default as GoodsMergeDialog } from './GoodsMergeDialog.vue';
+
+// ---------------------------------------------------------------------------
+// Rules Domain - Product rules editor
+// ---------------------------------------------------------------------------
+export { default as FeedbackRulesSection } from './FeedbackRulesSection.vue';
+export { default as RuleEditDialog } from './RuleEditDialog.vue';
+
+// ---------------------------------------------------------------------------
+// Drawer Domain - Auto answers drawer
+// ---------------------------------------------------------------------------
+export { default as AutoAnswersDrawer } from './AutoAnswersDrawer.vue';

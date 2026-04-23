@@ -5,16 +5,19 @@
 
 import { prisma } from '@/config/database';
 import { createLogger } from '@/utils/logger';
+import { feedbackGoodsGroupService } from './feedback-goods-group.service';
 
 const logger = createLogger('FeedbackRejected');
 
 export interface RejectedAnswerContext {
+  id: string;
   feedbackText: string;
   rejectedAnswerText: string;
   aiAnalysis: string | null;
   mistakeCategory: string | null;
-  productCategory: string | null;
   userFeedback: string | null;
+  nmId: number;
+  createdAt: Date;
 }
 
 const CATEGORY_RULES: Record<string, string> = {
@@ -47,7 +50,6 @@ export class FeedbackRejectedService {
     feedbackText: string;
     rejectedAnswerText: string;
     valuation: number;
-    productCategory?: string | null;
     productName?: string | null;
     aiAnalysis?: string | null;
     mistakeCategory?: string | null;
@@ -63,13 +65,12 @@ export class FeedbackRejectedService {
           feedbackText: params.feedbackText,
           rejectedAnswerText: params.rejectedAnswerText,
           valuation: params.valuation,
-          productCategory: params.productCategory ?? null,
           productName: params.productName ?? null,
           userFeedback: params.userFeedback ?? null,
         },
       });
       logger.info(
-        `Saved rejected answer for feedback ${params.feedbackId}, user ${params.userId}`,
+        `Saved rejected answer for feedback ${params.feedbackId}, user ${params.userId}, nmId: ${params.nmId}`,
       );
     } catch (error) {
       logger.error(
@@ -82,31 +83,41 @@ export class FeedbackRejectedService {
 
   /**
    * Get recent rejected answers for a user to include in AI prompt context.
+   * If nmId is provided, also includes rejected answers from goods in the same group.
    */
   async getRecentRejectedAnswers(
     userId: number,
     supplierId: string,
     limit = 30,
-    productCategory?: string,
+    nmId?: number,
   ): Promise<RejectedAnswerContext[]> {
     try {
+      let targetNmIds: number[] | undefined;
+
+      if (nmId !== undefined) {
+        const related = await feedbackGoodsGroupService.getGroupNmIds(userId, supplierId, nmId);
+        targetNmIds = [nmId, ...related];
+      }
+
       const rows = await prisma.feedbackRejectedAnswer.findMany({
         where: {
           userId,
           supplierId,
-          ...(productCategory ? { productCategory } : {}),
+          ...(targetNmIds ? { nmId: { in: targetNmIds } } : {}),
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
       });
 
       return rows.map((row) => ({
+        id: row.id,
         feedbackText: row.feedbackText,
         rejectedAnswerText: row.rejectedAnswerText,
         aiAnalysis: row.aiAnalysis,
         mistakeCategory: row.mistakeCategory,
-        productCategory: row.productCategory,
         userFeedback: row.userFeedback,
+        nmId: row.nmId,
+        createdAt: row.createdAt,
       }));
     } catch (error) {
       logger.error(
@@ -114,6 +125,43 @@ export class FeedbackRejectedService {
         , error,
       );
       return [];
+    }
+  }
+
+  /**
+   * Update a rejected answer's userFeedback.
+   */
+  async updateRejectedAnswer(
+    id: string,
+    userId: number,
+    updates: { userFeedback?: string },
+  ): Promise<void> {
+    try {
+      await prisma.feedbackRejectedAnswer.updateMany({
+        where: { id, userId },
+        data: {
+          ...(updates.userFeedback !== undefined && { userFeedback: updates.userFeedback }),
+        },
+      });
+      logger.info(`Updated rejected answer ${id} for user ${userId}`);
+    } catch (error) {
+      logger.error(`Failed to update rejected answer ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a rejected answer.
+   */
+  async deleteRejectedAnswer(id: string, userId: number): Promise<void> {
+    try {
+      await prisma.feedbackRejectedAnswer.deleteMany({
+        where: { id, userId },
+      });
+      logger.info(`Deleted rejected answer ${id} for user ${userId}`);
+    } catch (error) {
+      logger.error(`Failed to delete rejected answer ${id}:`, error);
+      throw error;
     }
   }
 }

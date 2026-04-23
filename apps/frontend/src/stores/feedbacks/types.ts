@@ -16,6 +16,10 @@ export type {
   FeedbackSettings,
   FeedbackProductSetting,
   ProcessResult,
+  FeedbackRule,
+  RejectedAnswerContext,
+  FeedbackGoodsGroup,
+  CreateFeedbackRuleInput,
 } from '@/api/feedbacks/types';
 
 export type FeedbackTab = 'unanswered' | 'ai-posted' | 'ai-pending';

@@ -13,6 +13,7 @@ const logger = createLogger('FeedbackPrompt');
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
 import type { RejectedAnswerContext } from './feedback-rejected.service';
+import type { FeedbackRule } from '@prisma/client';
 
 const VALUATION_LABELS: Record<number, string> = {
   1: 'negative (rated 1 star)',
@@ -31,6 +32,7 @@ export class FeedbackPromptService {
     recentAnswers: FeedbackExample[],
     templates: FeedbackTemplate[],
     rejectedAnswers: RejectedAnswerContext[] = [],
+    feedbackRules?: FeedbackRule[],
   ): Promise<string> {
     const productInfo = feedback.productInfo;
     const feedbackInfo = feedback.feedbackInfo;
@@ -39,10 +41,9 @@ export class FeedbackPromptService {
     const templatesContext = this.buildTemplatesContext(templates);
     const mediaContext = this.buildMediaContext(feedbackInfo);
     const valuationLabel = VALUATION_LABELS[feedback.valuation] || 'не указана';
-    const rejectedContext = this.buildRejectedContext(
-      rejectedAnswers,
-      productInfo.category,
-    );
+    const rejectedContext = this.buildRejectedContext(rejectedAnswers);
+    const ruleContext = this.buildRuleContext(feedbackRules);
+    const instructionContext = this.buildInstructionContext(feedbackRules);
 
     const prompt = this.buildPrompt({
       productInfo,
@@ -53,6 +54,8 @@ export class FeedbackPromptService {
       templatesContext,
       recentAnswersContext,
       rejectedContext,
+      ruleContext,
+      instructionContext,
     });
     try {
       const { text } = await generateText({
@@ -106,7 +109,6 @@ export class FeedbackPromptService {
 
   private buildRejectedContext(
     rejectedAnswers: RejectedAnswerContext[],
-    category?: string,
   ): string {
     if (rejectedAnswers.length === 0) return '';
 
@@ -119,11 +121,22 @@ export class FeedbackPromptService {
       })
       .join('\n');
 
-    const categoryNote = category
-      ? ` for category "${category}"`
-      : '';
+    return `\nANSWERS THAT MUST NOT BE REPEATED (previously rejected):\n${lines}\n`;
+  }
 
-    return `\nANSWERS THAT MUST NOT BE REPEATED (previously rejected${categoryNote}):\n${lines}\n`;
+  private buildRuleContext(rules?: FeedbackRule[]): string {
+    // Skip rules are evaluated before calling AI, no need to tell AI about them
+    return '';
+  }
+
+  private buildInstructionContext(rules?: FeedbackRule[]): string {
+    if (!rules || rules.length === 0) return '';
+
+    const instructionRules = rules.filter((r) => r.enabled && r.autoAnswer === false && r.instruction);
+    if (instructionRules.length === 0) return '';
+
+    const lines = instructionRules.map((r) => `- ${r.instruction}`);
+    return `\nSPECIAL INSTRUCTIONS FOR THIS REVIEW:\n${lines.join('\n')}\n`;
   }
 
   private buildPrompt(params: {
@@ -135,6 +148,8 @@ export class FeedbackPromptService {
     templatesContext: string;
     recentAnswersContext: string;
     rejectedContext: string;
+    ruleContext: string;
+    instructionContext: string;
   }): string {
     return `You are a professional review manager for the Wildberries marketplace.
 Your task is to write a personalized, warm, and professional response to a customer review.
@@ -143,7 +158,6 @@ Respond in Russian language only.
 PRODUCT INFORMATION:
 - Name: ${params.productInfo.name}
 - Brand: ${params.productInfo.brand}
-- Category: ${params.productInfo.category}
 - Supplier article: ${params.productInfo.supplierArticle}
 
 CUSTOMER REVIEW:
@@ -157,7 +171,7 @@ SELLER ANSWER TEMPLATES (use as style reference):
 ${params.templatesContext}
 
 EXAMPLE ANSWERS FOR ${params.valuation}/5 RATED REVIEWS (use as tone and style reference):
-${params.recentAnswersContext}${params.rejectedContext}
+${params.recentAnswersContext}${params.rejectedContext}${params.ruleContext}${params.instructionContext}
 RULES:
 1. Address the customer by name (${params.feedbackInfo.userName}).
 2. Thank them for the purchase and the review.

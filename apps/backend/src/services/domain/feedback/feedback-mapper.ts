@@ -83,7 +83,6 @@ export function mapFeedbackItemToDTO(raw: WBFeedbackItem): FeedbackItemDTO {
       name: raw.productInfo?.name ?? '',
       supplierArticle: raw.productInfo?.supplierArticle ?? '',
       wbArticle: raw.productInfo?.wbArticle ?? 0,
-      category: raw.productInfo?.category ?? '',
     },
   };
 }
