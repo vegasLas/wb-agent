@@ -155,6 +155,7 @@ import InputText from 'primevue/inputtext';
 import Card from 'primevue/card';
 import Panel from 'primevue/panel';
 import Message from 'primevue/message';
+import Tag from 'primevue/tag';
 import { showConfirm } from '@/utils/ui/confirm';
 import GoodsMergeDialog from './GoodsMergeDialog.vue';
 import type { GoodsItem, FeedbackGoodsGroup } from '@/api/feedbacks/types';

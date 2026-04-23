@@ -6,6 +6,22 @@
     :style="{ width: '30rem' }"
   >
     <div class="space-y-4">
+      <!-- Info Alert -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex gap-2">
+        <i class="pi pi-info-circle text-blue-500 mt-0.5 text-sm" />
+        <div class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+          <p class="font-medium mb-1">Как работают правила:</p>
+          <p>
+            Выберите товары, диапазон рейтинга и ключевые слова. Если отзыв клиента
+            <b>попадает под все условия</b> правила, сработает выбранный режим:
+          </p>
+          <ul class="list-disc pl-4 mt-1 space-y-0.5">
+            <li><b>Пропускать</b> — автоответ не будет создан</li>
+            <li><b>Инструкция</b> — к ответу AI добавится ваша инструкция</li>
+          </ul>
+        </div>
+      </div>
+
       <!-- Products -->
       <div class="space-y-1">
         <label class="text-sm font-medium">
@@ -55,7 +71,7 @@
 
       <!-- Ratings -->
       <div class="flex gap-4">
-        <div class="flex-1 space-y-1">
+        <div class="space-y-1">
           <label class="text-sm font-medium">
             Мин. рейтинг <span class="text-red-500">*</span>
           </label>
@@ -64,11 +80,11 @@
             :min="1"
             :max="5"
             placeholder="1-5"
-            class="w-full"
+            size="small"
           />
           <small v-if="validationErrors.minRating" class="text-red-500">{{ validationErrors.minRating }}</small>
         </div>
-        <div class="flex-1 space-y-1">
+        <div class="space-y-1">
           <label class="text-sm font-medium">
             Макс. рейтинг <span class="text-red-500">*</span>
           </label>
@@ -77,7 +93,7 @@
             :min="1"
             :max="5"
             placeholder="1-5"
-            class="w-full"
+            size="small"
           />
           <small v-if="validationErrors.maxRating" class="text-red-500">{{ validationErrors.maxRating }}</small>
         </div>
@@ -86,17 +102,14 @@
       <!-- Keywords -->
       <div class="space-y-1">
         <label class="text-sm font-medium">
-          Исключить ключевые слова <span class="text-red-500">*</span>
+          Ключевые слова
         </label>
         <Textarea
           v-model="keywordsRaw"
           rows="3"
           class="w-full"
-          placeholder="через запятую"
+          placeholder="через запятую (необязательно)"
         />
-        <small v-if="validationErrors.excludeKeywords" class="text-red-500">
-          {{ validationErrors.excludeKeywords }}
-        </small>
         <div v-if="keywordTags.length > 0" class="flex flex-wrap gap-1 mt-1">
           <Tag
             v-for="(tag, idx) in keywordTags"
@@ -118,11 +131,45 @@
         </div>
       </div>
 
-      <!-- Toggles -->
-      <div class="flex items-center justify-between">
-        <span class="text-sm">Требовать подтверждения</span>
-        <ToggleSwitch v-model="form.requireApproval" />
+      <!-- Mode -->
+      <div class="space-y-1">
+        <label class="text-sm font-medium">Режим</label>
+        <div class="flex gap-2">
+          <Button
+            :outlined="form.autoAnswer !== true"
+            label="Пропускать"
+            size="small"
+            class="flex-1"
+            @click="form.autoAnswer = true"
+          />
+          <Button
+            :outlined="form.autoAnswer !== false"
+            label="Инструкция"
+            size="small"
+            class="flex-1"
+            @click="form.autoAnswer = false"
+          />
+        </div>
+        <p class="text-xs text-surface-500">
+          {{ form.autoAnswer ? 'Не отвечать на отзывы, попадающие под условия' : 'Добавить инструкцию к ответу AI для отзывов под условия' }}
+        </p>
       </div>
+
+      <!-- Instruction (only in instruction mode) -->
+      <div v-if="form.autoAnswer === false" class="space-y-1">
+        <label class="text-sm font-medium">
+          Инструкция для AI <span class="text-red-500">*</span>
+        </label>
+        <Textarea
+          v-model="form.instruction"
+          rows="4"
+          class="w-full"
+          placeholder="Например: Если клиент жалуется на размер, предложи обмен или возврат"
+        />
+        <small v-if="validationErrors.instruction" class="text-red-500">{{ validationErrors.instruction }}</small>
+      </div>
+
+      <!-- Enabled toggle -->
       <div class="flex items-center justify-between">
         <span class="text-sm">Правило включено</span>
         <ToggleSwitch v-model="form.enabled" />
@@ -152,20 +199,21 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
 import Tag from 'primevue/tag';
-import type { FeedbackProductRule, GoodsItem } from '@/api/feedbacks/types';
+import type { FeedbackRule, GoodsItem } from '@/api/feedbacks/types';
 
 interface FormState {
   nmIds: number[];
   minRating: number | null;
   maxRating: number | null;
-  excludeKeywords: string[];
-  requireApproval: boolean;
+  keywords: string[];
+  instruction: string;
+  autoAnswer: boolean;
   enabled: boolean;
 }
 
 interface Props {
   visible: boolean;
-  rule?: FeedbackProductRule | null;
+  rule?: FeedbackRule | null;
   goodsByCategory: Record<string, GoodsItem[]>;
 }
 
@@ -204,8 +252,9 @@ const defaultForm = (): FormState => ({
   nmIds: [],
   minRating: 1,
   maxRating: 5,
-  excludeKeywords: [],
-  requireApproval: false,
+  keywords: [],
+  instruction: '',
+  autoAnswer: true,
   enabled: true,
 });
 
@@ -233,11 +282,12 @@ watch(
         nmIds: [...rule.nmIds],
         minRating: rule.minRating ?? 1,
         maxRating: rule.maxRating ?? 5,
-        excludeKeywords: [...rule.excludeKeywords],
-        requireApproval: rule.requireApproval,
+        keywords: [...rule.keywords],
+        instruction: rule.instruction ?? '',
+        autoAnswer: rule.autoAnswer,
         enabled: rule.enabled,
       };
-      keywordsRaw.value = rule.excludeKeywords.join(', ');
+      keywordsRaw.value = rule.keywords.join(', ');
     } else {
       form.value = defaultForm();
       keywordsRaw.value = '';
@@ -267,8 +317,8 @@ const validationErrors = computed<Record<string, string>>(() => {
     e.minRating = 'Мин. рейтинг не может быть больше макс.';
   }
 
-  if (keywordTags.value.length === 0) {
-    e.excludeKeywords = 'Добавьте хотя бы одно ключевое слово';
+  if (form.value.autoAnswer === false && !form.value.instruction.trim()) {
+    e.instruction = 'Введите инструкцию для AI';
   }
 
   return e;
@@ -279,7 +329,6 @@ const isValid = computed(() => Object.keys(validationErrors.value).length === 0)
 function submit() {
   if (!isValid.value) return;
 
-  // Default null ratings to 1-5 to prevent backend validation errors
   const minRating = form.value.minRating ?? 1;
   const maxRating = form.value.maxRating ?? 5;
 
@@ -287,8 +336,9 @@ function submit() {
     nmIds: form.value.nmIds,
     minRating,
     maxRating,
-    excludeKeywords: keywordTags.value,
-    requireApproval: form.value.requireApproval,
+    keywords: keywordTags.value,
+    instruction: form.value.instruction.trim() || null,
+    autoAnswer: form.value.autoAnswer,
     enabled: form.value.enabled,
   };
 
