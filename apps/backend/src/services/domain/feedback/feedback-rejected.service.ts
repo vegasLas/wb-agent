@@ -88,7 +88,7 @@ export class FeedbackRejectedService {
   async getRecentRejectedAnswers(
     userId: number,
     supplierId: string,
-    limit = 30,
+    limit = 40,
     nmId?: number,
   ): Promise<RejectedAnswerContext[]> {
     try {

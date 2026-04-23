@@ -37,11 +37,14 @@ export class FeedbackPromptService {
     const productInfo = feedback.productInfo;
     const feedbackInfo = feedback.feedbackInfo;
 
-    const recentAnswersContext = this.buildExamplesContext(recentAnswers);
+    const recentAnswersContext = this.buildExamplesContext(
+      recentAnswers.slice(0, 10),
+    );
     const templatesContext = this.buildTemplatesContext(templates);
     const mediaContext = this.buildMediaContext(feedbackInfo);
     const valuationLabel = VALUATION_LABELS[feedback.valuation] || 'не указана';
     const rejectedContext = this.buildRejectedContext(rejectedAnswers);
+    const userFeedbackContext = this.buildUserFeedbackContext(rejectedAnswers);
     const ruleContext = this.buildRuleContext(feedbackRules);
     const instructionContext = this.buildInstructionContext(feedbackRules);
 
@@ -54,6 +57,7 @@ export class FeedbackPromptService {
       templatesContext,
       recentAnswersContext,
       rejectedContext,
+      userFeedbackContext,
       ruleContext,
       instructionContext,
     });
@@ -113,15 +117,24 @@ export class FeedbackPromptService {
     if (rejectedAnswers.length === 0) return '';
 
     const lines = rejectedAnswers
-      .map((r) => {
-        const reason = r.userFeedback
-          ? ` | Причина отклонения: "${r.userFeedback}"`
-          : '';
-        return `- Ответ: "${r.rejectedAnswerText}"${reason}`;
-      })
+      .map((r) => `- Ответ: "${r.rejectedAnswerText}"`)
       .join('\n');
 
     return `\nANSWERS THAT MUST NOT BE REPEATED (previously rejected):\n${lines}\n`;
+  }
+
+  private buildUserFeedbackContext(
+    rejectedAnswers: RejectedAnswerContext[],
+  ): string {
+    const feedbacks = rejectedAnswers
+      .map((r) => r.userFeedback)
+      .filter((f): f is string => !!f && f.trim().length > 0)
+      .slice(0, 40);
+
+    if (feedbacks.length === 0) return '';
+
+    const lines = feedbacks.map((f) => `- ${f}`).join('\n');
+    return `\nUSER FEEDBACK FROM PREVIOUSLY REJECTED ANSWERS (learn from these mistakes):\n${lines}\n`;
   }
 
   private buildRuleContext(rules?: FeedbackRule[]): string {
@@ -132,7 +145,9 @@ export class FeedbackPromptService {
   private buildInstructionContext(rules?: FeedbackRule[]): string {
     if (!rules || rules.length === 0) return '';
 
-    const instructionRules = rules.filter((r) => r.enabled && r.autoAnswer === false && r.instruction);
+    const instructionRules = rules.filter(
+      (r) => r.enabled && r.mode === 'instruction' && r.instruction,
+    );
     if (instructionRules.length === 0) return '';
 
     const lines = instructionRules.map((r) => `- ${r.instruction}`);
@@ -148,6 +163,7 @@ export class FeedbackPromptService {
     templatesContext: string;
     recentAnswersContext: string;
     rejectedContext: string;
+    userFeedbackContext: string;
     ruleContext: string;
     instructionContext: string;
   }): string {
@@ -167,11 +183,9 @@ CUSTOMER REVIEW:
 - Cons: ${params.feedbackInfo.feedbackTextCons || '(not specified)'}
 - Rating: ${params.valuation} out of 5 (${params.valuationLabel})${params.mediaContext}
 
-SELLER ANSWER TEMPLATES (use as style reference):
-${params.templatesContext}
-
+${params.instructionContext}${params.userFeedbackContext}
 EXAMPLE ANSWERS FOR ${params.valuation}/5 RATED REVIEWS (use as tone and style reference):
-${params.recentAnswersContext}${params.rejectedContext}${params.ruleContext}${params.instructionContext}
+${params.recentAnswersContext}${params.rejectedContext}${params.ruleContext}
 RULES:
 1. Address the customer by name (${params.feedbackInfo.userName}).
 2. Thank them for the purchase and the review.
@@ -182,10 +196,13 @@ RULES:
 7. Tone: friendly, professional.
 8. Avoid template phrases — write naturally and vividly.
 9. Use examples as a reference for structure and tone, but do not copy their text — every answer must be original and unique.
-10. Consider mistakes from rejected answers and user feedback (rejection reasons).
+10. Consider user feedback from rejected answers and avoid repeating those mistakes.
 11. Respond ONLY with the answer text, no explanations.
 
-Answer:`
+SELLER ANSWER TEMPLATES (use as style reference):
+${params.templatesContext}
+
+Answer:`;
   }
 }
 

@@ -8,7 +8,10 @@ import { prisma } from '@/config/database';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
 import { feedbackPromptService } from './feedback-prompt.service';
 import { feedbackExampleService } from './feedback-example.service';
-import { feedbackRejectedService } from './feedback-rejected.service';
+import {
+  feedbackRejectedService,
+  RejectedAnswerContext,
+} from './feedback-rejected.service';
 
 import { createLogger } from '@/utils/logger';
 
@@ -25,6 +28,30 @@ export interface ProcessResult {
   failed: number;
 }
 
+/**
+ * Check if a feedback rule's conditions match the given feedback.
+ * Evaluates minRating, maxRating, and keywords.
+ */
+function doesRuleApply(
+  rule: FeedbackRule,
+  valuation: number,
+  feedbackTextLower: string,
+): boolean {
+  if (rule.minRating !== null && rule.minRating !== undefined) {
+    if (valuation < rule.minRating) return false;
+  }
+  if (rule.maxRating !== null && rule.maxRating !== undefined) {
+    if (valuation > rule.maxRating) return false;
+  }
+  if (rule.keywords && rule.keywords.length > 0) {
+    const hasKeyword = rule.keywords.some((kw) =>
+      feedbackTextLower.includes(kw.toLowerCase()),
+    );
+    if (!hasKeyword) return false;
+  }
+  return true;
+}
+
 export class FeedbackReviewService {
   /**
    * Count total unanswered feedbacks by fetching all pages
@@ -36,7 +63,7 @@ export class FeedbackReviewService {
         wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
       ]);
       // Merge: answered overwrites unanswered to avoid stale data from WB API
-      const merged = new Map<string, typeof answeredRaw[0]>();
+      const merged = new Map<string, (typeof answeredRaw)[0]>();
       for (const f of unansweredRaw) merged.set(f.id, f);
       for (const f of answeredRaw) merged.set(f.id, f);
       return Array.from(merged.values()).filter((f) => !f.answer).length;
@@ -170,7 +197,7 @@ export class FeedbackReviewService {
             ? await feedbackRejectedService.getRecentRejectedAnswers(
                 userId,
                 supplierId,
-                30,
+                40,
                 nmId,
               )
             : [];
@@ -229,7 +256,7 @@ export class FeedbackReviewService {
     feedbackRulesMap: Map<number, FeedbackRule[]>,
     existingAutoAnswerMap: Map<string, { status: string }>,
     examplesByValuation: Map<number, FeedbackExample[]>,
-    rejectedAnswers: import('./feedback-rejected.service').RejectedAnswerContext[] = [],
+    rejectedAnswers: RejectedAnswerContext[] = [],
   ): Promise<'posted' | 'skipped' | 'pending'> {
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
@@ -259,47 +286,29 @@ export class FeedbackReviewService {
     // ALL of its specified conditions match simultaneously.
     const rules = feedbackRulesMap.get(nmId);
     const enabledRules = rules?.filter((r) => r.enabled) || [];
-    if (enabledRules.length > 0) {
-      const feedbackText = (feedback.feedbackInfo?.feedbackText || '').toLowerCase();
+    const feedbackTextLower = (
+      feedback.feedbackInfo?.feedbackText || ''
+    ).toLowerCase();
+    const matchingInstructionRules: FeedbackRule[] = [];
 
-      for (const rule of enabledRules) {
-        let ruleApplies = true;
+    for (const rule of enabledRules) {
+      const ruleApplies = doesRuleApply(
+        rule,
+        feedback.valuation,
+        feedbackTextLower,
+      );
 
-        // Check min rating
-        if (rule.minRating !== null && rule.minRating !== undefined) {
-          if (feedback.valuation < rule.minRating) {
-            ruleApplies = false;
-          }
-        }
+      if (ruleApplies && rule.mode === 'instruction') {
+        // Instruction rule: don't skip, collect for prompt only if matching
+        matchingInstructionRules.push(rule);
+        continue;
+      }
 
-        // Check max rating
-        if (ruleApplies && rule.maxRating !== null && rule.maxRating !== undefined) {
-          if (feedback.valuation > rule.maxRating) {
-            ruleApplies = false;
-          }
-        }
-
-        // Check keywords: rule only applies if text contains at least one keyword
-        if (ruleApplies && rule.keywords && rule.keywords.length > 0) {
-          const hasKeyword = rule.keywords.some((kw) =>
-            feedbackText.includes(kw.toLowerCase()),
-          );
-          if (!hasKeyword) {
-            ruleApplies = false;
-          }
-        }
-
-        if (ruleApplies && rule.autoAnswer === false) {
-          // Instruction rule: don't skip, just collect instruction for prompt
-          continue;
-        }
-
-        if (ruleApplies) {
-          logger.debug(
-            `Feedback ${feedback.id} matches skip rule ${rule.id} (rating ${feedback.valuation}, keywords: [${rule.keywords.join(', ')}]), skipping`,
-          );
-          return 'skipped';
-        }
+      if (ruleApplies) {
+        logger.debug(
+          `Feedback ${feedback.id} matches skip rule ${rule.id} (rating ${feedback.valuation}, keywords: [${rule.keywords.join(', ')}]), skipping`,
+        );
+        return 'skipped';
       }
     }
 
@@ -318,7 +327,7 @@ export class FeedbackReviewService {
       recentAnswers,
       templates,
       rejectedAnswers,
-      rules?.filter((r) => r.enabled) || [],
+      matchingInstructionRules,
     );
 
     if (!answerText) {
@@ -384,6 +393,10 @@ export class FeedbackReviewService {
           nmId,
           answerText,
         });
+
+        logger.info(
+          `Posted answer for feedback ${feedback.id} (user ${userId}, nmId ${nmId}): "${answerText}"`,
+        );
 
         await prisma.feedbackAutoAnswer.update({
           where: {
@@ -451,7 +464,7 @@ export class FeedbackReviewService {
       await feedbackRejectedService.getRecentRejectedAnswers(
         userId,
         supplierId,
-        20,
+        40,
         nmId,
       );
 
@@ -465,23 +478,28 @@ export class FeedbackReviewService {
     });
 
     // Evaluate skip rules for manual generation too
-    const lowerFeedbackText = (feedback.feedbackInfo?.feedbackText || '').toLowerCase();
-    for (const rule of feedbackRules) {
-      if (rule.autoAnswer === false) continue; // instruction rules don't skip
+    const lowerFeedbackText = (
+      feedback.feedbackInfo?.feedbackText || ''
+    ).toLowerCase();
+    const matchingInstructionRules: FeedbackRule[] = [];
 
-      let ruleApplies = true;
-      if (rule.minRating !== null && rule.minRating !== undefined) {
-        if (feedback.valuation < rule.minRating) ruleApplies = false;
+    for (const rule of feedbackRules) {
+      const ruleApplies = doesRuleApply(
+        rule,
+        feedback.valuation,
+        lowerFeedbackText,
+      );
+
+      if (ruleApplies && rule.mode === 'instruction') {
+        // Instruction rule: don't skip, collect for prompt only if matching
+        matchingInstructionRules.push(rule);
+        continue;
       }
-      if (ruleApplies && rule.maxRating !== null && rule.maxRating !== undefined) {
-        if (feedback.valuation > rule.maxRating) ruleApplies = false;
-      }
-      if (ruleApplies && rule.keywords && rule.keywords.length > 0) {
-        const hasKeyword = rule.keywords.some((kw) => lowerFeedbackText.includes(kw.toLowerCase()));
-        if (!hasKeyword) ruleApplies = false;
-      }
+
       if (ruleApplies) {
-        throw new Error(`Feedback matches skip rule: cannot generate answer for this review`);
+        throw new Error(
+          `Feedback matches skip rule: cannot generate answer for this review`,
+        );
       }
     }
 
@@ -490,7 +508,7 @@ export class FeedbackReviewService {
       recentAnswers,
       templates,
       rejectedAnswers,
-      feedbackRules,
+      matchingInstructionRules,
     );
     await prisma.feedbackAutoAnswer.upsert({
       where: {
@@ -675,6 +693,10 @@ export class FeedbackReviewService {
       nmId: autoAnswer.nmId,
       answerText: autoAnswer.answerText,
     });
+
+    logger.info(
+      `Posted answer for feedback ${feedbackId} (user ${userId}, nmId ${autoAnswer.nmId}): "${autoAnswer.answerText}"`,
+    );
 
     await prisma.feedbackAutoAnswer.update({
       where: {

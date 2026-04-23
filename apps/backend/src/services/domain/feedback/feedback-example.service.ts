@@ -33,7 +33,7 @@ export class FeedbackExampleService {
     userId: number,
     supplierId: string,
     valuations: number[],
-    limit = 20,
+    limit = 10,
     fallbackThreshold = 3,
   ): Promise<Map<number, FeedbackExample[]>> {
     const result = new Map<number, FeedbackExample[]>();
@@ -83,7 +83,7 @@ export class FeedbackExampleService {
     userId: number,
     supplierId: string,
     nmId: number,
-    limit = 20,
+    limit = 10,
     valuation?: number,
   ): Promise<FeedbackExampleWithId[]> {
     try {
@@ -121,7 +121,7 @@ export class FeedbackExampleService {
     userId: number,
     supplierId: string,
     nmId: number,
-    limit = 20,
+    limit = 10,
     fallbackThreshold = 3,
     targetValuation?: number,
   ): Promise<FeedbackExample[]> {
