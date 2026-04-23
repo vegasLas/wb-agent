@@ -444,7 +444,7 @@ export const createFeedbackRule = async (req: Request, res: Response): Promise<v
     maxRating: body.maxRating,
     keywords: body.keywords,
     instruction: body.instruction,
-    autoAnswer: body.autoAnswer,
+    mode: body.mode,
     enabled: body.enabled,
   });
   successResponse(res, { rule });
@@ -470,7 +470,7 @@ export const updateFeedbackRule = async (req: Request, res: Response): Promise<v
     maxRating: body.maxRating,
     keywords: body.keywords,
     instruction: body.instruction,
-    autoAnswer: body.autoAnswer,
+    mode: body.mode,
     enabled: body.enabled,
   });
   successResponse(res, { rule });

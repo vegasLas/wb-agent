@@ -42,7 +42,7 @@ export interface FeedbackRuleInput {
   maxRating?: number | null;
   keywords?: string[];
   instruction?: string | null;
-  autoAnswer?: boolean;
+  mode?: 'skip' | 'instruction';
   enabled?: boolean;
 }
 
@@ -336,7 +336,7 @@ export class FeedbackSettingsService {
         maxRating: input.maxRating ?? null,
         keywords: input.keywords ?? [],
         instruction: input.instruction ?? null,
-        autoAnswer: input.autoAnswer ?? true,
+        mode: input.mode ?? 'skip',
         enabled: input.enabled ?? true,
       },
     });
@@ -368,7 +368,7 @@ export class FeedbackSettingsService {
       maxRating: number | null;
       keywords: string[];
       instruction: string | null;
-      autoAnswer: boolean;
+      mode: 'skip' | 'instruction';
       enabled: boolean;
     }> = {};
 
@@ -383,7 +383,7 @@ export class FeedbackSettingsService {
     if (input.maxRating !== undefined) updateData.maxRating = input.maxRating ?? null;
     if (input.keywords !== undefined) updateData.keywords = input.keywords ?? [];
     if (input.instruction !== undefined) updateData.instruction = input.instruction ?? null;
-    if (input.autoAnswer !== undefined) updateData.autoAnswer = input.autoAnswer;
+    if (input.mode !== undefined) updateData.mode = input.mode;
     if (input.enabled !== undefined) updateData.enabled = input.enabled;
 
     const rule = await prisma.feedbackRule.update({
