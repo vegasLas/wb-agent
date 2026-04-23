@@ -400,8 +400,13 @@ model FeedbackGoodsGroup {
   @@index([userId, supplierId])
 }
 
+enum FeedbackRuleMode {
+  skip
+  instruction
+}
+
 model FeedbackRule {
-  id          String   @id @default(uuid())
+  id          String          @id @default(uuid())
   userId      Int
   supplierId  String
   nmIds       Int[]
@@ -409,10 +414,10 @@ model FeedbackRule {
   maxRating   Int?
   keywords    String[]
   instruction String?
-  autoAnswer  Boolean  @default(true)
-  enabled     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  mode        FeedbackRuleMode @default(skip)
+  enabled     Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@index([userId])
   @@index([supplierId])
