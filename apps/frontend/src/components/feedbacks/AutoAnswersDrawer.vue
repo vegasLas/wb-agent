@@ -11,7 +11,7 @@
         class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-900 rounded-lg"
       >
         <div class="flex flex-col">
-          <span class="text-sm font-medium">Глобальные автоответы</span>
+          <span class="text-sm font-medium">Автоответы для всех товаров</span>
           <span class="text-xs text-surface-500">
             {{ autoAnswerEnabled ? 'Включены' : 'Выключены' }}
           </span>
@@ -85,7 +85,9 @@
               :model-value="product.autoAnswerEnabled"
               :disabled="!product.compliant"
               size="small"
-              @update:model-value="(val) => $emit('toggle-product', product.nmId, val)"
+              @update:model-value="
+                (val) => $emit('toggle-product', product.nmId, val)
+              "
             />
           </div>
         </div>

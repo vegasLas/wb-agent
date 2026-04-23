@@ -160,7 +160,7 @@
     <div v-else-if="viewMode === 'rules'">
       <FeedbackRulesSection
         :goods-by-category="feedbacksStore.goodsByCategory"
-        :product-rules="feedbacksStore.productRules"
+        :feedback-rules="feedbacksStore.feedbackRules"
         :rules-loading="feedbacksStore.rulesLoading"
         @create-rule="onCreateRule"
         @update-rule="onUpdateRule"
@@ -404,7 +404,7 @@ async function onRemoveFromGroup(groupId: string, nmId: number) {
 // Rules handlers
 async function onCreateRule(rule: Record<string, unknown> & { nmIds: number[] }) {
   try {
-    await feedbacksStore.createRule(rule);
+    await feedbacksStore.createFeedbackRule(rule);
   } catch {
     // Error handled in store
   }
@@ -412,7 +412,7 @@ async function onCreateRule(rule: Record<string, unknown> & { nmIds: number[] })
 
 async function onUpdateRule(id: string, rule: Record<string, unknown>) {
   try {
-    await feedbacksStore.updateRule(id, rule);
+    await feedbacksStore.updateFeedbackRule(id, rule);
   } catch {
     // Error handled in store
   }
@@ -420,7 +420,7 @@ async function onUpdateRule(id: string, rule: Record<string, unknown>) {
 
 async function onDeleteRule(id: string) {
   try {
-    await feedbacksStore.deleteRule(id);
+    await feedbacksStore.deleteFeedbackRule(id);
   } catch {
     // Error handled in store
   }
