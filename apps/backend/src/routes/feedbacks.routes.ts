@@ -30,10 +30,10 @@ import {
   updateProductFeedbackSetting,
   fetchFeedbackTemplates,
   fetchGoodsByCategory,
-  fetchProductRules,
-  createProductRule,
-  updateProductRule,
-  deleteProductRule,
+  fetchFeedbackRules,
+  createFeedbackRule,
+  updateFeedbackRule,
+  deleteFeedbackRule,
 } from '@/controllers/feedbacks.controller';
 
 const router = Router();
@@ -115,7 +115,7 @@ router.get('/templates', asyncHandler(fetchFeedbackTemplates));
 
 // Goods & rules endpoints
 router.get('/goods', resolveSupplier, asyncHandler(fetchGoodsByCategory));
-router.get('/rules', resolveSupplier, asyncHandler(fetchProductRules));
+router.get('/rules', resolveSupplier, asyncHandler(fetchFeedbackRules));
 router.post(
   '/rules',
   resolveSupplier,
@@ -123,12 +123,13 @@ router.post(
   body('nmIds.*').isInt().withMessage('Each nmId must be an integer'),
   body('minRating').optional().isInt({ min: 1, max: 5 }).withMessage('minRating must be 1-5'),
   body('maxRating').optional().isInt({ min: 1, max: 5 }).withMessage('maxRating must be 1-5'),
-  body('excludeKeywords').optional().isArray().withMessage('excludeKeywords must be an array'),
-  body('excludeKeywords.*').optional().isString(),
-  body('requireApproval').optional().isBoolean(),
+  body('keywords').optional().isArray().withMessage('keywords must be an array'),
+  body('keywords.*').optional().isString(),
+  body('instruction').optional({ checkFalsy: true }).isString(),
+  body('autoAnswer').optional().isBoolean(),
   body('enabled').optional().isBoolean(),
   validationMiddleware,
-  asyncHandler(createProductRule),
+  asyncHandler(createFeedbackRule),
 );
 router.put(
   '/rules/:id',
@@ -138,19 +139,20 @@ router.put(
   body('nmIds.*').optional().isInt().withMessage('Each nmId must be an integer'),
   body('minRating').optional().isInt({ min: 1, max: 5 }).withMessage('minRating must be 1-5'),
   body('maxRating').optional().isInt({ min: 1, max: 5 }).withMessage('maxRating must be 1-5'),
-  body('excludeKeywords').optional().isArray().withMessage('excludeKeywords must be an array'),
-  body('excludeKeywords.*').optional().isString(),
-  body('requireApproval').optional().isBoolean(),
+  body('keywords').optional().isArray().withMessage('keywords must be an array'),
+  body('keywords.*').optional().isString(),
+  body('instruction').optional({ checkFalsy: true }).isString(),
+  body('autoAnswer').optional().isBoolean(),
   body('enabled').optional().isBoolean(),
   validationMiddleware,
-  asyncHandler(updateProductRule),
+  asyncHandler(updateFeedbackRule),
 );
 router.delete(
   '/rules/:id',
   resolveSupplier,
   param('id').notEmpty().withMessage('id is required'),
   validationMiddleware,
-  asyncHandler(deleteProductRule),
+  asyncHandler(deleteFeedbackRule),
 );
 
 export default router;

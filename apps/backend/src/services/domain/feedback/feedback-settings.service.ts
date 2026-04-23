@@ -36,12 +36,13 @@ export interface GoodsItem {
   thumbnail: string | null;
 }
 
-export interface FeedbackProductRuleInput {
+export interface FeedbackRuleInput {
   nmIds?: number[];
   minRating?: number | null;
   maxRating?: number | null;
-  excludeKeywords?: string[];
-  requireApproval?: boolean;
+  keywords?: string[];
+  instruction?: string | null;
+  autoAnswer?: boolean;
   enabled?: boolean;
 }
 
@@ -307,36 +308,35 @@ export class FeedbackSettingsService {
   /**
    * Get all product rules for a user + supplier.
    */
-  async getProductRules(userId: number, supplierId: string) {
-    return prisma.feedbackProductRule.findMany({
+  async getFeedbackRules(userId: number, supplierId: string) {
+    return prisma.feedbackRule.findMany({
       where: { userId, supplierId },
     });
   }
 
   /**
-   * Create a new product rule. Validates no nmId overlap with existing rules.
+   * Create a new feedback rule.
    */
-  async createRule(
+  async createFeedbackRule(
     userId: number,
     supplierId: string,
-    input: FeedbackProductRuleInput & { nmIds: number[] },
+    input: FeedbackRuleInput & { nmIds: number[] },
   ) {
     const uniqueNmIds = [...new Set(input.nmIds)];
     if (uniqueNmIds.length === 0) {
       throw new Error('Rule must contain at least one product');
     }
 
-    await this._ensureNoOverlap(userId, supplierId, uniqueNmIds);
-
-    const rule = await prisma.feedbackProductRule.create({
+    const rule = await prisma.feedbackRule.create({
       data: {
         userId,
         supplierId,
         nmIds: uniqueNmIds,
         minRating: input.minRating ?? null,
         maxRating: input.maxRating ?? null,
-        excludeKeywords: input.excludeKeywords ?? [],
-        requireApproval: input.requireApproval ?? false,
+        keywords: input.keywords ?? [],
+        instruction: input.instruction ?? null,
+        autoAnswer: input.autoAnswer ?? true,
         enabled: input.enabled ?? true,
       },
     });
@@ -348,15 +348,14 @@ export class FeedbackSettingsService {
   }
 
   /**
-   * Update an existing product rule by ID.
-   * Validates no nmId overlap with other rules (excluding self).
+   * Update an existing feedback rule by ID.
    */
-  async updateRule(
+  async updateFeedbackRule(
     id: string,
     userId: number,
-    input: FeedbackProductRuleInput,
+    input: FeedbackRuleInput,
   ) {
-    const existing = await prisma.feedbackProductRule.findFirst({
+    const existing = await prisma.feedbackRule.findFirst({
       where: { id, userId },
     });
     if (!existing) {
@@ -367,8 +366,9 @@ export class FeedbackSettingsService {
       nmIds: number[];
       minRating: number | null;
       maxRating: number | null;
-      excludeKeywords: string[];
-      requireApproval: boolean;
+      keywords: string[];
+      instruction: string | null;
+      autoAnswer: boolean;
       enabled: boolean;
     }> = {};
 
@@ -377,16 +377,16 @@ export class FeedbackSettingsService {
       if (uniqueNmIds.length === 0) {
         throw new Error('Rule must contain at least one product');
       }
-      await this._ensureNoOverlap(userId, existing.supplierId, uniqueNmIds, id);
       updateData.nmIds = uniqueNmIds;
     }
     if (input.minRating !== undefined) updateData.minRating = input.minRating ?? null;
     if (input.maxRating !== undefined) updateData.maxRating = input.maxRating ?? null;
-    if (input.excludeKeywords !== undefined) updateData.excludeKeywords = input.excludeKeywords ?? [];
-    if (input.requireApproval !== undefined) updateData.requireApproval = input.requireApproval;
+    if (input.keywords !== undefined) updateData.keywords = input.keywords ?? [];
+    if (input.instruction !== undefined) updateData.instruction = input.instruction ?? null;
+    if (input.autoAnswer !== undefined) updateData.autoAnswer = input.autoAnswer;
     if (input.enabled !== undefined) updateData.enabled = input.enabled;
 
-    const rule = await prisma.feedbackProductRule.update({
+    const rule = await prisma.feedbackRule.update({
       where: { id },
       data: updateData,
     });
@@ -398,8 +398,8 @@ export class FeedbackSettingsService {
   /**
    * Delete a product rule by ID.
    */
-  async deleteRule(id: string, userId: number) {
-    const result = await prisma.feedbackProductRule.deleteMany({
+  async deleteFeedbackRule(id: string, userId: number) {
+    const result = await prisma.feedbackRule.deleteMany({
       where: { id, userId },
     });
 
@@ -410,38 +410,7 @@ export class FeedbackSettingsService {
     logger.info(`Deleted rule ${id} for user ${userId}`);
   }
 
-  /**
-   * Check that none of the given nmIds already belong to another rule.
-   */
-  private async _ensureNoOverlap(
-    userId: number,
-    supplierId: string,
-    nmIds: number[],
-    excludeRuleId?: string,
-  ): Promise<void> {
-    const conflicts = await prisma.feedbackProductRule.findMany({
-      where: {
-        userId,
-        supplierId,
-        nmIds: { hasSome: nmIds },
-        ...(excludeRuleId ? { id: { not: excludeRuleId } } : {}),
-      },
-    });
 
-    if (conflicts.length > 0) {
-      const conflictingNmIds = new Set<number>();
-      for (const rule of conflicts) {
-        for (const nmId of rule.nmIds) {
-          if (nmIds.includes(nmId)) {
-            conflictingNmIds.add(nmId);
-          }
-        }
-      }
-      throw new Error(
-        `Some products are already in other rules: [${Array.from(conflictingNmIds).join(', ')}]`,
-      );
-    }
-  }
 }
 
 export const feedbackSettingsService = new FeedbackSettingsService();

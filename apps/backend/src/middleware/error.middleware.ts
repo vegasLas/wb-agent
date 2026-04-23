@@ -99,12 +99,13 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   // Default: Internal server error
+  console.error('[INTERNAL_ERROR]', err.message);
+  console.error('[INTERNAL_ERROR] stack:', err.stack);
   res.status(500).json({
     success: false,
-    error:
-      env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    error: err.message,
     code: 'INTERNAL_ERROR',
-    ...(env.NODE_ENV === 'development' && { stack: err.stack }),
+    stack: err.stack,
   });
 };
 

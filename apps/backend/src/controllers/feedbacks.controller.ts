@@ -16,7 +16,7 @@ import { successResponse } from '@/utils/response';
 import type { FeedbackItem } from '@/types/wb';
 import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
-import type { FeedbackProductRuleInput } from '@/services/domain/feedback/feedback-settings.service';
+import type { FeedbackRuleInput } from '@/services/domain/feedback/feedback-settings.service';
 
 function getUserId(req: Request): number {
   return req.user!.id;
@@ -418,32 +418,33 @@ export const fetchGoodsByCategory = async (req: Request, res: Response): Promise
 /**
  * GET /api/v1/feedbacks/rules
  */
-export const fetchProductRules = async (req: Request, res: Response): Promise<void> => {
+export const fetchFeedbackRules = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
-  logger.info(`Fetching product rules for user ${userId}, supplier ${supplierId}`);
+  logger.info(`Fetching feedback rules for user ${userId}, supplier ${supplierId}`);
 
-  const rules = await feedbackSettingsService.getProductRules(userId, supplierId);
+  const rules = await feedbackSettingsService.getFeedbackRules(userId, supplierId);
   successResponse(res, { rules });
 };
 
 /**
  * POST /api/v1/feedbacks/rules
  */
-export const createProductRule = async (req: Request, res: Response): Promise<void> => {
+export const createFeedbackRule = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const body = req.body as FeedbackProductRuleInput & { nmIds: number[] };
+  const body = req.body as FeedbackRuleInput & { nmIds: number[] };
 
-  logger.info(`Creating product rule for user ${userId}, supplier ${supplierId}`);
+  logger.info(`Creating feedback rule for user ${userId}, supplier ${supplierId}`);
 
-  const rule = await feedbackSettingsService.createRule(userId, supplierId, {
+  const rule = await feedbackSettingsService.createFeedbackRule(userId, supplierId, {
     nmIds: body.nmIds,
     minRating: body.minRating,
     maxRating: body.maxRating,
-    excludeKeywords: body.excludeKeywords,
-    requireApproval: body.requireApproval,
+    keywords: body.keywords,
+    instruction: body.instruction,
+    autoAnswer: body.autoAnswer,
     enabled: body.enabled,
   });
   successResponse(res, { rule });
@@ -452,23 +453,24 @@ export const createProductRule = async (req: Request, res: Response): Promise<vo
 /**
  * PUT /api/v1/feedbacks/rules/:id
  */
-export const updateProductRule = async (req: Request, res: Response): Promise<void> => {
+export const updateFeedbackRule = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const { id } = req.params;
-  const body = req.body as FeedbackProductRuleInput;
+  const body = req.body as FeedbackRuleInput;
 
   if (!id) {
     throw ApiError.badRequest('id is required');
   }
 
-  logger.info(`Updating product rule ${id} for user ${userId}`);
+  logger.info(`Updating feedback rule ${id} for user ${userId}`);
 
-  const rule = await feedbackSettingsService.updateRule(id, userId, {
+  const rule = await feedbackSettingsService.updateFeedbackRule(id, userId, {
     nmIds: body.nmIds,
     minRating: body.minRating,
     maxRating: body.maxRating,
-    excludeKeywords: body.excludeKeywords,
-    requireApproval: body.requireApproval,
+    keywords: body.keywords,
+    instruction: body.instruction,
+    autoAnswer: body.autoAnswer,
     enabled: body.enabled,
   });
   successResponse(res, { rule });
@@ -477,7 +479,7 @@ export const updateProductRule = async (req: Request, res: Response): Promise<vo
 /**
  * DELETE /api/v1/feedbacks/rules/:id
  */
-export const deleteProductRule = async (req: Request, res: Response): Promise<void> => {
+export const deleteFeedbackRule = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const { id } = req.params;
 
@@ -485,9 +487,9 @@ export const deleteProductRule = async (req: Request, res: Response): Promise<vo
     throw ApiError.badRequest('id is required');
   }
 
-  logger.info(`Deleting product rule ${id} for user ${userId}`);
+  logger.info(`Deleting feedback rule ${id} for user ${userId}`);
 
-  await feedbackSettingsService.deleteRule(id, userId);
+  await feedbackSettingsService.deleteFeedbackRule(id, userId);
   successResponse(res, { deleted: true });
 };
 
@@ -614,8 +616,8 @@ export default {
   updateProductFeedbackSetting,
   fetchFeedbackTemplates,
   fetchGoodsByCategory,
-  fetchProductRules,
-  createProductRule,
-  updateProductRule,
-  deleteProductRule,
+  fetchFeedbackRules,
+  createFeedbackRule,
+  updateFeedbackRule,
+  deleteFeedbackRule,
 };
