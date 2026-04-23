@@ -136,27 +136,27 @@
         <label class="text-sm font-medium">Режим</label>
         <div class="flex gap-2">
           <Button
-            :outlined="form.autoAnswer !== true"
+            :outlined="form.mode !== 'skip'"
             label="Пропускать"
             size="small"
             class="flex-1"
-            @click="form.autoAnswer = true"
+            @click="form.mode = 'skip'"
           />
           <Button
-            :outlined="form.autoAnswer !== false"
+            :outlined="form.mode !== 'instruction'"
             label="Инструкция"
             size="small"
             class="flex-1"
-            @click="form.autoAnswer = false"
+            @click="form.mode = 'instruction'"
           />
         </div>
         <p class="text-xs text-surface-500">
-          {{ form.autoAnswer ? 'Не отвечать на отзывы, попадающие под условия' : 'Добавить инструкцию к ответу AI для отзывов под условия' }}
+          {{ form.mode === 'skip' ? 'Не отвечать на отзывы, попадающие под условия' : 'Добавить инструкцию к ответу AI для отзывов под условия' }}
         </p>
       </div>
 
       <!-- Instruction (only in instruction mode) -->
-      <div v-if="form.autoAnswer === false" class="space-y-1">
+      <div v-if="form.mode === 'instruction'" class="space-y-1">
         <label class="text-sm font-medium">
           Инструкция для AI <span class="text-red-500">*</span>
         </label>
@@ -207,7 +207,7 @@ interface FormState {
   maxRating: number | null;
   keywords: string[];
   instruction: string;
-  autoAnswer: boolean;
+  mode: 'skip' | 'instruction';
   enabled: boolean;
 }
 
@@ -254,7 +254,7 @@ const defaultForm = (): FormState => ({
   maxRating: 5,
   keywords: [],
   instruction: '',
-  autoAnswer: true,
+  mode: 'skip',
   enabled: true,
 });
 
@@ -284,7 +284,7 @@ watch(
         maxRating: rule.maxRating ?? 5,
         keywords: [...rule.keywords],
         instruction: rule.instruction ?? '',
-        autoAnswer: rule.autoAnswer,
+        mode: rule.mode,
         enabled: rule.enabled,
       };
       keywordsRaw.value = rule.keywords.join(', ');
@@ -317,7 +317,7 @@ const validationErrors = computed<Record<string, string>>(() => {
     e.minRating = 'Мин. рейтинг не может быть больше макс.';
   }
 
-  if (form.value.autoAnswer === false && !form.value.instruction.trim()) {
+  if (form.value.mode === 'instruction' && !form.value.instruction.trim()) {
     e.instruction = 'Введите инструкцию для AI';
   }
 
@@ -338,7 +338,7 @@ function submit() {
     maxRating,
     keywords: keywordTags.value,
     instruction: form.value.instruction.trim() || null,
-    autoAnswer: form.value.autoAnswer,
+    mode: form.value.mode,
     enabled: form.value.enabled,
   };
 

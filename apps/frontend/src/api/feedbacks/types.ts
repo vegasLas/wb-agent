@@ -172,7 +172,7 @@ export interface FeedbackRule {
   maxRating: number | null;
   keywords: string[];
   instruction: string | null;
-  autoAnswer: boolean;
+  mode: 'skip' | 'instruction';
   enabled: boolean;
 }
 
@@ -182,6 +182,6 @@ export interface CreateFeedbackRuleInput {
   maxRating?: number | null;
   keywords?: string[];
   instruction?: string | null;
-  autoAnswer?: boolean;
+  mode?: 'skip' | 'instruction';
   enabled?: boolean;
 }

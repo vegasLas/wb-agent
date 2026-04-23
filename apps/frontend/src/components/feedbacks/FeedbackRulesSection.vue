@@ -108,12 +108,12 @@
                   <div class="flex flex-wrap items-center gap-2">
                     <span
                       class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md font-medium"
-                      :class="rule.autoAnswer
+                      :class="rule.mode === 'skip'
                         ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                         : 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400'"
                     >
-                      <i class="pi text-[10px]" :class="rule.autoAnswer ? 'pi-ban' : 'pi-pen-to-square'" />
-                      {{ rule.autoAnswer ? 'Пропуск' : 'Инструкция' }}
+                      <i class="pi text-[10px]" :class="rule.mode === 'skip' ? 'pi-ban' : 'pi-pen-to-square'" />
+                      {{ rule.mode === 'skip' ? 'Пропуск' : 'Инструкция' }}
                     </span>
                     <span
                       v-if="rule.minRating !== null"
