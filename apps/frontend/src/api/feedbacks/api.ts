@@ -13,8 +13,8 @@ import type {
   ProcessResult,
   FetchFeedbacksParams,
   GoodsItem,
-  FeedbackProductRule,
-  CreateProductRuleInput,
+  FeedbackRule,
+  CreateFeedbackRuleInput,
 } from './types';
 
 /**
@@ -267,8 +267,8 @@ export const feedbacksAPI = {
    * GET /api/v1/feedbacks/rules
    * Get all product rules
    */
-  async fetchProductRules(): Promise<FeedbackProductRule[]> {
-    const response = await apiClient.get<{ data: { rules: FeedbackProductRule[] } }>(
+  async fetchFeedbackRules(): Promise<FeedbackRule[]> {
+    const response = await apiClient.get<{ data: { rules: FeedbackRule[] } }>(
       '/feedbacks/rules',
     );
     return response.data.data.rules;
@@ -276,10 +276,10 @@ export const feedbacksAPI = {
 
   /**
    * POST /api/v1/feedbacks/rules
-   * Create a product rule
+   * Create a feedback rule
    */
-  async createProductRule(input: CreateProductRuleInput): Promise<FeedbackProductRule> {
-    const response = await apiClient.post<{ data: { rule: FeedbackProductRule } }>(
+  async createFeedbackRule(input: CreateFeedbackRuleInput): Promise<FeedbackRule> {
+    const response = await apiClient.post<{ data: { rule: FeedbackRule } }>(
       '/feedbacks/rules',
       input,
     );
@@ -288,13 +288,13 @@ export const feedbacksAPI = {
 
   /**
    * PUT /api/v1/feedbacks/rules/:id
-   * Update a product rule
+   * Update a feedback rule
    */
-  async updateProductRule(
+  async updateFeedbackRule(
     id: string,
-    input: Partial<CreateProductRuleInput>,
-  ): Promise<FeedbackProductRule> {
-    const response = await apiClient.put<{ data: { rule: FeedbackProductRule } }>(
+    input: Partial<CreateFeedbackRuleInput>,
+  ): Promise<FeedbackRule> {
+    const response = await apiClient.put<{ data: { rule: FeedbackRule } }>(
       `/feedbacks/rules/${id}`,
       input,
     );
@@ -303,9 +303,9 @@ export const feedbacksAPI = {
 
   /**
    * DELETE /api/v1/feedbacks/rules/:id
-   * Delete a product rule
+   * Delete a feedback rule
    */
-  async deleteProductRule(id: string): Promise<void> {
+  async deleteFeedbackRule(id: string): Promise<void> {
     await apiClient.delete(`/feedbacks/rules/${id}`);
   },
 };

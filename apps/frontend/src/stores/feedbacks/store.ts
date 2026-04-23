@@ -9,11 +9,11 @@ import type {
   FeedbackProductSetting,
   FeedbackTab,
   GeneratedAnswer,
-  FeedbackProductRule,
+  FeedbackRule,
   RejectedAnswerContext,
   FeedbackGoodsGroup,
   GoodsItem,
-  CreateProductRuleInput,
+  CreateFeedbackRuleInput,
 } from './types';
 
 export const useFeedbacksStore = defineStore('feedbacks', () => {
@@ -25,7 +25,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const productStats = ref<Record<number, { postedCount: number; rejectedCount: number }>>({});
   const settings = ref<FeedbackSettings | null>(null);
   const productSettings = ref<FeedbackProductSetting[]>([]);
-  const productRules = ref<FeedbackProductRule[]>([]);
+  const feedbackRules = ref<FeedbackRule[]>([]);
   const rejectedAnswers = ref<RejectedAnswerContext[]>([]);
   const goodsGroups = ref<FeedbackGoodsGroup[]>([]);
   const goodsByCategory = ref<Record<string, GoodsItem[]>>({});
@@ -69,8 +69,8 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     return setting?.autoAnswerEnabled ?? false;
   }
 
-  function getProductRule(nmId: number): FeedbackProductRule | undefined {
-    return productRules.value.find((r) => r.nmId === nmId);
+  function getFeedbackRule(nmId: number): FeedbackRule | undefined {
+    return feedbackRules.value.find((r) => r.nmIds.includes(nmId));
   }
 
   // Actions
@@ -414,7 +414,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   async function fetchRules() {
     rulesLoading.value = true;
     try {
-      productRules.value = await feedbacksAPI.fetchProductRules();
+      feedbackRules.value = await feedbacksAPI.fetchFeedbackRules();
     } catch (err: unknown) {
       console.error('Failed to fetch product rules:', err);
     } finally {
@@ -422,45 +422,45 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function createRule(input: CreateProductRuleInput) {
+  async function createFeedbackRule(input: CreateFeedbackRuleInput) {
     try {
-      const created = await feedbacksAPI.createProductRule(input);
-      productRules.value.push(created);
+      const created = await feedbacksAPI.createFeedbackRule(input);
+      feedbackRules.value.push(created);
       return created;
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : 'Failed to create product rule';
+        err instanceof Error ? err.message : 'Failed to create feedback rule';
       error.value = errorMsg;
       throw err;
     }
   }
 
-  async function updateRule(id: string, input: Partial<CreateProductRuleInput>) {
+  async function updateFeedbackRule(id: string, input: Partial<CreateFeedbackRuleInput>) {
     try {
-      const updated = await feedbacksAPI.updateProductRule(id, input);
-      const idx = productRules.value.findIndex((r) => r.id === id);
+      const updated = await feedbacksAPI.updateFeedbackRule(id, input);
+      const idx = feedbackRules.value.findIndex((r) => r.id === id);
       if (idx >= 0) {
-        productRules.value[idx] = updated;
+        feedbackRules.value[idx] = updated;
       }
       return updated;
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : 'Failed to update product rule';
+        err instanceof Error ? err.message : 'Failed to update feedback rule';
       error.value = errorMsg;
       throw err;
     }
   }
 
-  async function deleteRule(id: string) {
+  async function deleteFeedbackRule(id: string) {
     try {
-      await feedbacksAPI.deleteProductRule(id);
-      const idx = productRules.value.findIndex((r) => r.id === id);
+      await feedbacksAPI.deleteFeedbackRule(id);
+      const idx = feedbackRules.value.findIndex((r) => r.id === id);
       if (idx >= 0) {
-        productRules.value.splice(idx, 1);
+        feedbackRules.value.splice(idx, 1);
       }
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : 'Failed to delete product rule';
+        err instanceof Error ? err.message : 'Failed to delete feedback rule';
       error.value = errorMsg;
       throw err;
     }
@@ -489,7 +489,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     productStats: readonly(productStats),
     settings: readonly(settings),
     productSettings: readonly(productSettings),
-    productRules: readonly(productRules),
+    feedbackRules: readonly(feedbackRules),
     rejectedAnswers: readonly(rejectedAnswers),
     goodsGroups: readonly(goodsGroups),
     goodsByCategory: readonly(goodsByCategory),
@@ -530,12 +530,12 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     clearGeneratedAnswer,
     clearFeedbacks,
     getProductSetting,
-    getProductRule,
+    getFeedbackRule,
     removeFeedback,
     fetchRules,
-    createRule,
-    updateRule,
-    deleteRule,
+    createFeedbackRule,
+    updateFeedbackRule,
+    deleteFeedbackRule,
     fetchRejectedAnswers,
     updateRejectedNote,
     deleteRejectedAnswer,

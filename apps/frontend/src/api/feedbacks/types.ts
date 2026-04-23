@@ -163,23 +163,25 @@ export interface GoodsItem {
   thumbnail: string | null;
 }
 
-export interface FeedbackProductRule {
+export interface FeedbackRule {
   id: string;
   userId: number;
   supplierId: string;
   nmIds: number[];
   minRating: number | null;
   maxRating: number | null;
-  excludeKeywords: string[];
-  requireApproval: boolean;
+  keywords: string[];
+  instruction: string | null;
+  autoAnswer: boolean;
   enabled: boolean;
 }
 
-export interface CreateProductRuleInput {
+export interface CreateFeedbackRuleInput {
   nmIds: number[];
   minRating?: number | null;
   maxRating?: number | null;
-  excludeKeywords?: string[];
-  requireApproval?: boolean;
+  keywords?: string[];
+  instruction?: string | null;
+  autoAnswer?: boolean;
   enabled?: boolean;
 }
