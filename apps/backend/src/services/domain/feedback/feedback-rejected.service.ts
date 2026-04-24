@@ -22,17 +22,27 @@ export interface RejectedAnswerContext {
 
 const CATEGORY_RULES: Record<string, string> = {
   toys: 'Покупатель часто покупает товар не для себя, а для ребёнка. Не предполагай, что отзыв оставил конечный пользователь. Упоминай ребёнка/сын/дочь, если контекст подразумевает это.',
-  игрушки: 'Покупатель часто покупает товар не для себя, а для ребёнка. Не предполагай, что отзыв оставил конечный пользователь. Упоминай ребёнка/сын/дочь, если контекст подразумевает это.',
-  'детские товары': 'Покупатель часто покупает товар не для себя, а для ребёнка. Не предполагай, что отзыв оставил конечный пользователь. Упоминай ребёнка/сын/дочь, если контекст подразумевает это.',
-  clothes: 'Учитывай размер, посадку, материал. Покупатель оценивает товар по личному опыту ношения.',
-  одежда: 'Учитывай размер, посадку, материал. Покупатель оценивает товар по личному опыту ношения.',
-  cosmetics: 'Учитывай тип кожи, аллергические реакции, эффект от использования.',
-  косметика: 'Учитывай тип кожи, аллергические реакции, эффект от использования.',
-  shoes: 'Учитывай размер, комфорт, качество материалов. Покупатель носит товар сам.',
-  обувь: 'Учитывай размер, комфорт, качество материалов. Покупатель носит товар сам.',
+  игрушки:
+    'Покупатель часто покупает товар не для себя, а для ребёнка. Не предполагай, что отзыв оставил конечный пользователь. Упоминай ребёнка/сын/дочь, если контекст подразумевает это.',
+  'детские товары':
+    'Покупатель часто покупает товар не для себя, а для ребёнка. Не предполагай, что отзыв оставил конечный пользователь. Упоминай ребёнка/сын/дочь, если контекст подразумевает это.',
+  clothes:
+    'Учитывай размер, посадку, материал. Покупатель оценивает товар по личному опыту ношения.',
+  одежда:
+    'Учитывай размер, посадку, материал. Покупатель оценивает товар по личному опыту ношения.',
+  cosmetics:
+    'Учитывай тип кожи, аллергические реакции, эффект от использования.',
+  косметика:
+    'Учитывай тип кожи, аллергические реакции, эффект от использования.',
+  shoes:
+    'Учитывай размер, комфорт, качество материалов. Покупатель носит товар сам.',
+  обувь:
+    'Учитывай размер, комфорт, качество материалов. Покупатель носит товар сам.',
 };
 
-export function getCategoryRule(category: string | null | undefined): string | null {
+export function getCategoryRule(
+  category: string | null | undefined,
+): string | null {
   if (!category) return null;
   const normalized = category.toLowerCase().trim();
   return CATEGORY_RULES[normalized] || null;
@@ -74,8 +84,8 @@ export class FeedbackRejectedService {
       );
     } catch (error) {
       logger.error(
-        `Failed to save rejected answer for feedback ${params.feedbackId}:`
-        , error,
+        `Failed to save rejected answer for feedback ${params.feedbackId}:`,
+        error,
       );
       throw error;
     }
@@ -95,7 +105,11 @@ export class FeedbackRejectedService {
       let targetNmIds: number[] | undefined;
 
       if (nmId !== undefined) {
-        const related = await feedbackGoodsGroupService.getGroupNmIds(userId, supplierId, nmId);
+        const related = await feedbackGoodsGroupService.getGroupNmIds(
+          userId,
+          supplierId,
+          nmId,
+        );
         targetNmIds = [nmId, ...related];
       }
 
@@ -121,8 +135,8 @@ export class FeedbackRejectedService {
       }));
     } catch (error) {
       logger.error(
-        `Failed to fetch recent rejected answers for user ${userId}:`
-        , error,
+        `Failed to fetch recent rejected answers for user ${userId}:`,
+        error,
       );
       return [];
     }
@@ -140,7 +154,9 @@ export class FeedbackRejectedService {
       await prisma.feedbackRejectedAnswer.updateMany({
         where: { id, userId },
         data: {
-          ...(updates.userFeedback !== undefined && { userFeedback: updates.userFeedback }),
+          ...(updates.userFeedback !== undefined && {
+            userFeedback: updates.userFeedback,
+          }),
         },
       });
       logger.info(`Updated rejected answer ${id} for user ${userId}`);

@@ -8,6 +8,7 @@
 
 import { prisma } from '@/config/database';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
+import { feedbackGoodsGroupService } from './feedback-goods-group.service';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('FeedbackExample');
@@ -114,6 +115,84 @@ export class FeedbackExampleService {
   }
 
   /**
+   * Get recent posted answers for a product AND all products in the same group.
+   * Falls back to WB API if DB results are below threshold.
+   */
+  async getRecentPostedAnswersForGroup(
+    userId: number,
+    supplierId: string,
+    nmId: number,
+    limit = 10,
+    valuation?: number,
+  ): Promise<FeedbackExample[]> {
+    try {
+      const related = await feedbackGoodsGroupService.getGroupNmIds(
+        userId,
+        supplierId,
+        nmId,
+      );
+      const targetNmIds = [nmId, ...related];
+
+      const rows = await prisma.feedbackAutoAnswer.findMany({
+        where: {
+          userId,
+          supplierId,
+          nmId: { in: targetNmIds },
+          status: 'POSTED',
+          ...(valuation !== undefined ? { valuation } : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+
+      const examples: FeedbackExample[] = rows.map((r) => ({
+        feedbackText: r.feedbackText,
+        answerText: r.answerText,
+        valuation: r.valuation,
+        feedbackTextPros: r.feedbackTextPros,
+        feedbackTextCons: r.feedbackTextCons,
+      }));
+
+      if (examples.length < 3) {
+        logger.info(
+          `Group DB examples insufficient for nmId ${nmId} valuation=${valuation ?? 'any'} (${examples.length} < 3), trying WB API`,
+        );
+        // Try WB API for the primary nmId as fallback
+        try {
+          const wbAnswers = await this.fetchWbAnswersByNmId(
+            userId,
+            nmId,
+            3,
+            valuation,
+          );
+          const seenTexts = new Set(examples.map((e) => e.feedbackText));
+          for (const wb of wbAnswers) {
+            if (seenTexts.has(wb.feedbackText)) continue;
+            examples.push({
+              feedbackText: wb.feedbackText,
+              answerText: wb.answerText,
+              valuation: wb.valuation,
+              feedbackTextPros: wb.feedbackTextPros,
+              feedbackTextCons: wb.feedbackTextCons,
+            });
+            if (examples.length >= limit) break;
+          }
+        } catch (err) {
+          logger.warn(`WB API fallback failed for nmId ${nmId}:`, err);
+        }
+      }
+
+      return examples.slice(0, limit);
+    } catch (error) {
+      logger.error(
+        `Error fetching group posted answers for nmId ${nmId}:`,
+        error,
+      );
+      return [];
+    }
+  }
+
+  /**
    * Get recent answers with fallback to WB API when our own cache is insufficient.
    * Used for single-feedback generation.
    */
@@ -207,14 +286,19 @@ export class FeedbackExampleService {
     let pagesFetched = 0;
     const maxPages = 3;
 
-    while (hasMore && wbAnswers.length < targetCount && pagesFetched < maxPages) {
+    while (
+      hasMore &&
+      wbAnswers.length < targetCount &&
+      pagesFetched < maxPages
+    ) {
       const data = await wbFeedbackService.getFeedbacks({
         userId,
         isAnswered: true,
         searchText: nmId.toString(),
         limit: 100,
         cursor,
-        valuations: targetValuation !== undefined ? [targetValuation] : undefined,
+        valuations:
+          targetValuation !== undefined ? [targetValuation] : undefined,
       });
 
       pagesFetched++;
@@ -272,7 +356,11 @@ export class FeedbackExampleService {
       let pagesFetched = 0;
       const maxPages = 3;
 
-      while (hasMore && wbAnswers.length < fallbackThreshold && pagesFetched < maxPages) {
+      while (
+        hasMore &&
+        wbAnswers.length < fallbackThreshold &&
+        pagesFetched < maxPages
+      ) {
         const data = await wbFeedbackService.getFeedbacks({
           userId,
           isAnswered: true,

@@ -9,7 +9,7 @@ import { resolveSupplier, asyncHandler } from '@/middleware/feedback.middleware'
 import { validationMiddleware } from '@/middleware/error.middleware';
 import {
   fetchFeedbacks,
-  countUnansweredFeedbacks,
+  fetchUnansweredSummary,
   answerAllFeedbacks,
   generateFeedbackAnswer,
   acceptFeedbackAnswer,
@@ -39,8 +39,15 @@ import {
 const router = Router();
 
 router.get('/', resolveSupplier, asyncHandler(fetchFeedbacks));
-router.get('/count-unanswered', asyncHandler(countUnansweredFeedbacks));
-router.post('/answer-all', resolveSupplier, asyncHandler(answerAllFeedbacks));
+router.get('/unanswered-summary', resolveSupplier, asyncHandler(fetchUnansweredSummary));
+router.post(
+  '/answer-all',
+  resolveSupplier,
+  body('nmIds').isArray({ min: 1 }).withMessage('nmIds must be a non-empty array'),
+  body('nmIds.*').isInt().withMessage('Each nmId must be an integer'),
+  validationMiddleware,
+  asyncHandler(answerAllFeedbacks),
+);
 router.post('/generate', resolveSupplier, asyncHandler(generateFeedbackAnswer));
 router.post('/accept', resolveSupplier, asyncHandler(acceptFeedbackAnswer));
 router.post('/reject', resolveSupplier, asyncHandler(rejectFeedbackAnswer));

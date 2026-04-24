@@ -33,12 +33,31 @@ export class FeedbackPromptService {
     templates: FeedbackTemplate[],
     rejectedAnswers: RejectedAnswerContext[] = [],
     feedbackRules?: FeedbackRule[],
+    groupExamples?: FeedbackExample[],
   ): Promise<string> {
     const productInfo = feedback.productInfo;
     const feedbackInfo = feedback.feedbackInfo;
 
+    // Combine group-specific examples (priority) with global examples
+    const combinedExamples: FeedbackExample[] = [];
+    const seenTexts = new Set<string>();
+
+    if (groupExamples && groupExamples.length > 0) {
+      for (const ex of groupExamples) {
+        if (seenTexts.has(ex.feedbackText)) continue;
+        seenTexts.add(ex.feedbackText);
+        combinedExamples.push(ex);
+      }
+    }
+
+    for (const ex of recentAnswers) {
+      if (seenTexts.has(ex.feedbackText)) continue;
+      seenTexts.add(ex.feedbackText);
+      combinedExamples.push(ex);
+    }
+
     const recentAnswersContext = this.buildExamplesContext(
-      recentAnswers.slice(0, 10),
+      combinedExamples.slice(0, 10),
     );
     const templatesContext = this.buildTemplatesContext(templates);
     const mediaContext = this.buildMediaContext(feedbackInfo);
@@ -60,6 +79,7 @@ export class FeedbackPromptService {
       userFeedbackContext,
       ruleContext,
       instructionContext,
+      hasGroupExamples: !!(groupExamples && groupExamples.length > 0),
     });
     try {
       const { text } = await generateText({
@@ -166,7 +186,12 @@ export class FeedbackPromptService {
     userFeedbackContext: string;
     ruleContext: string;
     instructionContext: string;
+    hasGroupExamples: boolean;
   }): string {
+    const groupNote = params.hasGroupExamples
+      ? '*(examples include answers from related products in the same group)*\n'
+      : '';
+
     return `You are a professional review manager for the Wildberries marketplace.
 Your task is to write a personalized, warm, and professional response to a customer review.
 Respond in Russian language only.
@@ -185,7 +210,7 @@ CUSTOMER REVIEW:
 
 ${params.instructionContext}${params.userFeedbackContext}
 EXAMPLE ANSWERS FOR ${params.valuation}/5 RATED REVIEWS (use as tone and style reference):
-${params.recentAnswersContext}${params.rejectedContext}${params.ruleContext}
+${groupNote}${params.recentAnswersContext}${params.rejectedContext}${params.ruleContext}
 RULES:
 1. Address the customer by name (${params.feedbackInfo.userName}).
 2. Thank them for the purchase and the review.

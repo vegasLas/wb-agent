@@ -8,6 +8,7 @@ import { prisma } from '@/config/database';
 import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
 import { feedbackPromptService } from './feedback-prompt.service';
 import { feedbackExampleService } from './feedback-example.service';
+import { feedbackGoodsGroupService } from './feedback-goods-group.service';
 import {
   feedbackRejectedService,
   RejectedAnswerContext,
@@ -54,35 +55,14 @@ function doesRuleApply(
 
 export class FeedbackReviewService {
   /**
-   * Count total unanswered feedbacks by fetching all pages
-   */
-  async countUnansweredFeedbacks(userId: number): Promise<number> {
-    try {
-      const [answeredRaw, unansweredRaw] = await Promise.all([
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
-      ]);
-      // Merge: answered overwrites unanswered to avoid stale data from WB API
-      const merged = new Map<string, (typeof answeredRaw)[0]>();
-      for (const f of unansweredRaw) merged.set(f.id, f);
-      for (const f of answeredRaw) merged.set(f.id, f);
-      return Array.from(merged.values()).filter((f) => !f.answer).length;
-    } catch (error) {
-      logger.error(
-        `Error counting unanswered feedbacks for user ${userId}:`,
-        error,
-      );
-      throw error;
-    }
-  }
-
-  /**
    * Process all unanswered feedbacks for a user + supplier
-   * Used by both cron job and manual "Answer All" button
+   * Used by both cron job and manual "Answer All" button.
+   * When nmIds is provided, only feedbacks for those nmIds are processed.
    */
   async processUnansweredFeedbacks(
     userId: number,
     supplierId: string,
+    nmIds?: number[],
   ): Promise<ProcessResult> {
     const result: ProcessResult = {
       processed: 0,
@@ -112,9 +92,17 @@ export class FeedbackReviewService {
         wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
       ]);
 
-      const unansweredFeedbacks = [...answeredRaw, ...unansweredRaw].filter(
+      let unansweredFeedbacks = [...answeredRaw, ...unansweredRaw].filter(
         (f) => !f.answer,
       );
+
+      if (nmIds && nmIds.length > 0) {
+        const nmIdSet = new Set(nmIds);
+        unansweredFeedbacks = unansweredFeedbacks.filter(
+          (f) =>
+            f.productInfo?.wbArticle && nmIdSet.has(f.productInfo.wbArticle),
+        );
+      }
 
       if (unansweredFeedbacks.length === 0) {
         logger.info(
@@ -190,6 +178,19 @@ export class FeedbackReviewService {
           3,
         );
 
+      // Pre-load goods groups for group-aware examples
+      const groups = await feedbackGoodsGroupService.getGroups(
+        userId,
+        supplierId,
+      );
+      const nmIdToGroupNmIds = new Map<number, number[]>();
+      for (const group of groups) {
+        for (const nmId of group.nmIds) {
+          const related = group.nmIds.filter((id) => id !== nmId);
+          nmIdToGroupNmIds.set(nmId, related);
+        }
+      }
+
       for (const feedback of unansweredFeedbacks) {
         try {
           const nmId = feedback.productInfo?.wbArticle;
@@ -202,6 +203,19 @@ export class FeedbackReviewService {
               )
             : [];
 
+          // Fetch group-specific posted examples if this nmId belongs to a group
+          let groupExamples: FeedbackExample[] = [];
+          if (nmId && nmIdToGroupNmIds.has(nmId)) {
+            groupExamples =
+              await feedbackExampleService.getRecentPostedAnswersForGroup(
+                userId,
+                supplierId,
+                nmId,
+                10,
+                feedback.valuation,
+              );
+          }
+
           const processResult = await this.processSingleFeedback(
             userId,
             supplierId,
@@ -213,6 +227,7 @@ export class FeedbackReviewService {
             existingAutoAnswerMap,
             examplesByValuation,
             rejectedAnswers,
+            groupExamples,
           );
 
           result.processed++;
@@ -257,6 +272,7 @@ export class FeedbackReviewService {
     existingAutoAnswerMap: Map<string, { status: string }>,
     examplesByValuation: Map<number, FeedbackExample[]>,
     rejectedAnswers: RejectedAnswerContext[] = [],
+    groupExamples: FeedbackExample[] = [],
   ): Promise<'posted' | 'skipped' | 'pending'> {
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
@@ -328,6 +344,7 @@ export class FeedbackReviewService {
       templates,
       rejectedAnswers,
       matchingInstructionRules,
+      groupExamples,
     );
 
     if (!answerText) {
@@ -460,6 +477,15 @@ export class FeedbackReviewService {
         feedback.valuation,
       );
 
+    const groupExamples =
+      await feedbackExampleService.getRecentPostedAnswersForGroup(
+        userId,
+        supplierId,
+        nmId,
+        10,
+        feedback.valuation,
+      );
+
     const rejectedAnswers =
       await feedbackRejectedService.getRecentRejectedAnswers(
         userId,
@@ -509,6 +535,7 @@ export class FeedbackReviewService {
       templates,
       rejectedAnswers,
       matchingInstructionRules,
+      groupExamples,
     );
     await prisma.feedbackAutoAnswer.upsert({
       where: {

@@ -194,14 +194,90 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
 };
 
 /**
- * GET /api/v1/feedbacks/count-unanswered
+ * GET /api/v1/feedbacks/unanswered-summary
+ * Collect all feedbacks (answered + unanswered), filter by no answer,
+ * group by nmId, and enrich with DB stats (rejected / responses counts).
  */
-export const countUnansweredFeedbacks = async (req: Request, res: Response): Promise<void> => {
+export const fetchUnansweredSummary = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
-  logger.info(`Counting unanswered feedbacks for user ${userId}`);
 
-  const count = await feedbackReviewService.countUnansweredFeedbacks(userId);
-  successResponse(res, { count });
+  logger.info(`Fetching unanswered summary for user ${userId}`);
+
+  const [answeredRaw, unansweredRaw] = await Promise.all([
+    wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
+    wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
+  ]);
+
+  // Merge: answered overwrites unanswered to avoid stale data from WB API
+  const merged = new Map<string, FeedbackItem>();
+  for (const f of unansweredRaw) merged.set(f.id, f);
+  for (const f of answeredRaw) merged.set(f.id, f);
+
+  const unansweredFeedbacks = Array.from(merged.values()).filter((f) => !f.answer);
+
+  // Group by nmId
+  const groupMap = new Map<
+    number,
+    { nmId: number; vendorCode: string; count: number }
+  >();
+
+  for (const f of unansweredFeedbacks) {
+    const nmId = f.productInfo?.wbArticle;
+    if (!nmId) continue;
+    const existing = groupMap.get(nmId);
+    if (existing) {
+      existing.count++;
+    } else {
+      groupMap.set(nmId, {
+        nmId,
+        vendorCode: f.productInfo?.supplierArticle || '',
+        count: 1,
+      });
+    }
+  }
+
+  const groups = Array.from(groupMap.values());
+  const nmIds = groups.map((g) => g.nmId);
+
+  // Batch-fetch DB counts for all nmIds in parallel
+  const [rejectedCounts, responsesCounts] = await Promise.all([
+    prisma.feedbackRejectedAnswer.groupBy({
+      by: ['nmId'],
+      where: { userId, nmId: { in: nmIds } },
+      _count: { nmId: true },
+    }),
+    prisma.feedbackAutoAnswer.groupBy({
+      by: ['nmId'],
+      where: { userId, nmId: { in: nmIds } },
+      _count: { nmId: true },
+    }),
+  ]);
+
+  const rejectedMap = new Map<number, number>();
+  for (const r of rejectedCounts) {
+    rejectedMap.set(r.nmId, r._count.nmId);
+  }
+
+  const responsesMap = new Map<number, number>();
+  for (const r of responsesCounts) {
+    responsesMap.set(r.nmId, r._count.nmId);
+  }
+
+  const enrichedGroups = groups.map((g) => {
+    const rejectedCount = rejectedMap.get(g.nmId) || 0;
+    const responsesCount = responsesMap.get(g.nmId) || 0;
+    return {
+      ...g,
+      rejectedCount,
+      responsesCount,
+      hasEnoughHistory: rejectedCount >= 5 || responsesCount >= 10,
+    };
+  });
+
+  successResponse(res, {
+    totalCount: unansweredFeedbacks.length,
+    groups: enrichedGroups,
+  });
 };
 
 /**
@@ -210,10 +286,11 @@ export const countUnansweredFeedbacks = async (req: Request, res: Response): Pro
 export const answerAllFeedbacks = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
+  const { nmIds } = req.body as { nmIds: number[] };
 
-  logger.info(`Answering all feedbacks for user ${userId}, supplier ${supplierId}`);
+  logger.info(`Answering feedbacks for user ${userId}, supplier ${supplierId}, nmIds=[${nmIds.join(', ')}]`);
 
-  const result = await feedbackReviewService.processUnansweredFeedbacks(userId, supplierId);
+  const result = await feedbackReviewService.processUnansweredFeedbacks(userId, supplierId, nmIds);
   successResponse(res, result);
 };
 
@@ -607,7 +684,7 @@ export const removeNmIdFromGroup = async (req: Request, res: Response): Promise<
 
 export default {
   fetchFeedbacks,
-  countUnansweredFeedbacks,
+  fetchUnansweredSummary,
   answerAllFeedbacks,
   generateFeedbackAnswer,
   acceptFeedbackAnswer,
