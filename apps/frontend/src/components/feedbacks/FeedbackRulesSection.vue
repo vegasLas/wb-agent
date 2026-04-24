@@ -24,148 +24,124 @@
       message="Нет правил. Нажмите 'Добавить правило' чтобы создать."
     />
 
-    <!-- Rules Card -->
-    <Card v-else>
-      <template #content>
-        <div class="overflow-x-auto -mx-3 -my-2">
-          <table class="w-full">
-            <thead>
-              <tr class="text-left">
-                <th class="pb-3 pl-5 pr-2 text-xs font-semibold text-surface-400 uppercase tracking-wider">
-                  Статус
-                </th>
-                <th class="pb-3 px-2 text-xs font-semibold text-surface-400 uppercase tracking-wider">
-                  Товары
-                </th>
-                <th class="pb-3 px-2 text-xs font-semibold text-surface-400 uppercase tracking-wider">
-                  Режим / Условия
-                </th>
-                <th class="pb-3 px-2 pr-5 text-xs font-semibold text-surface-400 uppercase tracking-wider text-right">
-                  Действия
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(rule, index) in feedbackRules"
-                :key="rule.id"
-                class="group transition-all duration-200 ease-out border-t border-surface-100 dark:border-surface-800"
-                :class="[
-                  !rule.enabled && 'opacity-55'
-                ]"
+    <DataTable
+      v-else
+      :value="feedbackRules"
+      striped-rows
+      class="p-datatable-sm"
+      :row-class="(data) => !data.enabled ? 'opacity-55' : ''"
+    >
+      <Column header="Статус" style="width: 160px">
+        <template #body="{ data }">
+          <div class="flex items-center gap-2">
+            <ToggleSwitch
+              :model-value="data.enabled"
+              @update:model-value="(val: boolean) => $emit('update-rule', data.id, { enabled: val })"
+            />
+            <span
+              class="text-xs font-medium transition-colors duration-300"
+              :class="data.enabled ? 'text-emerald-500' : 'text-surface-400'"
+            >
+              {{ data.enabled ? 'Активно' : 'Выключено' }}
+            </span>
+          </div>
+        </template>
+      </Column>
+
+      <Column header="Товары" style="min-width: 200px">
+        <template #body="{ data }">
+          <div class="flex items-center gap-2 flex-wrap">
+            <div
+              v-for="nmId in data.nmIds.slice(0, 3)"
+              :key="nmId"
+              class="flex items-center gap-1.5"
+            >
+              <img
+                v-if="getGoods(nmId)?.thumbnail"
+                :src="getGoods(nmId)!.thumbnail"
+                alt=""
+                class="w-8 h-8 object-cover rounded-md shadow-sm"
+              />
+              <div
+                v-else
+                class="w-8 h-8 bg-surface-100 dark:bg-surface-700 rounded-md flex items-center justify-center"
               >
-                <!-- Status / Toggle -->
-                <td class="py-4 pl-5 pr-2 align-middle">
-                  <div class="flex items-center gap-2">
-                    <ToggleSwitch
-                      :model-value="rule.enabled"
-                      @update:model-value="(val) => $emit('update-rule', rule.id, { enabled: val })"
-                    />
-                    <span
-                      class="text-xs font-medium transition-colors duration-300"
-                      :class="rule.enabled ? 'text-emerald-500' : 'text-surface-400'"
-                    >
-                      {{ rule.enabled ? 'Активно' : 'Выключено' }}
-                    </span>
-                  </div>
-                </td>
+                <i class="pi pi-image text-surface-300 text-xs" />
+              </div>
+              <span class="text-xs text-surface-600 dark:text-surface-300 font-medium">
+                {{ getGoods(nmId)?.vendorCode ?? nmId }}
+              </span>
+            </div>
+            <span
+              v-if="data.nmIds.length > 3"
+              class="text-xs text-surface-400 bg-surface-100 dark:bg-surface-700 px-2 py-0.5 rounded-full font-medium"
+            >
+              +{{ data.nmIds.length - 3 }}
+            </span>
+          </div>
+        </template>
+      </Column>
 
-                <!-- Products -->
-                <td class="py-4 px-2 align-middle">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <div
-                      v-for="nmId in rule.nmIds.slice(0, 3)"
-                      :key="nmId"
-                      class="flex items-center gap-1.5"
-                    >
-                      <img
-                        v-if="getGoods(nmId)?.thumbnail"
-                        :src="getGoods(nmId)!.thumbnail"
-                        alt=""
-                        class="w-8 h-8 object-cover rounded-md shadow-sm"
-                      />
-                      <div
-                        v-else
-                        class="w-8 h-8 bg-surface-100 dark:bg-surface-700 rounded-md flex items-center justify-center"
-                      >
-                        <i class="pi pi-image text-surface-300 text-xs" />
-                      </div>
-                      <span class="text-xs text-surface-600 dark:text-surface-300 font-medium">
-                        {{ getGoods(nmId)?.vendorCode ?? nmId }}
-                      </span>
-                    </div>
-                    <span
-                      v-if="rule.nmIds.length > 3"
-                      class="text-xs text-surface-400 bg-surface-100 dark:bg-surface-700 px-2 py-0.5 rounded-full font-medium"
-                    >
-                      +{{ rule.nmIds.length - 3 }}
-                    </span>
-                  </div>
-                </td>
+      <Column header="Режим / Условия" style="min-width: 220px">
+        <template #body="{ data }">
+          <div class="flex flex-wrap items-center gap-2">
+            <span
+              class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md font-medium"
+              :class="data.mode === 'skip'
+                ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                : 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400'"
+            >
+              <i class="pi text-[10px]" :class="data.mode === 'skip' ? 'pi-ban' : 'pi-pen-to-square'" />
+              {{ data.mode === 'skip' ? 'Пропуск' : 'Инструкция' }}
+            </span>
+            <span
+              v-if="data.minRating !== null"
+              class="inline-flex items-center gap-1 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md"
+            >
+              <i class="pi pi-star-fill text-[10px]" />
+              от {{ data.minRating }}
+            </span>
+            <span
+              v-if="data.maxRating !== null"
+              class="inline-flex items-center gap-1 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md"
+            >
+              <i class="pi pi-star-fill text-[10px]" />
+              до {{ data.maxRating }}
+            </span>
+            <span
+              v-if="data.keywords.length > 0"
+              class="inline-flex items-center gap-1 text-xs bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-md"
+            >
+              <i class="pi pi-tag text-[10px]" />
+              {{ data.keywords.length }}
+            </span>
+          </div>
+        </template>
+      </Column>
 
-                <!-- Conditions -->
-                <td class="py-4 px-2 align-middle">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span
-                      class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md font-medium"
-                      :class="rule.mode === 'skip'
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                        : 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400'"
-                    >
-                      <i class="pi text-[10px]" :class="rule.mode === 'skip' ? 'pi-ban' : 'pi-pen-to-square'" />
-                      {{ rule.mode === 'skip' ? 'Пропуск' : 'Инструкция' }}
-                    </span>
-                    <span
-                      v-if="rule.minRating !== null"
-                      class="inline-flex items-center gap-1 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md"
-                    >
-                      <i class="pi pi-star-fill text-[10px]" />
-                      от {{ rule.minRating }}
-                    </span>
-                    <span
-                      v-if="rule.maxRating !== null"
-                      class="inline-flex items-center gap-1 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md"
-                    >
-                      <i class="pi pi-star-fill text-[10px]" />
-                      до {{ rule.maxRating }}
-                    </span>
-                    <span
-                      v-if="rule.keywords.length > 0"
-                      class="inline-flex items-center gap-1 text-xs bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-md"
-                    >
-                      <i class="pi pi-tag text-[10px]" />
-                      {{ rule.keywords.length }}
-                    </span>
-                  </div>
-                </td>
-
-                <!-- Actions -->
-                <td class="py-4 px-2 pr-5 align-middle text-right">
-                  <div class="flex items-center justify-end gap-1">
-                    <Button
-                      icon="pi pi-pencil"
-                      severity="secondary"
-                      text
-                      size="small"
-                      class="p-1 w-8 h-8 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors duration-200"
-                      @click="openEditDialog(rule)"
-                    />
-                    <Button
-                      icon="pi pi-trash"
-                      severity="danger"
-                      text
-                      size="small"
-                      class="p-1 w-8 h-8 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
-                      @click="confirmDelete(rule)"
-                    />
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-    </Card>
+      <Column header="Действия" style="width: 100px">
+        <template #body="{ data }">
+          <div class="flex items-center justify-end gap-1">
+            <Button
+              icon="pi pi-pencil"
+              severity="secondary"
+              text
+              size="small"
+              class="p-1 w-8 h-8 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors duration-200"
+              @click="openEditDialog(data)"
+            />
+            <Button
+              icon="pi pi-trash"
+              severity="danger"
+              text
+              size="small"
+              class="p-1 w-8 h-8 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+              @click="confirmDelete(data)"
+            />
+          </div>
+        </template>
+      </Column>
+    </DataTable>
 
     <!-- Edit Dialog -->
     <RuleEditDialog
@@ -179,7 +155,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import Card from 'primevue/card';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import Button from 'primevue/button';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { LoadingSpinner, EmptyState } from '@/components/common';
