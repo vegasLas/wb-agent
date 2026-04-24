@@ -358,6 +358,7 @@ model FeedbackAutoAnswer {
   feedbackDate     BigInt?
   photos           Json?
   video            Json?
+  postedAt         DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
