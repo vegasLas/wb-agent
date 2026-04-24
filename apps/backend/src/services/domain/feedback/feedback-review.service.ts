@@ -258,6 +258,341 @@ export class FeedbackReviewService {
   }
 
   /**
+   * Process unanswered feedbacks MANUALLY — bypasses all settings checks.
+   * Used by the "Answer All" button in the UI. Always generates and posts answers.
+   */
+  async processUnansweredFeedbacksManual(
+    userId: number,
+    supplierId: string,
+    nmIds?: number[],
+  ): Promise<ProcessResult> {
+    const result: ProcessResult = {
+      processed: 0,
+      posted: 0,
+      skipped: 0,
+      failed: 0,
+    };
+
+    try {
+      const [answeredRaw, unansweredRaw] = await Promise.all([
+        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
+        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
+      ]);
+
+      let unansweredFeedbacks = [...answeredRaw, ...unansweredRaw].filter(
+        (f) => !f.answer,
+      );
+
+      if (nmIds && nmIds.length > 0) {
+        const nmIdSet = new Set(nmIds);
+        unansweredFeedbacks = unansweredFeedbacks.filter(
+          (f) =>
+            f.productInfo?.wbArticle && nmIdSet.has(f.productInfo.wbArticle),
+        );
+      }
+
+      if (unansweredFeedbacks.length === 0) {
+        logger.info(
+          `No unanswered feedbacks for user ${userId}, supplier ${supplierId}`,
+        );
+        return result;
+      }
+
+      logger.info(
+        `Manual processing ${unansweredFeedbacks.length} unanswered feedbacks for user ${userId}, supplier ${supplierId}`,
+      );
+
+      let templates: FeedbackTemplate[] = [];
+      try {
+        const templateData = await wbFeedbackService.getFeedbackTemplates({
+          userId,
+        });
+        templates = templateData.templates || [];
+      } catch (err) {
+        logger.warn(`Failed to fetch templates for user ${userId}:`, err);
+      }
+
+      const allFeedbackRules = await prisma.feedbackRule.findMany({
+        where: { userId, supplierId },
+      });
+      const feedbackRulesMap = new Map<number, FeedbackRule[]>();
+      for (const rule of allFeedbackRules) {
+        for (const nmId of rule.nmIds) {
+          const existing = feedbackRulesMap.get(nmId) || [];
+          existing.push(rule);
+          feedbackRulesMap.set(nmId, existing);
+        }
+      }
+
+      const feedbackIds = unansweredFeedbacks.map((f) => f.id);
+      const existingAutoAnswers = await prisma.feedbackAutoAnswer.findMany({
+        where: {
+          userId,
+          supplierId,
+          feedbackId: { in: feedbackIds },
+        },
+      });
+
+      const existingAutoAnswerMap = new Map<
+        string,
+        (typeof existingAutoAnswers)[0]
+      >();
+      for (const row of existingAutoAnswers) {
+        existingAutoAnswerMap.set(row.feedbackId, row);
+      }
+
+      const uniqueValuations = [
+        ...new Set(
+          unansweredFeedbacks
+            .map((f) => f.valuation)
+            .filter((v) => v !== undefined),
+        ),
+      ];
+      const examplesByValuation =
+        await feedbackExampleService.fetchExamplesByValuation(
+          userId,
+          supplierId,
+          uniqueValuations,
+          10,
+          3,
+        );
+
+      // Pre-load goods groups for group-aware examples
+      const groups = await feedbackGoodsGroupService.getGroups(
+        userId,
+        supplierId,
+      );
+      const nmIdToGroupNmIds = new Map<number, number[]>();
+      for (const group of groups) {
+        for (const nmId of group.nmIds) {
+          const related = group.nmIds.filter((id) => id !== nmId);
+          nmIdToGroupNmIds.set(nmId, related);
+        }
+      }
+
+      // Pre-fetch rejected answers for all unique nmIds
+      const uniqueNmIds = [
+        ...new Set(
+          unansweredFeedbacks
+            .map((f) => f.productInfo?.wbArticle)
+            .filter((n): n is number => n !== undefined),
+        ),
+      ];
+      const rejectedAnswersByNmId = new Map<number, RejectedAnswerContext[]>();
+      for (const nmId of uniqueNmIds) {
+        const rejected = await feedbackRejectedService.getRecentRejectedAnswers(
+          userId,
+          supplierId,
+          40,
+          nmId,
+        );
+        rejectedAnswersByNmId.set(nmId, rejected);
+      }
+
+      // Phase 1: Generate all answers in parallel
+      type GeneratedItem = {
+        feedback: FeedbackItem;
+        answerText: string;
+        nmId: number;
+      };
+
+      const generationTasks = unansweredFeedbacks.map(async (feedback) => {
+        try {
+          const nmId = feedback.productInfo?.wbArticle;
+          if (!nmId) {
+            logger.warn(`Feedback ${feedback.id} has no nmId, skipping`);
+            return null;
+          }
+
+          const existing = existingAutoAnswerMap.get(feedback.id);
+          if (existing && existing.status === 'POSTED') {
+            return null;
+          }
+
+          // Rule checks
+          const rules = feedbackRulesMap.get(nmId);
+          const enabledRules = rules?.filter((r) => r.enabled) || [];
+          const feedbackTextLower = (
+            feedback.feedbackInfo?.feedbackText || ''
+          ).toLowerCase();
+
+          for (const rule of enabledRules) {
+            const ruleApplies = doesRuleApply(
+              rule,
+              feedback.valuation,
+              feedbackTextLower,
+            );
+            if (ruleApplies && rule.mode !== 'instruction') {
+              logger.debug(
+                `Feedback ${feedback.id} matches skip rule ${rule.id}, skipping generation`,
+              );
+              return null;
+            }
+          }
+
+          const rejectedAnswers = rejectedAnswersByNmId.get(nmId) || [];
+
+          let groupExamples: FeedbackExample[] = [];
+          if (nmIdToGroupNmIds.has(nmId)) {
+            groupExamples =
+              await feedbackExampleService.getRecentPostedAnswersForGroup(
+                userId,
+                supplierId,
+                nmId,
+                10,
+                feedback.valuation,
+              );
+          }
+
+          const recentAnswers = examplesByValuation.get(feedback.valuation) || [];
+          const matchingInstructionRules = enabledRules.filter(
+            (r) => doesRuleApply(r, feedback.valuation, feedbackTextLower) && r.mode === 'instruction',
+          );
+
+          const answerText = await feedbackPromptService.generateAnswer(
+            feedback,
+            recentAnswers,
+            templates,
+            rejectedAnswers,
+            matchingInstructionRules,
+            groupExamples,
+          );
+
+          if (!answerText) {
+            logger.warn(`Empty AI answer for feedback ${feedback.id}`);
+            return null;
+          }
+
+          // Save as PENDING
+          const originalFeedbackText = feedback.feedbackInfo?.feedbackText || '';
+          const feedbackTextPros = feedback.feedbackInfo?.feedbackTextPros || null;
+          const feedbackTextCons = feedback.feedbackInfo?.feedbackTextCons || null;
+          const trustFactor = feedback.trustFactor || 'buyout';
+          const productInfo = feedback.productInfo;
+          const feedbackInfo = feedback.feedbackInfo;
+
+          await prisma.feedbackAutoAnswer.upsert({
+            where: {
+              userId_supplierId_feedbackId: {
+                userId,
+                supplierId,
+                feedbackId: feedback.id,
+              },
+            },
+            update: {
+              feedbackText: originalFeedbackText,
+              answerText,
+              valuation: feedback.valuation,
+              status: 'PENDING',
+              trustFactor,
+              feedbackTextCons,
+              feedbackTextPros,
+              productName: productInfo?.name || null,
+              productBrand: productInfo?.brand || null,
+              supplierArticle: productInfo?.supplierArticle || null,
+              userName: feedbackInfo?.userName || null,
+              purchaseDate: feedbackInfo?.purchaseDate || null,
+              feedbackDate: feedback.createdDate || null,
+              photos: feedbackInfo?.photos || null,
+              video: feedbackInfo?.video || null,
+            },
+            create: {
+              userId,
+              supplierId,
+              feedbackId: feedback.id,
+              nmId,
+              feedbackText: originalFeedbackText,
+              answerText,
+              valuation: feedback.valuation,
+              status: 'PENDING',
+              trustFactor,
+              feedbackTextCons,
+              feedbackTextPros,
+              productName: productInfo?.name || null,
+              productBrand: productInfo?.brand || null,
+              supplierArticle: productInfo?.supplierArticle || null,
+              userName: feedbackInfo?.userName || null,
+              purchaseDate: feedbackInfo?.purchaseDate || null,
+              feedbackDate: feedback.createdDate || null,
+              photos: feedbackInfo?.photos || null,
+              video: feedbackInfo?.video || null,
+            },
+          });
+
+          return { feedback, answerText, nmId };
+        } catch (error) {
+          logger.error(
+            `Failed to generate answer for feedback ${feedback.id}:`
+            , error,
+          );
+          return null;
+        }
+      });
+
+      const generatedResults = await Promise.all(generationTasks);
+      const generatedItems = generatedResults.filter(
+        (item): item is GeneratedItem => item !== null,
+      );
+
+      result.processed = generatedItems.length;
+      const skippedCount = unansweredFeedbacks.length - generatedItems.length;
+      result.skipped = skippedCount;
+
+      logger.info(
+        `Generated ${generatedItems.length} answers, skipped ${skippedCount} for user ${userId}, supplier ${supplierId}`,
+      );
+
+      // Phase 2: Post all answers sequentially
+      for (const item of generatedItems) {
+        try {
+          await wbFeedbackService.answerFeedback({
+            userId,
+            feedbackId: item.feedback.id,
+            nmId: item.nmId,
+            answerText: item.answerText,
+          });
+
+          logger.info(
+            `Posted answer for feedback ${item.feedback.id} (user ${userId}, nmId ${item.nmId}): "${item.answerText}"`,
+          );
+
+          await prisma.feedbackAutoAnswer.update({
+            where: {
+              userId_supplierId_feedbackId: {
+                userId,
+                supplierId,
+                feedbackId: item.feedback.id,
+              },
+            },
+            data: { status: 'POSTED', postedAt: new Date() },
+          });
+
+          result.posted++;
+        } catch (error) {
+          result.failed++;
+          logger.error(
+            `Failed to post answer for feedback ${item.feedback.id}:`
+            , error,
+          );
+        }
+      }
+
+      logger.info(
+        `Completed manual processing for user ${userId}, supplier ${supplierId}:`,
+        result,
+      );
+
+      return result;
+    } catch (error) {
+      logger.error(
+        `Error manual processing unanswered feedbacks for user ${userId}, supplier ${supplierId}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Process a single feedback
    * Returns: 'posted' | 'skipped' | 'pending'
    */
@@ -273,6 +608,7 @@ export class FeedbackReviewService {
     examplesByValuation: Map<number, FeedbackExample[]>,
     rejectedAnswers: RejectedAnswerContext[] = [],
     groupExamples: FeedbackExample[] = [],
+    forcePost = false,
   ): Promise<'posted' | 'skipped' | 'pending'> {
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
@@ -288,13 +624,15 @@ export class FeedbackReviewService {
     // 1. Global settings already checked in caller
     // 2. Extract nmId
 
-    // 3. Product setting check
-    const productEnabled = productSettingsMap.get(nmId) ?? true;
-    if (!productEnabled) {
-      logger.debug(
-        `Product ${nmId} auto-answer disabled for user ${userId}, supplier ${supplierId}`,
-      );
-      return 'skipped';
+    // 3. Product setting check (skip when forcePost = true)
+    if (!forcePost) {
+      const productEnabled = productSettingsMap.get(nmId) ?? true;
+      if (!productEnabled) {
+        logger.debug(
+          `Product ${nmId} auto-answer disabled for user ${userId}, supplier ${supplierId}`,
+        );
+        return 'skipped';
+      }
     }
 
     // 5-7. Feedback rule checks
@@ -400,9 +738,9 @@ export class FeedbackReviewService {
       },
     });
 
-    // 10. Auto-post only if global+product enabled
+    // 10. Auto-post only if global+product enabled, or forcePost = true
     const autoPostEnabled = productSettingsMap.get(nmId) ?? true;
-    if (settings.autoAnswerEnabled && autoPostEnabled) {
+    if (forcePost || (settings.autoAnswerEnabled && autoPostEnabled)) {
       try {
         await wbFeedbackService.answerFeedback({
           userId,

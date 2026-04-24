@@ -290,7 +290,7 @@ export const answerAllFeedbacks = async (req: Request, res: Response): Promise<v
 
   logger.info(`Answering feedbacks for user ${userId}, supplier ${supplierId}, nmIds=[${nmIds.join(', ')}]`);
 
-  const result = await feedbackReviewService.processUnansweredFeedbacks(userId, supplierId, nmIds);
+  const result = await feedbackReviewService.processUnansweredFeedbacksManual(userId, supplierId, nmIds);
   successResponse(res, result);
 };
 
