@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, inject, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Popover from 'primevue/popover';
@@ -138,7 +138,8 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const { primaryNav, secondaryNav, isActive } = useNavigation();
+const pendingRouteName = inject<Ref<string | null>>('pendingRouteName', ref(null));
+const { primaryNav, secondaryNav, isActive } = useNavigation(pendingRouteName);
 const userStore = useUserStore();
 
 // Theme toggle

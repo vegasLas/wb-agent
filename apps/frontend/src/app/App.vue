@@ -54,6 +54,13 @@ import {
   SkeletonReschedules,
   SkeletonPromotions,
   SkeletonTasks,
+  SkeletonHome,
+  SkeletonWB,
+  SkeletonFeedbacks,
+  SkeletonMPStats,
+  SkeletonChat,
+  SkeletonAdverts,
+  SkeletonTariffs,
 } from '../components/skeleton';
 import {
   getTelegramColorScheme,
@@ -105,6 +112,7 @@ const {
   onNavigationStart,
   onNavigationEnd,
   getEffectiveRouteName,
+  pendingRouteName,
 } = useSkeleton();
 
 // Map route names to skeleton components
@@ -125,21 +133,30 @@ const routeSkeletonMap: Record<string, any> = {
   StoreBookings: SkeletonStore,
   Payments: SkeletonPayments,
   Tasks: SkeletonTasks,
-  Chat: SkeletonAccount,
-  Adverts: SkeletonAccount,
+  Home: SkeletonHome,
+  WB: SkeletonWB,
+  Feedbacks: SkeletonFeedbacks,
+  MPStats: SkeletonMPStats,
+  Chat: SkeletonChat,
+  Adverts: SkeletonAdverts,
+  Tariffs: SkeletonTariffs,
   RegionSales: SkeletonReport,
   default: SkeletonAccount,
 };
 
 // Get the appropriate skeleton for current route
+// During navigation, uses pendingRouteName (target route) to show correct skeleton immediately
 // Uses getEffectiveRouteName which falls back to path-based detection when route name is null/undefined
 const currentRouteSkeleton = computed(() => {
-  const routeName = getEffectiveRouteName(route.name as string);
-  return routeSkeletonMap[routeName] || routeSkeletonMap.default;
+  const effectiveName = pendingRouteName.value || getEffectiveRouteName(route.name as string);
+  return routeSkeletonMap[effectiveName] || routeSkeletonMap.default;
 });
 
 // Provide the skeleton component so MainLayout can render it in the content area
 provide('currentRouteSkeleton', currentRouteSkeleton);
+
+// Provide pending route name so sidebar can highlight target route during navigation
+provide('pendingRouteName', pendingRouteName);
 
 // Form routes that should not show skeleton during navigation
 const formRouteNames = ['ReschedulesCreate', 'ReschedulesUpdate'];
@@ -148,7 +165,7 @@ const formRouteNames = ['ReschedulesCreate', 'ReschedulesUpdate'];
 router.beforeEach((to) => {
   // Skip skeleton for form views - they handle loading themselves
   if (!formRouteNames.includes(to.name as string)) {
-    onNavigationStart();
+    onNavigationStart(to.name as string);
   }
 });
 
