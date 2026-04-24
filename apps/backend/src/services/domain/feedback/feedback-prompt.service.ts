@@ -174,6 +174,18 @@ export class FeedbackPromptService {
     return `\nSPECIAL INSTRUCTIONS FOR THIS REVIEW:\n${lines.join('\n')}\n`;
   }
 
+  private getMoscowTimeContext(): string {
+    const now = new Date();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const moscowTime = new Date(utc + 3 * 60 * 60 * 1000);
+    const hour = moscowTime.getHours();
+    const isNight = hour >= 19 || hour < 6;
+    const greetingHint = isNight
+      ? 'It is evening/night time. Use "Добрый вечер" or "Доброй ночи" as the greeting if appropriate.'
+      : 'It is day time. Use "Добрый день" as the greeting if appropriate.';
+    return `Current time in Moscow (MSK, UTC+3): ${hour}:00. ${greetingHint}`;
+  }
+
   private buildPrompt(params: {
     productInfo: FeedbackItem['productInfo'];
     feedbackInfo: FeedbackItem['feedbackInfo'];
@@ -195,6 +207,9 @@ export class FeedbackPromptService {
     return `You are a professional review manager for the Wildberries marketplace.
 Your task is to write a personalized, warm, and professional response to a customer review.
 Respond in Russian language only.
+
+TIME CONTEXT:
+${this.getMoscowTimeContext()}
 
 PRODUCT INFORMATION:
 - Name: ${params.productInfo.name}
