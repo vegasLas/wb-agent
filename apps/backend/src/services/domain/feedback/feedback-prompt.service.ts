@@ -218,8 +218,8 @@ RULES:
 4. If there are cons — apologize and gently explain the situation.
 5. Mention the brand "${params.productInfo.brand}".
 6. Answer length: 100-300 characters.
-7. Tone: friendly, professional.
-8. Avoid template phrases — write naturally and vividly.
+7. Tone: businesslike, professional, without familiarity. Do not use slang, or overly casual language.
+8. Avoid template phrases — write naturally and vividly, but keep a formal business tone.
 9. Use examples as a reference for structure and tone, but do not copy their text — every answer must be original and unique.
 10. Consider user feedback from rejected answers and avoid repeating those mistakes.
 11. Respond ONLY with the answer text, no explanations.
