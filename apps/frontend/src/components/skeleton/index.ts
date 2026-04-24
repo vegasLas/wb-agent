@@ -1,6 +1,5 @@
 export { default as SkeletonAccount } from './SkeletonAccount.vue';
 export { default as SkeletonAutobookings } from './SkeletonAutobookings.vue';
-export { default as SkeletonMain } from './SkeletonMain.vue';
 export { default as SkeletonPayments } from './SkeletonPayments.vue';
 export { default as SkeletonPromotions } from './SkeletonPromotions.vue';
 export { default as SkeletonReport } from './SkeletonReport.vue';
@@ -8,3 +7,10 @@ export { default as SkeletonReschedules } from './SkeletonReschedules.vue';
 export { default as SkeletonStore } from './SkeletonStore.vue';
 export { default as SkeletonTasks } from './SkeletonTasks.vue';
 export { default as SkeletonTriggers } from './SkeletonTriggers.vue';
+export { default as SkeletonHome } from './SkeletonHome.vue';
+export { default as SkeletonWB } from './SkeletonWB.vue';
+export { default as SkeletonFeedbacks } from './SkeletonFeedbacks.vue';
+export { default as SkeletonMPStats } from './SkeletonMPStats.vue';
+export { default as SkeletonChat } from './SkeletonChat.vue';
+export { default as SkeletonAdverts } from './SkeletonAdverts.vue';
+export { default as SkeletonTariffs } from './SkeletonTariffs.vue';

@@ -1,23 +1,21 @@
 <template>
-  <div class="min-h-screen bg-deep-bg">
-    <!-- Header with Date Navigation -->
+  <div class="space-y-0">
+    <!-- Header with Date Navigation (Desktop) -->
     <div
-      class="sticky top-0 z-30 bg-deep-bg border-b border-deep-border px-4 py-3"
+      class="hidden sm:flex items-center justify-between px-4 py-3 border-b border-deep-border"
     >
-      <div class="flex items-center justify-between">
-        <!-- Date Navigation -->
-        <div class="hidden sm:flex items-center gap-2">
-          <Skeleton width="28px" height="28px" border-radius="6px" />
-          <Skeleton width="140px" height="20px" />
-          <Skeleton width="28px" height="28px" border-radius="6px" />
-          <Skeleton width="120px" height="16px" class="ml-4" />
-        </div>
-        <!-- Filter Buttons -->
-        <div class="hidden sm:flex items-center gap-2">
-          <Skeleton width="80px" height="28px" border-radius="6px" />
-          <Skeleton width="80px" height="28px" border-radius="6px" />
-          <Skeleton width="80px" height="28px" border-radius="6px" />
-        </div>
+      <!-- Date Navigation -->
+      <div class="flex items-center gap-2">
+        <Skeleton width="28px" height="28px" border-radius="0.5rem" />
+        <Skeleton width="140px" height="20px" border-radius="0.5rem" />
+        <Skeleton width="28px" height="28px" border-radius="0.5rem" />
+        <Skeleton width="120px" height="16px" border-radius="0.5rem" class="ml-4" />
+      </div>
+      <!-- Filter Buttons -->
+      <div class="flex items-center gap-2">
+        <Skeleton width="80px" height="28px" border-radius="0.5rem" />
+        <Skeleton width="80px" height="28px" border-radius="0.5rem" />
+        <Skeleton width="80px" height="28px" border-radius="0.5rem" />
       </div>
     </div>
 
@@ -25,18 +23,18 @@
     <div
       class="sm:hidden flex items-center justify-between px-4 py-2 border-b border-deep-border"
     >
-      <Skeleton width="28px" height="28px" border-radius="6px" />
-      <Skeleton width="120px" height="20px" />
-      <Skeleton width="28px" height="28px" border-radius="6px" />
+      <Skeleton width="28px" height="28px" border-radius="0.5rem" />
+      <Skeleton width="120px" height="20px" border-radius="0.5rem" />
+      <Skeleton width="28px" height="28px" border-radius="0.5rem" />
     </div>
 
     <!-- Mobile Filter Buttons -->
     <div
       class="sm:hidden flex items-center justify-center gap-2 px-4 py-2 border-b border-deep-border bg-deep-card"
     >
-      <Skeleton width="70px" height="24px" border-radius="6px" />
-      <Skeleton width="70px" height="24px" border-radius="6px" />
-      <Skeleton width="70px" height="24px" border-radius="6px" />
+      <Skeleton width="70px" height="24px" border-radius="0.5rem" />
+      <Skeleton width="70px" height="24px" border-radius="0.5rem" />
+      <Skeleton width="70px" height="24px" border-radius="0.5rem" />
     </div>
 
     <!-- Main Content -->
@@ -47,10 +45,10 @@
           <!-- Two Month Headers -->
           <div class="flex mb-2">
             <div class="flex-1 text-center">
-              <Skeleton width="120px" height="24px" class="mx-auto" />
+              <Skeleton width="120px" height="24px" class="mx-auto" border-radius="0.5rem" />
             </div>
             <div class="flex-1 text-center">
-              <Skeleton width="120px" height="24px" class="mx-auto" />
+              <Skeleton width="120px" height="24px" class="mx-auto" border-radius="0.5rem" />
             </div>
           </div>
 
@@ -62,7 +60,7 @@
               :key="`date-c-${n}`"
               class="w-10 flex-shrink-0 py-2 border-r border-deep-border"
             >
-              <Skeleton width="20px" height="14px" class="mx-auto" />
+              <Skeleton width="20px" height="14px" class="mx-auto" border-radius="0.25rem" />
             </div>
             <!-- Next Month Dates -->
             <div
@@ -70,7 +68,7 @@
               :key="`date-n-${n}`"
               class="w-10 flex-shrink-0 py-2 border-r border-deep-border last:border-r-0"
             >
-              <Skeleton width="20px" height="14px" class="mx-auto" />
+              <Skeleton width="20px" height="14px" class="mx-auto" border-radius="0.25rem" />
             </div>
           </div>
 
@@ -83,18 +81,14 @@
                   class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3"
                 >
                   <div class="flex-1 min-w-0">
-                    <Skeleton width="85%" height="16px" class="mb-2" />
+                    <Skeleton width="85%" height="16px" class="mb-2" border-radius="0.5rem" />
                     <div class="flex items-center gap-2 mb-2">
-                      <Skeleton
-                        width="70px"
-                        height="20px"
-                        border-radius="12px"
-                      />
-                      <Skeleton width="50px" height="14px" />
+                      <Skeleton width="70px" height="20px" border-radius="0.5rem" />
+                      <Skeleton width="50px" height="14px" border-radius="0.5rem" />
                     </div>
-                    <Skeleton width="60%" height="12px" />
+                    <Skeleton width="60%" height="12px" border-radius="0.5rem" />
                   </div>
-                  <Skeleton width="32px" height="32px" border-radius="6px" />
+                  <Skeleton width="32px" height="32px" border-radius="0.5rem" />
                 </div>
               </div>
               <div class="absolute h-[85px]" style="left: 400px; width: 320px">
@@ -102,18 +96,14 @@
                   class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3"
                 >
                   <div class="flex-1 min-w-0">
-                    <Skeleton width="80%" height="16px" class="mb-2" />
+                    <Skeleton width="80%" height="16px" class="mb-2" border-radius="0.5rem" />
                     <div class="flex items-center gap-2 mb-2">
-                      <Skeleton
-                        width="80px"
-                        height="20px"
-                        border-radius="12px"
-                      />
-                      <Skeleton width="55px" height="14px" />
+                      <Skeleton width="80px" height="20px" border-radius="0.5rem" />
+                      <Skeleton width="55px" height="14px" border-radius="0.5rem" />
                     </div>
-                    <Skeleton width="55%" height="12px" />
+                    <Skeleton width="55%" height="12px" border-radius="0.5rem" />
                   </div>
-                  <Skeleton width="32px" height="32px" border-radius="6px" />
+                  <Skeleton width="32px" height="32px" border-radius="0.5rem" />
                 </div>
               </div>
             </div>
@@ -125,18 +115,14 @@
                   class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3"
                 >
                   <div class="flex-1 min-w-0">
-                    <Skeleton width="70%" height="16px" class="mb-2" />
+                    <Skeleton width="70%" height="16px" class="mb-2" border-radius="0.5rem" />
                     <div class="flex items-center gap-2 mb-2">
-                      <Skeleton
-                        width="75px"
-                        height="20px"
-                        border-radius="12px"
-                      />
-                      <Skeleton width="50px" height="14px" />
+                      <Skeleton width="75px" height="20px" border-radius="0.5rem" />
+                      <Skeleton width="50px" height="14px" border-radius="0.5rem" />
                     </div>
-                    <Skeleton width="70%" height="12px" />
+                    <Skeleton width="70%" height="12px" border-radius="0.5rem" />
                   </div>
-                  <Skeleton width="32px" height="32px" border-radius="6px" />
+                  <Skeleton width="32px" height="32px" border-radius="0.5rem" />
                 </div>
               </div>
               <div class="absolute h-[85px]" style="left: 550px; width: 380px">
@@ -144,18 +130,14 @@
                   class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3"
                 >
                   <div class="flex-1 min-w-0">
-                    <Skeleton width="90%" height="16px" class="mb-2" />
+                    <Skeleton width="90%" height="16px" class="mb-2" border-radius="0.5rem" />
                     <div class="flex items-center gap-2 mb-2">
-                      <Skeleton
-                        width="85px"
-                        height="20px"
-                        border-radius="12px"
-                      />
-                      <Skeleton width="60px" height="14px" />
+                      <Skeleton width="85px" height="20px" border-radius="0.5rem" />
+                      <Skeleton width="60px" height="14px" border-radius="0.5rem" />
                     </div>
-                    <Skeleton width="50%" height="12px" />
+                    <Skeleton width="50%" height="12px" border-radius="0.5rem" />
                   </div>
-                  <Skeleton width="32px" height="32px" border-radius="6px" />
+                  <Skeleton width="32px" height="32px" border-radius="0.5rem" />
                 </div>
               </div>
             </div>
@@ -167,18 +149,14 @@
                   class="h-full mx-1 rounded-lg border border-deep-border bg-deep-card px-3 py-2 flex items-center gap-3"
                 >
                   <div class="flex-1 min-w-0">
-                    <Skeleton width="80%" height="16px" class="mb-2" />
+                    <Skeleton width="80%" height="16px" class="mb-2" border-radius="0.5rem" />
                     <div class="flex items-center gap-2 mb-2">
-                      <Skeleton
-                        width="70px"
-                        height="20px"
-                        border-radius="12px"
-                      />
-                      <Skeleton width="55px" height="14px" />
+                      <Skeleton width="70px" height="20px" border-radius="0.5rem" />
+                      <Skeleton width="55px" height="14px" border-radius="0.5rem" />
                     </div>
-                    <Skeleton width="60%" height="12px" />
+                    <Skeleton width="60%" height="12px" border-radius="0.5rem" />
                   </div>
-                  <Skeleton width="32px" height="32px" border-radius="6px" />
+                  <Skeleton width="32px" height="32px" border-radius="0.5rem" />
                 </div>
               </div>
             </div>
