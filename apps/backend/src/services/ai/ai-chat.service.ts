@@ -20,6 +20,7 @@ import { reportsTools } from './tools/reports.tools';
 import { contentCardsTools } from './tools/content-cards.tools';
 import { userContextTools } from './tools/user-context.tools';
 import { promotionsTools } from './tools/promotions.tools';
+import { feedbackTools } from './tools/feedback.tools';
 
 import type { AttachmentMeta } from './file-extraction.service';
 
@@ -38,7 +39,12 @@ function getMessageText(message: UIMessage): string {
 }
 
 export class AIChatService {
-  async handleChat({ userId, conversationId, messages, attachments }: HandleChatInput) {
+  async handleChat({
+    userId,
+    conversationId,
+    messages,
+    attachments,
+  }: HandleChatInput) {
     // 1. Load or create conversation
     let convId = conversationId;
     if (!convId) {
@@ -90,8 +96,8 @@ export class AIChatService {
       userText.includes('analyze');
 
     const model = wantsReasoning
-      ? deepseek('deepseek-reasoner')
-      : deepseek('deepseek-chat');
+      ? deepseek('deepseek-v4-flash')
+      : deepseek('deepseek-v4-flash');
 
     const tools: Record<string, Tool> | undefined = wantsReasoning
       ? undefined
@@ -107,6 +113,7 @@ export class AIChatService {
           contentCardsTools(userId),
           userContextTools(userId),
           promotionsTools(userId),
+          feedbackTools(userId),
         );
 
     // 7. Stream

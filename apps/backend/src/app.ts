@@ -6,6 +6,12 @@ import { env } from '@/config/env';
 import { logger } from '@/utils/logger';
 import { errorHandler, notFoundHandler } from '@/middleware/error.middleware';
 import routes from '@/routes';
+import {
+  basicHealthCheck,
+  detailedHealthCheck,
+  readinessCheck,
+  livenessCheck,
+} from '@/controllers/health.controller';
 
 /**
  * Create and configure the Express application
@@ -45,17 +51,11 @@ export function createApp(): Application {
   // Request logging disabled - only your console.log will show
   // app.use(requestLogger);
 
-  // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.json({
-      success: true,
-      data: {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        environment: env.NODE_ENV,
-      },
-    });
-  });
+  // Health check endpoints
+  app.get('/health', basicHealthCheck);
+  app.get('/health/detailed', detailedHealthCheck);
+  app.get('/health/ready', readinessCheck);
+  app.get('/health/live', livenessCheck);
 
   // API routes
   app.use('/v1', routes);

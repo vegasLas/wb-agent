@@ -21,6 +21,7 @@ export * from './suppliers';
 export * from './coefficients';
 export * from './mpstats';
 export * from './content-cards';
+export * from './feedbacks';
 export * from './ai';
 
 // Generic API methods

@@ -17,6 +17,7 @@ import promotionsRoutes from '@/routes/promotions.routes';
 import advertsRoutes from '@/routes/adverts.routes';
 import mpstatsRoutes from '@/routes/mpstats.routes';
 import contentCardsRoutes from '@/routes/content-cards.routes';
+import feedbacksRoutes from '@/routes/feedbacks.routes';
 import aiRoutes from '@/routes/ai.routes';
 import { authenticate } from '@/middleware/auth.middleware';
 
@@ -46,6 +47,7 @@ router.get('/', (req, res) => {
       adverts: '/api/v1/adverts',
       mpstats: '/api/v1/mpstats',
       contentCards: '/api/v1/content-cards',
+      feedbacks: '/api/v1/feedbacks',
       ai: '/api/v1/ai',
     },
   });
@@ -101,6 +103,9 @@ router.use('/mpstats', authenticate, mpstatsRoutes);
 
 // Content Cards routes (protected)
 router.use('/content-cards', authenticate, contentCardsRoutes);
+
+// Feedbacks routes (protected)
+router.use('/feedbacks', authenticate, feedbacksRoutes);
 
 // AI routes (protected)
 router.use('/ai', authenticate, aiRoutes);

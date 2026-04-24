@@ -81,9 +81,11 @@ export class WBContentService {
   async getContentCardsTableList({
     userId,
     n = 20,
+    cursor: inputCursor,
   }: {
     userId: number;
     n?: number;
+    cursor?: { n: number; nmID: number } | null;
   }): Promise<{
     cards: Array<{
       title: string;
@@ -119,7 +121,7 @@ export class WBContentService {
       body: {
         sort: [{ columnID: 11, order: 'desc' }],
         filter: { search: '', paidOptions: {} },
-        cursor: { n },
+        cursor: inputCursor ?? { n },
       },
     });
 

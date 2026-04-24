@@ -9,6 +9,7 @@
 import { startServer } from '@/app';
 import { setupTelegramPlugin } from '@/plugins/telegram.plugin';
 import { setupTriggerDateUpdatePlugin } from '@/plugins/trigger-date-update.plugin';
+import { setupFeedbackAutoPlugin } from '@/plugins/feedback-auto.plugin';
 import { logger } from '@/utils/logger';
 
 // Handle uncaught exceptions
@@ -29,6 +30,10 @@ setupTelegramPlugin();
 // Setup Trigger Date Update plugin (migrated from deprecated project)
 // Handles: dynamic interval monitoring, warehouse fetching, midnight trigger cleanup
 setupTriggerDateUpdatePlugin();
+
+// Setup Feedback Auto-Answer plugin
+// Handles: periodic AI-powered feedback answering
+setupFeedbackAutoPlugin();
 
 // Start the server
 startServer();

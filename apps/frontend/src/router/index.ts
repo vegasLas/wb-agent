@@ -10,6 +10,7 @@ import {
 } from '../views/reschedules';
 import { TriggersListView } from '../views/triggers';
 import { PromotionsView } from '../views/promotions';
+import { FeedbacksView } from '../views/feedbacks';
 import WBView from '../views/WBView.vue';
 import TasksView from '../views/TasksView.vue';
 import AdvertsView from '../views/adverts/AdvertsView.vue';
@@ -170,6 +171,14 @@ const routes: RouteRecordRaw[] = [
         component: PromotionsView,
         meta: {
           title: 'Акции',
+        },
+      },
+      {
+        path: 'feedbacks',
+        name: 'Feedbacks',
+        component: FeedbacksView,
+        meta: {
+          title: 'Отзывы',
         },
       },
       {
