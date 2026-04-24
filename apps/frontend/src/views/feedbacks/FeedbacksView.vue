@@ -70,7 +70,7 @@
           <EmptyState
             v-else-if="!feedbacksStore.loading"
             icon="pi pi-inbox"
-            message="в последних ста отзывах есть ответы"
+            message="в последних 100 отзывах есть ответы"
           />
           <Paginator
             v-if="
