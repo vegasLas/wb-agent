@@ -15,6 +15,7 @@ import type {
   GoodsItem,
   FeedbackRule,
   CreateFeedbackRuleInput,
+  UnansweredSummary,
 } from './types';
 
 /**
@@ -36,23 +37,24 @@ export const feedbacksAPI = {
   },
 
   /**
-   * GET /api/v1/feedbacks/count-unanswered
-   * Count total unanswered feedbacks
+   * GET /api/v1/feedbacks/unanswered-summary
+   * Collect all unanswered feedbacks grouped by nmId with DB stats
    */
-  async countUnansweredFeedbacks(): Promise<number> {
-    const response = await apiClient.get<{ data: { count: number } }>(
-      '/feedbacks/count-unanswered',
+  async fetchUnansweredSummary(): Promise<UnansweredSummary> {
+    const response = await apiClient.get<{ data: UnansweredSummary }>(
+      '/feedbacks/unanswered-summary',
     );
-    return response.data.data.count;
+    return response.data.data;
   },
 
   /**
    * POST /api/v1/feedbacks/answer-all
-   * Batch process all unanswered feedbacks
+   * Batch process unanswered feedbacks for given nmIds
    */
-  async answerAllFeedbacks(): Promise<ProcessResult> {
+  async answerAllFeedbacks(nmIds: number[]): Promise<ProcessResult> {
     const response = await apiClient.post<{ data: ProcessResult }>(
       '/feedbacks/answer-all',
+      { nmIds },
     );
     return response.data.data;
   },

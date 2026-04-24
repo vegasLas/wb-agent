@@ -149,6 +149,20 @@ export interface ProcessResult {
   failed: number;
 }
 
+export interface UnansweredSummaryGroup {
+  nmId: number;
+  vendorCode: string;
+  count: number;
+  rejectedCount: number;
+  responsesCount: number;
+  hasEnoughHistory: boolean;
+}
+
+export interface UnansweredSummary {
+  totalCount: number;
+  groups: UnansweredSummaryGroup[];
+}
+
 export interface FetchFeedbacksParams {
   tab?: 'unanswered' | 'ai-posted' | 'ai-pending';
   page?: number;

@@ -15,6 +15,7 @@ import type {
   GoodsItem,
   CreateFeedbackRuleInput,
   FeedbacksResponse,
+  UnansweredSummary,
 } from './types';
 
 export const useFeedbacksStore = defineStore('feedbacks', () => {
@@ -41,7 +42,9 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const rejectedLoading = ref(false);
   const goodsGroupsLoading = ref(false);
   const goodsLoading = ref(false);
+  const summaryLoading = ref(false);
   const error = ref<string | null>(null);
+  const unansweredSummary = ref<UnansweredSummary | null>(null);
 
   // Per-tab pagination state
   const pagination = ref<Record<FeedbackTab, FeedbacksResponse['pagination']>>({
@@ -131,12 +134,20 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function countUnansweredFeedbacks(): Promise<number> {
+  async function fetchUnansweredSummary(): Promise<UnansweredSummary | null> {
+    summaryLoading.value = true;
+    error.value = null;
     try {
-      return await feedbacksAPI.countUnansweredFeedbacks();
+      const data = await feedbacksAPI.fetchUnansweredSummary();
+      unansweredSummary.value = data;
+      return data;
     } catch (err: unknown) {
-      console.error('Failed to count unanswered feedbacks:', err);
-      return unansweredFeedbacks.value.length;
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to fetch unanswered summary';
+      error.value = errorMsg;
+      return null;
+    } finally {
+      summaryLoading.value = false;
     }
   }
 
@@ -256,7 +267,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function answerAllFeedbacks(): Promise<{
+  async function answerAllFeedbacks(nmIds: number[]): Promise<{
     processed: number;
     posted: number;
     skipped: number;
@@ -266,7 +277,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     error.value = null;
 
     try {
-      const result = await feedbacksAPI.answerAllFeedbacks();
+      const result = await feedbacksAPI.answerAllFeedbacks(nmIds);
       await fetchFeedbacks('unanswered', true);
       await fetchStatistics();
       return result;
@@ -504,6 +515,8 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     rejectedLoading: readonly(rejectedLoading),
     goodsGroupsLoading: readonly(goodsGroupsLoading),
     goodsLoading: readonly(goodsLoading),
+    summaryLoading: readonly(summaryLoading),
+    unansweredSummary: readonly(unansweredSummary),
     error: readonly(error),
     pagination: readonly(pagination),
 
@@ -517,7 +530,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     setPage,
     setPageSize,
     fetchStatistics,
-    countUnansweredFeedbacks,
+    fetchUnansweredSummary,
     fetchSettings,
     updateSettings,
     updateProductSetting,
