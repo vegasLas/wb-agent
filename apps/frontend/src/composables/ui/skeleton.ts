@@ -4,6 +4,7 @@ import { ref, computed, readonly } from 'vue';
 const routerInitializing = ref(true);
 const viewIsLoading = ref(true);
 const isNavigating = ref(false);
+const pendingRouteName = ref<string | null>(null);
 
 // Computed state
 const showSkeletonState = computed(
@@ -78,12 +79,16 @@ export function useSkeleton() {
 
   /**
    * Called when navigation starts - shows skeleton during route change
+   * @param targetRouteName The route being navigated to (for correct skeleton selection)
    */
-  function onNavigationStart() {
+  function onNavigationStart(targetRouteName?: string) {
     // Only show skeleton for navigation after initial load
     if (!routerInitializing.value) {
       isNavigating.value = true;
       viewIsLoading.value = true;
+      if (targetRouteName) {
+        pendingRouteName.value = targetRouteName;
+      }
     }
   }
 
@@ -92,6 +97,7 @@ export function useSkeleton() {
    */
   function onNavigationEnd() {
     isNavigating.value = false;
+    pendingRouteName.value = null;
   }
 
   return {
@@ -100,6 +106,7 @@ export function useSkeleton() {
     isRouterInitializing: readonly(routerInitializing),
     isViewLoading: readonly(viewIsLoading),
     isNavigating: readonly(isNavigating),
+    pendingRouteName: readonly(pendingRouteName),
 
     // Actions
     markRouterReady,

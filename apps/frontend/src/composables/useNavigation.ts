@@ -1,4 +1,4 @@
-import { computed } from 'vue';
+import { computed, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 export interface NavItem {
@@ -66,10 +66,17 @@ export const secondaryNav: NavItem[] = [
   },
 ];
 
-export function useNavigation() {
+export function useNavigation(pendingRouteName?: Ref<string | null>) {
   const route = useRoute();
 
   function isActive(item: { id: string; route: string }): boolean {
+    // During navigation, check pending route first for immediate feedback
+    const pending = pendingRouteName?.value;
+    if (pending) {
+      if (pending === item.route) return true;
+      if (pending.startsWith(item.id)) return true;
+    }
+
     const routeName = route.name?.toString() ?? '';
     const routePath = route.path;
 

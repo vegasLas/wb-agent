@@ -196,13 +196,6 @@ pre {
   color: var(--color-primary-hover);
 }
 
-/* Skeleton Card */
-.skeleton-card {
-  background-color: var(--color-card);
-  border-radius: 20px;
-  padding: 1.5rem;
-}
-
 /* Toast styling */
 .p-toast .p-toast-summary,
 .p-toast .p-toast-detail {

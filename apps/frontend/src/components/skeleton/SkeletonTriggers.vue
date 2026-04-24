@@ -3,22 +3,22 @@
     <!-- UserAlerts placeholder -->
     <Skeleton
       height="3rem"
-      border-radius="0.25rem"
+      border-radius="0.5rem"
     />
 
     <!-- Warning Message placeholder -->
     <Skeleton
       height="4rem"
-      border-radius="0.25rem"
+      border-radius="0.5rem"
     />
 
     <!-- Status Filter Buttons (3 buttons with counts) -->
     <div class="flex gap-2">
-      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded">
+      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded-lg">
         <Skeleton
           width="4rem"
           height="1.25rem"
-          border-radius="0.25rem"
+          border-radius="0.5rem"
         />
         <Skeleton
           width="1.5rem"
@@ -26,11 +26,11 @@
           border-radius="50%"
         />
       </div>
-      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded">
+      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded-lg">
         <Skeleton
           width="5rem"
           height="1.25rem"
-          border-radius="0.25rem"
+          border-radius="0.5rem"
         />
         <Skeleton
           width="1.5rem"
@@ -38,11 +38,11 @@
           border-radius="50%"
         />
       </div>
-      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded">
+      <div class="flex-1 flex items-center justify-between p-2 bg-deep-card rounded-lg">
         <Skeleton
           width="4rem"
           height="1.25rem"
-          border-radius="0.25rem"
+          border-radius="0.5rem"
         />
         <Skeleton
           width="1.5rem"
@@ -56,7 +56,7 @@
     <Skeleton
       width="100%"
       height="2.5rem"
-      border-radius="0.25rem"
+      border-radius="0.5rem"
     />
 
     <!-- Active Count Tag and Add Button Row -->
@@ -64,18 +64,18 @@
       <Skeleton
         width="12rem"
         height="1.75rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
       />
       <Skeleton
         width="7rem"
         height="2.25rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
       />
     </div>
 
     <!-- Trigger Cards -->
     <div class="space-y-3">
-      <div class="p-4 bg-deep-card">
+      <div class="p-4 bg-deep-card rounded-lg">
         <div class="flex flex-col gap-3">
           <!-- Warehouses section -->
           <div class="flex items-center gap-2">
@@ -88,12 +88,12 @@
               <Skeleton
                 width="6rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -109,12 +109,12 @@
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="6rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -130,12 +130,12 @@
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="8rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -150,7 +150,7 @@
             <Skeleton
               width="60%"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
 
@@ -165,12 +165,12 @@
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="6rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -185,7 +185,7 @@
             <Skeleton
               width="70%"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
 
@@ -199,7 +199,7 @@
             <Skeleton
               width="50%"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
 
@@ -208,18 +208,18 @@
             <Skeleton
               width="5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
         </div>
       </div>
 
-      <div class="p-4 bg-deep-card">
+      <div class="p-4 bg-deep-card rounded-lg">
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2">
             <Skeleton
@@ -231,7 +231,7 @@
               <Skeleton
                 width="7rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -246,17 +246,17 @@
               <Skeleton
                 width="6rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="7rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -271,22 +271,22 @@
               <Skeleton
                 width="6rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="2.5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="2.5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="2.5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -300,7 +300,7 @@
             <Skeleton
               width="55%"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
 
@@ -314,7 +314,7 @@
               <Skeleton
                 width="6rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -328,7 +328,7 @@
             <Skeleton
               width="45%"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
 
@@ -336,18 +336,18 @@
             <Skeleton
               width="5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
         </div>
       </div>
 
-      <div class="p-4 bg-deep-card">
+      <div class="p-4 bg-deep-card rounded-lg">
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2">
             <Skeleton
@@ -359,12 +359,12 @@
               <Skeleton
                 width="6rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -379,7 +379,7 @@
               <Skeleton
                 width="7rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -394,7 +394,7 @@
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -408,7 +408,7 @@
             <Skeleton
               width="50%"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
 
@@ -422,12 +422,12 @@
               <Skeleton
                 width="5rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
               <Skeleton
                 width="7rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
           </div>
@@ -441,7 +441,7 @@
             <Skeleton
               width="40%"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
 
@@ -449,12 +449,12 @@
             <Skeleton
               width="5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
         </div>

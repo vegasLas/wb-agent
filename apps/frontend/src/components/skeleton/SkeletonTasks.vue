@@ -5,12 +5,12 @@
       <Skeleton
         width="100%"
         height="2rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
       />
       <Skeleton
         width="100%"
         height="2rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
       />
     </div>
 
@@ -19,13 +19,13 @@
       <Skeleton
         width="100%"
         height="2.5rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
         class="flex-1"
       />
       <Skeleton
         width="8rem"
         height="2.5rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
       />
     </div>
 
@@ -34,18 +34,18 @@
       <Skeleton
         width="10rem"
         height="1.25rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
       />
       <Skeleton
         width="6rem"
         height="2rem"
-        border-radius="0.25rem"
+        border-radius="0.5rem"
       />
     </div>
 
     <!-- List Content Cards -->
     <div class="space-y-3">
-      <div class="p-4 bg-deep-card">
+      <div class="p-4 bg-deep-card rounded-lg">
         <div class="flex flex-col gap-3">
           <!-- Header row -->
           <div class="flex items-start justify-between">
@@ -58,13 +58,13 @@
               <Skeleton
                 width="8rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
             <Skeleton
               width="5rem"
               height="1.5rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
           <!-- Content rows -->
@@ -77,7 +77,7 @@
             <Skeleton
               width="6rem"
               height="1.25rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
           <div class="flex items-center gap-2">
@@ -89,7 +89,7 @@
             <Skeleton
               width="10rem"
               height="1rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
           <!-- Action buttons -->
@@ -97,23 +97,23 @@
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
         </div>
       </div>
 
-      <div class="p-4 bg-deep-card">
+      <div class="p-4 bg-deep-card rounded-lg">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-2">
@@ -125,13 +125,13 @@
               <Skeleton
                 width="7rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
             <Skeleton
               width="6rem"
               height="1.5rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
           <div class="flex items-center gap-2">
@@ -143,25 +143,25 @@
             <Skeleton
               width="5rem"
               height="1.25rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
           <div class="flex justify-end gap-2 mt-2">
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
         </div>
       </div>
 
-      <div class="p-4 bg-deep-card">
+      <div class="p-4 bg-deep-card rounded-lg">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-2">
@@ -173,13 +173,13 @@
               <Skeleton
                 width="9rem"
                 height="1.25rem"
-                border-radius="0.25rem"
+                border-radius="0.5rem"
               />
             </div>
             <Skeleton
               width="5rem"
               height="1.5rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
           <div class="flex items-center gap-2">
@@ -191,24 +191,24 @@
             <Skeleton
               width="8rem"
               height="1.25rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
           <div class="flex justify-end gap-2 mt-2">
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
             <Skeleton
               width="2.5rem"
               height="2rem"
-              border-radius="0.25rem"
+              border-radius="0.5rem"
             />
           </div>
         </div>
