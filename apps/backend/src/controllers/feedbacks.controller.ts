@@ -104,7 +104,7 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
         supplierId,
         status,
       },
-      orderBy: { feedbackDate: 'desc' },
+      orderBy: status === 'POSTED' ? { postedAt: 'desc' } : { feedbackDate: 'desc' },
       take: size,
       skip,
     });
