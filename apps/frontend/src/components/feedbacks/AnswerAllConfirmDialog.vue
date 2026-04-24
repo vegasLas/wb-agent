@@ -3,9 +3,9 @@
     :visible="visible"
     @update:visible="$emit('update:visible', $event)"
     header="Собрать все отзывы без ответа"
-    :style="{ width: '700px' }"
+    :style="{ width: '720px' }"
     :modal="true"
-    :closable="!loading && !answerLoading"
+    :closable="!summaryLoading && !answerLoading"
   >
     <div class="flex flex-col gap-4">
       <!-- Loading state -->
@@ -16,7 +16,7 @@
       </div>
 
       <!-- Summary state -->
-      <div v-else-if="summary && !answerLoading && !result && !showConfirm">
+      <div v-else-if="summary && !answerLoading && !result && !showConfirm && !showConfirmBulk">
         <div class="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-3">
           <i class="pi pi-info-circle text-blue-500 text-2xl" />
           <div>
@@ -30,6 +30,7 @@
         </div>
 
         <DataTable
+          v-model:selection="selectedRows"
           :value="summary.groups"
           :sort-field="'count'"
           :sort-order="-1"
@@ -38,7 +39,10 @@
           scroll-height="320px"
           class="p-datatable-sm"
           :row-class="rowClass"
+          data-key="nmId"
         >
+          <Column selection-mode="multiple" header-style="width: 3rem" />
+
           <Column field="vendorCode" header="Артикул" sortable>
             <template #body="{ data }">
               <span class="font-medium">{{ data.vendorCode || '—' }}</span>
@@ -66,24 +70,20 @@
               <span v-else class="text-xs text-surface-500">—</span>
             </template>
           </Column>
-
-          <Column header="Действие" style="width: 120px; text-align: center">
-            <template #body="{ data }">
-              <Button
-                v-if="data.hasEnoughHistory"
-                label="Ответить"
-                icon="pi pi-send"
-                size="small"
-                severity="primary"
-                @click="$emit('select-nmId', data.nmId)"
-              />
-              <span v-else class="text-xs text-surface-500">Недостаточно истории</span>
-            </template>
-          </Column>
         </DataTable>
+
+        <div class="flex justify-end pt-2">
+          <Button
+            :label="`Ответить выбранные (${selectedRows.length})`"
+            icon="pi pi-send"
+            severity="primary"
+            :disabled="selectedRows.length === 0"
+            @click="showConfirmBulk = true"
+          />
+        </div>
       </div>
 
-      <!-- Confirmation state -->
+      <!-- Single confirmation state -->
       <div v-else-if="showConfirm && selectedGroup && !answerLoading && !result" class="flex flex-col gap-3">
         <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
           <div class="flex items-center gap-2 mb-2">
@@ -96,6 +96,22 @@
           </p>
           <p class="text-xs text-surface-500 mt-1">
             Отзывов к обработке: {{ selectedGroup.count }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Bulk confirmation state -->
+      <div v-else-if="showConfirmBulk && !answerLoading && !result" class="flex flex-col gap-3">
+        <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+          <div class="flex items-center gap-2 mb-2">
+            <i class="pi pi-question-circle text-yellow-600" />
+            <span class="text-sm font-medium">Подтверждение</span>
+          </div>
+          <p class="text-sm text-surface-700 dark:text-surface-300">
+            Запустить автоответ для <strong>{{ selectedRows.length }}</strong> выбранных товаров?
+          </p>
+          <p class="text-xs text-surface-500 mt-1">
+            Всего отзывов к обработке: {{ totalSelectedCount }}
           </p>
         </div>
       </div>
@@ -115,15 +131,15 @@
             <span class="text-sm font-medium">Обработка завершена</span>
           </div>
           <div class="grid grid-cols-3 gap-2 text-center">
-            <div class="p-2 bg-white dark:bg-surface-800 rounded">
-              <p class="text-lg font-bold text-surface-900 dark:text-surface-0">{{ result.processed }}</p>
+            <div class="p-2 bg-surface-0 dark:bg-surface-800 rounded">
+              <p class="text-lg font-bold">{{ result.processed }}</p>
               <p class="text-xs text-surface-500">Обработано</p>
             </div>
-            <div class="p-2 bg-white dark:bg-surface-800 rounded">
+            <div class="p-2 bg-surface-0 dark:bg-surface-800 rounded">
               <p class="text-lg font-bold text-green-600">{{ result.posted }}</p>
               <p class="text-xs text-surface-500">Опубликовано</p>
             </div>
-            <div class="p-2 bg-white dark:bg-surface-800 rounded">
+            <div class="p-2 bg-surface-0 dark:bg-surface-800 rounded">
               <p class="text-lg font-bold text-surface-500">{{ result.skipped + result.failed }}</p>
               <p class="text-xs text-surface-500">Пропущено</p>
             </div>
@@ -140,21 +156,21 @@
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button
-          v-if="showConfirm && !answerLoading && !result"
+          v-if="(showConfirm || showConfirmBulk) && !answerLoading && !result"
           label="Отмена"
           severity="secondary"
           text
-          @click="$emit('cancel-confirm')"
+          @click="onCancel"
         />
         <Button
-          v-if="showConfirm && !answerLoading && !result"
+          v-if="(showConfirm || showConfirmBulk) && !answerLoading && !result"
           label="Подтвердить"
           icon="pi pi-send"
           severity="primary"
-          @click="$emit('confirm')"
+          @click="onConfirm"
         />
         <Button
-          v-if="!showConfirm && !summaryLoading && !answerLoading && !result"
+          v-if="!showConfirm && !showConfirmBulk && !summaryLoading && !answerLoading && !result"
           label="Закрыть"
           severity="secondary"
           text
@@ -177,7 +193,7 @@ import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ProgressSpinner from 'primevue/progressspinner';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { ProcessResult, UnansweredSummary, UnansweredSummaryGroup } from '@/stores/feedbacks';
 
 interface Props {
@@ -196,17 +212,47 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
   (e: 'select-nmId', nmId: number): void;
+  (e: 'confirm-bulk', nmIds: number[]): void;
   (e: 'cancel-confirm'): void;
-  (e: 'confirm'): void;
 }>();
+
+const selectedRows = ref<UnansweredSummaryGroup[]>([]);
+const showConfirmBulk = ref(false);
+
+// Reset selection when dialog opens with new data
+watch(
+  () => props.summary,
+  () => {
+    selectedRows.value = [];
+    showConfirmBulk.value = false;
+  },
+);
 
 const selectedGroup = computed(() => {
   if (!props.summary || props.selectedNmId === null) return null;
   return props.summary.groups.find((g) => g.nmId === props.selectedNmId) || null;
 });
 
+const totalSelectedCount = computed(() => {
+  return selectedRows.value.reduce((sum, g) => sum + g.count, 0);
+});
+
 function rowClass(data: UnansweredSummaryGroup): string {
   return data.hasEnoughHistory ? 'bg-orange-500/5' : '';
+}
+
+function onCancel() {
+  showConfirmBulk.value = false;
+  emit('cancel-confirm');
+}
+
+function onConfirm() {
+  if (showConfirmBulk.value) {
+    const nmIds = selectedRows.value.map((g) => g.nmId);
+    emit('confirm-bulk', nmIds);
+  } else {
+    emit('cancel-confirm');
+  }
 }
 </script>
 

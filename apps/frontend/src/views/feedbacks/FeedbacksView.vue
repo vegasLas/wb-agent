@@ -226,8 +226,8 @@
       :result="dialog.answerAllResult.value"
       :error="feedbacksStore.error"
       @select-nm-id="onSelectNmIdForAnswer"
+      @confirm-bulk="onConfirmBulk"
       @cancel-confirm="onCancelConfirmNmId"
-      @confirm="onConfirmAnswerAll"
     />
 
     <!-- Auto Answers Drawer -->
@@ -352,11 +352,10 @@ function onCancelConfirmNmId() {
   dialog.cancelConfirmNmId();
 }
 
-async function onConfirmAnswerAll() {
-  const nmId = dialog.selectedNmId.value;
-  if (!nmId) return;
+async function onConfirmBulk(nmIds: number[]) {
+  if (!nmIds || nmIds.length === 0) return;
   try {
-    const result = await feedbacksStore.answerAllFeedbacks([nmId]);
+    const result = await feedbacksStore.answerAllFeedbacks(nmIds);
     dialog.setAnswerAllResult(result);
   } catch {
     dialog.setAnswerAllResult(null);
