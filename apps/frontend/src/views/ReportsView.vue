@@ -144,53 +144,8 @@
         </template>
       </Card>
 
-      <!-- View Toggle Buttons -->
-      <div v-if="!reportStore.loading" class="mb-6 flex space-x-2">
-        <Button
-          :severity="
-            reportViewStore.activeView === 'charts' ? 'primary' : 'secondary'
-          "
-          :variant="
-            reportViewStore.activeView === 'charts' ? 'filled' : 'outlined'
-          "
-          size="small"
-          @click="reportViewStore.setActiveView('charts')"
-        >
-          <i class="pi pi-chart-pie mr-1" />
-          Графики
-        </Button>
-        <Button
-          :severity="
-            reportViewStore.activeView === 'suggestions'
-              ? 'primary'
-              : 'secondary'
-          "
-          :variant="
-            reportViewStore.activeView === 'suggestions' ? 'filled' : 'outlined'
-          "
-          size="small"
-          @click="reportViewStore.setActiveView('suggestions')"
-        >
-          <i class="pi pi-lightbulb mr-1" />
-          Рекомендации
-        </Button>
-      </div>
-
-      <!-- Conditional Rendering based on activeView -->
-      <WarehouseSuggestions
-        v-if="reportViewStore.activeView === 'suggestions'"
-      />
-
-      <ReportCharts
-        v-if="reportViewStore.activeView === 'charts'"
-        :items-by-warehouse="reportStore.itemsByWarehouse"
-        :data="reportDataTyped"
-        :error="reportStore.error"
-        :loading="reportStore.loading"
-        :report-pending="reportStore.reportPending"
-        :estimated-wait-time="reportStore.estimatedWaitTime"
-        @retry="reportViewStore.fetchReportData()"
-      />
+      <!-- Report Main with Tabs -->
+      <ReportMain />
     </template>
   </div>
 </template>
@@ -204,22 +159,16 @@ import { useUserStore } from '@/stores/user';
 import { useReportViewStore } from '@/stores/reports';
 import UserAlerts from '../components/global/UserAlerts.vue';
 import MultiSelect from 'primevue/multiselect';
-import ReportCharts from '../components/report/ReportCharts.vue';
-import WarehouseSuggestions from '../components/report/WarehouseSuggestions.vue';
+import { ReportMain } from '../components/report';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import type { ReportItem, ReportParsedData } from '../types';
+import type { ReportItem } from '../types';
 
 const reportStore = useReportStore();
 const userStore = useUserStore();
 const reportViewStore = useReportViewStore();
-
-// Typed report data for template (avoid type assertion with | in template)
-const reportDataTyped = computed<ReportParsedData | null>(() => {
-  return reportStore.data as ReportParsedData | null;
-});
 
 // Yesterday for max date
 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
