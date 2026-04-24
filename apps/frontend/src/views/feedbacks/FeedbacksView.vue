@@ -4,7 +4,9 @@
     <FeedbacksStatsCards :stats="feedbacksStore.stats" />
 
     <!-- Actions Bar + View Mode Switch -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface-0 dark:bg-surface-800 rounded-lg shadow-sm">
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface-0 dark:bg-surface-800 rounded-lg shadow-sm"
+    >
       <!-- Left: View Mode Switch -->
       <SelectButton
         v-model="viewMode"
@@ -18,6 +20,7 @@
 
       <!-- Right: Actions -->
       <FeedbacksActionsBar
+        :active-tab="activeTab"
         :settings-loading="feedbacksStore.settingsLoading"
         :answer-all-loading="feedbacksStore.answerAllLoading"
         @open-auto-answers="showAutoAnswersDrawer = true"
@@ -39,7 +42,10 @@
             v-if="feedbacksStore.loading && activeTab === 'unanswered'"
           />
           <div
-            v-if="feedbacksStore.pagination.unanswered.totalCount > 0 && !feedbacksStore.loading"
+            v-if="
+              feedbacksStore.pagination.unanswered.totalCount > 0 &&
+              !feedbacksStore.loading
+            "
             class="flex justify-end mb-2"
           >
             <Chip
@@ -64,14 +70,20 @@
           <EmptyState
             v-else-if="!feedbacksStore.loading"
             icon="pi pi-inbox"
-            message="Нет отзывов без ответа"
+            message="в последних ста отзывах есть ответы"
           />
           <Paginator
-            v-if="feedbacksStore.pagination.unanswered.totalPages > 1 && !feedbacksStore.loading"
+            v-if="
+              feedbacksStore.pagination.unanswered.totalPages > 1 &&
+              !feedbacksStore.loading
+            "
             class="feedbacks-paginator"
             :rows="feedbacksStore.pagination.unanswered.pageSize"
             :total-records="feedbacksStore.pagination.unanswered.totalCount"
-            :first="(feedbacksStore.pagination.unanswered.page - 1) * feedbacksStore.pagination.unanswered.pageSize"
+            :first="
+              (feedbacksStore.pagination.unanswered.page - 1) *
+              feedbacksStore.pagination.unanswered.pageSize
+            "
             :rows-per-page-options="[10, 20, 50]"
             @page="onPageChange"
           />
@@ -82,7 +94,10 @@
             v-if="feedbacksStore.loading && activeTab === 'ai-posted'"
           />
           <div
-            v-if="feedbacksStore.pagination['ai-posted'].totalCount > 0 && !feedbacksStore.loading"
+            v-if="
+              feedbacksStore.pagination['ai-posted'].totalCount > 0 &&
+              !feedbacksStore.loading
+            "
             class="flex justify-end mb-2"
           >
             <Chip
@@ -109,11 +124,17 @@
             message="Нет опубликованных AI-ответов"
           />
           <Paginator
-            v-if="feedbacksStore.pagination['ai-posted'].totalPages > 1 && !feedbacksStore.loading"
+            v-if="
+              feedbacksStore.pagination['ai-posted'].totalPages > 1 &&
+              !feedbacksStore.loading
+            "
             class="feedbacks-paginator"
             :rows="feedbacksStore.pagination['ai-posted'].pageSize"
             :total-records="feedbacksStore.pagination['ai-posted'].totalCount"
-            :first="(feedbacksStore.pagination['ai-posted'].page - 1) * feedbacksStore.pagination['ai-posted'].pageSize"
+            :first="
+              (feedbacksStore.pagination['ai-posted'].page - 1) *
+              feedbacksStore.pagination['ai-posted'].pageSize
+            "
             :rows-per-page-options="[10, 20, 50]"
             @page="onPageChange"
           />
@@ -124,13 +145,24 @@
             v-if="feedbacksStore.loading && activeTab === 'ai-pending'"
           />
           <div
-            v-if="feedbacksStore.pagination['ai-pending'].totalCount > 0 && !feedbacksStore.loading"
-            class="flex justify-end mb-2"
+            v-if="
+              feedbacksStore.pagination['ai-pending'].totalCount > 0 &&
+              !feedbacksStore.loading
+            "
+            class="flex items-center justify-between mb-2"
           >
             <Chip
               :label="`Показано ${feedbacksStore.feedbacks.length} из ${feedbacksStore.pagination['ai-pending'].totalCount}`"
               icon="pi pi-list"
               class="text-xs"
+            />
+            <Button
+              label="Опубликовать все AI"
+              icon="pi pi-check"
+              severity="success"
+              size="small"
+              :loading="feedbacksStore.postPendingLoading"
+              @click="onPostPending"
             />
           </div>
           <div
@@ -153,11 +185,17 @@
             message="Нет неопубликованных AI-ответов"
           />
           <Paginator
-            v-if="feedbacksStore.pagination['ai-pending'].totalPages > 1 && !feedbacksStore.loading"
+            v-if="
+              feedbacksStore.pagination['ai-pending'].totalPages > 1 &&
+              !feedbacksStore.loading
+            "
             class="feedbacks-paginator"
             :rows="feedbacksStore.pagination['ai-pending'].pageSize"
             :total-records="feedbacksStore.pagination['ai-pending'].totalCount"
-            :first="(feedbacksStore.pagination['ai-pending'].page - 1) * feedbacksStore.pagination['ai-pending'].pageSize"
+            :first="
+              (feedbacksStore.pagination['ai-pending'].page - 1) *
+              feedbacksStore.pagination['ai-pending'].pageSize
+            "
             :rows-per-page-options="[10, 20, 50]"
             @page="onPageChange"
           />
@@ -219,15 +257,9 @@
     <AnswerAllConfirmDialog
       v-model:visible="dialog.showAnswerAllDialog.value"
       :summary-loading="feedbacksStore.summaryLoading"
-      :answer-loading="feedbacksStore.answerAllLoading"
       :summary="dialog.answerAllSummary.value"
-      :selected-nm-id="dialog.selectedNmId.value"
-      :show-confirm="dialog.showConfirmNmId.value"
-      :result="dialog.answerAllResult.value"
       :error="feedbacksStore.error"
-      @select-nm-id="onSelectNmIdForAnswer"
       @confirm-bulk="onConfirmBulk"
-      @cancel-confirm="onCancelConfirmNmId"
     />
 
     <!-- Auto Answers Drawer -->
@@ -254,6 +286,8 @@ import Button from 'primevue/button';
 import SelectButton from 'primevue/selectbutton';
 import Paginator from 'primevue/paginator';
 import Chip from 'primevue/chip';
+import { toastHelpers, confirmPromise } from '@/utils/ui';
+import Message from 'primevue/message';
 import { useFeedbacksStore } from '@/stores/feedbacks';
 import { useViewReady } from '@/composables/ui';
 import { useFeedbacksDialog } from '@/composables/feedbacks/useFeedbacksDialog';
@@ -344,21 +378,38 @@ async function onAnswerAll() {
   }
 }
 
-function onSelectNmIdForAnswer(nmId: number) {
-  dialog.selectNmIdForAnswer(nmId);
-}
-
-function onCancelConfirmNmId() {
-  dialog.cancelConfirmNmId();
-}
-
 async function onConfirmBulk(nmIds: number[]) {
   if (!nmIds || nmIds.length === 0) return;
+  dialog.closeAnswerAllDialog();
   try {
     const result = await feedbacksStore.answerAllFeedbacks(nmIds);
-    dialog.setAnswerAllResult(result);
+    toastHelpers.info(
+      'Асинхронная обработка запущена',
+      `Обработка ${result.nmIdsCount} выбранных товаров запущена в фоновом режиме. Результаты появятся через несколько минут.`,
+    );
   } catch {
-    dialog.setAnswerAllResult(null);
+    toastHelpers.error('Ошибка', 'Не удалось запустить обработку отзывов');
+  }
+}
+
+async function onPostPending() {
+  const pendingCount = feedbacksStore.pagination['ai-pending'].totalCount;
+  const confirmed = await confirmPromise({
+    header: 'Подтверждение публикации',
+    message: `Запустить публикацию ${pendingCount} AI-ответов на Wildberries?`,
+    acceptLabel: 'Опубликовать',
+    rejectLabel: 'Отмена',
+  });
+  if (!confirmed) return;
+
+  try {
+    const result = await feedbacksStore.postPendingAnswers();
+    toastHelpers.info(
+      'Публикация запущена',
+      `Публикация ${result.pendingCount} AI-ответов запущена в фоновом режиме.`,
+    );
+  } catch {
+    toastHelpers.error('Ошибка', 'Не удалось запустить публикацию AI-ответов');
   }
 }
 
@@ -458,7 +509,9 @@ async function onRemoveFromGroup(groupId: string, nmId: number) {
 }
 
 // Rules handlers
-async function onCreateRule(rule: Record<string, unknown> & { nmIds: number[] }) {
+async function onCreateRule(
+  rule: Record<string, unknown> & { nmIds: number[] },
+) {
   try {
     await feedbacksStore.createFeedbackRule(rule);
   } catch {
@@ -501,6 +554,11 @@ onMounted(async () => {
       feedbacksStore.fetchRejectedAnswers(),
       feedbacksStore.fetchGoodsGroups(),
     ]);
+    // Prefetch counts for other tabs so tab labels show numbers immediately
+    await Promise.all([
+      feedbacksStore.fetchFeedbacks('ai-posted', true, true),
+      feedbacksStore.fetchFeedbacks('ai-pending', true, true),
+    ]);
   } finally {
     viewReady();
   }
@@ -537,7 +595,9 @@ onMounted(async () => {
 }
 
 .feedbacks-list {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .feedbacks-list.page-changing {
   opacity: 0.5;

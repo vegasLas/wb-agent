@@ -1,5 +1,7 @@
 <template>
-  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-3">
+  <div
+    class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-3"
+  >
     <!-- Left: Answer All button -->
     <Button
       :label="answerAllLabel"
@@ -23,8 +25,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Button from 'primevue/button';
+import type { FeedbackTab } from '@/stores/feedbacks';
 
 interface Props {
+  activeTab: FeedbackTab;
   settingsLoading: boolean;
   answerAllLoading: boolean;
 }
@@ -38,6 +42,6 @@ const emit = defineEmits<{
 
 const answerAllLabel = computed(() => {
   if (props.answerAllLoading) return 'Обработка...';
-  return 'Собрать все отзывы без ответа';
+  return 'собрать все отзывы без ответа';
 });
 </script>
