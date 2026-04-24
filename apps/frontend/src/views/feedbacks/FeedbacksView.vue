@@ -20,7 +20,6 @@
       <FeedbacksActionsBar
         :settings-loading="feedbacksStore.settingsLoading"
         :answer-all-loading="feedbacksStore.answerAllLoading"
-        :unanswered-count="unansweredCount"
         @open-auto-answers="showAutoAnswersDrawer = true"
         @answer-all="onAnswerAll"
       />
@@ -219,10 +218,15 @@
     <!-- Answer All Confirm Dialog -->
     <AnswerAllConfirmDialog
       v-model:visible="dialog.showAnswerAllDialog.value"
-      :count="dialog.unansweredCountForDialog.value"
-      :loading="feedbacksStore.answerAllLoading"
+      :summary-loading="feedbacksStore.summaryLoading"
+      :answer-loading="feedbacksStore.answerAllLoading"
+      :summary="dialog.answerAllSummary.value"
+      :selected-nm-id="dialog.selectedNmId.value"
+      :show-confirm="dialog.showConfirmNmId.value"
       :result="dialog.answerAllResult.value"
       :error="feedbacksStore.error"
+      @select-nm-id="onSelectNmIdForAnswer"
+      @cancel-confirm="onCancelConfirmNmId"
       @confirm="onConfirmAnswerAll"
     />
 
@@ -285,9 +289,6 @@ const viewModeOptions = [
 // Tabs
 const activeTab = computed(() => feedbacksStore.activeTab);
 const activeTabIndex = computed(() => tabs.indexOf(activeTab.value));
-const unansweredCount = computed(
-  () => feedbacksStore.unansweredFeedbacks.length,
-);
 
 const tabLabels = computed(() => ({
   unanswered: `Без ответа${feedbacksStore.pagination.unanswered.totalCount ? ` (${feedbacksStore.pagination.unanswered.totalCount})` : ''}`,
@@ -335,19 +336,27 @@ async function onToggleAutoAnswer(value: boolean) {
 }
 
 async function onAnswerAll() {
-  try {
-    const count =
-      (await feedbacksStore.countUnansweredFeedbacks?.()) ??
-      unansweredCount.value;
-    dialog.openAnswerAllDialog(count);
-  } catch {
-    dialog.openAnswerAllDialog(unansweredCount.value);
+  // Open dialog immediately so user sees the loader while fetching
+  dialog.openAnswerAllSummary({ totalCount: 0, groups: [] });
+  const summary = await feedbacksStore.fetchUnansweredSummary();
+  if (summary) {
+    dialog.openAnswerAllSummary(summary);
   }
 }
 
+function onSelectNmIdForAnswer(nmId: number) {
+  dialog.selectNmIdForAnswer(nmId);
+}
+
+function onCancelConfirmNmId() {
+  dialog.cancelConfirmNmId();
+}
+
 async function onConfirmAnswerAll() {
+  const nmId = dialog.selectedNmId.value;
+  if (!nmId) return;
   try {
-    const result = await feedbacksStore.answerAllFeedbacks();
+    const result = await feedbacksStore.answerAllFeedbacks([nmId]);
     dialog.setAnswerAllResult(result);
   } catch {
     dialog.setAnswerAllResult(null);

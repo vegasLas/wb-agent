@@ -6,7 +6,6 @@
       icon="pi pi-send"
       severity="primary"
       :loading="answerAllLoading"
-      :disabled="answerAllLoading || unansweredCount === 0"
       @click="$emit('answer-all')"
     />
 
@@ -28,7 +27,6 @@ import Button from 'primevue/button';
 interface Props {
   settingsLoading: boolean;
   answerAllLoading: boolean;
-  unansweredCount: number;
 }
 
 const props = defineProps<Props>();
@@ -40,7 +38,6 @@ const emit = defineEmits<{
 
 const answerAllLabel = computed(() => {
   if (props.answerAllLoading) return 'Обработка...';
-  if (props.unansweredCount === 0) return 'Нет отзывов';
-  return `Ответить на все (${props.unansweredCount})`;
+  return 'Собрать все отзывы без ответа';
 });
 </script>
