@@ -44,6 +44,7 @@ function mapDbRowToFeedbackItemDTO(row: {
   nmId: number;
   answerText: string;
   status: string;
+  postedAt: Date | null;
 }) {
   return {
     id: row.feedbackId,
@@ -71,6 +72,7 @@ function mapDbRowToFeedbackItemDTO(row: {
       answerText: row.answerText,
       status: row.status,
     },
+    postedAt: row.postedAt ? Number(row.postedAt) : null,
   };
 }
 
@@ -80,21 +82,21 @@ function mapDbRowToFeedbackItemDTO(row: {
 export const fetchFeedbacks = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { tab, limit, cursor, searchText } = req.query as {
+  const { tab, page, pageSize, searchText } = req.query as {
     tab?: string;
-    limit?: string;
-    cursor?: string;
+    page?: string;
+    pageSize?: string;
     searchText?: string;
   };
 
-  const pageLimit = limit ? Number(limit) : 100;
-  const pageCursor = cursor || '';
+  const currentPage = page ? Math.max(1, Number(page)) : 1;
+  const size = pageSize ? Math.max(1, Math.min(100, Number(pageSize))) : 10;
+  const skip = (currentPage - 1) * size;
 
-  logger.info(`Fetching feedbacks for user ${userId}, tab=${tab}`);
+  logger.info(`Fetching feedbacks for user ${userId}, tab=${tab}, page=${currentPage}, pageSize=${size}`);
 
   if (tab === 'ai-posted' || tab === 'ai-pending') {
     const status = tab === 'ai-posted' ? 'POSTED' : 'PENDING';
-    const skip = pageCursor ? Number(pageCursor) : 0;
 
     const rows = await prisma.feedbackAutoAnswer.findMany({
       where: {
@@ -102,8 +104,8 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
         supplierId,
         status,
       },
-      orderBy: { createdAt: 'desc' },
-      take: pageLimit,
+      orderBy: { feedbackDate: 'desc' },
+      take: size,
       skip,
     });
 
@@ -119,14 +121,17 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
       .filter((row) => row.productName && row.feedbackText !== undefined)
       .map(mapDbRowToFeedbackItemDTO);
 
-    const hasMore = skip + rows.length < totalCount;
+    const totalPages = Math.ceil(totalCount / size);
 
     successResponse(res, {
-      countUnanswered: 0,
       feedbacks,
-      pages: {
-        last: '',
-        next: hasMore ? String(skip + pageLimit) : '',
+      pagination: {
+        page: currentPage,
+        pageSize: size,
+        totalCount,
+        totalPages,
+        next: currentPage < totalPages ? currentPage + 1 : null,
+        prev: currentPage > 1 ? currentPage - 1 : null,
       },
     });
     return;
@@ -134,18 +139,20 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
 
   // Default: unanswered tab
   // WB API isAnswered filter is unreliable; fetch both and filter client-side
+  const pageCursor = skip === 0 ? '' : String(skip);
+
   const [answeredRes, unansweredRes] = await Promise.all([
     wbFeedbackService.getFeedbacks({
       userId,
       isAnswered: true,
-      limit: pageLimit,
+      limit: size,
       cursor: pageCursor,
       searchText: searchText || '',
     }),
     wbFeedbackService.getFeedbacks({
       userId,
       isAnswered: false,
-      limit: pageLimit,
+      limit: size,
       cursor: pageCursor,
       searchText: searchText || '',
     }),
@@ -166,17 +173,22 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
   const filteredFeedbacks = Array.from(merged.values())
     .filter((f) => !f.answer)
     .sort((a, b) => b.createdDate - a.createdDate)
-    .slice(0, pageLimit)
+    .slice(0, size)
     .map(mapFeedbackItemToDTO);
 
   const hasMore = (answeredRes.pages?.next || unansweredRes.pages?.next) !== '';
+  const totalCount = unansweredRes.countUnanswered || 0;
+  const totalPages = Math.ceil(totalCount / size);
 
   successResponse(res, {
-    countUnanswered: unansweredRes.countUnanswered,
     feedbacks: filteredFeedbacks,
-    pages: {
-      last: '',
-      next: hasMore ? (pageCursor ? String(Number(pageCursor) + pageLimit) : String(pageLimit)) : '',
+    pagination: {
+      page: currentPage,
+      pageSize: size,
+      totalCount,
+      totalPages,
+      next: hasMore ? currentPage + 1 : null,
+      prev: currentPage > 1 ? currentPage - 1 : null,
     },
   });
 };
