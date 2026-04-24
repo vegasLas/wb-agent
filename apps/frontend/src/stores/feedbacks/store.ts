@@ -35,6 +35,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const generatedAnswer = ref<GeneratedAnswer | null>(null);
   const loading = ref(false);
   const answerAllLoading = ref(false);
+  const postPendingLoading = ref(false);
   const generateLoading = ref(false);
   const statsLoading = ref(false);
   const settingsLoading = ref(false);
@@ -73,18 +74,22 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   }
 
   // Actions
-  async function fetchFeedbacks(tab: FeedbackTab, reset = true) {
+  async function fetchFeedbacks(tab: FeedbackTab, reset = true, silent = false) {
     if (!userStore.user?.selectedAccountId) {
       error.value = 'Необходимо выбрать аккаунт';
       return;
     }
 
     if (reset) {
-      feedbacks.value = [];
+      if (!silent) {
+        feedbacks.value = [];
+      }
       pagination.value[tab].page = 1;
     }
 
-    loading.value = true;
+    if (!silent) {
+      loading.value = true;
+    }
     error.value = null;
 
     try {
@@ -94,14 +99,18 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
         pageSize: pagination.value[tab].pageSize,
       });
 
-      feedbacks.value = response.feedbacks || [];
+      if (!silent) {
+        feedbacks.value = response.feedbacks || [];
+      }
       pagination.value[tab] = response.pagination;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to fetch feedbacks';
       error.value = errorMsg;
     } finally {
-      loading.value = false;
+      if (!silent) {
+        loading.value = false;
+      }
     }
   }
 
@@ -268,18 +277,14 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   }
 
   async function answerAllFeedbacks(nmIds: number[]): Promise<{
-    processed: number;
-    posted: number;
-    skipped: number;
-    failed: number;
+    started: true;
+    nmIdsCount: number;
   }> {
     answerAllLoading.value = true;
     error.value = null;
 
     try {
       const result = await feedbacksAPI.answerAllFeedbacks(nmIds);
-      await fetchFeedbacks('unanswered', true);
-      await fetchStatistics();
       return result;
     } catch (err: unknown) {
       const errorMsg =
@@ -288,6 +293,26 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
       throw err;
     } finally {
       answerAllLoading.value = false;
+    }
+  }
+
+  async function postPendingAnswers(): Promise<{
+    started: true;
+    pendingCount: number;
+  }> {
+    postPendingLoading.value = true;
+    error.value = null;
+
+    try {
+      const result = await feedbacksAPI.postPendingAnswers();
+      return result;
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to post pending answers';
+      error.value = errorMsg;
+      throw err;
+    } finally {
+      postPendingLoading.value = false;
     }
   }
 
@@ -508,6 +533,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     generatedAnswer: readonly(generatedAnswer),
     loading: readonly(loading),
     answerAllLoading: readonly(answerAllLoading),
+    postPendingLoading: readonly(postPendingLoading),
     generateLoading: readonly(generateLoading),
     statsLoading: readonly(statsLoading),
     settingsLoading: readonly(settingsLoading),
@@ -539,6 +565,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     rejectAnswer,
     regenerateAnswer,
     answerAllFeedbacks,
+    postPendingAnswers,
     setActiveTab,
     clearGeneratedAnswer,
     clearFeedbacks,

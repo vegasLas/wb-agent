@@ -49,12 +49,23 @@ export const feedbacksAPI = {
 
   /**
    * POST /api/v1/feedbacks/answer-all
-   * Batch process unanswered feedbacks for given nmIds
+   * Starts async batch processing of unanswered feedbacks for given nmIds.
    */
-  async answerAllFeedbacks(nmIds: number[]): Promise<ProcessResult> {
-    const response = await apiClient.post<{ data: ProcessResult }>(
+  async answerAllFeedbacks(nmIds: number[]): Promise<{ started: true; nmIdsCount: number }> {
+    const response = await apiClient.post<{ data: { started: true; nmIdsCount: number } }>(
       '/feedbacks/answer-all',
       { nmIds },
+    );
+    return response.data.data;
+  },
+
+  /**
+   * POST /api/v1/feedbacks/post-pending
+   * Starts async posting of all pending AI-generated answers.
+   */
+  async postPendingAnswers(): Promise<{ started: true; pendingCount: number }> {
+    const response = await apiClient.post<{ data: { started: true; pendingCount: number } }>(
+      '/feedbacks/post-pending',
     );
     return response.data.data;
   },
