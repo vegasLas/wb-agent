@@ -18,6 +18,10 @@ import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('FeedbackReview');
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
 import type { FeedbackRule } from '@prisma/client';
@@ -543,7 +547,8 @@ export class FeedbackReviewService {
       );
 
       // Phase 2: Post all answers sequentially
-      for (const item of generatedItems) {
+      for (let i = 0; i < generatedItems.length; i++) {
+        const item = generatedItems[i];
         try {
           await wbFeedbackService.answerFeedback({
             userId,
@@ -575,6 +580,10 @@ export class FeedbackReviewService {
             , error,
           );
         }
+        // Small delay between posts to reduce rate-limiting pressure
+        if (i < generatedItems.length - 1) {
+          await sleep(2000);
+        }
       }
 
       logger.info(
@@ -590,6 +599,66 @@ export class FeedbackReviewService {
       );
       throw error;
     }
+  }
+
+  /**
+   * Post all pending AI-generated answers to WB API one by one.
+   * Returns counts of posted and failed items.
+   */
+  async postPendingAnswers(
+    userId: number,
+    supplierId: string,
+  ): Promise<{ posted: number; failed: number }> {
+    const pending = await prisma.feedbackAutoAnswer.findMany({
+      where: { userId, supplierId, status: 'PENDING' },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    logger.info(
+      `Posting ${pending.length} pending answers for user ${userId}, supplier ${supplierId}`,
+    );
+
+    let posted = 0;
+    let failed = 0;
+
+    for (let i = 0; i < pending.length; i++) {
+      const item = pending[i];
+      try {
+        await wbFeedbackService.answerFeedback({
+          userId,
+          feedbackId: item.feedbackId,
+          nmId: item.nmId,
+          answerText: item.answerText,
+        });
+
+        await prisma.feedbackAutoAnswer.update({
+          where: {
+            userId_supplierId_feedbackId: {
+              userId,
+              supplierId,
+              feedbackId: item.feedbackId,
+            },
+          },
+          data: { status: 'POSTED', postedAt: new Date() },
+        });
+
+        posted++;
+        logger.info(`Posted pending answer for feedback ${item.feedbackId}`);
+      } catch (error) {
+        failed++;
+        logger.error(`Failed to post pending answer for feedback ${item.feedbackId}:`, error);
+      }
+
+      if (i < pending.length - 1) {
+        await sleep(2000);
+      }
+    }
+
+    logger.info(
+      `Completed posting pending answers for user ${userId}, supplier ${supplierId}: posted=${posted}, failed=${failed}`,
+    );
+
+    return { posted, failed };
   }
 
   /**

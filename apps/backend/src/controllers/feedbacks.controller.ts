@@ -282,16 +282,43 @@ export const fetchUnansweredSummary = async (req: Request, res: Response): Promi
 
 /**
  * POST /api/v1/feedbacks/answer-all
+ * Fire-and-forget: starts processing in background and returns immediately.
  */
 export const answerAllFeedbacks = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { nmIds } = req.body as { nmIds: number[] };
 
-  logger.info(`Answering feedbacks for user ${userId}, supplier ${supplierId}, nmIds=[${nmIds.join(', ')}]`);
+  logger.info(`Starting async answer-all for user ${userId}, supplier ${supplierId}, nmIds=[${nmIds.join(', ')}]`);
 
-  const result = await feedbackReviewService.processUnansweredFeedbacksManual(userId, supplierId, nmIds);
-  successResponse(res, result);
+  // Fire and forget — do not await, respond immediately
+  feedbackReviewService.processUnansweredFeedbacksManual(userId, supplierId, nmIds)
+    .then((result) => logger.info(`answer-all completed for user ${userId}:`, result))
+    .catch((error) => logger.error(`answer-all failed for user ${userId}:`, error));
+
+  successResponse(res, { started: true, nmIdsCount: nmIds.length });
+};
+
+/**
+ * POST /api/v1/feedbacks/post-pending
+ * Fire-and-forget: posts all pending AI answers to WB API one by one.
+ */
+export const postPendingAnswers = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const supplierId = getSupplierId(req);
+
+  const pendingCount = await prisma.feedbackAutoAnswer.count({
+    where: { userId, supplierId, status: 'PENDING' },
+  });
+
+  logger.info(`Starting async post-pending for user ${userId}, supplier ${supplierId}, pendingCount=${pendingCount}`);
+
+  // Fire and forget
+  feedbackReviewService.postPendingAnswers(userId, supplierId)
+    .then((result) => logger.info(`post-pending completed for user ${userId}:`, result))
+    .catch((error) => logger.error(`post-pending failed for user ${userId}:`, error));
+
+  successResponse(res, { started: true, pendingCount });
 };
 
 /**
@@ -686,6 +713,7 @@ export default {
   fetchFeedbacks,
   fetchUnansweredSummary,
   answerAllFeedbacks,
+  postPendingAnswers,
   generateFeedbackAnswer,
   acceptFeedbackAnswer,
   rejectFeedbackAnswer,

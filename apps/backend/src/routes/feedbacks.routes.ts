@@ -11,6 +11,7 @@ import {
   fetchFeedbacks,
   fetchUnansweredSummary,
   answerAllFeedbacks,
+  postPendingAnswers,
   generateFeedbackAnswer,
   acceptFeedbackAnswer,
   rejectFeedbackAnswer,
@@ -48,6 +49,7 @@ router.post(
   validationMiddleware,
   asyncHandler(answerAllFeedbacks),
 );
+router.post('/post-pending', resolveSupplier, asyncHandler(postPendingAnswers));
 router.post('/generate', resolveSupplier, asyncHandler(generateFeedbackAnswer));
 router.post('/accept', resolveSupplier, asyncHandler(acceptFeedbackAnswer));
 router.post('/reject', resolveSupplier, asyncHandler(rejectFeedbackAnswer));
