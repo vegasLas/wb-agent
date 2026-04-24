@@ -462,3 +462,13 @@ export const wbAccountRequest = withRetry(wbAccountRequestImpl, {
   baseDelayMs: 500,
   maxDelayMs: 4000,
 });
+
+/**
+ * Slow-retry variant for WB API posting operations (e.g., feedback answers).
+ * Delays: 10s, 20s — then stops. Useful when WB API is rate-limited or flaky.
+ */
+export const wbAccountRequestSlowRetry = withRetry(wbAccountRequestImpl, {
+  maxAttempts: 3,
+  baseDelayMs: 10000,
+  maxDelayMs: 20000,
+});

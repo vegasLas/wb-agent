@@ -6,7 +6,7 @@
  * - Post feedback answer
  */
 
-import { wbAccountRequest } from '@/utils/wb-request';
+import { wbAccountRequest, wbAccountRequestSlowRetry } from '@/utils/wb-request';
 import { resolveAccountContext } from '@/utils/supplier-resolver';
 import { createLogger } from '@/utils/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -190,7 +190,7 @@ export class WBFeedbackService {
 
     logger.info(`Posting feedback answer for user ${userId}, feedbackId=${feedbackId}`);
 
-    return wbAccountRequest<FeedbackAnswerResponse>({
+    return wbAccountRequestSlowRetry<FeedbackAnswerResponse>({
       url,
       accountId,
       userAgent,
