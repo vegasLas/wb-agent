@@ -362,6 +362,75 @@ export const PrimevalPreset = definePreset(Aura, {
       shadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
       color: '#FFFFFF',
     },
+    // DataTable component styling
+    datatable: {
+      root: {
+        borderColor: '{color.border}',
+      },
+      header: {
+        background: '{color.card}',
+        borderColor: '{color.border}',
+        color: '{color.text}',
+        borderWidth: '0 0 1px 0',
+        padding: '1rem 1.5rem',
+      },
+      headerCell: {
+        background: '{color.card}',
+        hoverBackground: '{color.elevated}',
+        borderColor: '{color.border}',
+        color: '{color.secondary}',
+        gap: '0.5rem',
+        padding: '0.875rem 1.25rem',
+        sm: { padding: '0.625rem 0.875rem' },
+      },
+      columnTitle: {
+        fontWeight: '600',
+      },
+      row: {
+        background: 'transparent',
+        hoverBackground: '{color.elevated}',
+        selectedBackground: 'rgba(106, 57, 244, 0.1)',
+        color: '{color.text}',
+        hoverColor: '{color.text}',
+        selectedColor: '{color.text}',
+        stripedBackground: '{color.bg}',
+      },
+      bodyCell: {
+        borderColor: '{color.border}',
+        padding: '1rem 1.25rem',
+        sm: { padding: '0.75rem 0.875rem' },
+      },
+      footerCell: {
+        background: '{color.card}',
+        borderColor: '{color.border}',
+        color: '{color.text}',
+        padding: '0.875rem 1.25rem',
+        sm: { padding: '0.625rem 0.875rem' },
+      },
+      columnFooter: {
+        fontWeight: '600',
+      },
+      footer: {
+        background: '{color.card}',
+        borderColor: '{color.border}',
+        color: '{color.text}',
+        borderWidth: '1px 0 0 0',
+        padding: '0.875rem 1.25rem',
+      },
+      sortIcon: {
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+        size: '0.875rem',
+      },
+      paginatorTop: {
+        borderColor: '{color.border}',
+        borderWidth: '0 0 1px 0',
+      },
+      paginatorBottom: {
+        borderColor: '{color.border}',
+        borderWidth: '1px 0 0 0',
+      },
+    },
     // Button component styling
     button: {
       borderRadius: '14px',
