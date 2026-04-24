@@ -39,7 +39,12 @@ function getMessageText(message: UIMessage): string {
 }
 
 export class AIChatService {
-  async handleChat({ userId, conversationId, messages, attachments }: HandleChatInput) {
+  async handleChat({
+    userId,
+    conversationId,
+    messages,
+    attachments,
+  }: HandleChatInput) {
     // 1. Load or create conversation
     let convId = conversationId;
     if (!convId) {
@@ -91,8 +96,8 @@ export class AIChatService {
       userText.includes('analyze');
 
     const model = wantsReasoning
-      ? deepseek('deepseek-reasoner')
-      : deepseek('deepseek-chat');
+      ? deepseek('deepseek-v4-flash')
+      : deepseek('deepseek-v4-flash');
 
     const tools: Record<string, Tool> | undefined = wantsReasoning
       ? undefined

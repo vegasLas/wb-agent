@@ -63,7 +63,7 @@ export class FeedbackPromptService {
     });
     try {
       const { text } = await generateText({
-        model: deepseek('deepseek-chat'),
+        model: deepseek('deepseek-v4-flash'),
         prompt,
         maxTokens: 512,
         temperature: 0.7,
