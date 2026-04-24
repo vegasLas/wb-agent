@@ -3,17 +3,9 @@
     <!-- Stats Cards -->
     <FeedbacksStatsCards :stats="feedbacksStore.stats" />
 
-    <!-- Actions Bar -->
-    <FeedbacksActionsBar
-      :settings-loading="feedbacksStore.settingsLoading"
-      :answer-all-loading="feedbacksStore.answerAllLoading"
-      :unanswered-count="unansweredCount"
-      @open-auto-answers="showAutoAnswersDrawer = true"
-      @answer-all="onAnswerAll"
-    />
-
-    <!-- View Mode Switch -->
-    <div class="flex justify-center">
+    <!-- Actions Bar + View Mode Switch -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface-0 dark:bg-surface-800 rounded-lg shadow-sm">
+      <!-- Left: View Mode Switch -->
       <SelectButton
         v-model="viewMode"
         :options="viewModeOptions"
@@ -22,6 +14,15 @@
         :allow-empty="false"
         size="small"
         class="text-sm"
+      />
+
+      <!-- Right: Actions -->
+      <FeedbacksActionsBar
+        :settings-loading="feedbacksStore.settingsLoading"
+        :answer-all-loading="feedbacksStore.answerAllLoading"
+        :unanswered-count="unansweredCount"
+        @open-auto-answers="showAutoAnswersDrawer = true"
+        @answer-all="onAnswerAll"
       />
     </div>
 
@@ -34,13 +35,24 @@
         :active-index="activeTabIndex"
         @update:active-index="onTabChange"
       >
-        <TabPanel header="Без ответа">
+        <TabPanel :header="tabLabels.unanswered">
           <LoadingSpinner
             v-if="feedbacksStore.loading && activeTab === 'unanswered'"
           />
           <div
-            v-else-if="feedbacksStore.unansweredFeedbacks.length > 0"
-            class="space-y-3"
+            v-if="feedbacksStore.pagination.unanswered.totalCount > 0 && !feedbacksStore.loading"
+            class="flex justify-end mb-2"
+          >
+            <Chip
+              :label="`Показано ${feedbacksStore.unansweredFeedbacks.length} из ${feedbacksStore.pagination.unanswered.totalCount}`"
+              icon="pi pi-list"
+              class="text-xs"
+            />
+          </div>
+          <div
+            v-if="feedbacksStore.unansweredFeedbacks.length > 0"
+            class="space-y-3 feedbacks-list"
+            :class="{ 'page-changing': pageChanging }"
           >
             <FeedbacksCard
               v-for="feedback in feedbacksStore.unansweredFeedbacks"
@@ -51,32 +63,39 @@
             />
           </div>
           <EmptyState
-            v-else
+            v-else-if="!feedbacksStore.loading"
             icon="pi pi-inbox"
             message="Нет отзывов без ответа"
           />
-          <div
-            v-if="
-              feedbacksStore.hasMore['unanswered'] && !feedbacksStore.loading
-            "
-            class="flex justify-center mt-4"
-          >
-            <Button
-              label="Загрузить ещё"
-              icon="pi pi-chevron-down"
-              severity="secondary"
-              @click="onLoadMore"
-            />
-          </div>
+          <Paginator
+            v-if="feedbacksStore.pagination.unanswered.totalPages > 1 && !feedbacksStore.loading"
+            class="feedbacks-paginator"
+            :rows="feedbacksStore.pagination.unanswered.pageSize"
+            :total-records="feedbacksStore.pagination.unanswered.totalCount"
+            :first="(feedbacksStore.pagination.unanswered.page - 1) * feedbacksStore.pagination.unanswered.pageSize"
+            :rows-per-page-options="[10, 20, 50]"
+            @page="onPageChange"
+          />
         </TabPanel>
 
-        <TabPanel header="Опубликованные AI">
+        <TabPanel :header="tabLabels['ai-posted']">
           <LoadingSpinner
             v-if="feedbacksStore.loading && activeTab === 'ai-posted'"
           />
           <div
-            v-else-if="feedbacksStore.feedbacks.length > 0"
-            class="space-y-3"
+            v-if="feedbacksStore.pagination['ai-posted'].totalCount > 0 && !feedbacksStore.loading"
+            class="flex justify-end mb-2"
+          >
+            <Chip
+              :label="`Показано ${feedbacksStore.feedbacks.length} из ${feedbacksStore.pagination['ai-posted'].totalCount}`"
+              icon="pi pi-list"
+              class="text-xs"
+            />
+          </div>
+          <div
+            v-if="feedbacksStore.feedbacks.length > 0"
+            class="space-y-3 feedbacks-list"
+            :class="{ 'page-changing': pageChanging }"
           >
             <FeedbacksCard
               v-for="feedback in feedbacksStore.feedbacks"
@@ -86,32 +105,39 @@
             />
           </div>
           <EmptyState
-            v-else
+            v-else-if="!feedbacksStore.loading"
             icon="pi pi-check-circle"
             message="Нет опубликованных AI-ответов"
           />
-          <div
-            v-if="
-              feedbacksStore.hasMore['ai-posted'] && !feedbacksStore.loading
-            "
-            class="flex justify-center mt-4"
-          >
-            <Button
-              label="Загрузить ещё"
-              icon="pi pi-chevron-down"
-              severity="secondary"
-              @click="onLoadMore"
-            />
-          </div>
+          <Paginator
+            v-if="feedbacksStore.pagination['ai-posted'].totalPages > 1 && !feedbacksStore.loading"
+            class="feedbacks-paginator"
+            :rows="feedbacksStore.pagination['ai-posted'].pageSize"
+            :total-records="feedbacksStore.pagination['ai-posted'].totalCount"
+            :first="(feedbacksStore.pagination['ai-posted'].page - 1) * feedbacksStore.pagination['ai-posted'].pageSize"
+            :rows-per-page-options="[10, 20, 50]"
+            @page="onPageChange"
+          />
         </TabPanel>
 
-        <TabPanel header="Не опубликованы AI">
+        <TabPanel :header="tabLabels['ai-pending']">
           <LoadingSpinner
             v-if="feedbacksStore.loading && activeTab === 'ai-pending'"
           />
           <div
-            v-else-if="feedbacksStore.feedbacks.length > 0"
-            class="space-y-3"
+            v-if="feedbacksStore.pagination['ai-pending'].totalCount > 0 && !feedbacksStore.loading"
+            class="flex justify-end mb-2"
+          >
+            <Chip
+              :label="`Показано ${feedbacksStore.feedbacks.length} из ${feedbacksStore.pagination['ai-pending'].totalCount}`"
+              icon="pi pi-list"
+              class="text-xs"
+            />
+          </div>
+          <div
+            v-if="feedbacksStore.feedbacks.length > 0"
+            class="space-y-3 feedbacks-list"
+            :class="{ 'page-changing': pageChanging }"
           >
             <FeedbacksCard
               v-for="feedback in feedbacksStore.feedbacks"
@@ -123,23 +149,19 @@
             />
           </div>
           <EmptyState
-            v-else
+            v-else-if="!feedbacksStore.loading"
             icon="pi pi-inbox"
             message="Нет неопубликованных AI-ответов"
           />
-          <div
-            v-if="
-              feedbacksStore.hasMore['ai-pending'] && !feedbacksStore.loading
-            "
-            class="flex justify-center mt-4"
-          >
-            <Button
-              label="Загрузить ещё"
-              icon="pi pi-chevron-down"
-              severity="secondary"
-              @click="onLoadMore"
-            />
-          </div>
+          <Paginator
+            v-if="feedbacksStore.pagination['ai-pending'].totalPages > 1 && !feedbacksStore.loading"
+            class="feedbacks-paginator"
+            :rows="feedbacksStore.pagination['ai-pending'].pageSize"
+            :total-records="feedbacksStore.pagination['ai-pending'].totalCount"
+            :first="(feedbacksStore.pagination['ai-pending'].page - 1) * feedbacksStore.pagination['ai-pending'].pageSize"
+            :rows-per-page-options="[10, 20, 50]"
+            @page="onPageChange"
+          />
         </TabPanel>
       </TabView>
     </div>
@@ -226,6 +248,8 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Button from 'primevue/button';
 import SelectButton from 'primevue/selectbutton';
+import Paginator from 'primevue/paginator';
+import Chip from 'primevue/chip';
 import { useFeedbacksStore } from '@/stores/feedbacks';
 import { useViewReady } from '@/composables/ui';
 import { useFeedbacksDialog } from '@/composables/feedbacks/useFeedbacksDialog';
@@ -265,8 +289,17 @@ const unansweredCount = computed(
   () => feedbacksStore.unansweredFeedbacks.length,
 );
 
+const tabLabels = computed(() => ({
+  unanswered: `Без ответа${feedbacksStore.pagination.unanswered.totalCount ? ` (${feedbacksStore.pagination.unanswered.totalCount})` : ''}`,
+  'ai-posted': `Опубликованные AI${feedbacksStore.pagination['ai-posted'].totalCount ? ` (${feedbacksStore.pagination['ai-posted'].totalCount})` : ''}`,
+  'ai-pending': `Не опубликованы AI${feedbacksStore.pagination['ai-pending'].totalCount ? ` (${feedbacksStore.pagination['ai-pending'].totalCount})` : ''}`,
+}));
+
 // Drawer visibility
 const showAutoAnswersDrawer = ref(false);
+
+// Page transition animation
+const pageChanging = ref(false);
 
 function onTabChange(index: number) {
   const tab = tabs[index];
@@ -274,8 +307,23 @@ function onTabChange(index: number) {
   feedbacksStore.fetchFeedbacks(tab, true);
 }
 
-async function onLoadMore() {
-  await feedbacksStore.loadMoreFeedbacks();
+async function onPageChange(event: { first: number; rows: number }) {
+  const tab = activeTab.value;
+  const currentPageSize = feedbacksStore.pagination[tab].pageSize;
+  pageChanging.value = true;
+
+  if (event.rows !== currentPageSize) {
+    // Page size changed — reset to page 1 with new size
+    await feedbacksStore.setPageSize(tab, event.rows);
+  } else {
+    // Only page changed
+    const page = Math.floor(event.first / event.rows) + 1;
+    await feedbacksStore.setPage(tab, page);
+  }
+
+  setTimeout(() => {
+    pageChanging.value = false;
+  }, 200);
 }
 
 async function onToggleAutoAnswer(value: boolean) {
@@ -450,3 +498,41 @@ onMounted(async () => {
   }
 });
 </script>
+<style scoped>
+.feedbacks-paginator :deep(.p-paginator) {
+  background: transparent;
+  border: none;
+  padding: 0.75rem 0;
+  gap: 0.25rem;
+}
+.feedbacks-paginator :deep(.p-paginator-page) {
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.feedbacks-paginator :deep(.p-paginator-page.p-highlight) {
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+.feedbacks-paginator :deep(.p-paginator-page:not(.p-highlight):hover) {
+  background: var(--p-surface-100);
+}
+.feedbacks-paginator :deep(.p-paginator-first),
+.feedbacks-paginator :deep(.p-paginator-prev),
+.feedbacks-paginator :deep(.p-paginator-next),
+.feedbacks-paginator :deep(.p-paginator-last) {
+  border-radius: 0.375rem;
+  transition: background 0.15s ease;
+}
+
+.feedbacks-list {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.feedbacks-list.page-changing {
+  opacity: 0.5;
+  transform: translateY(4px);
+}
+</style>

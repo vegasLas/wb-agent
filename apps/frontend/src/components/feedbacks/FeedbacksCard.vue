@@ -106,12 +106,20 @@
           v-if="isAiTab && 'aiAnswer' in feedback"
           class="bg-surface-100 dark:bg-surface-700 rounded-lg p-3 space-y-2"
         >
-          <div class="flex items-center gap-2 text-sm">
-            <i
-              class="pi"
-              :class="aiStatusIcon"
-            />
-            <span :class="aiStatusClass">{{ aiStatusLabel }}</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm">
+              <i
+                class="pi"
+                :class="aiStatusIcon"
+              />
+              <span :class="aiStatusClass">{{ aiStatusLabel }}</span>
+            </div>
+            <span
+              v-if="postedDate"
+              class="text-xs text-surface-500"
+            >
+              {{ postedDate }}
+            </span>
           </div>
           <p class="text-sm text-surface-800 dark:text-surface-200">
             {{ feedback.aiAnswer.answerText }}
@@ -179,6 +187,13 @@ const feedbackInfo = computed(() => props.feedback.feedbackInfo);
 const imageUrl = computed(() => getWbImageUrl(props.feedback.productInfo?.wbArticle));
 
 const formattedDate = computed(() => formatDate(props.feedback.createdDate));
+
+const postedDate = computed(() => {
+  if ('postedAt' in props.feedback && props.feedback.postedAt) {
+    return formatDate(props.feedback.postedAt);
+  }
+  return '';
+});
 
 const hasMedia = computed(() =>
   (feedbackInfo.value.photos && feedbackInfo.value.photos.length > 0) || !!feedbackInfo.value.video,

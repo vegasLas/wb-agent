@@ -1,15 +1,6 @@
 <template>
-  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface-0 dark:bg-surface-800 rounded-lg shadow-sm">
-    <!-- Left: Auto-answers button -->
-    <Button
-      label="Автоответы"
-      icon="pi pi-cog"
-      severity="secondary"
-      :loading="settingsLoading"
-      @click="$emit('open-auto-answers')"
-    />
-
-    <!-- Right: Answer All button -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-3">
+    <!-- Left: Answer All button -->
     <Button
       :label="answerAllLabel"
       icon="pi pi-send"
@@ -17,6 +8,15 @@
       :loading="answerAllLoading"
       :disabled="answerAllLoading || unansweredCount === 0"
       @click="$emit('answer-all')"
+    />
+
+    <!-- Right: Auto-answers button -->
+    <Button
+      label="Автоответы"
+      icon="pi pi-cog"
+      severity="secondary"
+      :loading="settingsLoading"
+      @click="$emit('open-auto-answers')"
     />
   </div>
 </template>

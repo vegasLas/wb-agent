@@ -14,6 +14,7 @@ import type {
   FeedbackGoodsGroup,
   GoodsItem,
   CreateFeedbackRuleInput,
+  FeedbacksResponse,
 } from './types';
 
 export const useFeedbacksStore = defineStore('feedbacks', () => {
@@ -43,15 +44,10 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const error = ref<string | null>(null);
 
   // Per-tab pagination state
-  const cursors = ref<Record<FeedbackTab, string>>({
-    unanswered: '',
-    'ai-posted': '',
-    'ai-pending': '',
-  });
-  const hasMore = ref<Record<FeedbackTab, boolean>>({
-    unanswered: false,
-    'ai-posted': false,
-    'ai-pending': false,
+  const pagination = ref<Record<FeedbackTab, FeedbacksResponse['pagination']>>({
+    unanswered: { page: 1, pageSize: 10, totalCount: 0, totalPages: 0, next: null, prev: null },
+    'ai-posted': { page: 1, pageSize: 10, totalCount: 0, totalPages: 0, next: null, prev: null },
+    'ai-pending': { page: 1, pageSize: 10, totalCount: 0, totalPages: 0, next: null, prev: null },
   });
 
   // Getters
@@ -82,7 +78,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
 
     if (reset) {
       feedbacks.value = [];
-      cursors.value[tab] = '';
+      pagination.value[tab].page = 1;
     }
 
     loading.value = true;
@@ -91,18 +87,12 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     try {
       const response = await feedbacksAPI.fetchFeedbacks({
         tab,
-        limit: 100,
-        cursor: reset ? '' : cursors.value[tab],
+        page: pagination.value[tab].page,
+        pageSize: pagination.value[tab].pageSize,
       });
 
-      if (reset) {
-        feedbacks.value = response.feedbacks || [];
-      } else {
-        feedbacks.value.push(...(response.feedbacks || []));
-      }
-
-      cursors.value[tab] = response.pages?.next || '';
-      hasMore.value[tab] = !!response.pages?.next;
+      feedbacks.value = response.feedbacks || [];
+      pagination.value[tab] = response.pagination;
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to fetch feedbacks';
@@ -112,8 +102,15 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     }
   }
 
-  async function loadMoreFeedbacks() {
-    await fetchFeedbacks(activeTab.value, false);
+  async function setPage(tab: FeedbackTab, page: number) {
+    pagination.value[tab].page = page;
+    await fetchFeedbacks(tab, false);
+  }
+
+  async function setPageSize(tab: FeedbackTab, size: number) {
+    pagination.value[tab].pageSize = size;
+    pagination.value[tab].page = 1;
+    await fetchFeedbacks(tab, false);
   }
 
   async function fetchStatistics() {
@@ -478,8 +475,11 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     feedbacks.value = [];
     generatedAnswer.value = null;
     error.value = null;
-    cursors.value = { unanswered: '', 'ai-posted': '', 'ai-pending': '' };
-    hasMore.value = { unanswered: false, 'ai-posted': false, 'ai-pending': false };
+    pagination.value = {
+      unanswered: { page: 1, pageSize: 10, totalCount: 0, totalPages: 0, next: null, prev: null },
+      'ai-posted': { page: 1, pageSize: 10, totalCount: 0, totalPages: 0, next: null, prev: null },
+      'ai-pending': { page: 1, pageSize: 10, totalCount: 0, totalPages: 0, next: null, prev: null },
+    };
   }
 
   return {
@@ -505,8 +505,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     goodsGroupsLoading: readonly(goodsGroupsLoading),
     goodsLoading: readonly(goodsLoading),
     error: readonly(error),
-    cursors: readonly(cursors),
-    hasMore: readonly(hasMore),
+    pagination: readonly(pagination),
 
     // Getters
     hasFeedbacks,
@@ -515,7 +514,8 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
 
     // Actions
     fetchFeedbacks,
-    loadMoreFeedbacks,
+    setPage,
+    setPageSize,
     fetchStatistics,
     countUnansweredFeedbacks,
     fetchSettings,

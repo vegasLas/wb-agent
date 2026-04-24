@@ -19,6 +19,7 @@ export interface AiFeedbackItem extends FeedbackItem {
     answerText: string;
     status: string;
   };
+  postedAt: number | null;
 }
 
 export interface FeedbackAnswer {
@@ -59,11 +60,14 @@ export interface FeedbackProductInfo {
 }
 
 export interface FeedbacksResponse {
-  countUnanswered: number;
   feedbacks: FeedbackItem[];
-  pages: {
-    last: string;
-    next: string;
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    next: number | null;
+    prev: number | null;
   };
 }
 
@@ -147,8 +151,8 @@ export interface ProcessResult {
 
 export interface FetchFeedbacksParams {
   tab?: 'unanswered' | 'ai-posted' | 'ai-pending';
-  limit?: number;
-  cursor?: string;
+  page?: number;
+  pageSize?: number;
   searchText?: string;
 }
 
