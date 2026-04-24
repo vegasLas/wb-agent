@@ -406,7 +406,7 @@ export class FeedbackReviewService {
               feedbackId: feedback.id,
             },
           },
-          data: { status: 'POSTED' },
+          data: { status: 'POSTED', postedAt: new Date() },
         });
 
         return 'posted';
@@ -706,7 +706,7 @@ export class FeedbackReviewService {
           feedbackId,
         },
       },
-      data: { status: 'POSTED' },
+      data: { status: 'POSTED', postedAt: new Date() },
     });
   }
 
