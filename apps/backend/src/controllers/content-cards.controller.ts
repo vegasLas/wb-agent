@@ -26,13 +26,27 @@ export const fetchContentCardsTableList = async (
       return;
     }
 
-    const { n } = req.query as { n?: string };
+    const { n, cursor } = req.query as { n?: string; cursor?: string };
 
     logger.info(`Fetching content cards table list for user ${userId}`);
+
+    let parsedCursor: { n: number; nmID: number } | undefined;
+    if (cursor) {
+      try {
+        parsedCursor = JSON.parse(cursor) as { n: number; nmID: number };
+      } catch {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid cursor format',
+        });
+        return;
+      }
+    }
 
     const data = await wbContentService.getContentCardsTableList({
       userId,
       n: n ? Number(n) : 20,
+      cursor: parsedCursor ?? null,
     });
 
     res.status(200).json({

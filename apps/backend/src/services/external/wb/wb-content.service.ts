@@ -102,6 +102,7 @@ export class WBContentService {
       n: number;
       nmID: number;
     };
+    totalCount: number;
   }> {
     const { accountId, supplierId, userAgent, proxy } =
       await resolveAccountContext(userId);
@@ -148,6 +149,7 @@ export class WBContentService {
         n: response.data?.cursor?.n ?? n,
         nmID: response.data?.cursor?.nmID ?? 0,
       },
+      totalCount: response.data?.cursor?.n ?? cards.length,
     };
   }
 
