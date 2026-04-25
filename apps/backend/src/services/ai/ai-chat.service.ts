@@ -10,6 +10,7 @@ import {
 } from 'ai';
 import { prisma } from '@/config/database';
 import { buildContextMessage } from './context-builder.service';
+import { aiUsageTrackingService } from './ai-usage-tracking.service';
 import { filterToolsByPermissions } from './ai-tool-permissions';
 import { autobookingTools } from './tools/autobooking.tools';
 import { triggerTools } from './tools/trigger.tools';
@@ -226,10 +227,26 @@ export class AIChatService {
         accumulatedText = preservedText;
         saveToDb(preservedText).catch(() => {});
       },
-      onFinish: async ({ text, toolCalls, toolResults }) => {
+      onFinish: async ({ text, toolCalls, toolResults, usage }) => {
         isFinished = true;
         accumulatedText = text;
         await saveToDb(text, toolCalls, toolResults);
+
+        if (usage) {
+          aiUsageTrackingService.trackUsage({
+            userId,
+            feature: 'ai_chat',
+            model: 'deepseek-v4-flash',
+            usage: {
+              promptTokens: usage.promptTokens ?? 0,
+              completionTokens: usage.completionTokens ?? 0,
+              totalTokens: usage.totalTokens ?? 0,
+            },
+            conversationId: convId,
+            messageId: assistantMessage.id,
+            metadata: { toolCount: toolCalls?.length ?? 0 },
+          });
+        }
       },
     });
 
