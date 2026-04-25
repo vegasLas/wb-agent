@@ -2,6 +2,7 @@ import { tool, Tool } from 'ai';
 import { z } from 'zod';
 import { wbExtendedService } from '@/services/external/wb/wb-extended.service';
 import { safeTool, loggedTool, cachedExecute } from './safe-tool.utils';
+import { normalizeWbDate } from './date-normalizer';
 
 export function advertsTools(userId: number): Record<string, Tool> {
   return {
@@ -25,8 +26,8 @@ Response structure:
           return cachedExecute(`region-sales-${data.dateFrom}-${data.dateTo}`, 30000, async () => {
             return wbExtendedService.getRegionSales({
               userId,
-              dateFrom: data.dateFrom,
-              dateTo: data.dateTo,
+              dateFrom: normalizeWbDate(data.dateFrom),
+              dateTo: normalizeWbDate(data.dateTo),
               limit: data.limit,
               offset: data.offset,
             });

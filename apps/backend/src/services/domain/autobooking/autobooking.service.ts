@@ -74,6 +74,7 @@ export class AutobookingService {
     userId: number,
     page = 1,
     limit = 20,
+    statusFilter?: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED' | 'ERROR',
   ): Promise<{
     success: boolean;
     counts: Record<string, number>;
@@ -81,7 +82,9 @@ export class AutobookingService {
     currentPage: number;
     nextPage: number | null;
   }> {
-    const statuses = ['ACTIVE', 'COMPLETED', 'ARCHIVED', 'ERROR'];
+    const statuses = statusFilter
+      ? [statusFilter]
+      : ['ACTIVE', 'COMPLETED', 'ARCHIVED', 'ERROR'];
     const skip = (page - 1) * limit;
 
     const results = await Promise.all(

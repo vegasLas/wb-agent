@@ -37,9 +37,10 @@ When describing drafts to the user, NEVER mention draft IDs or UUIDs. Use only t
                 proxy: ctx.proxy,
               });
               const drafts = res.result?.drafts || [];
-              // Sanitize: remove IDs so the model cannot leak them
+              // Return drafts with internal draftId for AI use (not shown to user per system prompt)
               return {
                 drafts: drafts.map((d: any) => ({
+                  draftId: d.ID,
                   createdAt: d.createdAt,
                   goodQuantity: d.goodQuantity,
                   barcodeQuantity: d.barcodeQuantity,
@@ -56,7 +57,7 @@ When describing drafts to the user, NEVER mention draft IDs or UUIDs. Use only t
                 limit: data.limit,
                 offset: data.offset,
                 search: data.search,
-              } as any,
+              },
               userAgent: ctx.userAgent,
               proxy: ctx.proxy,
             });
@@ -85,7 +86,7 @@ Optional: transitWarehouseId.`,
               draftID: data.draftID,
               warehouseId: data.warehouseId,
               transitWarehouseId: data.transitWarehouseId ?? null,
-            } as any,
+            },
             userAgent: ctx.userAgent,
             proxy: ctx.proxy,
           });
@@ -118,7 +119,7 @@ Optional: statusId, pageNumber (default 1), pageSize (default 10), sortBy, sortD
                 pageSize: data.pageSize,
                 sortBy: data.sortBy ?? '',
                 sortDirection: data.sortDirection ?? 'desc',
-              } as any,
+              },
               userAgent: ctx.userAgent,
               proxy: ctx.proxy,
             });
@@ -133,7 +134,7 @@ Call this when the user asks about the contents, status, or goods inside a suppl
 Required: supplyID.
 Optional: pageNumber (default 1), pageSize (default 10), search, preorderID.`,
       inputSchema: z.object({
-        supplyID: z.string(),
+        supplyID: z.coerce.number().int(),
         pageNumber: z.number().int().min(1).default(1),
         pageSize: z.number().int().min(1).default(10),
         search: z.string().optional(),
@@ -147,12 +148,12 @@ Optional: pageNumber (default 1), pageSize (default 10), search, preorderID.`,
               accountId: ctx.accountId,
               supplierId: ctx.supplierId,
               params: {
-                supplyID: Number(data.supplyID),
+                supplyID: data.supplyID,
                 pageNumber: data.pageNumber,
                 pageSize: data.pageSize,
                 search: data.search ?? '',
                 preorderID: data.preorderID ?? null,
-              } as any,
+              },
               userAgent: ctx.userAgent,
               proxy: ctx.proxy,
             });
@@ -173,7 +174,7 @@ Required: none.`,
             return wbSupplierService.getBalancesByAccount({
               accountId: ctx.accountId,
               supplierId: ctx.supplierId,
-              params: { limit: 100, offset: 0 } as any,
+              params: { limit: 100, offset: 0 },
               userAgent: ctx.userAgent,
               proxy: ctx.proxy,
             });
