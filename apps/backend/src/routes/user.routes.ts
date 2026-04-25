@@ -57,7 +57,11 @@ router.get('/', authenticate, async (req, res, next) => {
           id: string;
           phoneWb: string | null;
           selectedSupplierId: string | null;
-          suppliers: { supplierId: string; supplierName: string }[];
+          suppliers: {
+            supplierId: string;
+            supplierName: string;
+            permissions: string[];
+          }[];
           createdAt: Date;
           updatedAt: Date;
         }) => ({
@@ -65,9 +69,14 @@ router.get('/', authenticate, async (req, res, next) => {
           phoneWb: account.phoneWb || undefined,
           selectedSupplierId: account.selectedSupplierId || undefined,
           suppliers: (account.suppliers || []).map(
-            (supplier: { supplierId: string; supplierName: string }) => ({
+            (supplier: {
+              supplierId: string;
+              supplierName: string;
+              permissions: string[];
+            }) => ({
               supplierId: supplier.supplierId,
               supplierName: supplier.supplierName,
+              permissions: supplier.permissions || [],
             }),
           ),
           createdAt: account.createdAt.toISOString(),

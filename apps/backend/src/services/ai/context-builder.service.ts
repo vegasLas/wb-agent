@@ -1,4 +1,13 @@
 import { prisma } from '@/config/database';
+import type { Permission } from '@prisma/client';
+
+const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
+  PROMOTIONS: 'управление акциями и промо',
+  FEEDBACKS: 'работа с отзывами',
+  ADVERTS: 'управление рекламными кампаниями',
+  REPORTS: 'отчеты и аналитика (продажи по регионам)',
+  SUPPLIES: 'автобронирования, поставки и тарифы',
+};
 
 export async function buildContextMessage(userId: number): Promise<string> {
   const user = await prisma.user.findUnique({
@@ -7,6 +16,32 @@ export async function buildContextMessage(userId: number): Promise<string> {
   });
 
   if (!user) throw new Error('User not found');
+
+  const userWithAccounts = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { accounts: { include: { suppliers: true } } },
+  });
+
+  const activeAccount =
+    userWithAccounts?.accounts.find(
+      (a) => a.id === userWithAccounts.selectedAccountId,
+    ) || userWithAccounts?.accounts[0];
+
+  const activeSupplier =
+    activeAccount?.suppliers.find(
+      (s) => s.supplierId === activeAccount.selectedSupplierId,
+    ) || activeAccount?.suppliers[0];
+
+  const permissions = (activeSupplier?.permissions as Permission[]) || [];
+
+  const availableFeatures =
+    permissions.map((p) => `- ${PERMISSION_DESCRIPTIONS[p]}`).join('\n') ||
+    '- базовые функции';
+
+  const unavailableFeatures = (Object.entries(PERMISSION_DESCRIPTIONS) as [Permission, string][])
+    .filter(([key]) => !permissions.includes(key))
+    .map(([, desc]) => `- ${desc}`)
+    .join('\n');
 
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -53,6 +88,12 @@ You help manage автобронирования and таймслоты.
     - Put a blank line BEFORE and AFTER every table.
     - If a cell is empty, write a single dash — or 0 inside it. Never leave a cell completely blank.
     - Keep column count reasonable (maximum 8–10 columns). If data has more fields, split into multiple smaller tables.
+
+### Available Features
+${availableFeatures}
+
+### Unavailable Features (NEVER suggest or mention these)
+${unavailableFeatures}
 
 Today is ${todayStr} (current year is ${today.getFullYear()}).
 

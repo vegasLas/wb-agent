@@ -249,7 +249,7 @@ export class AccountService {
    * Save supplier info after successful authentication
    * Creates account and fetches all suppliers for the account
    */
-  async saveAccount(params: SaveAccountParams): Promise<void> {
+  async saveAccount(params: SaveAccountParams) {
     const { userId, wbCookies, wbLocalStorage, phoneWb, userAgent, proxy } =
       params;
 
@@ -324,6 +324,8 @@ export class AccountService {
       });
       throw new Error('Failed to create account: Unable to fetch suppliers');
     }
+
+    return account;
   }
 
   /**
