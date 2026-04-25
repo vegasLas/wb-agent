@@ -533,13 +533,32 @@ export const PrimevalPreset = definePreset(Aura, {
     },
     // Popover styling
     popover: {
-      background: '{color.card}',
-      borderColor: '{color.border}',
-      color: '{color.text}',
-      borderRadius: '14px',
-      shadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
-      gutter: '10px',
-      arrowOffset: '1.25rem',
+      root: {
+        borderRadius: '14px',
+        gutter: '10px',
+        arrowOffset: '1.25rem',
+      },
+      content: {
+        padding: '0',
+      },
+      colorScheme: {
+        light: {
+          root: {
+            background: '{color.card}',
+            borderColor: '{color.border}',
+            color: '{color.text}',
+            shadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+          },
+        },
+        dark: {
+          root: {
+            background: '{color.card}',
+            borderColor: '{color.border}',
+            color: '{color.text}',
+            shadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+          },
+        },
+      },
     },
     // Drawer styling
     drawer: {
