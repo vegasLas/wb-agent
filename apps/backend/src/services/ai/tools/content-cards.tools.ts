@@ -9,6 +9,8 @@ export function contentCardsTools(userId: number): Record<string, Tool> {
       description: `Get the user's WB content cards table list (карточки товаров / content cards) from seller-content.wildberries.ru.
 Call this when the user asks about their products, cards, карточки, товары, or catalog.
 Optional: n (number of cards to fetch, default 20).
+Optional: cursor (for pagination — pass the cursor object from a previous response to get the next page).
+The response includes totalCount (total number of products) and cursor.next (whether more pages exist).
 CRITICAL: When presenting results to the user, never mention nmID values. Refer to products only by their title or vendorCode.
 Response columns explained (each row is one product card):
 - title = Название товара (product name).
@@ -21,6 +23,7 @@ Response columns explained (each row is one product card):
 - thumbnail = Миниатюра изображения товара (product thumbnail URL).`,
       inputSchema: z.object({
         n: z.number().int().min(1).default(20),
+        cursor: z.object({ n: z.number().int(), nmID: z.number().int() }).optional(),
       }),
       execute: safeTool('getContentCardsTableList', async (data) => {
         return loggedTool('getContentCardsTableList', userId, async () => {
@@ -28,6 +31,7 @@ Response columns explained (each row is one product card):
             return wbContentService.getContentCardsTableList({
               userId,
               n: data.n,
+              cursor: data.cursor ?? null,
             });
           });
         });
