@@ -32,6 +32,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
   const goodsGroups = ref<FeedbackGoodsGroup[]>([]);
   const goodsByCategory = ref<Record<string, GoodsItem[]>>({});
   const activeTab = ref<FeedbackTab>('unanswered');
+  const selectedGoodNmId = ref<number | null>(null);
   const generatedAnswer = ref<GeneratedAnswer | null>(null);
   const loading = ref(false);
   const answerAllLoading = ref(false);
@@ -97,6 +98,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
         tab,
         page: pagination.value[tab].page,
         pageSize: pagination.value[tab].pageSize,
+        ...(selectedGoodNmId.value ? { nmId: selectedGoodNmId.value } : {}),
       });
 
       if (!silent) {
@@ -503,6 +505,10 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     activeTab.value = tab;
   }
 
+  function setSelectedGood(nmId: number | null) {
+    selectedGoodNmId.value = nmId;
+  }
+
   function clearGeneratedAnswer() {
     generatedAnswer.value = null;
   }
@@ -530,6 +536,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     goodsGroups: readonly(goodsGroups),
     goodsByCategory: readonly(goodsByCategory),
     activeTab: readonly(activeTab),
+    selectedGoodNmId: readonly(selectedGoodNmId),
     generatedAnswer: readonly(generatedAnswer),
     loading: readonly(loading),
     answerAllLoading: readonly(answerAllLoading),
@@ -567,6 +574,7 @@ export const useFeedbacksStore = defineStore('feedbacks', () => {
     answerAllFeedbacks,
     postPendingAnswers,
     setActiveTab,
+    setSelectedGood,
     clearGeneratedAnswer,
     clearFeedbacks,
     getProductSetting,

@@ -168,6 +168,7 @@ export interface FetchFeedbacksParams {
   page?: number;
   pageSize?: number;
   searchText?: string;
+  nmId?: number;
 }
 
 export interface GoodsItem {
