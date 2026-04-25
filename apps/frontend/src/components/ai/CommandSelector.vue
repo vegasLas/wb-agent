@@ -89,7 +89,7 @@ function handleToggleFavorite(event: MouseEvent, commandId: string) {
           >
             Избранное
           </div>
-          <div class="flex flex-col">
+          <div class="flex flex-col max-h-[180px] overflow-y-auto">
             <div
               v-for="cmd in favoriteCommands"
               :key="cmd.id"
