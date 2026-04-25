@@ -20,7 +20,6 @@ import { reportsTools } from './tools/reports.tools';
 import { contentCardsTools } from './tools/content-cards.tools';
 import { userContextTools } from './tools/user-context.tools';
 import { promotionsTools } from './tools/promotions.tools';
-import { feedbackTools } from './tools/feedback.tools';
 
 import type { AttachmentMeta } from './file-extraction.service';
 
@@ -29,6 +28,13 @@ interface HandleChatInput {
   conversationId?: string;
   messages: UIMessage[];
   attachments?: AttachmentMeta[];
+  abortSignal?: AbortSignal;
+}
+
+interface ChatResult {
+  result: any;
+  assistantMessageId: string;
+  forceSave: () => Promise<string>;
 }
 
 function getMessageText(message: UIMessage): string {
@@ -44,7 +50,8 @@ export class AIChatService {
     conversationId,
     messages,
     attachments,
-  }: HandleChatInput) {
+    abortSignal,
+  }: HandleChatInput): Promise<ChatResult> {
     // 1. Load or create conversation
     let convId = conversationId;
     if (!convId) {
@@ -77,7 +84,16 @@ export class AIChatService {
       });
     }
 
-    // 3. Build system context
+    // 3. Create placeholder assistant message for partial persistence
+    const assistantMessage = await prisma.aiMessage.create({
+      data: {
+        conversationId: convId,
+        role: 'assistant',
+        content: '',
+      },
+    });
+
+    // 4. Build system context
     const systemMessage: CoreMessage = {
       role: 'system',
       content: await buildContextMessage(userId),
@@ -113,36 +129,100 @@ export class AIChatService {
           contentCardsTools(userId),
           userContextTools(userId),
           promotionsTools(userId),
-          feedbackTools(userId),
         );
 
-    // 7. Stream
+    // 7. Set up accumulation and debounced persistence
+    let accumulatedText = '';
+    let lastDbUpdate = Date.now();
+    const debounceMs = 2000;
+    let toolCallsSnapshot: any = null;
+    let toolResultsSnapshot: any = null;
+    let isFinished = false;
+
+    const saveToDb = async (text: string, calls?: any, results?: any) => {
+      try {
+        await prisma.aiMessage.update({
+          where: { id: assistantMessage.id },
+          data: {
+            content: text,
+            toolCalls: calls ?? undefined,
+            toolResults: results ?? undefined,
+          },
+        });
+      } catch (err) {
+        console.error('[AI-CHAT] Failed to update assistant message:', err);
+      }
+    };
+
+    const debouncedSave = (text: string) => {
+      accumulatedText = text;
+      const now = Date.now();
+      if (now - lastDbUpdate >= debounceMs && !isFinished) {
+        lastDbUpdate = now;
+        saveToDb(accumulatedText).catch(() => {});
+      }
+    };
+
+    const forceSave = async (): Promise<string> => {
+      if (!isFinished && accumulatedText) {
+        await saveToDb(accumulatedText, toolCallsSnapshot, toolResultsSnapshot);
+      }
+      return accumulatedText;
+    };
+
+    // 8. Stream
     const result = streamText<Record<string, Tool>>({
       model,
       messages: modelMessages,
+      providerOptions: { deepseek: { thinking: { type: 'disabled' } } },
       tools: tools as any,
       stopWhen: wantsReasoning ? stepCountIs(1) : stepCountIs(5),
       maxTokens: 2048,
+      abortSignal,
       experimental_transform: smoothStream({
         delayInMs: 40,
         chunking: 'word',
       }),
-      onFinish: async ({ text, usage }) => {
-        await prisma.aiMessage
-          .create({
-            data: {
-              conversationId: convId!,
-              role: 'assistant',
-              content: text,
-            },
-          })
-          .catch((err) => {
-            console.error('[AI-CHAT] Failed to save assistant message:', err);
-          });
+      onChunk: ({ chunk }: { chunk: any }) => {
+        if (chunk.type === 'text-delta' && chunk.textDelta) {
+          accumulatedText += chunk.textDelta;
+          debouncedSave(accumulatedText);
+        }
+      },
+      onStepFinish: ({ text, toolCalls, toolResults }) => {
+        accumulatedText = text;
+        toolCallsSnapshot = toolCalls ?? toolCallsSnapshot;
+        toolResultsSnapshot = toolResults ?? toolResultsSnapshot;
+        saveToDb(accumulatedText, toolCallsSnapshot, toolResultsSnapshot).catch(
+          () => {},
+        );
+      },
+      onError: ({ error }: { error: Error }) => {
+        console.error('[AI-CHAT] streamText error:', error);
+        // Skip overwriting on client abort — partial text is already saved by forceSave
+        if (error.name === 'AbortError' || error.message?.includes('abort')) {
+          return;
+        }
+        // Preserve accumulated text and append error note rather than overwriting
+        const preservedText = accumulatedText
+          ? `${accumulatedText}\n\n[Ошибка: ${error.message}]`
+          : `Ошибка: не удалось получить ответ от ИИ. ${error.message}`;
+        accumulatedText = preservedText;
+        saveToDb(preservedText).catch(() => {});
+      },
+      onFinish: async ({ text, toolCalls, toolResults }) => {
+        isFinished = true;
+        accumulatedText = text;
+        await saveToDb(text, toolCalls, toolResults);
       },
     });
 
-    return result;
+    // Keep consuming the stream in the background so it finishes
+    // even if the client disconnects (page reload, close tab).
+    // This ensures onFinish fires and the full message is persisted.
+    (result as any).consumeStream?.();
+
+    return { result, assistantMessageId: assistantMessage.id, forceSave };
   }
 }
 
