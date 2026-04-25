@@ -9,6 +9,14 @@ datasource db {
 
 // ============== USER & ACCOUNTS ==============
 
+enum Permission {
+  PROMOTIONS
+  FEEDBACKS
+  REPORTS
+  ADVERTS
+  SUPPLIES
+}
+
 model User {
   id                     Int                     @id @default(autoincrement())
   telegramId             BigInt                  @unique // REQUIRED - primary identifier
@@ -87,9 +95,10 @@ model Account {
 }
 
 model Supplier {
-  id           Int      @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   supplierId   String
   supplierName String
+  permissions  Permission[] @default([])
   accountId    String
   account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
