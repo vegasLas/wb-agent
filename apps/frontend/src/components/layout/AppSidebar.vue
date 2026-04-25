@@ -10,7 +10,7 @@
         <span class="text-white font-bold text-sm tracking-tight">WB</span>
       </div>
       <div>
-        <div class="font-semibold text-theme text-sm leading-none">Agent</div>
+        <div class="font-semibold text-theme text-sm leading-none">OI</div>
         <div class="text-[11px] text-muted leading-none mt-1">
           Панель управления
         </div>
@@ -138,7 +138,10 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const pendingRouteName = inject<Ref<string | null>>('pendingRouteName', ref(null));
+const pendingRouteName = inject<Ref<string | null>>(
+  'pendingRouteName',
+  ref(null),
+);
 const { primaryNav, secondaryNav, isActive } = useNavigation(pendingRouteName);
 const userStore = useUserStore();
 

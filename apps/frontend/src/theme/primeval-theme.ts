@@ -511,6 +511,60 @@ export const PrimevalPreset = definePreset(Aura, {
     toast: {
       borderRadius: '16px',
       shadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
+      colorScheme: {
+        light: {
+          root: {
+            background: '{surface.0}',
+            borderColor: '{content.borderColor}',
+            color: '{text.color}',
+          },
+          message: {
+            background: '{surface.0}',
+            borderColor: '{content.borderColor}',
+            color: '{text.color}',
+          },
+          content: {
+            background: '{surface.0}',
+            color: '{text.color}',
+          },
+          summary: {
+            color: '{text.color}',
+          },
+          detail: {
+            color: '{text.mutedColor}',
+          },
+          closeButton: {
+            color: '{text.mutedColor}',
+            hoverColor: '{text.color}',
+          },
+        },
+        dark: {
+          root: {
+            background: '{color.card}',
+            borderColor: '{color.border}',
+            color: '{color.text}',
+          },
+          message: {
+            background: '{color.card}',
+            borderColor: '{color.border}',
+            color: '{color.text}',
+          },
+          content: {
+            background: '{color.card}',
+            color: '{color.text}',
+          },
+          summary: {
+            color: '{color.text}',
+          },
+          detail: {
+            color: '{text.mutedColor}',
+          },
+          closeButton: {
+            color: '{text.mutedColor}',
+            hoverColor: '{color.text}',
+          },
+        },
+      },
     },
     // Menu styling - popup menus
     menu: {
