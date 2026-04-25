@@ -16,6 +16,9 @@ export const useContentCardsStore = defineStore('contentCards', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const selectedCard = ref<ContentCardTableItem | null>(null);
+  const cursor = ref<{ next: boolean; n: number; nmID: number } | null>(null);
+  const totalCount = ref(0);
+  const pageSize = ref(20);
 
   const commissionsData = ref<CommissionCategory[]>([]);
   const commissionsLoading = ref(false);
@@ -27,6 +30,8 @@ export const useContentCardsStore = defineStore('contentCards', () => {
 
   // Getters
   const hasCards = computed(() => cards.value.length > 0);
+  const hasMore = computed(() => cursor.value?.next ?? false);
+  const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value));
   const hasCommissions = computed(() => commissionsData.value.length > 0);
   const hasTariffs = computed(() => tariffsData.value.length > 0);
 
@@ -51,10 +56,49 @@ export const useContentCardsStore = defineStore('contentCards', () => {
     try {
       const response = await contentCardsAPI.fetchContentCardsTableList(n);
       cards.value = response.cards || [];
+      cursor.value = response.cursor ?? null;
+      totalCount.value = response.totalCount ?? 0;
+      pageSize.value = n;
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch content cards';
       error.value = errorMsg;
       cards.value = [];
+      cursor.value = null;
+      totalCount.value = 0;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function fetchNextPage() {
+    if (!cursor.value?.next) {
+      return;
+    }
+    if (!userStore.user?.selectedAccountId) {
+      error.value = 'Необходимо выбрать аккаунт';
+      return;
+    }
+    if (!userStore.hasValidSupplier) {
+      error.value = 'Необходимо выбрать поставщика';
+      return;
+    }
+    if (!userStore.subscriptionActive) {
+      error.value = 'Необходимо активировать подписку';
+      return;
+    }
+
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const nextCursor = { n: cursor.value.n, nmID: cursor.value.nmID };
+      const response = await contentCardsAPI.fetchContentCardsTableList(pageSize.value, nextCursor);
+      cards.value.push(...(response.cards || []));
+      cursor.value = response.cursor ?? null;
+      totalCount.value = response.totalCount ?? 0;
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch next page';
+      error.value = errorMsg;
     } finally {
       loading.value = false;
     }
@@ -153,15 +197,23 @@ export const useContentCardsStore = defineStore('contentCards', () => {
 
     // Getters
     hasCards,
+    hasMore,
+    totalPages,
     hasCommissions,
     hasTariffs,
 
     // Actions
     fetchCards,
+    fetchNextPage,
     fetchCommissions,
     fetchTariffs,
     selectCard,
     clearSelection,
     clearCards,
+
+    // Pagination state
+    cursor: readonly(cursor),
+    totalCount: readonly(totalCount),
+    pageSize: readonly(pageSize),
   };
 });
