@@ -15,6 +15,27 @@
         <p class="text-xs text-surface-500">Пожалуйста, подождите</p>
       </div>
 
+      <!-- Submitted / Success state -->
+      <div
+        v-else-if="submitted"
+        class="flex flex-col items-center gap-4 py-8"
+      >
+        <div
+          class="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30"
+        >
+          <i class="pi pi-check-circle text-green-500 text-3xl" />
+        </div>
+        <div class="text-center">
+          <p class="text-base font-semibold text-surface-900 dark:text-surface-0">
+            Обработка запущена
+          </p>
+          <p class="text-sm text-surface-500 mt-1 max-w-sm">
+            Обработка {{ submittedNmIdsCount }} выбранных товаров запущена в фоновом режиме.
+            Результаты появятся через несколько минут. Вы можете продолжить работу.
+          </p>
+        </div>
+      </div>
+
       <!-- Summary state -->
       <div v-else-if="summary">
         <div
@@ -114,12 +135,13 @@
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button
-          label="Закрыть"
+          :label="submitted ? 'Продолжить работу' : 'Закрыть'"
           severity="secondary"
           text
           @click="$emit('update:visible', false)"
         />
         <Button
+          v-if="!submitted"
           :label="actionButtonLabel"
           icon="pi pi-send"
           severity="primary"
@@ -159,12 +181,27 @@ const emit = defineEmits<{
 }>();
 
 const selectedRows = ref<UnansweredSummaryGroup[]>([]);
+const submitted = ref(false);
+const submittedNmIdsCount = ref(0);
+
+// Reset state when dialog opens/closes
+watch(
+  () => props.visible,
+  (isOpen) => {
+    if (isOpen) {
+      submitted.value = false;
+      submittedNmIdsCount.value = 0;
+    }
+  },
+);
 
 // Reset selection when dialog opens with new data
 watch(
   () => props.summary,
   () => {
     selectedRows.value = [];
+    submitted.value = false;
+    submittedNmIdsCount.value = 0;
   },
 );
 
@@ -229,8 +266,9 @@ function toggleSelectAll(checked: boolean) {
 function onConfirm() {
   if (selectedRows.value.length === 0) return;
   const nmIds = selectedRows.value.map((g) => g.nmId);
+  submittedNmIdsCount.value = nmIds.length;
+  submitted.value = true;
   emit('confirm-bulk', nmIds);
-  emit('update:visible', false);
 }
 </script>
 
