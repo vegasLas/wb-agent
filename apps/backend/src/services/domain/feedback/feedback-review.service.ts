@@ -92,13 +92,14 @@ export class FeedbackReviewService {
 
     try {
       const [answeredRaw, unansweredRaw] = await Promise.all([
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
+        wbFeedbackService.getFeedbacks({ userId, isAnswered: true, limit: 100 }),
+        wbFeedbackService.getFeedbacks({ userId, isAnswered: false, limit: 100 }),
       ]);
 
-      let unansweredFeedbacks = [...answeredRaw, ...unansweredRaw].filter(
-        (f) => !f.answer,
-      );
+      let unansweredFeedbacks = [
+        ...(answeredRaw.feedbacks || []),
+        ...(unansweredRaw.feedbacks || []),
+      ].filter((f) => !f.answer);
 
       if (nmIds && nmIds.length > 0) {
         const nmIdSet = new Set(nmIds);
@@ -279,13 +280,14 @@ export class FeedbackReviewService {
 
     try {
       const [answeredRaw, unansweredRaw] = await Promise.all([
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
+        wbFeedbackService.getFeedbacks({ userId, isAnswered: true, limit: 100 }),
+        wbFeedbackService.getFeedbacks({ userId, isAnswered: false, limit: 100 }),
       ]);
 
-      let unansweredFeedbacks = [...answeredRaw, ...unansweredRaw].filter(
-        (f) => !f.answer,
-      );
+      let unansweredFeedbacks = [
+        ...(answeredRaw.feedbacks || []),
+        ...(unansweredRaw.feedbacks || []),
+      ].filter((f) => !f.answer);
 
       if (nmIds && nmIds.length > 0) {
         const nmIdSet = new Set(nmIds);
