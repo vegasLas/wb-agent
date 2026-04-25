@@ -2,6 +2,7 @@ import { Browser, chromium, Page, BrowserContext, Cookie } from 'playwright';
 import { prisma } from '@/config/database';
 import { userService } from './user.service';
 import { accountService } from './account.service';
+import { wbPermissionService } from '@/services/external/wb/wb-permission.service';
 import { encodeCookies } from '@/utils/cookies';
 import { encodeLocalStorage } from '@/utils/localStorage';
 import { UserEnvInfo } from '@/types/wb';
@@ -703,7 +704,7 @@ export class AuthService {
       const cookiesString = encodeCookies(cookies);
       const localStorageString = encodeLocalStorage(localStorage);
 
-      await accountService.saveAccount({
+      const account = await accountService.saveAccount({
         userId: session.userId,
         wbCookies: cookiesString,
         wbLocalStorage: localStorageString,
@@ -713,6 +714,24 @@ export class AuthService {
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         proxy: session.proxy,
       });
+
+      // Probe WB service permissions and assign to all suppliers in the account
+      try {
+        console.log('Probe WB service');
+        await wbPermissionService.probeAndAssignPermissions(
+          account.id,
+          session.userAgent ||
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          session.proxy,
+        );
+      } catch (probeError) {
+        console.error(
+          '[AuthService] Permission probing failed for account',
+          account.id,
+          probeError,
+        );
+        // Auth succeeds even if permission probing fails — user gets empty permissions
+      }
 
       await this.cleanupSession(sessionId);
 
