@@ -15,10 +15,18 @@ export const contentCardsAPI = {
    * GET /api/v1/content-cards
    * Get content cards table list
    */
-  async fetchContentCardsTableList(n = 20): Promise<ContentCardTableListResponse> {
+  async fetchContentCardsTableList(
+    n = 20,
+    cursor?: { n: number; nmID: number },
+  ): Promise<ContentCardTableListResponse> {
     const response = await apiClient.get<{ data: ContentCardTableListResponse }>(
       '/content-cards',
-      { params: { n } },
+      {
+        params: {
+          n,
+          ...(cursor ? { cursor: JSON.stringify(cursor) } : {}),
+        },
+      },
     );
     return response.data.data;
   },
