@@ -63,7 +63,7 @@ function handleToggleFavorite(event: MouseEvent, commandId: string) {
       @click="togglePopover"
     >
       <i class="pi pi-sliders-h text-sm" />
-      <span class="hidden md:inline ml-1.5 text-sm">команды</span>
+      <span class="inline ml-1.5 text-sm">команды</span>
     </Button>
 
     <Popover ref="popoverRef" class="command-selector-popover">
