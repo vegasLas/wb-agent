@@ -1,11 +1,13 @@
 import { computed, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
+import type { Permission } from '@/types';
 
 export interface NavItem {
   id: string;
   label: string;
   icon: string;
   route: string;
+  permissions?: Permission[];
 }
 
 export const primaryNav: NavItem[] = [
@@ -15,6 +17,7 @@ export const primaryNav: NavItem[] = [
     label: 'Автоброни',
     icon: 'pi pi-calendar',
     route: 'AutobookingList',
+    permissions: ['SUPPLIES'],
   },
   {
     id: 'triggers',
@@ -22,32 +25,54 @@ export const primaryNav: NavItem[] = [
     icon: 'pi pi-clock',
     route: 'TriggersList',
   },
-  { id: 'promotions', label: 'Акции', icon: 'pi pi-tags', route: 'Promotions' },
-  { id: 'feedbacks', label: 'Отзывы', icon: 'pi pi-star', route: 'Feedbacks' },
-  { id: 'reports', label: 'Отчеты', icon: 'pi pi-chart-pie', route: 'Reports' },
+  {
+    id: 'promotions',
+    label: 'Акции',
+    icon: 'pi pi-tags',
+    route: 'Promotions',
+    permissions: ['PROMOTIONS'],
+  },
+  {
+    id: 'feedbacks',
+    label: 'Отзывы',
+    icon: 'pi pi-star',
+    route: 'Feedbacks',
+    permissions: ['FEEDBACKS'],
+  },
+  {
+    id: 'reports',
+    label: 'Отчеты',
+    icon: 'pi pi-chart-pie',
+    route: 'Reports',
+    permissions: ['REPORTS'],
+  },
   {
     id: 'adverts',
     label: 'Реклама',
     icon: 'pi pi-megaphone',
     route: 'Adverts',
+    permissions: ['ADVERTS'],
   },
   {
     id: 'regionSales',
     label: 'Продажи по регионам',
     icon: 'pi pi-map',
     route: 'RegionSales',
+    permissions: ['REPORTS'],
   },
   {
     id: 'reschedules',
     label: 'Перепланирования',
     icon: 'pi pi-calendar-clock',
     route: 'ReschedulesList',
+    permissions: ['SUPPLIES'],
   },
   {
     id: 'tariffs',
     label: 'Тарифы',
     icon: 'pi pi-percentage',
     route: 'Tariffs',
+    permissions: ['SUPPLIES'],
   },
   {
     id: 'mpstats',

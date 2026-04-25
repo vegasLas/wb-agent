@@ -53,6 +53,11 @@ export interface AuthResponse {
 }
 
 // -----------------------------------------------------------------------------
+// Permission Types
+// -----------------------------------------------------------------------------
+export type Permission = 'PROMOTIONS' | 'FEEDBACKS' | 'REPORTS' | 'ADVERTS' | 'SUPPLIES';
+
+// -----------------------------------------------------------------------------
 // Account Types
 // -----------------------------------------------------------------------------
 export interface Account {
@@ -75,6 +80,7 @@ export interface AccountWithSuppliers extends Account {
 export interface Supplier {
   supplierId: string;
   supplierName: string;
+  permissions?: Permission[];
 }
 
 export interface SupplierInfo {

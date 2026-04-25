@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
 import { isTelegramWebApp, getInitData } from '../utils/telegram';
+import { usePermissions } from '@/composables/usePermissions';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
 import {
@@ -349,6 +350,14 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
     
+    // Permission check
+    const { canAccessRoute } = usePermissions();
+    if (!canAccessRoute(to.name as string)) {
+      console.log('[Router] Permission denied for route:', to.name);
+      next({ name: 'Chat', replace: true });
+      return;
+    }
+    
     // Browser user is authenticated, proceed
     console.log('[Router] Browser auth validated, proceeding to:', to.name);
     next();
@@ -362,12 +371,19 @@ router.beforeEach(async (to, from, next) => {
       await initializeApp();
       isAppInitialized = true;
       console.log('[Router] App initialized, proceeding to:', to.name);
-      next();
     } catch (error: any) {
       console.error('[Router] Initialization failed:', error);
       initError = classifyError(error);
       next({ name: errorToRouteName(initError), replace: true });
+      return;
     }
+  }
+
+  // Permission check (applies to both Telegram and Browser modes)
+  const { canAccessRoute } = usePermissions();
+  if (!canAccessRoute(to.name as string)) {
+    console.log('[Router] Permission denied for route:', to.name);
+    next({ name: 'Chat', replace: true });
     return;
   }
 

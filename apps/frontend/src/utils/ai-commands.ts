@@ -1,50 +1,63 @@
 import { computed } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
+import type { Permission } from '@/types';
 
 export interface AICommand {
   id: string;
   label: string;
   icon: string;
   prompt: string;
+  permissions?: Permission[];
 }
 
 export const AI_COMMANDS: AICommand[] = [
-  { id: 'balances', label: 'Остатки на складах', icon: 'pi pi-warehouse', prompt: 'Покажи остатки товаров на складах' },
-  { id: 'supplies', label: 'Поставки', icon: 'pi pi-truck', prompt: 'Покажи мои поставки' },
-  { id: 'supply-details', label: 'Детали поставки', icon: 'pi pi-file-o', prompt: 'Покажи детали поставки [ID]' },
-  { id: 'draft-goods', label: 'Товары черновика', icon: 'pi pi-box', prompt: 'Покажи товары в черновике' },
-  { id: 'validate-warehouse', label: 'Проверить совместимость', icon: 'pi pi-check-square', prompt: 'Проверь, можно ли отправить товары черновика на склад [ID]' },
+  // SUPPLIES
+  { id: 'balances', label: 'Остатки на складах', icon: 'pi pi-warehouse', prompt: 'Покажи остатки товаров на складах', permissions: ['SUPPLIES'] },
+  { id: 'supplies', label: 'Поставки', icon: 'pi pi-truck', prompt: 'Покажи мои поставки', permissions: ['SUPPLIES'] },
+  { id: 'supply-details', label: 'Детали поставки', icon: 'pi pi-file-o', prompt: 'Покажи детали поставки [ID]', permissions: ['SUPPLIES'] },
+  { id: 'draft-goods', label: 'Товары черновика', icon: 'pi pi-box', prompt: 'Покажи товары в черновике', permissions: ['SUPPLIES'] },
+  { id: 'validate-warehouse', label: 'Проверить совместимость', icon: 'pi pi-check-square', prompt: 'Проверь, можно ли отправить товары черновика на склад [ID]', permissions: ['SUPPLIES'] },
   { id: 'warehouses-list', label: 'Список складов', icon: 'pi pi-warehouse', prompt: 'Покажи все доступные склады' },
   { id: 'search-warehouse', label: 'Найти склад', icon: 'pi pi-search', prompt: 'Найди склад по запросу: [город/название]' },
-  { id: 'coefficients', label: 'Коэффициенты приёмки', icon: 'pi pi-percentage', prompt: 'Покажи текущие коэффициенты приёмки' },
-  { id: 'planned-coefficients', label: 'Плановые коэффициенты', icon: 'pi pi-percentage', prompt: 'Покажи плановые коэффициенты на ближайшие дни' },
-  { id: 'transit-tariffs', label: 'Тарифы транзитных складов', icon: 'pi pi-arrow-right-arrow-left', prompt: 'Покажи транзитные склады и тарифы для склада [ID]' },
-  { id: 'autobookings-list', label: 'Мои автобронирования', icon: 'pi pi-list', prompt: 'Покажи мои автобронирования' },
-  { id: 'autobooking-create', label: 'Создать автобронь', icon: 'pi pi-calendar-plus', prompt: 'Создай автобронирование на склад [ID]' },
-  { id: 'autobooking-update', label: 'Обновить автобронь', icon: 'pi pi-pencil', prompt: 'Обнови автобронирование [ID]' },
-  { id: 'autobooking-delete', label: 'Удалить автобронь', icon: 'pi pi-trash', prompt: 'Удали автобронирование [ID]' },
-  { id: 'triggers-list', label: 'Мои таймслоты', icon: 'pi pi-clock', prompt: 'Покажи мои таймслоты' },
-  { id: 'trigger-create', label: 'Создать таймслот', icon: 'pi pi-plus-circle', prompt: 'Создай таймслот на склад [ID]' },
-  { id: 'trigger-update', label: 'Обновить таймслот', icon: 'pi pi-pencil', prompt: 'Обнови таймслот [ID]' },
-  { id: 'trigger-delete', label: 'Удалить таймслот', icon: 'pi pi-trash', prompt: 'Удали таймслот [ID]' },
-  { id: 'sales-report', label: 'Отчёт по продажам', icon: 'pi pi-chart-line', prompt: 'Покажи отчёт по продажам' },
-  { id: 'region-sales', label: 'Продажи по регионам', icon: 'pi pi-map', prompt: 'Покажи продажи по регионам' },
-  { id: 'sales-analysis', label: 'Анализ продаж', icon: 'pi pi-chart-line', prompt: 'Проанализируй мои продажи за последнюю неделю' },
-  { id: 'adverts-list', label: 'Рекламные кампании', icon: 'pi pi-bullseye', prompt: 'Покажи мои рекламные кампании' },
-  { id: 'advert-keywords', label: 'Ключевые слова рекламы', icon: 'pi pi-info-circle', prompt: 'Покажи статистику по ключевым словам кампании [ID]' },
-  { id: 'advert-efficiency', label: 'Эффективность рекламы', icon: 'pi pi-bullseye', prompt: 'Какая реклама приносит больше всего продаж?' },
+  { id: 'coefficients', label: 'Коэффициенты приёмки', icon: 'pi pi-percentage', prompt: 'Покажи текущие коэффициенты приёмки', permissions: ['SUPPLIES'] },
+  { id: 'planned-coefficients', label: 'Плановые коэффициенты', icon: 'pi pi-percentage', prompt: 'Покажи плановые коэффициенты на ближайшие дни', permissions: ['SUPPLIES'] },
+  { id: 'transit-tariffs', label: 'Тарифы транзитных складов', icon: 'pi pi-arrow-right-arrow-left', prompt: 'Покажи транзитные склады и тарифы для склада [ID]', permissions: ['SUPPLIES'] },
+  { id: 'autobookings-list', label: 'Мои автобронирования', icon: 'pi pi-list', prompt: 'Покажи мои автобронирования', permissions: ['SUPPLIES'] },
+  { id: 'autobooking-create', label: 'Создать автобронь', icon: 'pi pi-calendar-plus', prompt: 'Создай автобронирование на склад [ID]', permissions: ['SUPPLIES'] },
+  { id: 'autobooking-update', label: 'Обновить автобронь', icon: 'pi pi-pencil', prompt: 'Обнови автобронирование [ID]', permissions: ['SUPPLIES'] },
+  { id: 'autobooking-delete', label: 'Удалить автобронь', icon: 'pi pi-trash', prompt: 'Удали автобронирование [ID]', permissions: ['SUPPLIES'] },
+  { id: 'triggers-list', label: 'Мои таймслоты', icon: 'pi pi-clock', prompt: 'Покажи мои таймслоты', permissions: ['SUPPLIES'] },
+  { id: 'trigger-create', label: 'Создать таймслот', icon: 'pi pi-plus-circle', prompt: 'Создай таймслот на склад [ID]', permissions: ['SUPPLIES'] },
+  { id: 'trigger-update', label: 'Обновить таймслот', icon: 'pi pi-pencil', prompt: 'Обнови таймслот [ID]', permissions: ['SUPPLIES'] },
+  { id: 'trigger-delete', label: 'Удалить таймслот', icon: 'pi pi-trash', prompt: 'Удали таймслот [ID]', permissions: ['SUPPLIES'] },
+
+  // REPORTS
+  { id: 'sales-report', label: 'Отчёт по продажам', icon: 'pi pi-chart-line', prompt: 'Покажи отчёт по продажам', permissions: ['REPORTS'] },
+  { id: 'region-sales', label: 'Продажи по регионам', icon: 'pi pi-map', prompt: 'Покажи продажи по регионам', permissions: ['REPORTS'] },
+  { id: 'sales-analysis', label: 'Анализ продаж', icon: 'pi pi-chart-line', prompt: 'Проанализируй мои продажи за последнюю неделю', permissions: ['REPORTS'] },
+
+  // ADVERTS
+  { id: 'adverts-list', label: 'Рекламные кампании', icon: 'pi pi-bullseye', prompt: 'Покажи мои рекламные кампании', permissions: ['ADVERTS'] },
+  { id: 'advert-keywords', label: 'Ключевые слова рекламы', icon: 'pi pi-info-circle', prompt: 'Покажи статистику по ключевым словам кампании [ID]', permissions: ['ADVERTS'] },
+  { id: 'advert-efficiency', label: 'Эффективность рекламы', icon: 'pi pi-bullseye', prompt: 'Какая реклама приносит больше всего продаж?', permissions: ['ADVERTS'] },
+
+  // MPStats (no permission required, gated by token)
   { id: 'mpstats-sku', label: 'Аналитика артикула (MPStats)', icon: 'pi pi-chart-bar', prompt: 'Покажи MPStats аналитику артикула [nmId]' },
   { id: 'mpstats-saved', label: 'Сохранённые артикулы (MPStats)', icon: 'pi pi-bookmark', prompt: 'Покажи мои сохранённые артикулы в MPStats' },
   { id: 'mpstats-add', label: 'Добавить артикул (MPStats)', icon: 'pi pi-plus', prompt: 'Добавь артикул [nmId] в MPStats аналитику' },
   { id: 'mpstats-compare', label: 'Сравнить артикулы (MPStats)', icon: 'pi pi-chart-bar', prompt: 'Сравни артикулы в MPStats: [nmId1], [nmId2]' },
-  { id: 'promotions-list', label: 'Список акций', icon: 'pi pi-calendar', prompt: 'Покажи акции и промо' },
-  { id: 'promotion-detail', label: 'Детали акции', icon: 'pi pi-info-circle', prompt: 'Покажи детали акции [ID]' },
-  { id: 'promotion-goods', label: 'Товары акции', icon: 'pi pi-box', prompt: 'Покажи товары акции [ID]' },
-  { id: 'promotion-manage', label: 'Управлять участием в акции', icon: 'pi pi-pencil', prompt: 'Добавь/убери товары из акции [ID]' },
-  { id: 'content-cards', label: 'Карточки товаров', icon: 'pi pi-shopping-bag', prompt: 'Покажи мои карточки товаров' },
-  { id: 'content-card-detail', label: 'Детали карточки', icon: 'pi pi-info-circle', prompt: 'Покажи детали карточки [nmID]' },
-  { id: 'content-card-tariffs', label: 'Тарифы по размерам', icon: 'pi pi-percentage', prompt: 'Покажи тарифы складов для товара с параметрами [высота/длина/вес/ширина]' },
-  { id: 'content-card-categories', label: 'Категории и комиссии', icon: 'pi pi-tag', prompt: 'Покажи комиссии категории [название]' },
+
+  // PROMOTIONS
+  { id: 'promotions-list', label: 'Список акций', icon: 'pi pi-calendar', prompt: 'Покажи акции и промо', permissions: ['PROMOTIONS'] },
+  { id: 'promotion-detail', label: 'Детали акции', icon: 'pi pi-info-circle', prompt: 'Покажи детали акции [ID]', permissions: ['PROMOTIONS'] },
+  { id: 'promotion-goods', label: 'Товары акции', icon: 'pi pi-box', prompt: 'Покажи товары акции [ID]', permissions: ['PROMOTIONS'] },
+  { id: 'promotion-manage', label: 'Управлять участием в акции', icon: 'pi pi-pencil', prompt: 'Добавь/убери товары из акции [ID]', permissions: ['PROMOTIONS'] },
+
+  // Content cards (SUPPLIES — includes tariffs)
+  { id: 'content-cards', label: 'Карточки товаров', icon: 'pi pi-shopping-bag', prompt: 'Покажи мои карточки товаров', permissions: ['SUPPLIES'] },
+  { id: 'content-card-detail', label: 'Детали карточки', icon: 'pi pi-info-circle', prompt: 'Покажи детали карточки [nmID]', permissions: ['SUPPLIES'] },
+  { id: 'content-card-tariffs', label: 'Тарифы по размерам', icon: 'pi pi-percentage', prompt: 'Покажи тарифы складов для товара с параметрами [высота/длина/вес/ширина]', permissions: ['SUPPLIES'] },
+  { id: 'content-card-categories', label: 'Категории и комиссии', icon: 'pi pi-tag', prompt: 'Покажи комиссии категории [название]', permissions: ['SUPPLIES'] },
 ];
 
 const FAVORITES_STORAGE_KEY = 'ai-chat-command-favorites';
