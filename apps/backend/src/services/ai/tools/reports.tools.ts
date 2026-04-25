@@ -2,6 +2,7 @@ import { tool, Tool } from 'ai';
 import { z } from 'zod';
 import { getSalesReport } from '@/services/domain/report/report.service';
 import { safeTool, loggedTool } from './safe-tool.utils';
+import { normalizeWbDate } from './date-normalizer';
 
 export function reportsTools(userId: number): Record<string, Tool> {
   return {
@@ -23,7 +24,11 @@ Response contains:
       }),
       execute: safeTool('getSalesReport', async ({ dateFrom, dateTo }) => {
         return loggedTool('getSalesReport', userId, async () => {
-          return getSalesReport({ userId, dateFrom, dateTo });
+          return getSalesReport({
+            userId,
+            dateFrom: normalizeWbDate(dateFrom),
+            dateTo: normalizeWbDate(dateTo),
+          });
         });
       }),
     }),
