@@ -19,6 +19,7 @@ import mpstatsRoutes from '@/routes/mpstats.routes';
 import contentCardsRoutes from '@/routes/content-cards.routes';
 import feedbacksRoutes from '@/routes/feedbacks.routes';
 import aiRoutes from '@/routes/ai.routes';
+import adminRoutes from '@/routes/admin.routes';
 import { authenticate } from '@/middleware/auth.middleware';
 
 const router = Router();
@@ -109,6 +110,9 @@ router.use('/feedbacks', authenticate, feedbacksRoutes);
 
 // AI routes (protected)
 router.use('/ai', authenticate, aiRoutes);
+
+// Admin routes (protected + admin only)
+router.use('/admin', authenticate, adminRoutes);
 
 // Webhook routes (public - called by YooKassa)
 router.use('/webhooks', webhookRoutes);
