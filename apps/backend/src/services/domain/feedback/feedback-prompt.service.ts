@@ -87,6 +87,7 @@ export class FeedbackPromptService {
         prompt,
         maxTokens: 512,
         temperature: 0.7,
+        providerOptions: { deepseek: { thinking: { type: 'disabled' } } },
       });
 
       return text.trim();
