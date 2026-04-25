@@ -6,6 +6,7 @@
       class="grid grid-cols-2 md:grid-cols-4 gap-3"
     >
       <Button
+        v-if="hasPermission('PROMOTIONS')"
         severity="primary"
         @click="showSection('promotions')"
       >
@@ -13,6 +14,7 @@
         акции
       </Button>
       <Button
+        v-if="hasPermission('SUPPLIES')"
         severity="secondary"
         @click="showSection('balances')"
       >
@@ -20,6 +22,7 @@
         остаток
       </Button>
       <Button
+        v-if="hasPermission('ADVERTS')"
         severity="help"
         @click="showSection('adverts')"
       >
@@ -27,6 +30,7 @@
         реклама
       </Button>
       <Button
+        v-if="hasPermission('REPORTS')"
         severity="info"
         @click="showSection('sales')"
       >
@@ -162,6 +166,7 @@ import { ref, onMounted } from 'vue';
 import { useViewReady } from '../composables/ui';
 import { useUserStore } from '@/stores/user';
 import { useAdvertsStore } from '@/stores/adverts';
+import { usePermissions } from '@/composables/usePermissions';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import PromotionsView from './promotions/PromotionsView.vue';
@@ -172,6 +177,7 @@ import { RegionSalesView } from '@/components/report';
 const { viewReady } = useViewReady();
 const userStore = useUserStore();
 const advertsStore = useAdvertsStore();
+const { hasPermission } = usePermissions();
 
 type SectionType = 'main' | 'promotions' | 'balances' | 'adverts' | 'sales';
 
