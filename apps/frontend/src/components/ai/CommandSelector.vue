@@ -19,7 +19,8 @@ const emit = defineEmits<{
 const popoverRef = ref<InstanceType<typeof Popover> | null>(null);
 const searchQuery = ref('');
 
-const { toggleFavorite, isFavorite, sortedCommands } = useCommandFavorites();
+const { toggleFavorite, isFavorite, sortedCommands, favorites } =
+  useCommandFavorites();
 const { hasAnyPermission } = usePermissions();
 
 const visibleCommands = computed(() =>
@@ -36,13 +37,14 @@ const filteredCommands = computed(() => {
   );
 });
 
-const favoriteCommands = computed(() =>
-  filteredCommands.value.filter((cmd) => isFavorite(cmd.id)),
-);
-
-const nonFavoriteCommands = computed(() =>
-  filteredCommands.value.filter((cmd) => !isFavorite(cmd.id)),
-);
+const sortedFilteredCommands = computed(() => {
+  const favSet = new Set(favorites.value);
+  return [...filteredCommands.value].sort((a, b) => {
+    const aFav = favSet.has(a.id) ? 1 : 0;
+    const bFav = favSet.has(b.id) ? 1 : 0;
+    return bFav - aFav;
+  });
+});
 
 function togglePopover(event: MouseEvent) {
   popoverRef.value?.toggle(event);
@@ -90,50 +92,11 @@ function handleToggleFavorite(event: MouseEvent, commandId: string) {
           </IconField>
         </div>
 
-        <!-- Favorites -->
-        <template v-if="favoriteCommands.length > 0">
-          <div
-            class="px-3 py-1.5 text-xs font-semibold text-purple uppercase tracking-wider"
-          >
-            Избранное
-          </div>
-          <div class="flex flex-col max-h-[180px] overflow-y-auto">
-            <div
-              v-for="cmd in favoriteCommands"
-              :key="cmd.id"
-              class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-elevated transition-colors group"
-              @click="handleSelect(cmd)"
-            >
-              <i
-                :class="[
-                  cmd.icon,
-                  'text-sm text-secondary group-hover:text-purple',
-                ]"
-              />
-              <span class="text-sm text-theme flex-1 truncate">{{
-                cmd.label
-              }}</span>
-              <Button
-                icon="pi pi-star-fill"
-                severity="secondary"
-                text
-                rounded
-                class="w-6 h-6 text-purple hover:text-yellow-400"
-                @click="handleToggleFavorite($event, cmd.id)"
-              />
-            </div>
-          </div>
-          <div
-            v-if="nonFavoriteCommands.length > 0"
-            class="border-t border-deep-border my-1"
-          />
-        </template>
-
-        <!-- All commands -->
+        <!-- Commands -->
         <div class="flex-1 overflow-y-auto">
           <div class="flex flex-col">
             <div
-              v-for="cmd in nonFavoriteCommands"
+              v-for="cmd in sortedFilteredCommands"
               :key="cmd.id"
               class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-elevated transition-colors group"
               @click="handleSelect(cmd)"
@@ -148,11 +111,16 @@ function handleToggleFavorite(event: MouseEvent, commandId: string) {
                 cmd.label
               }}</span>
               <Button
-                icon="pi pi-star"
+                :icon="isFavorite(cmd.id) ? 'pi pi-star-fill' : 'pi pi-star'"
                 severity="secondary"
                 text
                 rounded
-                class="w-6 h-6 opacity-0 group-hover:opacity-100 text-secondary hover:text-yellow-400 transition-opacity"
+                class="w-6 h-6"
+                :class="[
+                  isFavorite(cmd.id)
+                    ? 'text-purple hover:text-yellow-400'
+                    : 'opacity-0 group-hover:opacity-100 text-secondary hover:text-yellow-400 transition-opacity',
+                ]"
                 @click="handleToggleFavorite($event, cmd.id)"
               />
             </div>
