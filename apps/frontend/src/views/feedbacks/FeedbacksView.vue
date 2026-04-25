@@ -94,12 +94,19 @@
             v-if="feedbacksStore.loading && activeTab === 'ai-posted'"
           />
           <div
-            v-if="
-              feedbacksStore.pagination['ai-posted'].totalCount > 0 &&
-              !feedbacksStore.loading
-            "
-            class="flex justify-end mb-2"
+            v-if="!feedbacksStore.loading"
+            class="flex items-center justify-between mb-2 gap-3"
           >
+            <Select
+              v-model="selectedGoodFilter"
+              :options="goodsOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="Фильтр по товару"
+              size="small"
+              class="w-56 text-sm"
+              show-clear
+            />
             <Chip
               :label="`Показано ${feedbacksStore.feedbacks.length} из ${feedbacksStore.pagination['ai-posted'].totalCount}`"
               icon="pi pi-list"
@@ -279,11 +286,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Button from 'primevue/button';
 import SelectButton from 'primevue/selectbutton';
+import Select from 'primevue/select';
 import Paginator from 'primevue/paginator';
 import Chip from 'primevue/chip';
 import { toastHelpers, confirmPromise } from '@/utils/ui';
@@ -333,6 +341,27 @@ const tabLabels = computed(() => ({
 // Drawer visibility
 const showAutoAnswersDrawer = ref(false);
 
+// Product filter for ai-posted tab
+const selectedGoodFilter = ref<number | null>(null);
+
+const goodsOptions = computed(() => {
+  const result: { label: string; value: number }[] = [];
+  for (const goods of Object.values(feedbacksStore.goodsByCategory)) {
+    for (const item of goods) {
+      result.push({ label: item.vendorCode, value: item.nmID });
+    }
+  }
+  // Sort alphabetically by vendor code
+  return result.sort((a, b) => a.label.localeCompare(b.label));
+});
+
+watch(selectedGoodFilter, async (newVal) => {
+  feedbacksStore.setSelectedGood(newVal);
+  if (activeTab.value === 'ai-posted') {
+    await feedbacksStore.fetchFeedbacks('ai-posted', true);
+  }
+});
+
 // Page transition animation
 const pageChanging = ref(false);
 
@@ -380,13 +409,8 @@ async function onAnswerAll() {
 
 async function onConfirmBulk(nmIds: number[]) {
   if (!nmIds || nmIds.length === 0) return;
-  dialog.closeAnswerAllDialog();
   try {
-    const result = await feedbacksStore.answerAllFeedbacks(nmIds);
-    toastHelpers.info(
-      'Асинхронная обработка запущена',
-      `Обработка ${result.nmIdsCount} выбранных товаров запущена в фоновом режиме. Результаты появятся через несколько минут.`,
-    );
+    await feedbacksStore.answerAllFeedbacks(nmIds);
   } catch {
     toastHelpers.error('Ошибка', 'Не удалось запустить обработку отзывов');
   }

@@ -82,12 +82,15 @@ function mapDbRowToFeedbackItemDTO(row: {
 export const fetchFeedbacks = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { tab, page, pageSize, searchText } = req.query as {
+  const { tab, page, pageSize, searchText, nmId } = req.query as {
     tab?: string;
     page?: string;
     pageSize?: string;
     searchText?: string;
+    nmId?: string;
   };
+
+  const nmIdFilter = nmId ? Number(nmId) : undefined;
 
   const currentPage = page ? Math.max(1, Number(page)) : 1;
   const size = pageSize ? Math.max(1, Math.min(100, Number(pageSize))) : 10;
@@ -103,6 +106,7 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
         userId,
         supplierId,
         status,
+        ...(nmIdFilter ? { nmId: nmIdFilter } : {}),
       },
       orderBy: status === 'POSTED' ? { postedAt: 'desc' } : { feedbackDate: 'desc' },
       take: size,
@@ -114,6 +118,7 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
         userId,
         supplierId,
         status,
+        ...(nmIdFilter ? { nmId: nmIdFilter } : {}),
       },
     });
 
@@ -170,18 +175,26 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
   }
 
   // Filter: only feedbacks that genuinely have no answer
-  const filteredFeedbacks = Array.from(merged.values())
+  let filteredFeedbacks = Array.from(merged.values())
     .filter((f) => !f.answer)
     .sort((a, b) => b.createdDate - a.createdDate)
-    .slice(0, size)
-    .map(mapFeedbackItemToDTO);
+    .slice(0, size);
+
+  // Apply nmId filter for unanswered tab
+  if (nmIdFilter) {
+    filteredFeedbacks = filteredFeedbacks.filter(
+      (f) => f.productInfo?.wbArticle === nmIdFilter,
+    );
+  }
+
+  const mappedFeedbacks = filteredFeedbacks.map(mapFeedbackItemToDTO);
 
   const hasMore = (answeredRes.pages?.next || unansweredRes.pages?.next) !== '';
   const totalCount = unansweredRes.countUnanswered || 0;
   const totalPages = Math.ceil(totalCount / size);
 
   successResponse(res, {
-    feedbacks: filteredFeedbacks,
+    feedbacks: mappedFeedbacks,
     pagination: {
       page: currentPage,
       pageSize: size,
