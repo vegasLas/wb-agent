@@ -931,7 +931,7 @@ describe('feedback-prompt.service.ts (Prompt Building)', () => {
       createMockRule({ mode: 'instruction', instruction: 'Mention discount code' }),
     ];
 
-    await feedbackPromptService.generateAnswer(feedback, examples, templates, rejected, rules);
+    await feedbackPromptService.generateAnswer(1, feedback, examples, templates, rejected, rules);
 
     const promptArg = mockGenerateText.mock.calls[0][0];
     const prompt: string = promptArg.prompt;
@@ -965,7 +965,7 @@ describe('feedback-prompt.service.ts (Prompt Building)', () => {
       },
     });
 
-    await feedbackPromptService.generateAnswer(feedback, [], [], [], []);
+    await feedbackPromptService.generateAnswer(1, feedback, [], [], []);
 
     const promptArg = mockGenerateText.mock.calls[0][0];
     const prompt: string = promptArg.prompt;
@@ -981,7 +981,7 @@ describe('feedback-prompt.service.ts (Prompt Building)', () => {
     const feedback = createMockFeedbackItem();
 
     await expect(
-      feedbackPromptService.generateAnswer(feedback, [], [], [], []),
+      feedbackPromptService.generateAnswer(1, feedback, [], [], []),
     ).rejects.toThrow('Failed to generate answer with AI');
   });
 });

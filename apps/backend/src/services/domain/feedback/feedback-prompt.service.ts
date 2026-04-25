@@ -7,6 +7,7 @@
 import { deepseek } from '@ai-sdk/deepseek';
 import { generateText } from 'ai';
 import { createLogger } from '@/utils/logger';
+import { aiUsageTrackingService } from '@/services/ai/ai-usage-tracking.service';
 
 const logger = createLogger('FeedbackPrompt');
 
@@ -28,6 +29,7 @@ export class FeedbackPromptService {
    * Generate an AI answer for a feedback using Deepseek.
    */
   async generateAnswer(
+    userId: number,
     feedback: FeedbackItem,
     recentAnswers: FeedbackExample[],
     templates: FeedbackTemplate[],
@@ -82,13 +84,30 @@ export class FeedbackPromptService {
       hasGroupExamples: !!(groupExamples && groupExamples.length > 0),
     });
     try {
-      const { text } = await generateText({
+      const { text, usage } = await generateText({
         model: deepseek('deepseek-v4-flash'),
         prompt,
         maxTokens: 512,
         temperature: 0.7,
         providerOptions: { deepseek: { thinking: { type: 'disabled' } } },
       });
+
+      if (usage) {
+        aiUsageTrackingService.trackUsage({
+          userId,
+          feature: 'feedback_auto_answer',
+          model: 'deepseek-v4-flash',
+          usage: {
+            promptTokens: usage.promptTokens ?? 0,
+            completionTokens: usage.completionTokens ?? 0,
+            totalTokens: usage.totalTokens ?? 0,
+          },
+          metadata: {
+            feedbackId: feedback.id,
+            valuation: feedback.valuation,
+          },
+        });
+      }
 
       return text.trim();
     } catch (error) {

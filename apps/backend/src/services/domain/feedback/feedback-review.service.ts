@@ -456,6 +456,7 @@ export class FeedbackReviewService {
           );
 
           const answerText = await feedbackPromptService.generateAnswer(
+            userId,
             feedback,
             recentAnswers,
             templates,
@@ -748,6 +749,7 @@ export class FeedbackReviewService {
     const recentAnswers = examplesByValuation.get(feedback.valuation) || [];
 
     const answerText = await feedbackPromptService.generateAnswer(
+      userId,
       feedback,
       recentAnswers,
       templates,
@@ -939,6 +941,7 @@ export class FeedbackReviewService {
     }
 
     const answerText = await feedbackPromptService.generateAnswer(
+      userId,
       feedback,
       recentAnswers,
       templates,
