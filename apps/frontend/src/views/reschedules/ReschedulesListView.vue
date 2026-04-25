@@ -1,8 +1,5 @@
 <template>
   <div class="space-y-3">
-    <!-- User Alerts -->
-    <UserAlerts />
-
     <!-- Display content only if user has selected account, valid supplier and subscription is active -->
     <template
       v-if="
@@ -123,7 +120,6 @@ import { useRescheduleStore } from '@/stores/reschedules';
 import { useRescheduleListStore } from '@/stores/reschedules';
 import { useSupplyDetailsStore } from '@/stores/supplies';
 import { useViewReady } from '../../composables/ui';
-import UserAlerts from '../../components/global/UserAlerts.vue';
 import ReschedulesCard from '../../components/reschedules/Card.vue';
 import ReschedulesSupplyDetailsModal from '../../components/reschedules/SupplyDetailsModal.vue';
 import type { AutobookingReschedule, RescheduleStatus } from '../../types';

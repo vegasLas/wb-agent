@@ -1,7 +1,5 @@
 <template>
   <div class="space-y-4">
-    <UserAlerts />
-
     <!-- Top Navigation Buttons -->
     <div
       v-if="activeSection === 'main'"
@@ -166,7 +164,6 @@ import { useUserStore } from '@/stores/user';
 import { useAdvertsStore } from '@/stores/adverts';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
-import UserAlerts from '../components/global/UserAlerts.vue';
 import PromotionsView from './promotions/PromotionsView.vue';
 import ReportsView from './ReportsView.vue';
 import AdvertsView from './adverts/AdvertsView.vue';

@@ -1,7 +1,5 @@
 <template>
   <div class="space-y-4">
-    <UserAlerts />
-
     <!-- Welcome Section -->
     <Card>
       <template #content>
@@ -139,7 +137,6 @@ import { useViewReady } from '../composables/ui';
 import { useUserStore } from '@/stores/user';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
-import UserAlerts from '../components/global/UserAlerts.vue';
 
 
 const router = useRouter();

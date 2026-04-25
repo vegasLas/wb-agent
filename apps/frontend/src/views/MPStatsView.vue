@@ -1,7 +1,5 @@
 <template>
   <div class="space-y-4">
-    <UserAlerts />
-
     <!-- Token Setup State -->
     <div
       v-if="!tokensReady"
@@ -157,7 +155,6 @@ import { useRouter } from 'vue-router';
 import { useViewReady } from '../composables/ui';
 import { useUserStore } from '@/stores/user';
 import { useMpstatsStore } from '@/stores/mpstats';
-import UserAlerts from '../components/global/UserAlerts.vue';
 import MpstatsSearchPanel from '../components/mpstats/MpstatsSearchPanel.vue';
 import MpstatsFavoritesPanel from '../components/mpstats/MpstatsFavoritesPanel.vue';
 import MpstatsHistoryPanel from '../components/mpstats/MpstatsHistoryPanel.vue';
