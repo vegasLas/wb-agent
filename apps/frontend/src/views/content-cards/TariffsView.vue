@@ -22,6 +22,23 @@
       @show-tariffs="openTariffs"
     />
 
+    <!-- Pagination info -->
+    <div
+      v-if="contentCardsStore.hasCards"
+      class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400"
+    >
+      <span>
+        Показано {{ contentCardsStore.cards.length }} из {{ contentCardsStore.totalCount }}
+      </span>
+      <Button
+        v-if="contentCardsStore.hasMore"
+        label="Загрузить ещё"
+        size="small"
+        :loading="contentCardsStore.loading"
+        @click="contentCardsStore.fetchNextPage"
+      />
+    </div>
+
     <!-- Empty -->
     <EmptyState
       v-else
@@ -65,6 +82,7 @@ import {
 import ErrorMessage from '@/components/common/ErrorMessage.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
+import Button from 'primevue/button';
 import type { ContentCardTableItem } from '@/types';
 
 const contentCardsStore = useContentCardsStore();
