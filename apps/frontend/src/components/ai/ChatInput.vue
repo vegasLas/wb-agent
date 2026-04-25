@@ -3,6 +3,8 @@ import { ref, computed, nextTick, watch } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import { useTypewriterPlaceholder } from '@/composables/ai/useTypewriterPlaceholder';
 import { ABILITY_PROMPTS } from '@/utils/ai-abilities';
+import CommandSelector from '@/components/ai/CommandSelector.vue';
+import type { AICommand } from '@/utils/ai-commands';
 
 const store = useAIChatStore();
 const inputText = ref('');
@@ -11,6 +13,13 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const attachedFiles = ref<File[]>([]);
 const isDragOver = ref(false);
 const isFocused = ref(false);
+function selectCommand(cmd: AICommand) {
+  inputText.value = cmd.prompt;
+  nextTick(() => {
+    adjustHeight();
+    textareaRef.value?.focus();
+  });
+}
 
 const {
   placeholder: dynamicPlaceholder,
@@ -141,6 +150,18 @@ function adjustHeight() {
   });
 }
 
+function setInputText(text: string) {
+  inputText.value = text;
+  nextTick(() => {
+    adjustHeight();
+    textareaRef.value?.focus();
+  });
+}
+
+defineExpose({
+  setInputText,
+});
+
 function getFileIcon(file: File): string {
   if (file.name.match(/\.(xlsx|xls)$/i))
     return 'pi pi-file-excel text-green-500';
@@ -206,6 +227,8 @@ function getFileIcon(file: File): string {
         >
           <i class="pi pi-paperclip text-sm" />
         </button>
+
+        <CommandSelector :disabled="isLoading" @select="selectCommand" />
 
         <!-- Attachment chips -->
         <div v-if="attachedFiles.length > 0" class="flex items-center gap-1.5">
