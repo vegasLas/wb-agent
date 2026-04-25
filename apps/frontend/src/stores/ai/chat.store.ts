@@ -120,6 +120,8 @@ function createChatSession(
       experimental_throttle: 50,
       onError: (err) => {
         console.error('[CHAT-STORE] AI SDK error:', err);
+        // The AI SDK surfaces stream errors here; the store's computed `error`
+        // property (activeSession?.chat.error) will reflect this automatically.
       },
     }),
   );

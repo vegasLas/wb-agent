@@ -48,9 +48,14 @@ export function createToolTrackingStream(
                 ) {
                   onToolFinished(currentStepToolCallId);
                   currentStepToolCallId = null;
+                } else if ((event as any).error || (event as any).type === 'error') {
+                  console.error('[STREAM] Backend error in SSE:', event);
                 }
-              } catch {
-                // ignore malformed JSON
+              } catch (parseErr) {
+                // Only log if it looks like it might be an error payload rather than a data chunk
+                if (data.includes('error') || data.includes('Error')) {
+                  console.error('[STREAM] Failed to parse SSE data:', data, parseErr);
+                }
               }
             }
 
