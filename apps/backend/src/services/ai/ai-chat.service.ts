@@ -10,6 +10,7 @@ import {
 } from 'ai';
 import { prisma } from '@/config/database';
 import { buildContextMessage } from './context-builder.service';
+import { filterToolsByPermissions } from './ai-tool-permissions';
 import { autobookingTools } from './tools/autobooking.tools';
 import { triggerTools } from './tools/trigger.tools';
 import { externalTools } from './tools/external.tools';
@@ -115,20 +116,35 @@ export class AIChatService {
       ? deepseek('deepseek-v4-flash')
       : deepseek('deepseek-v4-flash');
 
+    // Resolve active supplier permissions for tool filtering
+    const userWithAccounts = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { accounts: { include: { suppliers: true } } },
+    });
+    const activeAccount =
+      userWithAccounts?.accounts.find(
+        (a) => a.id === userWithAccounts.selectedAccountId,
+      ) || userWithAccounts?.accounts[0];
+    const activeSupplier =
+      activeAccount?.suppliers.find(
+        (s) => s.supplierId === activeAccount.selectedSupplierId,
+      ) || activeAccount?.suppliers[0];
+    const permissions = (activeSupplier?.permissions as import('@prisma/client').Permission[]) || [];
+
     const tools: Record<string, Tool> | undefined = wantsReasoning
       ? undefined
       : Object.assign(
           {} as Record<string, Tool>,
-          autobookingTools(userId, convId),
-          triggerTools(userId),
-          externalTools(userId),
-          supplierTools(userId),
-          mpstatsTools(userId),
-          advertsTools(userId),
-          reportsTools(userId),
-          contentCardsTools(userId),
-          userContextTools(userId),
-          promotionsTools(userId),
+          filterToolsByPermissions(autobookingTools(userId, convId), 'autobookingTools', permissions),
+          filterToolsByPermissions(triggerTools(userId), 'triggerTools', permissions),
+          filterToolsByPermissions(externalTools(userId), 'externalTools', permissions),
+          filterToolsByPermissions(supplierTools(userId), 'supplierTools', permissions),
+          filterToolsByPermissions(mpstatsTools(userId), 'mpstatsTools', permissions),
+          filterToolsByPermissions(advertsTools(userId), 'advertsTools', permissions),
+          filterToolsByPermissions(reportsTools(userId), 'reportsTools', permissions),
+          filterToolsByPermissions(contentCardsTools(userId), 'contentCardsTools', permissions),
+          filterToolsByPermissions(userContextTools(userId), 'userContextTools', permissions),
+          filterToolsByPermissions(promotionsTools(userId), 'promotionsTools', permissions),
         );
 
     // 7. Set up accumulation and debounced persistence
