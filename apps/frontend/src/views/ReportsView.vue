@@ -1,8 +1,5 @@
 <template>
   <div class="report-main">
-    <!-- User Alerts -->
-    <UserAlerts class="mb-6" />
-
     <!-- Display content only if user has selected account, valid supplier and subscription is active -->
     <template
       v-if="
@@ -157,7 +154,6 @@ import DatePicker from 'primevue/datepicker';
 import { useReportStore } from '@/stores/reports';
 import { useUserStore } from '@/stores/user';
 import { useReportViewStore } from '@/stores/reports';
-import UserAlerts from '../components/global/UserAlerts.vue';
 import MultiSelect from 'primevue/multiselect';
 import { ReportMain } from '../components/report';
 import Button from 'primevue/button';

@@ -1,8 +1,5 @@
 <template>
   <div class="space-y-3">
-    <!-- User Alerts -->
-    <UserAlerts />
-
     <!-- Create Dialog -->
     <AutobookingCreateDialog
       v-model:show="showCreateDialog"
@@ -142,7 +139,6 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Message from 'primevue/message';
-import UserAlerts from '../../components/global/UserAlerts.vue';
 import AutobookingBookingCard from '../../components/autobooking/BookingCard.vue';
 import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsModal.vue';
 import AutobookingCreateDialog from '../../components/autobooking/CreateDialog.vue';

@@ -1,8 +1,5 @@
 <template>
   <div class="space-y-3">
-    <!-- User Alerts -->
-    <UserAlerts />
-
     <!-- Create Dialog -->
     <TriggerCreateDialog
       v-model:show="showCreateDialog"
@@ -273,7 +270,6 @@ import { useTriggerStore } from '@/stores/triggers';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useUserStore } from '@/stores/user';
 import { useViewReady } from '../../composables/ui';
-import UserAlerts from '../../components/global/UserAlerts.vue';
 import CoefficientHistoryAlert from '../../components/triggers/CoefficientHistoryAlert.vue';
 import TriggerCreateDialog from '../../components/triggers/CreateDialog.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';

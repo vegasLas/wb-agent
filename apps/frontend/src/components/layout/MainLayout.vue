@@ -74,6 +74,7 @@
         </div>
 
         <div class="max-w-7xl mx-auto w-full">
+          <UserAlerts class="mb-4" />
           <RouterView />
         </div>
       </div>
@@ -115,6 +116,7 @@ import { AccountManagementView } from '../account-management';
 import { useSkeleton } from '../../composables/ui';
 import AppSidebar from './AppSidebar.vue';
 import MobileNavDrawer from './MobileNavDrawer.vue';
+import { UserAlerts } from '../global';
 import AutobookingCreateDialog from '../autobooking/CreateDialog.vue';
 import TriggerCreateDialog from '../triggers/CreateDialog.vue';
 import type { MenuItem } from 'primevue/menu';
