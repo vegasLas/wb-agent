@@ -6,6 +6,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Button from 'primevue/button';
 import { useCommandFavorites, type AICommand } from '@/utils/ai-commands';
+import { usePermissions } from '@/composables/usePermissions';
 
 const props = defineProps<{
   disabled?: boolean;
@@ -19,11 +20,18 @@ const popoverRef = ref<InstanceType<typeof Popover> | null>(null);
 const searchQuery = ref('');
 
 const { toggleFavorite, isFavorite, sortedCommands } = useCommandFavorites();
+const { hasAnyPermission } = usePermissions();
+
+const visibleCommands = computed(() =>
+  sortedCommands.value.filter(
+    (cmd) => !cmd.permissions || hasAnyPermission(cmd.permissions),
+  ),
+);
 
 const filteredCommands = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
-  if (!query) return sortedCommands.value;
-  return sortedCommands.value.filter((cmd) =>
+  if (!query) return visibleCommands.value;
+  return visibleCommands.value.filter((cmd) =>
     cmd.label.toLowerCase().includes(query),
   );
 });
@@ -59,7 +67,7 @@ function handleToggleFavorite(event: MouseEvent, commandId: string) {
       text
       rounded
       :disabled="props.disabled"
-      class="w-7 h-7 md:w-auto md:h-8 md:px-2.5"
+      class="h-7 w-auto md:h-8 md:px-2.5"
       @click="togglePopover"
     >
       <i class="pi pi-sliders-h text-sm" />
