@@ -16,6 +16,7 @@ export interface ContentCardTableListResponse {
     n: number;
     nmID: number;
   };
+  totalCount: number;
 }
 
 export interface CommissionCategory {
