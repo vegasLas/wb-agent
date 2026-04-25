@@ -80,6 +80,24 @@ export const TOOL_LABELS: Record<string, { label: string; icon: string }> = {
     label: 'Получаем аналитику артикула',
     icon: 'pi pi-chart-bar',
   },
+  listSavedSkus: {
+    label: 'Получаем сохранённые артикулы',
+    icon: 'pi pi-bookmark',
+  },
+  addSku: {
+    label: 'Добавляем артикул в аналитику',
+    icon: 'pi pi-plus',
+  },
+  compareSkus: {
+    label: 'Сравниваем артикулы',
+    icon: 'pi pi-chart-bar',
+  },
+
+  // User Context
+  getUserContext: {
+    label: 'Получаем данные пользователя',
+    icon: 'pi pi-user',
+  },
 
   // Promotions
   listPromotions: {
