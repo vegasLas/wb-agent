@@ -54,18 +54,12 @@ Optional: status ('ACTIVE' | 'COMPLETED' | 'ARCHIVED' | 'ERROR'), limit (max 20,
       }),
       execute: safeTool('listAutobookings', async ({ status, limit }) => {
         return loggedTool('listAutobookings', userId, async () => {
-          const result: any = await autobookingService.getUserAutobookings(
+          return autobookingService.getUserAutobookings(
             userId,
             1,
             limit,
+            status,
           );
-          if (status && result.items) {
-            return {
-              ...result,
-              items: result.items.filter((item: any) => item.status === status),
-            };
-          }
-          return result;
         });
       }),
     }),
