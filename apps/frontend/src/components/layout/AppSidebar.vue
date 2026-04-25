@@ -21,7 +21,7 @@
     <div class="flex-1 overflow-y-auto px-3 py-4 space-y-6">
       <nav class="space-y-1">
         <RouterLink
-          v-for="item in primaryNav"
+          v-for="item in visiblePrimaryNav"
           :key="item.route"
           :to="{ name: item.route }"
           :class="[
@@ -131,6 +131,7 @@ import { useColorMode } from '@vueuse/core';
 import Popover from 'primevue/popover';
 import { useUserStore } from '@/stores/user';
 import { useNavigation } from '@/composables/useNavigation';
+import { usePermissions } from '@/composables/usePermissions';
 
 const emit = defineEmits<{
   'show-help': [];
@@ -144,6 +145,11 @@ const pendingRouteName = inject<Ref<string | null>>(
 );
 const { primaryNav, secondaryNav, isActive } = useNavigation(pendingRouteName);
 const userStore = useUserStore();
+const { hasAnyPermission } = usePermissions();
+
+const visiblePrimaryNav = computed(() =>
+  primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions)),
+);
 
 // Theme toggle
 const colorMode = useColorMode({

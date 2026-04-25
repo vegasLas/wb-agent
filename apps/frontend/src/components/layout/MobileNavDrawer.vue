@@ -41,7 +41,7 @@
     <div class="flex-1 overflow-y-auto px-3 py-4 space-y-6">
       <nav class="space-y-1">
         <RouterLink
-          v-for="item in primaryNav"
+          v-for="item in visiblePrimaryNav"
           :key="item.route"
           :to="{ name: item.route }"
           :class="[
@@ -121,6 +121,7 @@ import Sidebar from 'primevue/sidebar';
 import Menu from 'primevue/menu';
 import { useUserStore } from '@/stores/user';
 import { useNavigation } from '@/composables/useNavigation';
+import { usePermissions } from '@/composables/usePermissions';
 import type { MenuItem } from 'primevue/menu';
 
 const props = defineProps<{
@@ -136,6 +137,11 @@ const emit = defineEmits<{
 const router = useRouter();
 const { primaryNav, secondaryNav, isActive } = useNavigation();
 const userStore = useUserStore();
+const { hasAnyPermission } = usePermissions();
+
+const visiblePrimaryNav = computed(() =>
+  primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions)),
+);
 
 // Theme toggle
 const colorMode = useColorMode({
