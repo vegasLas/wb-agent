@@ -68,11 +68,31 @@ router.post('/chat', authenticate, async (req, res, next) => {
       messages as any,
     );
 
-    const result = await aiChatService.handleChat({
+    const abortController = new AbortController();
+
+    const { result, forceSave } = await aiChatService.handleChat({
       userId,
       conversationId: parsed.id,
       messages: processedMessages as any,
       attachments: attachments.length ? attachments : undefined,
+      abortSignal: abortController.signal,
+    });
+
+    // Handle client disconnect: save partial response, but do NOT abort.
+    // consumeStream() keeps the stream running in the background so
+    // onFinish fires and the full message is persisted.
+    const onClientClose = async () => {
+      console.log('[AI-BACKEND] Client disconnected, saving partial response');
+      try {
+        await forceSave();
+      } catch (err) {
+        console.error('[AI-BACKEND] Failed to save partial message on disconnect:', err);
+      }
+    };
+    req.on('close', onClientClose);
+    res.on('error', (err) => {
+      console.error('[AI-BACKEND] Response stream error:', err);
+      onClientClose().catch(() => {});
     });
 
     if (typeof (result as any).pipeUIMessageStreamToResponse === 'function') {
@@ -80,15 +100,24 @@ router.post('/chat', authenticate, async (req, res, next) => {
       if ((res as any).socket) {
         (res as any).socket.setNoDelay(true);
       }
-      return (result as any).pipeUIMessageStreamToResponse(res, {
-        headers: {
-          'Content-Encoding': 'none',
-          'X-Accel-Buffering': 'no',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          Pragma: 'no-cache',
-          Expires: '0',
-        },
-      });
+      try {
+        return (result as any).pipeUIMessageStreamToResponse(res, {
+          headers: {
+            'Content-Encoding': 'none',
+            'X-Accel-Buffering': 'no',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+        });
+      } catch (pipeErr) {
+        console.error('[AI-BACKEND] Stream pipe error:', pipeErr);
+        await onClientClose();
+        if (!res.headersSent) {
+          return res.status(500).json({ error: 'Streaming failed' });
+        }
+        return;
+      }
     }
 
     return res.status(500).json({ error: 'Streaming unsupported' });
