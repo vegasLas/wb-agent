@@ -11,6 +11,7 @@ import ChatInput from '@/components/ai/ChatInput.vue';
 const store = useAIChatStore();
 const { viewReady } = useViewReady();
 const historyDrawerVisible = ref(false);
+const chatInputRef = ref<InstanceType<typeof ChatInput> | null>(null);
 
 onMounted(() => {
   store.loadConversations();
@@ -27,8 +28,8 @@ function handleNew() {
   historyDrawerVisible.value = false;
 }
 
-function handleSendFromSuggestion(text: string) {
-  store.sendMessage(text);
+function handleFillInput(text: string) {
+  chatInputRef.value?.setInputText(text);
 }
 </script>
 
@@ -75,8 +76,8 @@ function handleSendFromSuggestion(text: string) {
         </button>
       </div>
 
-      <ChatMessageList @send="handleSendFromSuggestion" />
-      <ChatInput />
+      <ChatMessageList @send="handleFillInput" />
+      <ChatInput ref="chatInputRef" />
     </div>
 
     <!-- Desktop conversation list -->
