@@ -46,7 +46,7 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   }
 
   /**
-   * Login with credentials
+   * Login with legacy bot-generated credentials
    */
   async function login(login: string, password: string): Promise<boolean> {
     try {
@@ -58,43 +58,70 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
         password,
       });
 
-      if (response.data.success) {
-        const {
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-          expiresIn,
-        } = response.data;
-
-        // Store tokens
-        accessToken.value = newAccessToken;
-        refreshToken.value = newRefreshToken;
-        tokenExpiresAt.value = Date.now() + expiresIn * 1000;
-
-        // Set access token in API client
-        setAuthToken(newAccessToken);
-
-        // Clean up legacy token
-        localStorage.removeItem(LEGACY_TOKEN_KEY);
-
-        // Fetch full user data from userStore
-        try {
-          const userStore = useUserStore();
-          await userStore.fetchUser();
-          console.log('[BrowserAuth] UserStore populated after login');
-        } catch (error) {
-          console.error('[BrowserAuth] Failed to populate userStore after login:', error);
-        }
-
-        return true;
-      }
-
-      return false;
+      return handleAuthResponse(response.data);
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Ошибка входа';
       return false;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /**
+   * Login with email + password
+   */
+  async function emailLogin(email: string, password: string): Promise<boolean> {
+    try {
+      isLoading.value = true;
+      error.value = null;
+
+      const response = await apiClient.post('/auth/email-login', {
+        email,
+        password,
+      });
+
+      return handleAuthResponse(response.data);
+    } catch (err: any) {
+      error.value = err.response?.data?.message || 'Ошибка входа';
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Handle successful auth response (stores tokens & fetches user)
+   */
+  async function handleAuthResponse(data: any): Promise<boolean> {
+    if (!data.success) return false;
+
+    const {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      expiresIn,
+    } = data;
+
+    // Store tokens
+    accessToken.value = newAccessToken;
+    refreshToken.value = newRefreshToken;
+    tokenExpiresAt.value = Date.now() + expiresIn * 1000;
+
+    // Set access token in API client
+    setAuthToken(newAccessToken);
+
+    // Clean up legacy token
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+
+    // Fetch full user data from userStore
+    try {
+      const userStore = useUserStore();
+      await userStore.fetchUser();
+      console.log('[BrowserAuth] UserStore populated after login');
+    } catch (error) {
+      console.error('[BrowserAuth] Failed to populate userStore after login:', error);
+    }
+
+    return true;
   }
 
   /**
@@ -264,6 +291,7 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
 
     // Actions
     login,
+    emailLogin,
     logout,
     doRefreshToken,
     initAuth,
