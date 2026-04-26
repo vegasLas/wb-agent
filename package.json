@@ -10,6 +10,7 @@
     "build:frontend": "nx build frontend",
     "build:backend": "nx build backend",
     "deploy:frontend": "nx deploy frontend",
+    "deploy:landing": "cd apps/landing && npm run build && scp -r ../../dist/apps/landing/* wbsupplier:/var/www/html/wboi/",
     "lint": "nx run-many -t lint -p frontend backend",
     "type-check": "nx type-check frontend",
     "test": "nx run-many -t test -p backend -- --forceExit",
