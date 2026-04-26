@@ -1,29 +1,26 @@
-/**
- * Admin Service
- * Provides admin-only functionality like broadcasting messages to all users
- */
-
-import { TBOT } from '@/utils/TBOT';
 import { prisma } from '@/config/database';
-import { logger } from '@/utils/logger';
+import { TBOT } from '@/utils/TBOT';
+import { createLogger } from '@/utils/logger';
+import { ApiError } from '@/utils/errors';
 
-/**
- * Admin service for broadcast and administrative functions
- */
+const logger = createLogger('AdminService');
+
 export class AdminService {
   /**
-   * Broadcast a message to all users with a chatId
-   * @param messageText - The message to broadcast
-   * @returns Statistics about the broadcast
+   * Send broadcast message to all users via Telegram
    */
-  async broadcastMessage(messageText: string): Promise<{
-    success: boolean;
-    totalUsers: number;
-    successful: number;
-    failed: number;
-  }> {
+  async sendBroadcast(messageText: string, adminUserId: number) {
+    // Check if user is admin
+    const admin = await prisma.admin.findUnique({
+      where: { userId: adminUserId },
+    });
+
+    if (!admin) {
+      throw ApiError.forbidden('Требуются права администратора');
+    }
+
     if (!TBOT) {
-      logger.warn('TBOT not initialized, cannot broadcast message');
+      logger.warn('TBOT not initialized, cannot send broadcast');
       return {
         success: false,
         totalUsers: 0,
@@ -33,29 +30,29 @@ export class AdminService {
     }
 
     // Get all users with chatId
-    const users = await prisma.user.findMany({
+    const telegrams = await prisma.telegram.findMany({
       where: {
-        chatId: {
-          not: null,
-        },
+        chatId: { not: null },
       },
-      select: {
-        id: true,
-        chatId: true,
-        name: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
     let successful = 0;
     let failed = 0;
 
-    logger.info(`Starting broadcast to ${users.length} users`);
+    logger.info(`Starting broadcast to ${telegrams.length} users`);
 
-    for (const user of users) {
-      if (!user.chatId) continue;
+    for (const telegram of telegrams) {
+      if (!telegram.chatId) continue;
 
       try {
-        await TBOT.sendMessage(user.chatId, messageText, {
+        await TBOT.sendMessage(telegram.chatId, messageText, {
           parse_mode: 'HTML',
         });
         successful++;
@@ -64,15 +61,15 @@ export class AdminService {
         await new Promise((resolve) => setTimeout(resolve, 50));
       } catch (error) {
         failed++;
-        logger.error(`Failed to send broadcast to user ${user.id}:`, error);
+        logger.error(`Failed to send broadcast to user ${telegram.user.id}:`, error);
 
         // If bot was blocked, clear the chatId
         if (this.isBotBlockedError(error)) {
-          await prisma.user.update({
-            where: { id: user.id },
+          await prisma.telegram.update({
+            where: { userId: telegram.user.id },
             data: { chatId: null },
           });
-          logger.info(`Cleared chatId for user ${user.id} (blocked bot)`);
+          logger.info(`Cleared chatId for user ${telegram.user.id} (blocked bot)`);
         }
       }
     }
@@ -83,30 +80,16 @@ export class AdminService {
 
     return {
       success: true,
-      totalUsers: users.length,
+      totalUsers: telegrams.length,
       successful,
       failed,
     };
   }
 
-  /**
-   * Check if error indicates bot was blocked by user
-   */
   private isBotBlockedError(error: unknown): boolean {
-    if (typeof error !== 'object' || error === null) return false;
-
-    const err = error as {
-      code?: string;
-      response?: {
-        body?: {
-          description?: string;
-        };
-      };
-    };
-
-    return !!(
-      err.code === 'ETELEGRAM' &&
-      err.response?.body?.description?.includes('bot was blocked by the user')
+    return (
+      error instanceof Error &&
+      error.message.includes('bot was blocked by the user')
     );
   }
 }

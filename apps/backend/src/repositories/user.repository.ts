@@ -1,4 +1,4 @@
-import { User, PrismaClient, Prisma } from '@prisma/client';
+import { User, PrismaClient } from '@prisma/client';
 import { prisma } from '@/config/database';
 
 export class UserRepository {
@@ -12,34 +12,67 @@ export class UserRepository {
           include: { suppliers: true },
         },
         supplierApiKey: true,
+        profile: true,
+        telegram: true,
       },
     });
   }
 
-  async findByTelegramId(telegramId: bigint): Promise<User | null> {
+  async findByIdWithIdentities(id: number): Promise<(User & { identities: { id: number; provider: string; providerId: string | null; email: string | null }[] }) | null> {
     return this.prismaClient.user.findUnique({
-      where: { telegramId },
+      where: { id },
       include: {
         accounts: {
           include: { suppliers: true },
         },
         supplierApiKey: true,
+        identities: {
+          select: {
+            id: true,
+            provider: true,
+            providerId: true,
+            email: true,
+          },
+        },
+        profile: true,
+        telegram: true,
       },
     });
   }
 
   async create(data: {
-    telegramId: bigint;
     name: string;
+    email?: string;
+    phone?: string;
     chatId?: string;
     username?: string;
     languageCode?: string;
     envInfo?: unknown;
-  }): Promise<User> {
+  }): Promise<User & { profile: { name: string; email: string | null; phone: string | null } | null; telegram: { chatId: string | null; username: string | null; languageCode: string | null } | null }> {
     return this.prismaClient.user.create({
       data: {
-        ...data,
-        envInfo: data.envInfo as Prisma.JsonValue,
+        envInfo: data.envInfo as any,
+        envInfoUpdatedAt: data.envInfo ? new Date() : undefined,
+        profile: {
+          create: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+          },
+        },
+        telegram: data.chatId
+          ? {
+              create: {
+                chatId: data.chatId,
+                username: data.username,
+                languageCode: data.languageCode,
+              },
+            }
+          : undefined,
+      },
+      include: {
+        profile: true,
+        telegram: true,
       },
     });
   }

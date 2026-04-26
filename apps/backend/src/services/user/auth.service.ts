@@ -267,7 +267,7 @@ export class AuthService {
         };
       }
 
-      await userService.logoutWb(user.telegramId);
+      await userService.logoutWb(user.id);
 
       const sessionId = this.generateSessionId();
       const options = await this.getPlaywrightOptions();
