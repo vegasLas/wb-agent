@@ -54,6 +54,22 @@ model User {
   mpstatsToken           String?
   skuCards               WbSkuCard[]
   admins                 Admin[]
+  refreshTokens          RefreshToken[]
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  tokenHash  String    @unique
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  replacedBy String?
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
 }
 
 model WbSkuCard {
