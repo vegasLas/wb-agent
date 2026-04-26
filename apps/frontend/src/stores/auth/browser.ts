@@ -6,19 +6,44 @@ import apiClient, { setAuthToken } from '@/api/client';
 import { useUserStore } from '@/stores/user';
 import { resetAppState } from '@/router';
 
+// Storage keys
+const ACCESS_TOKEN_KEY = 'auth_access_token';
+const REFRESH_TOKEN_KEY = 'auth_refresh_token';
+const TOKEN_EXPIRES_AT_KEY = 'auth_token_expires_at';
+const LEGACY_TOKEN_KEY = 'auth_token'; // For migration cleanup
+
 /**
  * Browser authentication store for JWT-based auth
- * Used when the app is accessed from a regular browser
+ * Uses dual tokens: short-lived access token + long-lived refresh token
  */
 export const useBrowserAuthStore = defineStore('browserAuth', () => {
   const router = useRouter();
 
   // Use VueUse useStorage for automatic localStorage sync
-  const token = useStorage<string | null>('auth_token', null);
+  const accessToken = useStorage<string | null>(ACCESS_TOKEN_KEY, null);
+  const refreshToken = useStorage<string | null>(REFRESH_TOKEN_KEY, null);
+  const tokenExpiresAt = useStorage<number | null>(TOKEN_EXPIRES_AT_KEY, null);
+
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
-  const isAuthenticated = computed(() => !!token.value);
+  const isAuthenticated = computed(() => !!accessToken.value);
+
+  /**
+   * Check if access token is expiring soon (default: within 60 seconds)
+   */
+  function isTokenExpiringSoon(thresholdMs = 60000): boolean {
+    if (!tokenExpiresAt.value) return true;
+    return Date.now() >= tokenExpiresAt.value - thresholdMs;
+  }
+
+  /**
+   * Check if access token is already expired
+   */
+  function isTokenExpired(): boolean {
+    if (!tokenExpiresAt.value) return true;
+    return Date.now() >= tokenExpiresAt.value;
+  }
 
   /**
    * Login with credentials
@@ -34,18 +59,30 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       });
 
       if (response.data.success) {
-        // VueUse useStorage automatically syncs to localStorage
-        token.value = response.data.token;
-        setAuthToken(response.data.token);
+        const {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+          expiresIn,
+        } = response.data;
 
-        // Fetch full user data from userStore (includes subscription, accounts, etc.)
+        // Store tokens
+        accessToken.value = newAccessToken;
+        refreshToken.value = newRefreshToken;
+        tokenExpiresAt.value = Date.now() + expiresIn * 1000;
+
+        // Set access token in API client
+        setAuthToken(newAccessToken);
+
+        // Clean up legacy token
+        localStorage.removeItem(LEGACY_TOKEN_KEY);
+
+        // Fetch full user data from userStore
         try {
           const userStore = useUserStore();
           await userStore.fetchUser();
           console.log('[BrowserAuth] UserStore populated after login');
         } catch (error) {
           console.error('[BrowserAuth] Failed to populate userStore after login:', error);
-          // Still return true since login succeeded, but user data fetch failed
         }
 
         return true;
@@ -65,25 +102,75 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
    */
   async function logout(): Promise<void> {
     try {
-      // Optionally notify backend about logout
-      if (token.value) {
-        await apiClient.post('/auth/logout').catch(() => {
-          // Ignore errors during logout
-        });
+      // Notify backend about logout so refresh token can be revoked
+      if (refreshToken.value) {
+        await apiClient
+          .post('/auth/logout', { refreshToken: refreshToken.value })
+          .catch(() => {
+            // Ignore errors during logout
+          });
       }
     } finally {
-      // VueUse useStorage automatically clears localStorage
-      token.value = null;
+      // Clear all token storage
+      accessToken.value = null;
+      refreshToken.value = null;
+      tokenExpiresAt.value = null;
       setAuthToken(null);
-      
+
       // Reset userStore as well
       const userStore = useUserStore();
       userStore.reset();
-      
+
       // Reset router auth state to allow re-initialization on next login
       resetAppState();
-      
+
       await router.push('/login');
+    }
+  }
+
+  /**
+   * Refresh access token using refresh token
+   */
+  async function doRefreshToken(): Promise<boolean> {
+    if (!refreshToken.value) {
+      console.log('[BrowserAuth] No refresh token available');
+      return false;
+    }
+
+    try {
+      const response = await apiClient.post('/auth/refresh', {
+        refreshToken: refreshToken.value,
+      });
+
+      if (response.data.success) {
+        const {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+          expiresIn,
+        } = response.data;
+
+        accessToken.value = newAccessToken;
+        refreshToken.value = newRefreshToken;
+        tokenExpiresAt.value = Date.now() + expiresIn * 1000;
+        setAuthToken(newAccessToken);
+
+        console.log('[BrowserAuth] Tokens refreshed successfully');
+        return true;
+      }
+
+      return false;
+    } catch (err: any) {
+      console.error('[BrowserAuth] Token refresh failed:', err.response?.data?.message || err.message);
+
+      // If refresh fails with 401, clear everything — token is revoked or expired
+      if (err.response?.status === 401) {
+        accessToken.value = null;
+        refreshToken.value = null;
+        tokenExpiresAt.value = null;
+        setAuthToken(null);
+      }
+
+      return false;
     }
   }
 
@@ -92,21 +179,39 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
    * @param skipUserFetch If true, skip fetching user data (use when already fetched)
    */
   async function initAuth(skipUserFetch = false): Promise<boolean> {
-    if (!token.value) {
+    // Migrate legacy single token if present
+    const legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
+    if (legacyToken && !accessToken.value) {
+      localStorage.removeItem(LEGACY_TOKEN_KEY);
+      console.log('[BrowserAuth] Cleared legacy auth_token');
+    }
+
+    if (!accessToken.value || !refreshToken.value) {
       setAuthToken(null);
       return false;
     }
 
-    // Ensure token is set in API client for subsequent requests
-    setAuthToken(token.value);
-    console.log('[BrowserAuth] Token restored from storage, validating...');
+    // Ensure access token is set in API client for subsequent requests
+    setAuthToken(accessToken.value);
+    console.log('[BrowserAuth] Tokens restored from storage');
 
-    // If we're skipping fetch, just return true (token exists)
+    // If access token is already expired, try to refresh immediately
+    if (isTokenExpired()) {
+      console.log('[BrowserAuth] Access token expired, attempting refresh...');
+      const refreshed = await doRefreshToken();
+      if (!refreshed) {
+        console.log('[BrowserAuth] Refresh failed, clearing auth');
+        resetAppState();
+        return false;
+      }
+    }
+
+    // If we're skipping fetch, just return true (token exists and is valid)
     if (skipUserFetch) {
       return true;
     }
 
-    // Fetch full user data from userStore (includes subscription, accounts, etc.)
+    // Fetch full user data from userStore
     try {
       const userStore = useUserStore();
       await userStore.fetchUser();
@@ -114,32 +219,25 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       return true;
     } catch (error: any) {
       console.error('[BrowserAuth] Failed to fetch user data:', error);
-      
-      // On 401, clear auth
+
+      // On 401, try one refresh then retry
       if (error?.response?.status === 401) {
-        token.value = null;
+        const refreshed = await doRefreshToken();
+        if (refreshed) {
+          try {
+            await userStore.fetchUser();
+            return true;
+          } catch {
+            // Second attempt failed
+          }
+        }
+
+        accessToken.value = null;
+        refreshToken.value = null;
+        tokenExpiresAt.value = null;
         setAuthToken(null);
         resetAppState();
       }
-      return false;
-    }
-  }
-
-  /**
-   * Refresh JWT token
-   */
-  async function refreshToken(): Promise<boolean> {
-    try {
-      const response = await apiClient.post('/auth/refresh');
-
-      if (response.data.success) {
-        token.value = response.data.token; // Auto-syncs to localStorage
-        setAuthToken(response.data.token);
-        return true;
-      }
-
-      return false;
-    } catch (err) {
       return false;
     }
   }
@@ -152,19 +250,23 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   }
 
   return {
-    // State (readonly) - useStorage refs are already reactive
-    token: readonly(token),
+    // State (readonly)
+    accessToken: readonly(accessToken),
+    refreshToken: readonly(refreshToken),
+    tokenExpiresAt: readonly(tokenExpiresAt),
     isLoading: readonly(isLoading),
     error: readonly(error),
 
     // Getters
     isAuthenticated,
+    isTokenExpiringSoon,
+    isTokenExpired,
 
     // Actions
     login,
     logout,
+    doRefreshToken,
     initAuth,
-    refreshToken,
     clearError,
   };
 });
