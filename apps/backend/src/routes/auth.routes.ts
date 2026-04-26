@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
+import rateLimit from 'express-rate-limit';
+import { env } from '@/config/env';
 import { prisma } from '@/config/database';
 import { authService, userService } from '@/services/user/';
 import { jwtAuthService } from '@/services/user/jwt-auth.service';
+import { emailAuthService } from '@/services/auth/email-auth.service';
+import { vkAuthService } from '@/services/auth/vk-auth.service';
 import { authenticate } from '@/middleware/auth.middleware';
 import { sendLogoutNotification } from '@/utils/TBOT';
 import { ApiError } from '@/utils/errors';
@@ -11,9 +15,210 @@ import { createLogger } from '@/utils/logger';
 const logger = createLogger('AuthRoutes');
 const router = Router();
 
-// POST /api/v1/auth/login - Browser login (public)
+// Rate limiters for public auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: {
+    success: false,
+    error: 'Слишком много попыток. Пожалуйста, попробуйте позже.',
+    code: 'RATE_LIMITED',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip || 'unknown',
+});
+
+const strictAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: {
+    success: false,
+    error: 'Слишком много попыток. Пожалуйста, попробуйте позже.',
+    code: 'RATE_LIMITED',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip || 'unknown',
+});
+
+// POST /api/v1/auth/register - Register with email (public)
+router.post(
+  '/register',
+  strictAuthLimiter,
+  [
+    body('name').trim().isLength({ min: 2 }).withMessage('Имя должно быть не менее 2 символов'),
+    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
+    body('password').isLength({ min: 8 }).withMessage('Пароль должен быть не менее 8 символов'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+      }
+
+      const { name, email, password } = req.body;
+      const result = await emailAuthService.register({ name, email, password });
+
+      res.status(201).json({
+        success: true,
+        message: 'Регистрация успешна. Проверьте email для подтверждения.',
+        userId: result.userId,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /api/v1/auth/verify-email - Verify email (public)
+router.post(
+  '/verify-email',
+  [
+    body('token').isString().notEmpty().withMessage('Токен обязателен'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+      }
+
+      await emailAuthService.verifyEmail(req.body.token);
+
+      res.json({
+        success: true,
+        message: 'Email успешно подтвержден. Теперь вы можете войти.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /api/v1/auth/resend-verification - Resend verification email (public)
+router.post(
+  '/resend-verification',
+  authLimiter,
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+      }
+
+      const normalizedEmail = req.body.email.toLowerCase().trim();
+      const identity = await prisma.userIdentity.findUnique({
+        where: { provider_email: { provider: 'EMAIL', email: normalizedEmail } },
+      });
+
+      if (identity && !identity.emailVerifiedAt) {
+        await emailAuthService.sendVerificationEmail(identity.id, normalizedEmail);
+      }
+
+      // Always return success to prevent email enumeration
+      res.json({
+        success: true,
+        message: 'Если пользователь существует, письмо отправлено.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /api/v1/auth/forgot-password - Request password reset (public)
+router.post(
+  '/forgot-password',
+  authLimiter,
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+      }
+
+      await emailAuthService.requestPasswordReset(req.body.email);
+
+      res.json({
+        success: true,
+        message: 'Если пользователь существует, письмо для сброса пароля отправлено.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /api/v1/auth/reset-password - Reset password with token (public)
+router.post(
+  '/reset-password',
+  strictAuthLimiter,
+  [
+    body('token').isString().notEmpty().withMessage('Токен обязателен'),
+    body('password').isLength({ min: 8 }).withMessage('Пароль должен быть не менее 8 символов'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+      }
+
+      await emailAuthService.resetPassword(req.body.token, req.body.password);
+
+      res.json({
+        success: true,
+        message: 'Пароль успешно изменен. Войдите с новым паролем.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /api/v1/auth/email-login - Email login (public)
+router.post(
+  '/email-login',
+  authLimiter,
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
+    body('password').exists().withMessage('Пароль обязателен'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+      }
+
+      const { email, password } = req.body;
+      const result = await jwtAuthService.emailLogin(email, password);
+
+      res.json({
+        success: true,
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: result.expiresIn,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /api/v1/auth/login - Legacy browser login (public)
 router.post(
   '/login',
+  authLimiter,
   [
     body('login').trim().isLength({ min: 3 }).withMessage('Логин должен быть не менее 3 символов'),
     body('password').exists().withMessage('Пароль обязателен'),
@@ -41,6 +246,55 @@ router.post(
   },
 );
 
+// GET /api/v1/auth/vk - Initiate VK OAuth (public)
+router.get('/vk', (req, res, next) => {
+  try {
+    if (!vkAuthService.isConfigured()) {
+      throw ApiError.internal('VK OAuth не настроен');
+    }
+
+    const state = vkAuthService.generateState();
+    const redirectUrl = vkAuthService.getAuthorizeUrl(state);
+
+    res.redirect(redirectUrl);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/auth/vk/callback - VK OAuth callback (public)
+router.get('/vk/callback', async (req, res, next) => {
+  try {
+    const { code, state, error: vkError, error_description } = req.query;
+
+    if (vkError) {
+      logger.warn('VK OAuth error:', vkError, error_description);
+      return res.redirect(`${env.FRONTEND_URL}/login?error=vk_denied`);
+    }
+
+    if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
+      return res.redirect(`${env.FRONTEND_URL}/login?error=invalid_request`);
+    }
+
+    if (!vkAuthService.verifyState(state)) {
+      return res.redirect(`${env.FRONTEND_URL}/login?error=invalid_state`);
+    }
+
+    const vkData = await vkAuthService.exchangeCode(code);
+    const result = await vkAuthService.handleVKCallback(vkData);
+
+    const redirectUrl = new URL(`${env.FRONTEND_URL}/auth/callback`);
+    redirectUrl.searchParams.set('access_token', result.accessToken);
+    redirectUrl.searchParams.set('refresh_token', result.refreshToken);
+    redirectUrl.searchParams.set('expires_in', String(result.expiresIn));
+
+    res.redirect(redirectUrl.toString());
+  } catch (error) {
+    logger.error('VK callback error:', error);
+    return res.redirect(`${env.FRONTEND_URL}/login?error=auth_failed`);
+  }
+});
+
 // POST /api/v1/auth/refresh - Refresh access token using refresh token (public)
 router.post(
   '/refresh',
@@ -56,44 +310,39 @@ router.post(
 
       const { refreshToken } = req.body;
 
-      // Verify refresh token and get userId
       const { userId } = await jwtAuthService.verifyRefreshToken(refreshToken);
-
-      // Rotate refresh token (revoke old, create new)
       const newRefreshToken = await jwtAuthService.rotateRefreshToken(refreshToken, userId);
 
-      // Get user data for new access token
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: {
-          id: true,
-          login: true,
-          name: true,
-          telegramId: true,
-          subscriptionExpiresAt: true,
+        include: {
+          profile: { select: { name: true } },
         },
       });
 
-      if (!user || !user.login) {
-        throw ApiError.unauthorized('Пользователь не найден или не имеет данных для входа');
+      if (!user) {
+        throw ApiError.unauthorized('Пользователь не найден');
       }
 
-      // Check subscription
       if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
         throw ApiError.forbidden('Требуется активная подписка', 'SUBSCRIPTION_REQUIRED');
       }
 
-      // Generate new access token
+      // Get primary identity for token
+      const primaryIdentity = await prisma.userIdentity.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'asc' },
+      });
+
       const accessToken = jwtAuthService.generateAccessToken({
         userId: user.id,
-        login: user.login,
-        telegramId: user.telegramId.toString(),
+        identityId: primaryIdentity?.id ?? 0,
         authType: 'browser',
       });
 
       const expiresIn = jwtAuthService.getAccessTokenExpirySeconds();
 
-      logger.info(`Token refreshed for user: ${user.login}`);
+      logger.info(`Token refreshed for user: ${user.id}`);
 
       res.json({
         success: true,
@@ -102,8 +351,7 @@ router.post(
         expiresIn,
         user: {
           id: user.id,
-          login: user.login,
-          name: user.name,
+          name: user.profile?.name,
         },
       });
     } catch (error) {
@@ -113,7 +361,6 @@ router.post(
 );
 
 // POST /api/v1/auth/verify-phone
-// Requires subscription (checked in auth middleware)
 router.post(
   '/verify-phone',
   authenticate,
@@ -255,7 +502,6 @@ router.post('/logout', authenticate, async (req, res, next) => {
   try {
     const { refreshToken, allDevices, accountId } = req.body;
 
-    // Revoke refresh token(s)
     if (allDevices || !refreshToken) {
       await jwtAuthService.revokeAllUserRefreshTokens(req.user!.id);
     } else {
@@ -263,18 +509,12 @@ router.post('/logout', authenticate, async (req, res, next) => {
     }
 
     if (accountId) {
-      // Logout specific account
       await userService.logoutAccount(req.user!.id, accountId);
     } else {
-      // Logout all accounts
-      await userService.logoutWb(BigInt(req.user!.telegramId));
+      await userService.logoutWb(req.user!.id);
 
-      // Send Telegram notification only for Telegram auth users
-      if (req.user?.authType === 'telegram') {
-        const user = await userService.findByIdWithChatId(req.user!.id);
-        if (user?.chatId) {
-          await sendLogoutNotification(user.chatId);
-        }
+      if (req.user?.authType === 'telegram' && req.user?.chatId) {
+        await sendLogoutNotification(req.user.chatId);
       }
     }
 

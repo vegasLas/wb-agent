@@ -29,10 +29,17 @@ export const requireAdmin = async (
     }
 
     // 2. Fallback to TECHNICAL_MODE_USER_IDS env var
+    // For Telegram users, look up their telegram ID from identity
     const technicalModeUserIds = process.env.TECHNICAL_MODE_USER_IDS;
     if (technicalModeUserIds) {
       const allowedIds = technicalModeUserIds.split(',').map((id) => id.trim());
-      if (allowedIds.includes(user.telegramId)) {
+
+      // Actually, technical mode uses Telegram user IDs. Let's find the telegram ID for this user.
+      const identity = await prisma.userIdentity.findFirst({
+        where: { userId: user.id, provider: 'TELEGRAM' },
+      });
+
+      if (identity && allowedIds.includes(identity.providerId || '')) {
         (req.user as any).isAdmin = true;
         return next();
       }
