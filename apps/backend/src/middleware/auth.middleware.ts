@@ -141,7 +141,7 @@ export const authenticate = async (
     if (authHeader?.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7);
-        const payload = jwtAuthService.verifyToken(token);
+        const payload = jwtAuthService.verifyAccessToken(token);
         
         const user = await prisma.user.findUnique({
           where: { id: payload.userId },

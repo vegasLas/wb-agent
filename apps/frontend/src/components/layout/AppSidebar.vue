@@ -118,6 +118,14 @@
             <i class="pi pi-users text-base" />
             <span>Аккаунты</span>
           </button>
+          <div class="border-t border-deep-border my-1" />
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors text-left w-full"
+            @click="handleLogout"
+          >
+            <i class="pi pi-sign-out text-base" />
+            <span>Выйти</span>
+          </button>
         </div>
       </Popover>
     </div>
@@ -130,8 +138,10 @@ import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Popover from 'primevue/popover';
 import { useUserStore } from '@/stores/user';
+import { useBrowserAuthStore } from '@/stores/auth/browser';
 import { useNavigation } from '@/composables/useNavigation';
 import { usePermissions } from '@/composables/usePermissions';
+import { confirmPromise } from '@/utils/ui';
 
 const emit = defineEmits<{
   'show-help': [];
@@ -188,6 +198,19 @@ const handleProfile = () => {
 const handleAccounts = () => {
   profileMenu.value?.hide();
   emit('show-accounts');
+};
+
+const handleLogout = async () => {
+  profileMenu.value?.hide();
+  const confirmed = await confirmPromise({
+    header: 'Выход из аккаунта',
+    message: 'Вы уверены, что хотите выйти?',
+  });
+
+  if (confirmed) {
+    const browserStore = useBrowserAuthStore();
+    await browserStore.logout();
+  }
 };
 
 // Account label

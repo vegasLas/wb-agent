@@ -120,8 +120,10 @@ import { useColorMode } from '@vueuse/core';
 import Sidebar from 'primevue/sidebar';
 import Menu from 'primevue/menu';
 import { useUserStore } from '@/stores/user';
+import { useBrowserAuthStore } from '@/stores/auth/browser';
 import { useNavigation } from '@/composables/useNavigation';
 import { usePermissions } from '@/composables/usePermissions';
+import { confirmPromise } from '@/utils/ui';
 import type { MenuItem } from 'primevue/menu';
 
 const props = defineProps<{
@@ -199,10 +201,32 @@ const profileMenuItems = computed<MenuItem[]>(() => [
       emit('show-accounts');
     },
   },
+  { separator: true },
+  {
+    label: 'Выйти',
+    icon: 'pi pi-sign-out',
+    class: 'text-red-500',
+    command: () => {
+      handleLogout();
+    },
+  },
 ]);
 
 const toggleProfileMenu = (event: MouseEvent) => {
   profileMenu.value?.toggle(event);
+};
+
+const handleLogout = async () => {
+  closeDrawer();
+  const confirmed = await confirmPromise({
+    header: 'Выход из аккаунта',
+    message: 'Вы уверены, что хотите выйти?',
+  });
+
+  if (confirmed) {
+    const browserStore = useBrowserAuthStore();
+    await browserStore.logout();
+  }
 };
 
 // Account label
