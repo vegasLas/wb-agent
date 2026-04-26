@@ -1,18 +1,7 @@
 import { prisma } from '@/config/database';
 import { UserEnvInfo } from '@/types/wb';
-import { InputJsonValue } from '@prisma/client/runtime/library';
 
 export class UserService {
-  async findByTelegramId(telegramId: bigint) {
-    return prisma.user.findUnique({
-      where: { telegramId },
-      include: {
-        accounts: { include: { suppliers: true } },
-        supplierApiKey: true,
-      },
-    });
-  }
-
   async findById(id: number) {
     return prisma.user.findUnique({
       where: { id },
@@ -20,6 +9,8 @@ export class UserService {
         accounts: { include: { suppliers: true } },
         supplierApiKey: true,
         payments: true,
+        profile: true,
+        telegram: true,
       },
     });
   }
@@ -29,17 +20,20 @@ export class UserService {
       where: { id },
       select: {
         id: true,
-        telegramId: true,
-        chatId: true,
-        login: true,
-        name: true,
+        profile: {
+          select: { name: true },
+        },
+        telegram: {
+          select: { chatId: true },
+        },
       },
     });
   }
 
   async createUser(data: {
-    telegramId: bigint;
     name: string;
+    email?: string;
+    phone?: string;
     chatId?: string;
     username?: string;
     languageCode?: string;
@@ -47,17 +41,33 @@ export class UserService {
   }) {
     return prisma.user.create({
       data: {
-        ...data,
-        envInfo: data.envInfo as unknown as InputJsonValue,
+        envInfo: data.envInfo as any,
         envInfoUpdatedAt: data.envInfo ? new Date() : undefined,
+        profile: {
+          create: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+          },
+        },
+        telegram: data.chatId
+          ? {
+              create: {
+                chatId: data.chatId,
+                username: data.username,
+                languageCode: data.languageCode,
+              },
+            }
+          : undefined,
       },
     });
   }
 
-  async updateChatId(telegramId: bigint, chatId: string) {
-    return prisma.user.update({
-      where: { telegramId },
-      data: { chatId },
+  async updateChatId(userId: number, chatId: string) {
+    return prisma.telegram.upsert({
+      where: { userId },
+      create: { userId, chatId },
+      update: { chatId },
     });
   }
 
@@ -65,22 +75,20 @@ export class UserService {
     return prisma.user.update({
       where: { id: userId },
       data: {
-        envInfo: envInfo as unknown as InputJsonValue,
+        envInfo: envInfo as any,
         envInfoUpdatedAt: new Date(),
       },
     });
   }
 
-  async logoutWb(telegramId: bigint): Promise<void> {
-    const user = await prisma.user.findUnique({ where: { telegramId } });
+  async logoutWb(userId: number): Promise<void> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return;
 
-    // Delete all accounts (cascade deletes suppliers)
     await prisma.account.deleteMany({
       where: { userId: user.id },
     });
 
-    // Clear selected account
     await prisma.user.update({
       where: { id: user.id },
       data: { selectedAccountId: null },
@@ -92,7 +100,6 @@ export class UserService {
       where: { id: accountId, userId },
     });
 
-    // If this was the selected account, clear it
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user?.selectedAccountId === accountId) {
       await prisma.user.update({
@@ -104,7 +111,6 @@ export class UserService {
 
   async updateSelectedAccount(userId: number, accountId: string | null) {
     if (accountId) {
-      // Verify account belongs to user
       const account = await prisma.account.findFirst({
         where: { id: accountId, userId },
       });
@@ -155,10 +161,6 @@ export class UserService {
     };
   }
 
-  /**
-   * Find a random user that has at least one account
-   * Used as fallback when current user has no accounts
-   */
   async findRandomUserWithAccount() {
     const usersWithAccounts = await prisma.user.findMany({
       where: {
@@ -169,14 +171,13 @@ export class UserService {
       include: {
         accounts: { include: { suppliers: true } },
       },
-      take: 10, // Get up to 10 users to have some randomness
+      take: 10,
     });
 
     if (usersWithAccounts.length === 0) {
       return null;
     }
 
-    // Return a random user from the list
     const randomIndex = Math.floor(Math.random() * usersWithAccounts.length);
     return usersWithAccounts[randomIndex];
   }
