@@ -240,6 +240,7 @@ import { useUserStore } from '@/stores/user';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useCoefficientsStore } from '@/stores/coefficients';
 import Card from 'primevue/card';
+import { confirmPromise } from '@/utils/ui';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Message from 'primevue/message';
@@ -306,9 +307,10 @@ function openUpdateForm() {
 async function updateCoefficient() {
   if (suggestedCoefficientValue.value === null) return;
 
-  const confirmed = confirm(
-    `Вы уверены, что хотите увеличить коэффициент для этого автобронирования до ${suggestedCoefficientValue.value}?`,
-  );
+  const confirmed = await confirmPromise({
+    header: 'Изменение коэффициента',
+    message: `Вы уверены, что хотите увеличить коэффициент для этого автобронирования до ${suggestedCoefficientValue.value}?`,
+  });
 
   if (!confirmed) return;
 
@@ -325,9 +327,10 @@ async function updateCoefficient() {
 }
 
 async function archiveAutobooking() {
-  const confirmed = confirm(
-    'Вы уверены, что хотите архивировать это автобронирование?',
-  );
+  const confirmed = await confirmPromise({
+    header: 'Архивирование',
+    message: 'Вы уверены, что хотите архивировать это автобронирование?',
+  });
   if (!confirmed) return;
 
   try {
@@ -347,9 +350,10 @@ async function activateAutobooking() {
 }
 
 async function deleteAutobooking() {
-  const confirmed = confirm(
-    'Вы уверены, что хотите удалить это автобронирование?',
-  );
+  const confirmed = await confirmPromise({
+    header: 'Удаление',
+    message: 'Вы уверены, что хотите удалить это автобронирование?',
+  });
   if (!confirmed) return;
 
   try {

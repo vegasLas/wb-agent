@@ -168,6 +168,7 @@ import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
 import Message from 'primevue/message';
+import { confirmPromise } from '@/utils/ui';
 
 const apiKeyStore = useSupplierApiKeyStore();
 const userStore = useUserStore();
@@ -205,9 +206,10 @@ async function saveApiKey() {
 }
 
 async function handleDelete() {
-  const confirmed = confirm(
-    'Удаление API ключа\n\nВы уверены, что хотите удалить API ключ? Это действие нельзя отменить.\n\nНажмите "OK" для удаления.',
-  );
+  const confirmed = await confirmPromise({
+    header: 'Удаление API ключа',
+    message: 'Вы уверены, что хотите удалить API ключ? Это действие нельзя отменить.\n\nНажмите "OK" для удаления.',
+  });
 
   if (confirmed) {
     try {

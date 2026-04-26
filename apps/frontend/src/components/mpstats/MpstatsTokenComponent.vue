@@ -125,6 +125,7 @@ import { ref, onMounted } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { mpstatsAPI } from '@/api';
 import { useAppToast } from '@/utils/ui/toast';
+import { confirmPromise } from '@/utils/ui';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -188,9 +189,10 @@ async function saveToken() {
 }
 
 async function handleDelete() {
-  const confirmed = confirm(
-    'Удаление токена MPStats\n\nВы уверены, что хотите удалить токен? Это действие нельзя отменить.\n\nНажмите "OK" для удаления.',
-  );
+  const confirmed = await confirmPromise({
+    header: 'Удаление токена MPStats',
+    message: 'Вы уверены, что хотите удалить токен? Это действие нельзя отменить.\n\nНажмите "OK" для удаления.',
+  });
 
   if (confirmed) {
     try {

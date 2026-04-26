@@ -55,20 +55,19 @@
 
         <div class="flex justify-between items-center gap-4">
           <Button
+            label="Отмена"
             variant="text"
+            :disabled="authStore.loading"
             @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          />
           <Button
+            label="Отправить SMS"
             :loading="authStore.loading"
             :disabled="isSubmitDisabled"
             severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="handleVerifyPhone"
-          >
-            Отправить SMS
-          </Button>
+          />
         </div>
       </div>
 
@@ -121,20 +120,19 @@
 
         <div class="flex justify-between items-center gap-4">
           <Button
+            label="Отмена"
             variant="text"
+            :disabled="authStore.loading"
             @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          />
           <Button
+            label="Подтвердить"
             :loading="authStore.loading"
-            :disabled="smsCode.length !== 6"
+            :disabled="smsCode.length !== 6 || authStore.loading"
             severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="handleVerifySMS"
-          >
-            Подтвердить
-          </Button>
+          />
         </div>
       </div>
 
@@ -187,20 +185,19 @@
 
         <div class="flex justify-between items-center gap-4">
           <Button
+            label="Отмена"
             variant="text"
+            :disabled="authStore.loading"
             @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          />
           <Button
+            label="Завершить авторизацию"
             :loading="authStore.loading"
-            :disabled="twoFactorCode.length !== 6"
+            :disabled="twoFactorCode.length !== 6 || authStore.loading"
             severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="handleVerifyTwoFactor"
-          >
-            Завершить авторизацию
-          </Button>
+          />
         </div>
       </div>
 
@@ -223,18 +220,19 @@
 
         <div class="flex justify-between items-center gap-4">
           <Button
+            label="Отмена"
             variant="text"
+            :disabled="authStore.loading"
             @click="handleCancel"
-          >
-            Отмена
-          </Button>
+          />
           <Button
+            label="Попробовать снова"
+            :loading="authStore.loading"
+            :disabled="authStore.loading"
             severity="primary"
             class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             @click="authStore.resetState"
-          >
-            Попробовать снова
-          </Button>
+          />
         </div>
       </div>
 

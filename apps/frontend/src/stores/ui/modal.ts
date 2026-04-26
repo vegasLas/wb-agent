@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { useUserStore } from '@/stores/user';
 import { useAccountsStore } from '@/stores/accounts';
 import { userAPI } from '@/api';
+import { confirmPromise } from '@/utils/ui';
 
 export const useModalStore = defineStore('modal', () => {
   const userStore = useUserStore();
@@ -14,6 +15,7 @@ export const useModalStore = defineStore('modal', () => {
   const showTermsModal = ref(false);
   const saving = ref(false);
   const refreshingSuppliers = ref(false);
+  const removingAccountId = ref<string | null>(null);
 
   // Temporary selection state (for preview before saving)
   const tempSelectedAccountId = ref<string | null>(null);
@@ -160,11 +162,14 @@ export const useModalStore = defineStore('modal', () => {
   async function removeAccount(accountId: string) {
     try {
       // Show confirmation dialog
-      const confirmed = confirm(
-        'Вы уверены, что хотите удалить этот аккаунт ?',
-      );
+      const confirmed = await confirmPromise({
+        header: 'Удаление аккаунта',
+        message: 'Вы уверены, что хотите удалить этот аккаунт ?',
+      });
 
       if (!confirmed) return;
+
+      removingAccountId.value = accountId;
 
       // Remove account via API
       await accountsStore.deleteAccount(accountId);
@@ -179,6 +184,8 @@ export const useModalStore = defineStore('modal', () => {
       await userStore.fetchUser();
     } catch (error) {
       console.error('Error removing account:', error);
+    } finally {
+      removingAccountId.value = null;
     }
   }
 
@@ -189,6 +196,7 @@ export const useModalStore = defineStore('modal', () => {
     showTermsModal,
     saving,
     refreshingSuppliers,
+    removingAccountId,
     tempSelectedAccountId,
     tempSelectedSupplierId,
 

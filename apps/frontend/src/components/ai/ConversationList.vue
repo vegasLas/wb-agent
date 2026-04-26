@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import Button from 'primevue/button';
 import { useAIChatStore } from '@/stores/ai/chat.store';
+import { confirmPromise } from '@/utils/ui';
 
 const store = useAIChatStore();
 
@@ -34,7 +35,11 @@ function formatDate(dateStr: string): string {
 
 async function handleDelete(id: string, event: Event) {
   event.stopPropagation();
-  if (confirm('Удалить этот чат?')) {
+  const confirmed = await confirmPromise({
+    header: 'Удаление чата',
+    message: 'Удалить этот чат?',
+  });
+  if (confirmed) {
     await store.deleteConversation(id);
   }
 }

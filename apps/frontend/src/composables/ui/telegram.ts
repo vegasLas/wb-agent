@@ -1,4 +1,5 @@
 import { ref, onMounted, type Ref } from 'vue';
+import { confirmPromise } from '@/utils/ui';
 
 // Telegram WebApp types (subset we need)
 interface TelegramUser {
@@ -134,8 +135,9 @@ export function useTelegram(): UseTelegramReturn {
           resolve(confirmed);
         });
       } else {
-        const confirmed = confirm(message);
-        resolve(confirmed);
+        confirmPromise({ header: 'Подтверждение', message }).then((confirmed) => {
+          resolve(confirmed);
+        });
       }
     });
   };
