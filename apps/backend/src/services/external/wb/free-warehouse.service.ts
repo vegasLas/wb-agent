@@ -13,7 +13,6 @@ export class FreeWarehouseService {
   private static instance: FreeWarehouseService;
   private cachedWarehouses: Supply[] = [];
   private lastUpdateTimestamp = 0;
-  private readonly CACHE_FRESHNESS_MS = 5000; // Only return cache if updated within last 5 seconds
 
   static getInstance(): FreeWarehouseService {
     if (!this.instance) {
@@ -76,15 +75,18 @@ export class FreeWarehouseService {
   }
 
   /**
-   * Checks if cache is fresh (updated within last 5 seconds)
+   * Checks if cache is fresh based on the optimal request interval.
+   * Cache is considered fresh for roughly two polling cycles to account
+   * for network latency and processing time.
    */
   private isCacheFresh(): boolean {
-    return Date.now() - this.lastUpdateTimestamp <= this.CACHE_FRESHNESS_MS;
+    const freshnessMs = Math.max(1000, this.getOptimalInterval() * 2);
+    return Date.now() - this.lastUpdateTimestamp <= freshnessMs;
   }
 
   /**
    * Gets cached warehouses filtered by requested IDs
-   * Only returns data if cache was updated within last 5 seconds
+   * Only returns data if cache is still fresh
    */
   getCachedWarehouses(warehouseIds: number[]): Supply[] {
     if (this.cachedWarehouses.length === 0 || !this.isCacheFresh()) {
@@ -99,7 +101,7 @@ export class FreeWarehouseService {
 
   /**
    * Gets all cached warehouses
-   * Only returns data if cache was updated within last 5 seconds
+   * Only returns data if cache is still fresh
    */
   getAllCachedWarehouses(): Supply[] {
     if (!this.isCacheFresh()) {
