@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
+import { prisma } from '@/config/database';
 import { authService, userService } from '@/services/user/';
 import { jwtAuthService } from '@/services/user/jwt-auth.service';
 import { authenticate } from '@/middleware/auth.middleware';
@@ -30,7 +31,9 @@ router.post(
       res.json({
         success: true,
         user: result.user,
-        token: result.token,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: result.expiresIn,
       });
     } catch (error) {
       next(error);
@@ -38,46 +41,76 @@ router.post(
   },
 );
 
-// POST /api/v1/auth/refresh - Refresh JWT token (protected)
-router.post('/refresh', authenticate, async (req, res, next) => {
-  try {
-    // Only allow refresh for browser auth users
-    if (req.user?.authType !== 'browser') {
-      throw ApiError.forbidden('Эндпоинт доступен только для браузерной авторизации');
-    }
-
-    const user = await userService.findByIdWithChatId(req.user.id);
-
-    if (!user) {
-      throw ApiError.unauthorized('Пользователь не найден');
-    }
-
-    if (!user.login) {
-      throw ApiError.unauthorized('У пользователя нет данных для браузерного входа');
-    }
-
-    const token = jwtAuthService.generateToken({
-      userId: user.id,
-      login: user.login,
-      telegramId: user.telegramId.toString(),
-      authType: 'browser',
-    });
-
-    logger.info(`Token refreshed for user: ${user.login}`);
-
-    res.json({ 
-      success: true, 
-      token,
-      user: {
-        id: user.id,
-        login: user.login,
-        name: user.name,
+// POST /api/v1/auth/refresh - Refresh access token using refresh token (public)
+router.post(
+  '/refresh',
+  [
+    body('refreshToken').isString().notEmpty().withMessage('Refresh token is required'),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
       }
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+
+      const { refreshToken } = req.body;
+
+      // Verify refresh token and get userId
+      const { userId } = await jwtAuthService.verifyRefreshToken(refreshToken);
+
+      // Rotate refresh token (revoke old, create new)
+      const newRefreshToken = await jwtAuthService.rotateRefreshToken(refreshToken, userId);
+
+      // Get user data for new access token
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          login: true,
+          name: true,
+          telegramId: true,
+          subscriptionExpiresAt: true,
+        },
+      });
+
+      if (!user || !user.login) {
+        throw ApiError.unauthorized('Пользователь не найден или не имеет данных для входа');
+      }
+
+      // Check subscription
+      if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
+        throw ApiError.forbidden('Требуется активная подписка', 'SUBSCRIPTION_REQUIRED');
+      }
+
+      // Generate new access token
+      const accessToken = jwtAuthService.generateAccessToken({
+        userId: user.id,
+        login: user.login,
+        telegramId: user.telegramId.toString(),
+        authType: 'browser',
+      });
+
+      const expiresIn = jwtAuthService.getAccessTokenExpirySeconds();
+
+      logger.info(`Token refreshed for user: ${user.login}`);
+
+      res.json({
+        success: true,
+        accessToken,
+        refreshToken: newRefreshToken,
+        expiresIn,
+        user: {
+          id: user.id,
+          login: user.login,
+          name: user.name,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 // POST /api/v1/auth/verify-phone
 // Requires subscription (checked in auth middleware)
@@ -220,7 +253,14 @@ router.post('/cancel', async (req, res, next) => {
 // POST /api/v1/auth/logout
 router.post('/logout', authenticate, async (req, res, next) => {
   try {
-    const { accountId } = req.body;
+    const { refreshToken, allDevices, accountId } = req.body;
+
+    // Revoke refresh token(s)
+    if (allDevices || !refreshToken) {
+      await jwtAuthService.revokeAllUserRefreshTokens(req.user!.id);
+    } else {
+      await jwtAuthService.revokeRefreshToken(refreshToken);
+    }
 
     if (accountId) {
       // Logout specific account
