@@ -1,8 +1,8 @@
-# WB Agent - Deployment Guide
+# wboi - Deployment Guide
 
 ## Overview
 
-This document describes how to deploy the WB Agent backend using Docker.
+This document describes how to deploy the wboi backend using Docker.
 
 ## Prerequisites
 
@@ -213,7 +213,7 @@ docker-compose -f docker-compose.prod.yml up -d
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│  WB Agent API   │ Docker Container
+│  wboi API       │ Docker Container
 │   (Port 3001)   │
 │                 │
 │  - Express.js   │

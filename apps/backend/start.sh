@@ -11,6 +11,7 @@ npx prisma generate --schema=prisma/schema.prisma
 
 # Run database migrations
 echo "→ Running database migrations..."
+npx prisma migrate resolve --rolled-back "20250426_drop_deprecated_user_fields_and_add_captcha"
 npx prisma migrate deploy --schema=prisma/schema.prisma
 
 # Start the server
