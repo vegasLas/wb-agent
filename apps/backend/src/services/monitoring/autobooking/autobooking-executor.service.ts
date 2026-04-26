@@ -275,7 +275,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
         await bookingErrorService.handleCriticalBookingError({
           error,
           entity: booking as unknown as import('@prisma/client').Autobooking,
-          user: user as unknown as import('@prisma/client').User,
+          user: { id: user.userId, chatId: user.chatId },
           warehouseName,
           effectiveDate,
           type: 'autobooking',
@@ -342,12 +342,14 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     try {
       const adminUser = await prisma.user.findFirst({
         where: { id: 4 },
+        include: { telegram: true },
       });
 
-      if (adminUser?.chatId) {
+      const adminChatId = adminUser?.telegram?.chatId;
+      if (adminChatId) {
         const { TBOT } = await import('../../../utils/TBOT');
         if (TBOT) {
-          await TBOT.sendMessage(adminUser.chatId, 'Слишком много запросов', {
+          await TBOT.sendMessage(adminChatId, 'Слишком много запросов', {
             reply_markup: {
               inline_keyboard: [
                 [{ text: '❌ Закрыть', callback_data: 'close_menu' }],

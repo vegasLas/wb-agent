@@ -437,7 +437,7 @@ export class CloseApiService {
         // Find user associated with this account
         const account = await prisma.account.findUnique({
           where: { id: accountId },
-          include: { user: { select: { id: true, chatId: true } } },
+          include: { user: { select: { id: true }, include: { telegram: { select: { chatId: true } } } } },
         });
 
         if (account?.user) {
@@ -473,7 +473,7 @@ export class CloseApiService {
         // Find user associated with this account
         const account = await prisma.account.findUnique({
           where: { id: accountId },
-          include: { user: { select: { id: true, chatId: true } } },
+          include: { user: { select: { id: true }, include: { telegram: { select: { chatId: true } } } } },
         });
 
         if (account?.user) {
@@ -508,7 +508,7 @@ export class CloseApiService {
         // Find user associated with this account
         const account = await prisma.account.findUnique({
           where: { id: accountId },
-          include: { user: { select: { id: true, chatId: true } } },
+          include: { user: { select: { id: true }, include: { telegram: { select: { chatId: true } } } } },
         });
 
         if (account?.user) {

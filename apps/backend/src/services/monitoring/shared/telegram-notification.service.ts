@@ -314,7 +314,7 @@ export class SharedTelegramNotificationService
     newChatId: string | null,
   ): Promise<void> {
     try {
-      await prisma.user.update({
+      await prisma.telegram.updateMany({
         where: { chatId: oldChatId },
         data: { chatId: newChatId },
       });

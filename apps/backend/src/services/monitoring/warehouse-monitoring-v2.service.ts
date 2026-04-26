@@ -49,7 +49,7 @@ interface AccountData {
 interface UserData {
   id: number;
   envInfo: JsonValue;
-  chatId?: string | null;
+  telegram?: { chatId?: string | null } | null;
   accounts: AccountData[];
 }
 
@@ -180,7 +180,7 @@ export class WarehouseMonitoringV2Service {
         subscriptionExpiresAt?: { gt: Date };
         id?: number;
       } = {
-        chatId: { not: null },
+        telegram: { isNot: null },
         subscriptionExpiresAt: { gt: new Date() },
       };
 
@@ -196,7 +196,7 @@ export class WarehouseMonitoringV2Service {
       const userSelection = {
         id: true,
         envInfo: true,
-        chatId: true,
+        telegram: { select: { chatId: true } },
         accounts: {
           include: { suppliers: true },
         },
@@ -372,7 +372,7 @@ export class WarehouseMonitoringV2Service {
     const { user } = trigger;
 
     // Early validation returns
-    if (!user.chatId) return null;
+    if (!user.telegram?.chatId) return null;
     if (!this.shouldNotifyTrigger(trigger)) return null;
     if (trigger.warehouseIds.length === 0) return null;
 
@@ -440,7 +440,7 @@ export class WarehouseMonitoringV2Service {
       userId: user.id,
       proxy: envInfo.proxy,
       userAgent: envInfo.userAgent,
-      chatId: user.chatId || undefined,
+      chatId: user.telegram?.chatId || undefined,
       autobookings,
       supplyTriggers,
       reschedules,

@@ -117,6 +117,7 @@ export class YookassaService {
     // Get user for notification
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: { telegram: true },
     });
 
     // Handle subscription tariff (has 'days' property)
@@ -136,8 +137,9 @@ export class YookassaService {
       });
 
       // Send Telegram notification
-      if (user?.chatId) {
-        await this.sendSuccessNotification(user.chatId, tariff, 'subscription');
+      const chatId = user?.telegram?.chatId;
+      if (chatId) {
+        await this.sendSuccessNotification(chatId, tariff, 'subscription');
       }
     }
     // Handle booking tariff (has 'bookingCount' property)
@@ -152,8 +154,9 @@ export class YookassaService {
       });
 
       // Send Telegram notification
-      if (user?.chatId) {
-        await this.sendSuccessNotification(user.chatId, tariff, 'booking');
+      const chatId = user?.telegram?.chatId;
+      if (chatId) {
+        await this.sendSuccessNotification(chatId, tariff, 'booking');
       }
     }
   }

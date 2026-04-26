@@ -254,7 +254,7 @@ export class AutobookingRescheduleExecutorService
     await bookingErrorService.handleCriticalBookingError({
       error: params.error,
       entity: params.reschedule,
-      user: params.user as unknown as import('@prisma/client').User,
+      user: { id: params.user.userId, chatId: params.user.chatId },
       warehouseName: params.warehouseName,
       effectiveDate: params.effectiveDate,
       type: 'reschedule',
