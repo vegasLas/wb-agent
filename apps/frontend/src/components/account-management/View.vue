@@ -36,6 +36,7 @@
           :accounts="userStore.user.accounts"
           :has-accounts="hasAccounts"
           :temp-selected-account-id="tempSelectedAccountId"
+          :removing-account-id="removingAccountId"
           @select-account="selectTempAccount"
           @add-account="startAuth"
           @remove-account="removeAccount"
@@ -65,7 +66,7 @@
         />
         <Button
           label="Сохранить выбор"
-          :disabled="!canSave"
+          :disabled="!canSave || saving"
           :loading="saving"
           severity="primary"
           class="px-6 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
@@ -110,6 +111,7 @@ const {
   showTermsModal,
   saving,
   refreshingSuppliers,
+  removingAccountId,
   tempSelectedAccountId,
   tempSelectedSupplierId,
 

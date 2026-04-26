@@ -112,19 +112,18 @@
 
       <div class="flex justify-between items-center gap-4">
         <Button
+          label="Отмена"
           variant="text"
           @click="$emit('cancel')"
-        >
-          Отмена
-        </Button>
+        />
         <Button
+          label="✍️ Я согласен с условиями"
           :loading="loading"
+          :disabled="loading"
           severity="primary"
           class="px-8 py-3 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
           @click="handleAgree"
-        >
-          ✍️ Я согласен с условиями
-        </Button>
+        />
       </div>
     </div>
   </div>

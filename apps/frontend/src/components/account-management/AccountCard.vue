@@ -28,10 +28,11 @@
         severity="danger"
         text
         size="small"
+        icon="pi pi-trash"
+        :loading="isRemoving"
+        :disabled="isRemoving"
         @click.stop="$emit('remove', account.id)"
-      >
-        <i class="pi pi-trash" />
-      </Button>
+      />
       <div
         v-if="isSelected"
         class="text-blue-600 dark:text-blue-400 flex"
@@ -43,17 +44,21 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import Button from 'primevue/button';
 import type { Account } from '@/stores/user';
 
 interface Props {
   account: Account;
   isSelected: boolean;
+  removingAccountId: string | null;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 defineEmits<{
   select: [accountId: string];
   remove: [accountId: string];
 }>();
+
+const isRemoving = computed(() => props.removingAccountId === props.account.id);
 </script>

@@ -12,6 +12,7 @@
         :key="account.id"
         :account="account"
         :is-selected="tempSelectedAccountId === account.id"
+        :removing-account-id="removingAccountId"
         @select="$emit('select-account', $event)"
         @remove="$emit('remove-account', $event)"
       />
@@ -58,6 +59,7 @@ interface Props {
   accounts: Account[];
   hasAccounts: boolean;
   tempSelectedAccountId: string | null;
+  removingAccountId: string | null;
 }
 
 defineProps<Props>();

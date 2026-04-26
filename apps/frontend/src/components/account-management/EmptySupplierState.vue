@@ -5,14 +5,14 @@
     />
     <p>У выбранного аккаунта нет поставщиков</p>
     <Button
+      label="Попробовать обновить"
       size="small"
       variant="outlined"
       class="mt-3"
       :loading="refreshingSuppliers"
+      :disabled="refreshingSuppliers"
       @click="$emit('refresh')"
-    >
-      Попробовать обновить
-    </Button>
+    />
   </div>
 </template>
 

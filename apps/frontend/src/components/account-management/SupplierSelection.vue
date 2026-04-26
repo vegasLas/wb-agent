@@ -7,12 +7,12 @@
       <Button
         size="small"
         outlined
+        icon="pi pi-refresh"
         :loading="refreshingSuppliers"
+        :disabled="refreshingSuppliers"
         aria-label="Обновить список поставщиков"
         @click="$emit('refresh')"
-      >
-        <i class="pi pi-refresh" />
-      </Button>
+      />
     </div>
 
     <div
