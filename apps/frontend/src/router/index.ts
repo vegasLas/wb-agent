@@ -29,6 +29,51 @@ const routes: RouteRecordRaw[] = [
       public: true,
     },
   },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/RegisterView.vue'),
+    meta: {
+      title: 'Регистрация',
+      public: true,
+    },
+  },
+  {
+    path: '/verify-email',
+    name: 'VerifyEmail',
+    component: () => import('../views/VerifyEmailView.vue'),
+    meta: {
+      title: 'Подтверждение email',
+      public: true,
+    },
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('../views/ForgotPasswordView.vue'),
+    meta: {
+      title: 'Восстановление пароля',
+      public: true,
+    },
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('../views/ResetPasswordView.vue'),
+    meta: {
+      title: 'Сброс пароля',
+      public: true,
+    },
+  },
+  {
+    path: '/auth/callback',
+    name: 'AuthCallback',
+    component: () => import('../views/AuthCallbackView.vue'),
+    meta: {
+      title: 'Авторизация',
+      public: true,
+    },
+  },
 
   // Error Routes (public, no layout)
   {
@@ -307,7 +352,7 @@ router.beforeEach(async (to, from, next) => {
   // Update page title
   const title = to.meta.title as string;
   if (title) {
-    document.title = `${title} | WB Agent`;
+    document.title = `${title} | wboi`;
   }
 
   // Skip initialization check for public routes
