@@ -7,8 +7,6 @@ import { jwtAuthService } from '@/services/user/jwt-auth.service';
 
 export interface AuthUser {
   id: number;
-  telegramId: string;  // REQUIRED - always present
-  login?: string;      // May be set for browser users
   authType: 'telegram' | 'browser';
   subscriptionExpiresAt?: Date | null;
   selectedAccountId?: string | null;
@@ -41,7 +39,14 @@ export const authenticate = async (
       path.includes('_nuxt_icon') ||
       path.includes('payments/check') ||
       path.includes('webhooks/yookassa') ||
-      path.includes('auth/login') ||  // Browser login is public
+      path.includes('auth/login') ||
+      path.includes('auth/register') ||
+      path.includes('auth/verify-email') ||
+      path.includes('auth/resend-verification') ||
+      path.includes('auth/forgot-password') ||
+      path.includes('auth/reset-password') ||
+      path.includes('auth/email-login') ||
+      path.includes('auth/vk') ||
       path.includes('health')
     ) {
       return next();
@@ -56,20 +61,18 @@ export const authenticate = async (
 
         if (technicalModeUserIds.split(',').includes(userId)) {
           logger.info('Technical mode: allowing user', userId);
-          // Set user for request
           const user = await prisma.user.findUnique({
-            where: { telegramId: BigInt(initData.user.id) },
+            where: { id: parseInt(userId) },
+            include: { identities: { where: { provider: 'TELEGRAM' } }, telegram: true },
           });
 
           if (user) {
             req.user = {
               id: user.id,
-              telegramId: initData.user.id.toString(),
-              login: user.login || undefined,
               authType: 'telegram',
               selectedAccountId: user.selectedAccountId,
               subscriptionExpiresAt: user.subscriptionExpiresAt,
-              chatId: user.chatId,
+              chatId: user.telegram?.chatId ?? null,
             };
           }
           return next();
@@ -96,19 +99,26 @@ export const authenticate = async (
 
     // Try Telegram auth first (initData in x-init-data header)
     const initDataRaw = req.headers['x-init-data'] as string | undefined;
-    
+
     if (initDataRaw) {
       try {
         const initData = parseInitData(req);
-        const user = await prisma.user.findUnique({
-          where: { telegramId: BigInt(initData.user.id) },
+        const identity = await prisma.userIdentity.findUnique({
+          where: {
+            provider_providerId: {
+              provider: 'TELEGRAM',
+              providerId: String(initData.user.id),
+            },
+          },
+          include: { user: { include: { telegram: true } } },
         });
 
-        if (!user) {
+        if (!identity) {
           throw ApiError.unauthorized('Пользователь не найден');
         }
 
-        // Check subscription
+        const user = identity.user;
+
         if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
           throw ApiError.forbidden(
             'Требуется активная подписка.',
@@ -118,21 +128,18 @@ export const authenticate = async (
 
         req.user = {
           id: user.id,
-          telegramId: initData.user.id.toString(),
-          login: user.login || undefined,
           authType: 'telegram',
           selectedAccountId: user.selectedAccountId,
           subscriptionExpiresAt: user.subscriptionExpiresAt,
-          chatId: user.chatId,
+          chatId: user.telegram?.chatId ?? null,
         };
-        
+
         return next();
       } catch (error) {
         if (error instanceof ApiError) {
           throw error;
         }
         logger.warn('Telegram auth failed, trying JWT:', error);
-        // Don't throw here - try JWT auth next
       }
     }
 
@@ -142,16 +149,16 @@ export const authenticate = async (
       try {
         const token = authHeader.substring(7);
         const payload = jwtAuthService.verifyAccessToken(token);
-        
+
         const user = await prisma.user.findUnique({
           where: { id: payload.userId },
+          include: { telegram: true },
         });
-        
+
         if (!user) {
           throw ApiError.unauthorized('Пользователь не найден');
         }
 
-        // Check subscription
         if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
           throw ApiError.forbidden(
             'Требуется активная подписка.',
@@ -161,14 +168,12 @@ export const authenticate = async (
 
         req.user = {
           id: user.id,
-          telegramId: user.telegramId.toString(),
-          login: payload.login,
           authType: 'browser',
           selectedAccountId: user.selectedAccountId,
           subscriptionExpiresAt: user.subscriptionExpiresAt,
-          chatId: user.chatId,
+          chatId: user.telegram?.chatId ?? null,
         };
-        
+
         return next();
       } catch (error) {
         if (error instanceof ApiError) {

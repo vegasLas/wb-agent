@@ -11,7 +11,6 @@ import { setupTelegramPlugin } from '@/plugins/telegram.plugin';
 import { setupTriggerDateUpdatePlugin } from '@/plugins/trigger-date-update.plugin';
 import { setupFeedbackAutoPlugin } from '@/plugins/feedback-auto.plugin';
 import { logger } from '@/utils/logger';
-
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
