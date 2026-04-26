@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { prisma } from '@/config/database';
 import { accountRepository, userRepository } from '@/repositories';
+import { identityService } from '@/services/auth/identity.service';
+import { AuthProvider } from '@prisma/client';
 
 // Check if database is available
 let isDatabaseAvailable = false;
@@ -41,48 +43,81 @@ describe('Database', () => {
   });
 
   conditionalDescribe('User Repository', () => {
-    const testTelegramId = BigInt(123456789);
-
     afterEach(async () => {
       // Cleanup test data
-      await prisma.user.deleteMany({
-        where: { telegramId: testTelegramId },
+      const users = await prisma.user.findMany({
+        where: {
+          telegram: { username: { startsWith: 'testuser_' } },
+        },
+        select: { id: true },
       });
+      for (const u of users) {
+        await prisma.user.delete({ where: { id: u.id } });
+      }
     });
 
     it('should create a user', async () => {
       const user = await userRepository.create({
-        telegramId: testTelegramId,
         name: 'Test User',
-        username: 'testuser',
+        username: 'testuser_1',
       });
 
       expect(user).toBeDefined();
-      expect(user.telegramId).toBe(testTelegramId);
-      expect(user.name).toBe('Test User');
+      expect(user.profile?.name).toBe('Test User');
+      expect(user.telegram?.username).toBe('testuser_1');
     });
 
-    it('should find user by telegramId', async () => {
-      await userRepository.create({
-        telegramId: testTelegramId,
+    it('should find user by id', async () => {
+      const created = await userRepository.create({
         name: 'Test User',
+        username: 'testuser_2',
       });
 
-      const found = await userRepository.findByTelegramId(testTelegramId);
+      const found = await userRepository.findById(created.id);
       expect(found).toBeDefined();
-      expect(found?.name).toBe('Test User');
+      expect(found?.profile?.name).toBe('Test User');
+    });
+  });
+
+  conditionalDescribe('Identity Service', () => {
+    let testUserId: number;
+
+    afterEach(async () => {
+      if (testUserId) {
+        await prisma.userIdentity.deleteMany({ where: { userId: testUserId } });
+        await prisma.user.deleteMany({ where: { id: testUserId } });
+      }
+    });
+
+    it('should create a user with TELEGRAM identity', async () => {
+      const result = await identityService.createUserWithIdentity(
+        { name: 'Test User', username: 'testuser_tg' },
+        { provider: AuthProvider.TELEGRAM, providerId: '123456789' },
+      );
+
+      testUserId = result.userId;
+
+      expect(result.userId).toBeDefined();
+      expect(result.identityId).toBeDefined();
+
+      const identity = await prisma.userIdentity.findUnique({
+        where: { id: result.identityId },
+      });
+
+      expect(identity).toBeDefined();
+      expect(identity?.provider).toBe(AuthProvider.TELEGRAM);
+      expect(identity?.providerId).toBe('123456789');
     });
   });
 
   conditionalDescribe('Account Repository', () => {
-    const testTelegramId = BigInt(987654321);
     let testUserId: number;
 
     beforeEach(async () => {
       const user = await prisma.user.create({
         data: {
-          telegramId: testTelegramId,
-          name: 'Test User',
+          profile: { create: { name: 'Test User' } },
+          telegram: { create: { username: 'testuser_account' } },
         },
       });
       testUserId = user.id;
@@ -93,7 +128,7 @@ describe('Database', () => {
         where: { userId: testUserId },
       });
       await prisma.user.deleteMany({
-        where: { telegramId: testTelegramId },
+        where: { id: testUserId },
       });
     });
 
