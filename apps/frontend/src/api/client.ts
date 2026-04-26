@@ -6,8 +6,11 @@ import axios, {
 } from 'axios';
 import { getInitData } from '../utils/telegram';
 
-// Token storage key for browser auth
+// Token storage key for browser auth (legacy single token, kept for compatibility)
 const AUTH_TOKEN_KEY = 'auth_token';
+const ACCESS_TOKEN_KEY = 'auth_access_token';
+const REFRESH_TOKEN_KEY = 'auth_refresh_token';
+const TOKEN_EXPIRES_AT_KEY = 'auth_token_expires_at';
 
 /**
  * Check if current mode is Telegram
@@ -35,9 +38,38 @@ function getAuthToken(): string | null {
     return getInitData();
   }
 
-  // Always read fresh from localStorage
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  return token;
+  // Prefer the new access token, fallback to legacy token
+  const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (accessToken) return accessToken;
+
+  // Fallback to legacy token for backward compatibility
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+/**
+ * Get refresh token from storage
+ */
+function getRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+/**
+ * Get token expiry timestamp from storage
+ */
+function getTokenExpiresAt(): number | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(TOKEN_EXPIRES_AT_KEY);
+  return raw ? parseInt(raw, 10) : null;
+}
+
+/**
+ * Check if access token is expiring soon (default: within 60 seconds)
+ */
+function isTokenExpiringSoon(thresholdMs = 60000): boolean {
+  const expiresAt = getTokenExpiresAt();
+  if (!expiresAt) return true;
+  return Date.now() >= expiresAt - thresholdMs;
 }
 
 /**
@@ -47,10 +79,82 @@ export function setAuthToken(token: string | null): void {
   if (typeof window === 'undefined') return;
 
   if (token) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    // Also set legacy key for compatibility during transition
     localStorage.setItem(AUTH_TOKEN_KEY, token);
   } else {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(AUTH_TOKEN_KEY);
   }
+}
+
+/**
+ * Clear all browser auth tokens from storage
+ */
+function clearAllTokens(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRES_AT_KEY);
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+// Refresh promise lock to prevent concurrent refresh requests
+let refreshPromise: Promise<boolean> | null = null;
+
+/**
+ * Perform token refresh using the refresh token
+ */
+async function performRefresh(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    console.log('[API Client] No refresh token available');
+    return false;
+  }
+
+  try {
+    // Use a fresh axios instance to avoid interceptors
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1'}/auth/refresh`,
+      { refreshToken },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    if (response.data?.success) {
+      const { accessToken, refreshToken: newRefreshToken, expiresIn } = response.data;
+
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+      localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+      localStorage.setItem(TOKEN_EXPIRES_AT_KEY, String(Date.now() + expiresIn * 1000));
+      // Also update legacy token for compatibility
+      localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
+
+      console.log('[API Client] Tokens refreshed successfully');
+      return true;
+    }
+
+    return false;
+  } catch (err: any) {
+    console.error('[API Client] Token refresh failed:', err.response?.data?.message || err.message);
+    return false;
+  }
+}
+
+/**
+ * Refresh access token with deduplication (promise lock)
+ */
+async function refreshAccessToken(): Promise<boolean> {
+  // If a refresh is already in progress, wait for it
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  // Start a new refresh and store the promise
+  refreshPromise = performRefresh().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
 }
 
 // Create axios instance with base URL
@@ -64,9 +168,25 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor to add authentication
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+  async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
     const token = getAuthToken();
     const mode = isTelegramMode() ? 'telegram' : 'browser';
+
+    // For browser mode, check if token is expiring soon and refresh proactively
+    // Skip refresh for the refresh endpoint itself to avoid loops
+    if (!isTelegramMode() && config.url !== '/auth/refresh' && isTokenExpiringSoon()) {
+      const refreshed = await refreshAccessToken();
+      if (!refreshed) {
+        // Refresh failed — clear tokens and let the request proceed (it will 401)
+        clearAllTokens();
+      }
+      // Use the newly refreshed token (or old one if refresh failed)
+      const newToken = getAuthToken();
+      if (newToken && config.headers) {
+        config.headers['Authorization'] = `Bearer ${newToken}`;
+      }
+      return config;
+    }
 
     if (token && config.headers) {
       if (isTelegramMode()) {
@@ -93,7 +213,9 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
     console.error(
       '[API Client] Error:',
       error.config?.url,
@@ -103,17 +225,46 @@ apiClient.interceptors.response.use(
       error.message,
     );
 
+    // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      if (!isTelegramMode()) {
-        console.log(
-          '[API Client] 401 Unauthorized, clearing token and redirecting to login',
-        );
-        localStorage.removeItem(AUTH_TOKEN_KEY);
+      // In Telegram mode, just propagate the error
+      if (isTelegramMode()) {
+        return Promise.reject(error);
+      }
+
+      // If this was the refresh endpoint itself, refresh token is dead — redirect to login
+      if (originalRequest?.url === '/auth/refresh') {
+        console.log('[API Client] Refresh token invalid, redirecting to login');
+        clearAllTokens();
+        if (window.location.pathname !== '/login') {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }
+        return Promise.reject(error);
+      }
+
+      // If we haven't already retried this request, attempt one silent refresh
+      if (originalRequest && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          // Retry the original request with the new token
+          const newToken = getAuthToken();
+          if (newToken && originalRequest.headers) {
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          }
+          return apiClient(originalRequest);
+        }
+
+        // Refresh failed — clear everything and redirect
+        console.log('[API Client] Silent refresh failed, redirecting to login');
+        clearAllTokens();
         if (window.location.pathname !== '/login') {
           window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
         }
       }
     }
+
     return Promise.reject(error);
   },
 );
