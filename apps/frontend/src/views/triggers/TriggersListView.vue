@@ -270,6 +270,7 @@ import { useTriggerStore } from '@/stores/triggers';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useUserStore } from '@/stores/user';
 import { useViewReady } from '../../composables/ui';
+import { confirmPromise } from '@/utils/ui';
 import CoefficientHistoryAlert from '../../components/triggers/CoefficientHistoryAlert.vue';
 import TriggerCreateDialog from '../../components/triggers/CreateDialog.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
@@ -303,7 +304,10 @@ async function handleStatusChange(status: 'RELEVANT' | 'COMPLETED' | 'EXPIRED') 
 }
 
 async function confirmDeleteTrigger(id: string) {
-  const confirmed = confirm('Вы уверены, что хотите удалить этот таймслот?');
+  const confirmed = await confirmPromise({
+    header: 'Удаление таймслота',
+    message: 'Вы уверены, что хотите удалить этот таймслот?',
+  });
   if (!confirmed) return;
 
   try {

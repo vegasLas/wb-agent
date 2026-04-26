@@ -271,6 +271,7 @@ import Tag from 'primevue/tag';
 import Message from 'primevue/message';
 import CoefficientHistoryAlert from './CoefficientHistoryAlert.vue';
 import type { SupplyTrigger, SearchMode } from '../../types';
+import { confirmPromise } from '@/utils/ui';
 
 const triggerStore = useTriggerStore();
 const warehouseStore = useWarehousesStore();
@@ -288,7 +289,10 @@ function handleCreated() {
 }
 
 async function confirmDeleteTrigger(id: string) {
-  const confirmed = confirm('Вы уверены, что хотите удалить этот таймслот?');
+  const confirmed = await confirmPromise({
+    header: 'Удаление таймслота',
+    message: 'Вы уверены, что хотите удалить этот таймслот?',
+  });
   if (!confirmed) return;
 
   try {

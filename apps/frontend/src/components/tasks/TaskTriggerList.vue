@@ -231,6 +231,7 @@ import Message from 'primevue/message';
 import TaskListLayout from './TaskListLayout.vue';
 import TaskCoefficientHistoryAlert from './TaskCoefficientHistoryAlert.vue';
 import TriggerCreateDialog from '../triggers/CreateDialog.vue';
+import { confirmPromise } from '@/utils/ui';
 import type { SupplyTrigger, SearchMode } from '../../types';
 
 type TabType = 'autobooking' | 'triggers';
@@ -288,7 +289,10 @@ function handleCreated() {
 }
 
 async function confirmDeleteTrigger(id: string) {
-  const confirmed = confirm('Вы уверены, что хотите удалить этот таймслот?');
+  const confirmed = await confirmPromise({
+    header: 'Удаление таймслота',
+    message: 'Вы уверены, что хотите удалить этот таймслот?',
+  });
   if (!confirmed) return;
 
   try {

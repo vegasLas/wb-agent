@@ -2,6 +2,7 @@ import { ref, computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { userAPI } from '@/api';
 import type { User } from './types';
+import { confirmPromise } from '@/utils/ui';
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User>({
@@ -150,9 +151,10 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function logout() {
-    const confirmed = confirm(
-      'Ваши автобронирования не будут активны, чтобы увидеть их снова, вам нужно будет авторизоваться в тот же аккаунт WB с которого вы создавали автобронирования. \n Вы уверены, что хотите выйти из всех аккаунтов WB ?',
-    );
+    const confirmed = await confirmPromise({
+      header: 'Выход из аккаунта',
+      message: 'Ваши автобронирования не будут активны, чтобы увидеть их снова, вам нужно будет авторизоваться в тот же аккаунт WB с которого вы создавали автобронирования. \n Вы уверены, что хотите выйти из всех аккаунтов WB ?',
+    });
 
     if (confirmed) {
       try {
