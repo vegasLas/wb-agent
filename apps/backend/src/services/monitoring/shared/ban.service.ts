@@ -414,7 +414,7 @@ export class SharedBanService implements ISharedBanService {
   private async getAdminUser() {
     return prisma.user.findUnique({
       where: { id: ADMIN_USER_ID },
-      select: { chatId: true },
+      include: { telegram: { select: { chatId: true } } },
     });
   }
 

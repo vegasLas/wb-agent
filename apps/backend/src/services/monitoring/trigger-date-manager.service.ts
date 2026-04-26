@@ -163,9 +163,11 @@ export class TriggerDateManagerService {
 
       const user = await prisma.user.findUnique({
         where: { id: trigger.userId },
+        include: { telegram: true },
       });
 
-      if (!user?.chatId || !TBOT) return;
+      const chatId = user?.telegram?.chatId;
+      if (!chatId || !TBOT) return;
 
       const warehouseNames = this.getWarehouseNames(trigger.warehouseIds);
 
@@ -175,7 +177,7 @@ export class TriggerDateManagerService {
         `${warehouseNames ? `🏬 Склады: ${warehouseNames}\n` : ''}` +
         `📅 Создан: ${new Date(trigger.createdAt).toLocaleDateString('ru-RU')}`;
 
-      await TBOT.sendMessage(user.chatId, message, {
+      await TBOT.sendMessage(chatId, message, {
         reply_markup: {
           inline_keyboard: [
             [

@@ -84,13 +84,13 @@ export class AutobookingRescheduleNotificationService
           status: 'ACTIVE',
         },
         include: {
-          user: { select: { chatId: true } },
+          user: { include: { telegram: { select: { chatId: true } } } },
         },
       });
 
       const uniqueChatIds = new Set(
         reschedules
-          .map((r: { user: { chatId: string | null } }) => r.user.chatId)
+          .map((r: { user: { telegram: { chatId: string | null } | null } }) => r.user.telegram?.chatId)
           .filter((chatId: string | null): chatId is string => chatId !== null),
       );
 
