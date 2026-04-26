@@ -12,7 +12,7 @@
               Главная
             </h1>
             <p class="text-sm text-gray-500">
-              Добро пожаловать в WB Agent
+              Добро пожаловать в wboi
             </p>
           </div>
         </div>
