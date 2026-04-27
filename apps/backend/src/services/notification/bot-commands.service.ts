@@ -1,7 +1,7 @@
 import { TBOT } from '@/utils/TBOT';
 import { prisma } from '@/config/database';
-import { jwtAuthService } from '@/services/user/jwt-auth.service';
 import { identityService } from '@/services/auth/identity.service';
+import { linkCodeService } from '@/services/auth/link-code.service';
 import { createLogger } from '@/utils/logger';
 import TelegramBot from 'node-telegram-bot-api';
 import { AuthProvider } from '@prisma/client';
@@ -17,136 +17,18 @@ export class BotCommandsService {
       return;
     }
 
-    TBOT.onText(/\/login/, this.handleLogin.bind(this));
-    TBOT.onText(/\/reset_password/, this.handleResetPassword.bind(this));
+    TBOT.onText(/\/link_email/, this.handleLinkEmail.bind(this));
     TBOT.onText(/\/help/, this.handleHelp.bind(this));
 
     logger.info('Bot command handlers registered');
   }
 
-  private async handleLogin(msg: TelegramBot.Message): Promise<void> {
+  private async handleLinkEmail(msg: TelegramBot.Message): Promise<void> {
     if (!TBOT || !msg.from) return;
 
     try {
       const telegramId = String(msg.from.id);
       const chatId = msg.chat.id.toString();
-      const username = msg.from.username;
-      const name = [msg.from.first_name, msg.from.last_name]
-        .filter(Boolean)
-        .join(' ');
-
-      // Find TELEGRAM identity
-      let identity = await prisma.userIdentity.findUnique({
-        where: {
-          provider_providerId: { provider: AuthProvider.TELEGRAM, providerId: telegramId },
-        },
-        include: { user: true },
-      });
-
-      let user = identity?.user;
-
-      if (!user) {
-        // Create new user with TELEGRAM identity and LEGACY credentials
-        const { login, password, passwordHash } = jwtAuthService.generateCredentials(username);
-
-        const result = await identityService.createUserWithIdentity(
-          {
-            chatId,
-            username,
-            name: name || username || 'User',
-          },
-          {
-            provider: AuthProvider.TELEGRAM,
-            providerId: telegramId,
-          },
-        );
-
-        // Also create LEGACY identity for browser login
-        await identityService.createIdentity(result.userId, AuthProvider.LEGACY, {
-          email: login,
-          passwordHash,
-        });
-
-        user = await prisma.user.findUnique({ where: { id: result.userId } })!;
-
-        await TBOT.sendMessage(
-          chatId,
-          this.formatCredentialsMessage(login, password, true),
-          {
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: '📋 Копировать логин', copy_text: { text: login } },
-                  { text: '🔑 Копировать пароль', copy_text: { text: password } },
-                ],
-              ],
-            },
-          },
-        );
-
-        logger.info(`New user created with credentials: ${login}`, { telegramId });
-      } else {
-        // User exists - check if has LEGACY identity
-        const legacyIdentity = await prisma.userIdentity.findUnique({
-          where: {
-            provider_email: { provider: AuthProvider.LEGACY, email: user.id.toString() },
-          },
-        });
-
-        const legacyByLogin = await prisma.userIdentity.findFirst({
-          where: { userId: user.id, provider: AuthProvider.LEGACY },
-        });
-
-        if (legacyByLogin && legacyByLogin.passwordHash) {
-          await TBOT.sendMessage(
-            chatId,
-            this.formatExistingCredentialsMessage(legacyByLogin.email || ''),
-            { parse_mode: 'HTML' },
-          );
-        } else {
-          // Generate credentials for existing user
-          const { login, password, passwordHash } = jwtAuthService.generateCredentials(username);
-
-          await identityService.createIdentity(user.id, AuthProvider.LEGACY, {
-            email: login,
-            passwordHash,
-          });
-
-          await TBOT.sendMessage(
-            chatId,
-            this.formatCredentialsMessage(login, password, false),
-            {
-              parse_mode: 'HTML',
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    { text: '📋 Копировать логин', copy_text: { text: login } },
-                    { text: '🔑 Копировать пароль', copy_text: { text: password } },
-                  ],
-                ],
-              },
-            },
-          );
-
-          logger.info(`Credentials generated for existing user: ${login}`, { telegramId });
-        }
-      }
-    } catch (error) {
-      logger.error('Error in /login command:', error);
-      await TBOT.sendMessage(
-        msg.chat.id,
-        '❌ Произошла ошибка. Пожалуйста, попробуйте позже.',
-      );
-    }
-  }
-
-  private async handleResetPassword(msg: TelegramBot.Message): Promise<void> {
-    if (!TBOT || !msg.from) return;
-
-    try {
-      const telegramId = String(msg.from.id);
-      const username = msg.from.username;
 
       // Find user by TELEGRAM identity
       const identity = await prisma.userIdentity.findUnique({
@@ -158,51 +40,54 @@ export class BotCommandsService {
 
       if (!identity) {
         await TBOT.sendMessage(
-          msg.chat.id,
+          chatId,
           '❌ Вы не зарегистрированы.\n\n' +
-          'Используйте /login для создания аккаунта.',
+          'Отправьте /start для создания аккаунта.'
         );
         return;
       }
 
-      const { login, password, passwordHash } = jwtAuthService.generateCredentials(username);
-
-      // Update or create LEGACY identity
-      const existingLegacy = await prisma.userIdentity.findFirst({
-        where: { userId: identity.user.id, provider: AuthProvider.LEGACY },
+      // Check if user already has EMAIL identity
+      const emailIdentity = await prisma.userIdentity.findFirst({
+        where: { userId: identity.user.id, provider: AuthProvider.EMAIL },
       });
 
-      if (existingLegacy) {
-        await prisma.userIdentity.update({
-          where: { id: existingLegacy.id },
-          data: { email: login, passwordHash },
-        });
-      } else {
-        await identityService.createIdentity(identity.user.id, AuthProvider.LEGACY, {
-          email: login,
-          passwordHash,
-        });
+      if (emailIdentity) {
+        await TBOT.sendMessage(
+          chatId,
+          '✅ У вас уже привязан email: ' + (emailIdentity.email || 'неизвестно'),
+        );
+        return;
       }
 
+      // Generate link code
+      const code = await linkCodeService.generate(identity.user.id);
+
+      const url = process.env.FRONTEND_URL || 'https://app.example.com';
+
       await TBOT.sendMessage(
-        msg.chat.id,
-        this.formatCredentialsMessage(login, password, false, true),
+        chatId,
+        '🔗 <b>Привязка email</b>\n\n' +
+        `Ваш код: <code>${code}</code>\n\n` +
+        `1. Откройте ${url}/register\n` +
+        '2. Заполните email, имя, пароль\n' +
+        `3. Введите код <code>${code}</code> в поле "Код из Telegram"\n\n` +
+        '⏳ Код действителен 1 час.',
         {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
               [
-                { text: '📋 Копировать логин', copy_text: { text: login } },
-                { text: '🔑 Копировать пароль', copy_text: { text: password } },
+                { text: '📋 Копировать код', copy_text: { text: code } },
               ],
             ],
           },
         },
       );
 
-      logger.info(`Credentials reset for user: ${login}`, { telegramId });
+      logger.info(`Link code generated for user ${identity.user.id}`);
     } catch (error) {
-      logger.error('Error in /reset_password command:', error);
+      logger.error('Error in /link_email command:', error);
       await TBOT.sendMessage(
         msg.chat.id,
         '❌ Произошла ошибка. Пожалуйста, попробуйте позже.',
@@ -216,50 +101,11 @@ export class BotCommandsService {
     await TBOT.sendMessage(
       msg.chat.id,
       '🤖 <b>Доступные команды</b>\n\n' +
-      '/login - Получить данные для входа в браузер\n' +
-      '/reset_password - Сгенерировать новые данные для входа\n' +
+      '/link_email - Получить код для привязки email\n' +
       '/help - Показать это сообщение\n\n' +
-      '💡 <b>Совет:</b> Храните свои данные для входа в безопасном месте и не передавайте их никому!',
+      '💡 <b>Совет:</b> Привяжите email для входа через браузер!\n' +
+      'Откройте веб-приложение через кнопку меню бота.',
       { parse_mode: 'HTML' },
-    );
-  }
-
-  private formatCredentialsMessage(
-    login: string,
-    password: string,
-    isNewUser: boolean,
-    isReset: boolean = false,
-  ): string {
-    const header = isNewUser
-      ? '🎉 <b>Добро пожаловать! Ваш аккаунт создан.</b>'
-      : isReset
-        ? '🔑 <b>Ваши данные для входа обновлены.</b>'
-        : '🔑 <b>Ваши данные для входа в браузер:</b>';
-
-    const webAppUrl = URL || 'https://app.example.com';
-
-    return (
-      `${header}\n\n` +
-      `🆔 <b>Логин:</b> <code>${login}</code>\n` +
-      `🔒 <b>Пароль:</b> <code>${password}</code>\n\n` +
-      `🔗 <b>Открыть веб-приложение:</b> ${webAppUrl}\n\n` +
-      `⚠️ <b>Важно:</b>\n` +
-      `• Храните эти данные в безопасности\n` +
-      `• Не передавайте их никому\n` +
-      `• Используйте /reset_password, если забыли пароль\n\n` +
-      `💡 <b>Совет:</b> Добавьте веб-приложение в закладки для быстрого доступа!`
-    );
-  }
-
-  private formatExistingCredentialsMessage(login: string): string {
-    const webAppUrl = URL || 'https://app.example.com';
-
-    return (
-      `🔑 <b>Ваши данные для входа в браузер:</b>\n\n` +
-      `🆔 <b>Логин:</b> <code>${login}</code>\n` +
-      `🔒 <b>Пароль:</b> <i>(был отправлен при создании)</i>\n\n` +
-      `🔗 <b>Открыть веб-приложение:</b> ${webAppUrl}\n\n` +
-      `💡 Используйте /reset_password для генерации новых данных, если забыли пароль.`
     );
   }
 }

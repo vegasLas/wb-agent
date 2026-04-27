@@ -79,29 +79,6 @@ export class IdentityService {
   }
 
   /**
-   * Find a LEGACY identity by login (stored in email column)
-   */
-  async findByLegacyLogin(login: string): Promise<IdentityWithUser | null> {
-    const identity = await prisma.userIdentity.findUnique({
-      where: { provider_email: { provider: AuthProvider.LEGACY, email: login } },
-      include: {
-        user: {
-          select: {
-            id: true,
-            subscriptionExpiresAt: true,
-            selectedAccountId: true,
-            profile: { select: { name: true } },
-            telegram: { select: { chatId: true } },
-          },
-        },
-      },
-    });
-
-    if (!identity) return null;
-    return { identity, user: identity.user };
-  }
-
-  /**
    * Get all identities for a user
    */
   async getUserIdentities(userId: number) {
