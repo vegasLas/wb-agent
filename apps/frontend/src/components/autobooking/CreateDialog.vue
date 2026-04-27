@@ -110,7 +110,7 @@ const warehouseOptions = computed(() =>
 
 // Use store's canSubmit directly for proper reactivity
 const canSubmit = computed(() => {
-  return formStore.canSubmit && userStore.hasAutobookingCredits;
+  return formStore.canSubmit;
 });
 
 // Use the drafts fetcher composable for automatic data fetching
