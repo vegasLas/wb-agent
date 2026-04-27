@@ -67,6 +67,7 @@ import {
   isTelegramWebApp,
   getInitData,
 } from '../utils/telegram';
+import { requestFullscreen, readyWebApp } from '../utils/telegram/webApp';
 import type { ColorScheme } from '../utils/telegram/theme';
 
 // Initialize color mode with proper configuration for class-based dark mode
@@ -148,7 +149,8 @@ const routeSkeletonMap: Record<string, any> = {
 // During navigation, uses pendingRouteName (target route) to show correct skeleton immediately
 // Uses getEffectiveRouteName which falls back to path-based detection when route name is null/undefined
 const currentRouteSkeleton = computed(() => {
-  const effectiveName = pendingRouteName.value || getEffectiveRouteName(route.name as string);
+  const effectiveName =
+    pendingRouteName.value || getEffectiveRouteName(route.name as string);
   return routeSkeletonMap[effectiveName] || routeSkeletonMap.default;
 });
 
@@ -192,7 +194,11 @@ onMounted(async () => {
     navigator.userAgent,
   );
 
-  // Request fullscreen on phones
+  // Expand and ready the WebApp when running inside Telegram
+  if (hasInitData.value) {
+    requestFullscreen();
+    readyWebApp();
+  }
 
   // Initialize toast for stores
   const { initToast } = await import('../utils/ui');

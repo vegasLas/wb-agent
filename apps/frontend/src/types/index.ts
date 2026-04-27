@@ -983,6 +983,7 @@ declare global {
         colorScheme: 'light' | 'dark';
         themeParams: Record<string, string>;
         isExpanded: boolean;
+        isFullscreen: boolean;
         viewportHeight: number;
         viewportStableHeight: number;
         headerColor: string;
@@ -990,6 +991,8 @@ declare global {
         bottomBarColor: string;
         ready: () => void;
         expand: () => void;
+        requestFullscreen: () => void;
+        exitFullscreen: () => void;
         enableClosingConfirmation: () => void;
         disableClosingConfirmation: () => void;
         showPopup: (params: {

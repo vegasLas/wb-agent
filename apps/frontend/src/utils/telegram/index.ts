@@ -10,4 +10,8 @@ export {
   getInitData,
   clearInitData,
   closeWebApp,
+  expandWebApp,
+  readyWebApp,
+  requestFullscreen,
+  exitFullscreen,
 } from './webApp';
