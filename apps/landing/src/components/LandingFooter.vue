@@ -3,7 +3,10 @@
     <div class="max-w-7xl mx-auto">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
         <div class="md:col-span-2">
-          <h3 class="text-3xl font-bold text-gradient mb-4">WBOI</h3>
+          <div class="flex items-center gap-2 mb-4">
+            <img src="/logo.png" alt="WBOI" class="h-8 w-auto block" draggable="false" />
+            <span class="text-3xl font-bold text-gradient">WBOI</span>
+          </div>
           <p class="text-gray-400 max-w-md leading-relaxed">
             Интеллектуальная платформа для селлеров Wildberries. Автоматизируйте рутину, анализируйте продажи и масштабируйте бизнес с помощью AI.
           </p>

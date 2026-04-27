@@ -15,13 +15,9 @@
     >
       <!-- Brand -->
       <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg shadow-purple-900/20"
-        >
-          <span class="text-white font-bold text-sm tracking-tight">WB</span>
-        </div>
+        <AppLogo :size="32" />
         <div>
-          <div class="font-semibold text-theme text-sm leading-none">OI</div>
+          <div class="font-semibold text-theme text-sm leading-none">WBOI</div>
           <div class="text-[11px] text-muted leading-none mt-1">
             Панель управления
           </div>
@@ -114,6 +110,7 @@
 </template>
 
 <script setup lang="ts">
+import AppLogo from './AppLogo.vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';

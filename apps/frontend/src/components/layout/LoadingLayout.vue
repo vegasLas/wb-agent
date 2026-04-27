@@ -8,11 +8,7 @@
     >
       <!-- Brand -->
       <div class="h-16 flex items-center gap-3 px-5 border-b border-deep-border">
-        <div
-          class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg shadow-purple-900/20"
-        >
-          <span class="text-white font-bold text-sm tracking-tight">WB</span>
-        </div>
+        <AppLogo :size="32" />
         <div class="space-y-1.5">
           <Skeleton width="3.5rem" height="0.875rem" border-radius="0.5rem" />
           <Skeleton width="5rem" height="0.625rem" border-radius="0.5rem" />
@@ -98,5 +94,6 @@
 </template>
 
 <script setup lang="ts">
+import AppLogo from './AppLogo.vue';
 import Skeleton from 'primevue/skeleton';
 </script>
