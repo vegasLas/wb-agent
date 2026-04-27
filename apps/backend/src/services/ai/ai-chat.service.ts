@@ -12,6 +12,8 @@ import { prisma } from '@/config/database';
 import { buildContextMessage } from './context-builder.service';
 import { aiUsageTrackingService } from './ai-usage-tracking.service';
 import { filterToolsByPermissions } from './ai-tool-permissions';
+import { AI_CHAT_BUDGET_USD } from '@/constants/payments';
+import { ApiError } from '@/utils/errors';
 import { autobookingTools } from './tools/autobooking.tools';
 import { triggerTools } from './tools/trigger.tools';
 import { externalTools } from './tools/external.tools';
@@ -47,6 +49,28 @@ function getMessageText(message: UIMessage): string {
 }
 
 export class AIChatService {
+  private async checkChatBudget(
+    userId: number,
+    tier: 'LITE' | 'PRO' | 'MAX',
+  ): Promise<{ allowed: boolean; spent: number; max: number }> {
+    const max = AI_CHAT_BUDGET_USD[tier];
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const result = await prisma.aiUsageLog.aggregate({
+      _sum: { cost: true },
+      where: {
+        userId,
+        feature: 'ai_chat',
+        createdAt: { gte: startOfMonth },
+      },
+    });
+
+    const spent = result._sum.cost ?? 0;
+
+    return { allowed: spent < max, spent, max };
+  }
+
   async handleChat({
     userId,
     conversationId,
@@ -54,6 +78,22 @@ export class AIChatService {
     attachments,
     abortSignal,
   }: HandleChatInput): Promise<ChatResult> {
+    // 0. Check token budget
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { subscriptionTier: true },
+    });
+    const tier = (user?.subscriptionTier ?? 'LITE') as 'LITE' | 'PRO' | 'MAX';
+    const budget = await this.checkChatBudget(userId, tier);
+
+    if (!budget.allowed) {
+      throw new ApiError(
+        429,
+        'Вы исчерпали лимит ИИ-чата. Обновите подписку для продолжения.',
+        'AI_BUDGET_EXHAUSTED',
+      );
+    }
+
     // 1. Load or create conversation
     let convId = conversationId;
     if (!convId) {
