@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-deep-bg text-theme flex flex-col lg:flex-row">
     <!-- Main Content -->
     <AppSidebar
-      class="hidden lg:block"
+      class="hidden lg:flex"
       @show-help="showHelpModal = true"
       @show-accounts="accountModalStore.showModal = true"
     />
@@ -67,7 +67,7 @@
         <!-- Content skeleton overlay during view loading/navigation -->
         <!-- Positioned to only cover content below the header -->
         <div
-          v-if="showContentSkeleton"
+          v-if="showContentSkeleton && canShowView"
           class="absolute inset-0 bg-deep-bg text-theme z-10"
         >
           <component :is="currentRouteSkeleton" />
@@ -75,7 +75,8 @@
 
         <div class="max-w-7xl mx-auto w-full">
           <UserAlerts class="mb-4" />
-          <RouterView />
+          <RouterView v-if="canShowView" />
+          <div v-else class="h-[78vh] lg:h-[calc(100vh-100px)]" />
         </div>
       </div>
     </main>
@@ -105,7 +106,7 @@
 
 <script setup lang="ts">
 import { ref, inject, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
@@ -125,8 +126,17 @@ import { useTriggerStore } from '@/stores/triggers';
 
 const accountModalStore = useAccountSupplierModalStore();
 const userStore = useUserStore();
+const route = useRoute();
 const showHelpModal = ref(false);
 const drawerVisible = ref(false);
+
+const canShowView = computed(() => {
+  if (route.meta.skipSubscriptionCheck) return true;
+  if (!userStore.subscriptionActive) return false;
+  if (route.meta.requiresAccount && !userStore.user.selectedAccountId) return false;
+  if (route.meta.requiresSupplier && !userStore.hasValidSupplier) return false;
+  return true;
+});
 
 // Theme toggle
 const colorMode = useColorMode({

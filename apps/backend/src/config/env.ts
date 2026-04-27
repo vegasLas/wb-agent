@@ -35,8 +35,22 @@ const envSchema = z.object({
   // Technical Mode (comma-separated user IDs allowed during maintenance)
   TECHNICAL_MODE_USER_IDS: z.string().optional(),
 
-  // Frontend URL (for CORS)
+  // Frontend URL (for CORS and email links)
   FRONTEND_URL: z.string().default('http://localhost:3000'),
+
+  // Email (SMTP)
+  EMAIL_SMTP_HOST: z.string().optional(),
+  EMAIL_SMTP_PORT: z.string().default('587'),
+  EMAIL_SMTP_USER: z.string().optional(),
+  EMAIL_SMTP_PASS: z.string().optional(),
+  EMAIL_FROM: z.string().default('noreply@wboi.ru'),
+
+  // VK OAuth
+  VK_APP_ID: z.string().optional(),
+  VK_SECRET_KEY: z.string().optional(),
+  VK_REDIRECT_URI: z
+    .string()
+    .default('http://localhost:3001/v1/auth/vk/callback'),
 
   // WB API Base URL
   WB_API_BASE_URL: z.string().default('https://seller-supply.wildberries.ru'),

@@ -49,12 +49,10 @@ export class SubscriptionNotificationService {
             gte: now,
             lte: sevenDaysFromNow,
           },
-          chatId: { not: null },
+          telegram: { isNot: null },
         },
-        select: {
-          id: true,
-          chatId: true,
-          subscriptionExpiresAt: true,
+        include: {
+          telegram: { select: { chatId: true } },
         },
       });
 
@@ -63,7 +61,8 @@ export class SubscriptionNotificationService {
       );
 
       for (const user of expiringUsers) {
-        if (!user.chatId || !user.subscriptionExpiresAt) continue;
+        const chatId = user.telegram?.chatId;
+        if (!chatId || !user.subscriptionExpiresAt) continue;
 
         const daysLeft = Math.ceil(
           (user.subscriptionExpiresAt.getTime() - now.getTime()) /
@@ -80,7 +79,7 @@ export class SubscriptionNotificationService {
         if (daysLeft === 7 || daysLeft === 3 || daysLeft === 1) {
           await this.sendExpirationNotification({
             userId: user.id,
-            chatId: user.chatId,
+            chatId,
             daysLeft,
             subscriptionExpiresAt: user.subscriptionExpiresAt,
           });

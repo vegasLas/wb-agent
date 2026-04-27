@@ -29,6 +29,51 @@ const routes: RouteRecordRaw[] = [
       public: true,
     },
   },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/RegisterView.vue'),
+    meta: {
+      title: 'Регистрация',
+      public: true,
+    },
+  },
+  {
+    path: '/verify-email',
+    name: 'VerifyEmail',
+    component: () => import('../views/VerifyEmailView.vue'),
+    meta: {
+      title: 'Подтверждение email',
+      public: true,
+    },
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('../views/ForgotPasswordView.vue'),
+    meta: {
+      title: 'Восстановление пароля',
+      public: true,
+    },
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('../views/ResetPasswordView.vue'),
+    meta: {
+      title: 'Сброс пароля',
+      public: true,
+    },
+  },
+  {
+    path: '/auth/callback',
+    name: 'AuthCallback',
+    component: () => import('../views/AuthCallbackView.vue'),
+    meta: {
+      title: 'Авторизация',
+      public: true,
+    },
+  },
 
   // Error Routes (public, no layout)
   {
@@ -48,6 +93,16 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: 'Технические работы',
       errorType: 'maintenance',
+      public: true,
+    },
+  },
+  {
+    path: '/error/subscription-required',
+    name: 'SubscriptionRequired',
+    component: () => import('../components/layout/ErrorLayout.vue'),
+    meta: {
+      title: 'Требуется подписка',
+      errorType: 'subscription_required',
       public: true,
     },
   },
@@ -85,6 +140,7 @@ const routes: RouteRecordRaw[] = [
         component: TasksView,
         meta: {
           title: 'Задачи',
+          requiresAccount: true,
         },
       },
       {
@@ -93,6 +149,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/ai/ChatView.vue'),
         meta: {
           title: 'AI Чат',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -105,6 +163,7 @@ const routes: RouteRecordRaw[] = [
         component: AdvertsView,
         meta: {
           title: 'Реклама',
+          requiresAccount: true,
         },
       },
       {
@@ -113,6 +172,7 @@ const routes: RouteRecordRaw[] = [
         component: RegionSalesView,
         meta: {
           title: 'Продажи по регионам',
+          requiresAccount: true,
         },
       },
       {
@@ -130,6 +190,8 @@ const routes: RouteRecordRaw[] = [
         component: AutobookingListView,
         meta: {
           title: 'Автобронирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       // Reschedules Routes (flat structure - each view is standalone)
@@ -139,6 +201,8 @@ const routes: RouteRecordRaw[] = [
         component: ReschedulesListView,
         meta: {
           title: 'Перепланирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -147,6 +211,8 @@ const routes: RouteRecordRaw[] = [
         component: ReschedulesCreateView,
         meta: {
           title: 'Создание перепланирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -155,6 +221,8 @@ const routes: RouteRecordRaw[] = [
         component: ReschedulesUpdateView,
         meta: {
           title: 'Редактирование перепланирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       // Triggers Routes (flat structure - each view is standalone)
@@ -172,6 +240,8 @@ const routes: RouteRecordRaw[] = [
         component: PromotionsView,
         meta: {
           title: 'Акции',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -180,6 +250,8 @@ const routes: RouteRecordRaw[] = [
         component: FeedbacksView,
         meta: {
           title: 'Отзывы',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -188,6 +260,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/ReportsView.vue'),
         meta: {
           title: 'Reports',
+          requiresAccount: true,
         },
       },
       {
@@ -196,6 +269,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/content-cards/TariffsView.vue'),
         meta: {
           title: 'Тарифы',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -204,6 +278,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StoreView.vue'),
         meta: {
           title: 'Store',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -213,6 +288,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Store - Subscription',
           initialTab: 'subscription',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -222,6 +298,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Store - Bookings',
           initialTab: 'bookings',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -230,6 +307,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/PaymentsView.vue'),
         meta: {
           title: 'Payments',
+          skipSubscriptionCheck: true,
         },
       },
     ],
@@ -258,7 +336,7 @@ const router = createRouter({
 
 // Global app state
 let isAppInitialized = false;
-let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
+let initError: 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' | null = null;
 let isBrowserAuthInitialized = false;
 
 /**
@@ -307,7 +385,7 @@ router.beforeEach(async (to, from, next) => {
   // Update page title
   const title = to.meta.title as string;
   if (title) {
-    document.title = `${title} | WB Agent`;
+    document.title = `${title} | wboi`;
   }
 
   // Skip initialization check for public routes
@@ -412,13 +490,19 @@ async function initializeApp(): Promise<void> {
 // Classify error type
 function classifyError(
   error: any,
-): 'session_expired' | 'maintenance' | 'not_found' {
+): 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' {
   if (error?.data?.data?.expired === true) {
     return 'session_expired';
   }
 
-  if (error?.status === 503 || error?.statusCode === 503) {
+  const status = error?.response?.status || error?.status || error?.statusCode;
+
+  if (status === 503) {
     return 'maintenance';
+  }
+
+  if (status === 403) {
+    return 'subscription_required';
   }
 
   return 'not_found';
@@ -429,6 +513,7 @@ function errorToRouteName(error: string): string {
   const map: Record<string, string> = {
     session_expired: 'SessionExpired',
     maintenance: 'Maintenance',
+    subscription_required: 'SubscriptionRequired',
     not_found: 'UserNotFound',
   };
   return map[error] || 'UserNotFound';

@@ -17,35 +17,28 @@ enum Permission {
   SUPPLIES
 }
 
+enum AuthProvider {
+  EMAIL
+  TELEGRAM
+  VK
+  LEGACY
+}
+
 model User {
-  id                     Int                     @id @default(autoincrement())
-  telegramId             BigInt                  @unique // REQUIRED - primary identifier
-  login                  String?                 @unique // Auto-generated browser login
-  passwordHash           String? // Bcrypt hashed password for browser auth
-  chatId                 String?                 @unique
-  username               String?
-  languageCode           String?
-  phone                  String?
-  name                   String
-  captcha                String?
-  phoneWb                String?
-  wbCookies              String?
-  wbAuthUpdatedAt        DateTime?
-  autobookingCount       Int                     @default(0)
-  subscriptionExpiresAt  DateTime?
-  supplyTriggers         SupplyTrigger[]
-  payments               Payment[]
-  autobookings           Autobooking[]
-  supplierApiKey         SupplierApiKey?
-  captchaText            String?
-  captchaExpiry          DateTime?
-  awaitingPhone          Boolean                 @default(false)
-  lastUpdatedCookie      DateTime?
+  id                    Int     @id @default(autoincrement())
+  wbAuthUpdatedAt       DateTime?
+  autobookingCount      Int             @default(0)
+  subscriptionExpiresAt DateTime?
+  supplyTriggers        SupplyTrigger[]
+  payments              Payment[]
+  autobookings          Autobooking[]
+  supplierApiKey        SupplierApiKey?
+
   agreeTerms             Boolean                 @default(false)
   supplierId             String?
   supplierName           String?
-  selectedAccountId      String? // Direct reference to selected account
-  envInfo                Json? // Stores the generated environment information
+  selectedAccountId      String?
+  envInfo                Json?
   createdAt              DateTime                @default(now())
   envInfoUpdatedAt       DateTime?
   accounts               Account[]
@@ -55,6 +48,34 @@ model User {
   skuCards               WbSkuCard[]
   admins                 Admin[]
   refreshTokens          RefreshToken[]
+  authTokens             AuthToken[]
+  identities             UserIdentity[]
+  linkCodes              LinkCode[]
+
+  profile  Profile?
+  telegram Telegram?
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Telegram {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatId       String?  @unique
+  username     String?
+  languageCode String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model RefreshToken {
@@ -95,6 +116,53 @@ model WbSkuCard {
   @@index([nmID])
 }
 
+model UserIdentity {
+  id              Int          @id @default(autoincrement())
+  userId          Int
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider        AuthProvider
+  providerId      String? // external ID: vk user id, telegram id, etc.
+  email           String? // normalized email (for EMAIL provider)
+  passwordHash    String? // bcrypt hash (for EMAIL / LEGACY)
+  emailVerifiedAt DateTime?
+  metadata        Json? // provider-specific extra data
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([provider, providerId])
+  @@unique([provider, email])
+  @@index([userId])
+  @@index([email])
+}
+
+model AuthToken {
+  id        String    @id @default(uuid())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  type      String // 'EMAIL_VERIFICATION' | 'PASSWORD_RESET'
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model LinkCode {
+  id        String    @id @default(uuid())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([code])
+  @@index([expiresAt])
+}
+
 model Account {
   id                 String     @id @default(uuid())
   userId             Int
@@ -117,10 +185,10 @@ model Supplier {
   supplierName String
   permissions  Permission[] @default([])
   accountId    String
-  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
+  account      Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
 
-  @@unique([supplierId, accountId]) // Ensure unique supplier per account
+  @@unique([supplierId, accountId])
   @@index([accountId])
   @@index([supplierId])
 }
@@ -138,23 +206,23 @@ model Autobooking {
   userId               Int
   supplierId           String
   user                 User       @relation(fields: [userId], references: [id])
-  draftId              String // External WB draft ID
-  warehouseId          Int // Main warehouse ID
-  transitWarehouseId   Int? // Optional transit warehouse ID
+  draftId              String
+  warehouseId          Int
+  transitWarehouseId   Int?
   transitWarehouseName String?
-  supplyType           String // BOX, MONOPALLETE, SUPERSAFE
-  dateType             String // WEEK, MONTH, CUSTOM_DATES, CUSTOM_PERIOD
+  supplyType           String
+  dateType             String
   startDate            DateTime?
   endDate              DateTime?
-  customDates          DateTime[] // For CUSTOM_DATES type
-  completedDates       DateTime[] @default([]) // New field to track completed dates
+  customDates          DateTime[]
+  completedDates       DateTime[] @default([])
   maxCoefficient       Float      @default(0)
-  monopalletCount      Int? // Number of monopallets for MONOPALLETE supply type
-  status               String     @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
+  monopalletCount      Int?
+  status               String     @default("ACTIVE")
   bookedAt             DateTime?
   bookedDate           DateTime?
-  supplyId             String? // Cached supply ID from WB
-  supplyIdUpdatedAt    DateTime? // When supplyId was last updated
+  supplyId             String?
+  supplyIdUpdatedAt    DateTime?
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
 
@@ -166,19 +234,19 @@ model Autobooking {
 model AutobookingReschedule {
   id             String     @id @default(uuid())
   userId         Int
-  supplierId     String
   user           User       @relation(fields: [userId], references: [id])
-  warehouseId    Int // Target warehouse ID
-  dateType       String // WEEK, MONTH, CUSTOM_PERIOD, CUSTOM_DATES_SINGLE
-  startDate      DateTime? // For WEEK, MONTH, CUSTOM_PERIOD
-  endDate        DateTime? // For CUSTOM_PERIOD
-  currentDate    DateTime // Current target date for reschedule
-  customDates    DateTime[] @default([]) // For CUSTOM_DATES_SINGLE
-  completedDates DateTime[] @default([]) // Track completed reschedule dates
+  supplierId     String
+  warehouseId    Int
+  dateType       String
+  startDate      DateTime?
+  endDate        DateTime?
+  currentDate    DateTime
+  customDates    DateTime[] @default([])
+  completedDates DateTime[] @default([])
   maxCoefficient Float      @default(0)
-  status         String     @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
-  supplyType     String // BOX, MONOPALLETE, SUPERSAFE
-  supplyId       String // Required WB supply ID
+  status         String     @default("ACTIVE")
+  supplyType     String
+  supplyId       String
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
@@ -194,18 +262,18 @@ model SupplyTrigger {
   userId             Int
   user               User       @relation(fields: [userId], references: [id])
   warehouseIds       Int[]
-  supplyTypes        String[] // BOX, MONOPALLETE, SUPERSAFE
+  supplyTypes        String[]
   isActive           Boolean    @default(true)
   checkInterval      Int        @default(180)
   maxCoefficient     Float      @default(0)
   lastNotificationAt DateTime?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
-  searchMode         String     @default("TODAY") // TODAY, TOMORROW, WEEK, UNTIL_FOUND, CUSTOM_DATES
-  startDate          DateTime? // For CUSTOM_DATES mode
-  endDate            DateTime? // For CUSTOM_DATES mode
-  selectedDates      DateTime[] @default([]) // For CUSTOM_DATES mode
-  status             String     @default("RELEVANT") // RELEVANT, EXPIRED, COMPLETED
+  searchMode         String     @default("TODAY")
+  startDate          DateTime?
+  endDate            DateTime?
+  selectedDates      DateTime[] @default([])
+  status             String     @default("RELEVANT")
 
   @@index([userId])
   @@index([isActive])
@@ -219,9 +287,9 @@ model Payment {
   user           User      @relation(fields: [userId], references: [id])
   amount         Float
   currency       String    @default("RUB")
-  status         String // pending, succeeded, canceled
-  paymentId      String    @unique // YooKassa payment ID
-  tariffId       String // Add this field
+  status         String
+  paymentId      String    @unique
+  tariffId       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   idempotencyKey String    @unique
@@ -268,17 +336,17 @@ model Bonus {
   id            String    @id @default(uuid())
   userId        Int
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bonusType     String // NEW_USER_WELCOME, REFERRAL, PROMOTION_SUMMER, etc.
-  bonusValue    Int // Amount of autobookingCount or other value
-  description   String? // Human readable description
+  bonusType     String
+  bonusValue    Int
+  description   String?
   isApplied     Boolean   @default(false)
   appliedAt     DateTime?
-  expiresAt     DateTime? // Optional expiration date
-  promotionCode String? // Optional promotion code
+  expiresAt     DateTime?
+  promotionCode String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@unique([userId, bonusType]) // Prevent duplicate bonuses for same user+bonus type
+  @@unique([userId, bonusType])
   @@index([userId])
   @@index([bonusType])
   @@index([isApplied])
@@ -288,8 +356,8 @@ model Bonus {
 
 model RateLimit {
   id         String     @id @default(uuid())
-  userId     String // Telegram user ID
-  type       String // message, command, callback
+  userId     String
+  type       String
   timestamps DateTime[]
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
@@ -302,7 +370,7 @@ model RateLimit {
 
 model UserSupplierHistory {
   id         Int      @id @default(autoincrement())
-  supplierId String   @unique // WB supplier ID from cookies
+  supplierId String   @unique
   createdAt  DateTime @default(now())
 
   @@index([supplierId])
@@ -323,7 +391,7 @@ model AiConversation {
 model AiMessage {
   id             String   @id @default(uuid())
   conversationId String
-  role           String // user | assistant | tool
+  role           String
   content        String   @db.Text
   toolCalls      Json?
   toolResults    Json?
@@ -336,12 +404,12 @@ model AiMessage {
 }
 
 model Admin {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role       String   @default("admin")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -396,16 +464,16 @@ model FeedbackProductSetting {
 }
 
 model FeedbackAutoAnswer {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   userId           Int
   supplierId       String
   feedbackId       String
   nmId             Int
-  feedbackText     String   @default("")
+  feedbackText     String    @default("")
   answerText       String
-  valuation        Int      @default(5)
-  status           String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, POSTED
-  trustFactor      String   @default("buyout") // buyout | rejected
+  valuation        Int       @default(5)
+  status           String    @default("PENDING")
+  trustFactor      String    @default("buyout")
   feedbackTextCons String?
   feedbackTextPros String?
   productName      String?
@@ -417,8 +485,8 @@ model FeedbackAutoAnswer {
   photos           Json?
   video            Json?
   postedAt         DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@unique([userId, supplierId, feedbackId])
   @@index([userId, supplierId, nmId])
@@ -465,7 +533,7 @@ enum FeedbackRuleMode {
 }
 
 model FeedbackRule {
-  id          String          @id @default(uuid())
+  id          String           @id @default(uuid())
   userId      Int
   supplierId  String
   nmIds       Int[]

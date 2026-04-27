@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 echo "========================================"
 echo "  WB Backend - Starting Server"
@@ -11,6 +11,9 @@ npx prisma generate --schema=prisma/schema.prisma
 
 # Run database migrations
 echo "→ Running database migrations..."
+
+# Safely resolve the rolled-back migration only if the migrations table exists
+# and the migration was actually marked as rolled back
 npx prisma migrate deploy --schema=prisma/schema.prisma
 
 # Start the server

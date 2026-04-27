@@ -3,15 +3,16 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { env } from '@/config/env';
 import { prisma } from '@/config/database';
+import { identityService } from '@/services/auth/identity.service';
 import { ApiError } from '@/utils/errors';
 import { createLogger } from '@/utils/logger';
+import { AuthProvider } from '@prisma/client';
 
 const logger = createLogger('JWTAuth');
 
 export interface JWTPayload {
   userId: number;
-  login: string;
-  telegramId: string;
+  identityId: number;
   authType: 'browser';
   iat: number;
   exp: number;
@@ -20,7 +21,6 @@ export interface JWTPayload {
 export interface BrowserAuthResult {
   user: {
     id: number;
-    login: string;
     name: string;
   };
   accessToken: string;
@@ -53,7 +53,7 @@ export class JWTAuthService {
   }
 
   /**
-   * Hash password (for use in bot commands)
+   * Hash password (for use in identity creation)
    */
   hashPassword(password: string): string {
     return bcrypt.hashSync(password, this.BCRYPT_ROUNDS);
@@ -67,58 +67,51 @@ export class JWTAuthService {
   }
 
   /**
-   * Browser login with login + password
+   * Email login with email + password
    */
-  async browserLogin(login: string, password: string): Promise<BrowserAuthResult> {
+  async emailLogin(email: string, password: string): Promise<BrowserAuthResult> {
     if (!this.isConfigured()) {
       throw ApiError.internal('JWT authentication is not configured');
     }
 
-    // Find user by login
-    const user = await prisma.user.findUnique({
-      where: { login },
-      select: {
-        id: true,
-        login: true,
-        name: true,
-        passwordHash: true,
-        telegramId: true,
-        subscriptionExpiresAt: true,
-      },
-    });
+    const found = await identityService.findByEmail(email);
 
-    if (!user || !user.passwordHash) {
+    if (!found || !found.identity.passwordHash) {
       throw ApiError.unauthorized('Неверные учетные данные');
     }
 
-    // Verify password
-    const isValid = await this.comparePassword(password, user.passwordHash);
+    // Strict verification: must verify email before login
+    if (!found.identity.emailVerifiedAt) {
+      throw ApiError.forbidden(
+        'Email не подтвержден. Пожалуйста, проверьте почту и перейдите по ссылке.',
+        'EMAIL_NOT_VERIFIED',
+      );
+    }
+
+    const isValid = await this.comparePassword(password, found.identity.passwordHash);
     if (!isValid) {
       throw ApiError.unauthorized('Неверные учетные данные');
     }
 
-    // Check subscription
-    if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
+    if (!found.user.subscriptionExpiresAt || new Date(found.user.subscriptionExpiresAt) <= new Date()) {
       throw ApiError.forbidden('Требуется активная подписка', 'SUBSCRIPTION_REQUIRED');
     }
 
     const accessToken = this.generateAccessToken({
-      userId: user.id,
-      login: user.login!,
-      telegramId: user.telegramId.toString(),
+      userId: found.user.id,
+      identityId: found.identity.id,
       authType: 'browser',
     });
 
-    const refreshToken = await this.generateRefreshToken(user.id);
+    const refreshToken = await this.generateRefreshToken(found.user.id);
     const expiresIn = this.parseExpiresIn(this.JWT_ACCESS_EXPIRES_IN);
 
-    logger.info(`Browser login successful: ${login}`);
+    logger.info(`Email login successful: ${email}`);
 
     return {
       user: {
-        id: user.id,
-        login: user.login!,
-        name: user.name,
+        id: found.user.id,
+        name: found.user.profile?.name || '',
       },
       accessToken,
       refreshToken,
@@ -251,67 +244,6 @@ export class JWTAuthService {
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
-  }
-
-  /**
-   * Generate unique login and password
-   */
-  generateCredentials(telegramUsername?: string): {
-    login: string;
-    password: string;
-    passwordHash: string;
-  } {
-    // Generate random suffix (6 chars)
-    const suffix = this.generateRandomString(6, 'lower');
-
-    // Create login: username_suffix or user_suffix if no username
-    const prefix = telegramUsername
-      ? this.sanitizeUsername(telegramUsername)
-      : 'user';
-    const login = `${prefix}_${suffix}`;
-
-    // Generate strong password (12 chars)
-    const password = this.generateRandomString(12, 'mixed');
-
-    // Hash password
-    const passwordHash = this.hashPassword(password);
-
-    return { login, password, passwordHash };
-  }
-
-  /**
-   * Generate random string
-   */
-  private generateRandomString(
-    length: number,
-    type: 'lower' | 'upper' | 'mixed' | 'numeric'
-  ): string {
-    const chars = {
-      lower: 'abcdefghijklmnopqrstuvwxyz',
-      upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-      numeric: '0123456789',
-      mixed: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*',
-    };
-
-    const charSet = chars[type];
-    let result = '';
-
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * charSet.length);
-      result += charSet.charAt(randomIndex);
-    }
-
-    return result;
-  }
-
-  /**
-   * Sanitize username for use in login
-   */
-  private sanitizeUsername(username: string): string {
-    return username
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, '')
-      .substring(0, 20);
   }
 
   /**

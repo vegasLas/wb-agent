@@ -247,7 +247,7 @@ export function setupTelegramPlugin(): void {
     }
   });
 
-  // Initialize bot commands service (/login, /reset_password, etc.)
+  // Initialize bot commands service (/link_email, /help)
   botCommandsService.initialize();
 
   logger.debug('Telegram bot plugin setup complete');

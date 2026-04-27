@@ -7,59 +7,46 @@
           <i class="pi pi-shopping-bag text-white text-2xl" />
         </div>
         <h1 class="text-2xl font-bold text-theme mb-2">
-          WB Agent
+          wboi
         </h1>
         <p class="text-secondary">
-          Вход в браузерную версию
+          Вход в систему
         </p>
       </div>
 
       <!-- Login Card -->
       <div class="crypto-card">
         <h2 class="text-lg font-semibold text-theme mb-6">
-          Вход в систему
+          Вход
         </h2>
 
         <!-- Error Message -->
-        <div 
-          v-if="authStore.error" 
+        <div
+          v-if="authStore.error || routeError"
           class="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
         >
           <div class="flex items-start gap-3">
             <i class="pi pi-exclamation-circle text-red-500 mt-0.5" />
             <p class="text-red-500 text-sm">
-              {{ authStore.error }}
+              {{ authStore.error || routeError }}
             </p>
           </div>
         </div>
 
-        <!-- Info Message -->
-        <div class="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-          <div class="flex items-start gap-3">
-            <i class="pi pi-info-circle text-blue-500 mt-0.5" />
-            <div class="text-blue-500 text-sm">
-              <p class="font-medium mb-1">
-                Нужны данные для входа?
-              </p>
-              <p>Откройте Telegram и отправьте <code class="bg-blue-500/20 px-1.5 py-0.5 rounded">/login</code> боту @wb_booking_bot</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Login Form -->
+        <!-- Email Login Form -->
         <form
           class="space-y-4"
-          @submit.prevent="handleLogin"
+          @submit.prevent="handleEmailLogin"
         >
           <div>
             <label class="block text-sm font-medium text-secondary mb-1.5">
-              Логин
+              Email
             </label>
             <InputText
-              v-model="form.login"
-              type="text"
+              v-model="emailForm.email"
+              type="email"
               required
-              placeholder="Введите ваш логин"
+              placeholder="your@email.com"
               class="w-full"
               :disabled="authStore.isLoading"
             />
@@ -70,9 +57,9 @@
               Пароль
             </label>
             <Password
-              v-model="form.password"
+              v-model="emailForm.password"
               required
-              placeholder="Введите ваш пароль"
+              placeholder="Введите пароль"
               class="w-full"
               :disabled="authStore.isLoading"
               :feedback="false"
@@ -81,33 +68,63 @@
             />
           </div>
 
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2 text-sm text-secondary cursor-pointer">
+              <input
+                v-model="rememberMe"
+                type="checkbox"
+                class="rounded border-[var(--color-border)] bg-[var(--color-elevated)] text-purple focus:ring-purple"
+              />
+              Запомнить меня
+            </label>
+            <RouterLink to="/forgot-password" class="text-sm text-purple hover:underline">
+              Забыли пароль?
+            </RouterLink>
+          </div>
+
           <Button
             type="submit"
             :loading="authStore.isLoading"
-            :disabled="authStore.isLoading || !form.login || !form.password"
+            :disabled="authStore.isLoading || !emailForm.email || !emailForm.password"
             class="w-full mt-2"
             label="Войти"
             icon="pi pi-sign-in"
           />
         </form>
 
-        <!-- Help Section -->
-        <div class="mt-6 pt-6 border-t border-[var(--color-border)]">
-          <div class="text-center">
-            <p class="text-secondary text-sm mb-2">
-              Забыли данные для входа?
-            </p>
-            <p class="text-muted text-xs">
-              Отправьте <code class="bg-[var(--color-elevated)] px-1.5 py-0.5 rounded">/reset_password</code> в Telegram боте
-            </p>
+        <!-- VK Login (temporarily hidden) -->
+        <div v-if="false" class="mt-4">
+          <div class="relative flex items-center justify-center my-4">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-[var(--color-border)]" />
+            </div>
+            <span class="relative bg-[var(--color-surface)] px-3 text-xs text-secondary">или</span>
           </div>
+
+          <a
+            :href="vkAuthUrl"
+            class="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 rounded-xl bg-[#4a76a8] text-white font-medium hover:bg-[#3d6694] transition-colors"
+          >
+            <i class="pi pi-external-link" />
+            Войти через VK
+          </a>
+        </div>
+
+        <!-- Register Link -->
+        <div class="mt-6 pt-6 border-t border-[var(--color-border)] text-center">
+          <p class="text-secondary text-sm">
+            Нет аккаунта?
+            <RouterLink to="/register" class="text-purple hover:underline ml-1">
+              Зарегистрироваться
+            </RouterLink>
+          </p>
         </div>
       </div>
 
       <!-- Back to Telegram -->
       <div class="mt-6 text-center">
-        <a 
-          href="https://t.me/wb_booking_bot" 
+        <a
+          href="https://t.me/wb_booking_bot"
           target="_blank"
           class="inline-flex items-center gap-2 text-secondary hover:text-purple transition-colors text-sm"
         >
@@ -120,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -131,16 +148,25 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useBrowserAuthStore();
 
-const form = ref({
-  login: '',
+const rememberMe = ref(false);
+const routeError = ref((route.query.error as string) || null);
+
+const emailForm = ref({
+  email: '',
   password: '',
 });
 
-async function handleLogin() {
+const vkAuthUrl = computed(() => {
+  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
+  return `${base}/auth/vk`;
+});
+
+async function handleEmailLogin() {
   authStore.clearError();
-  
-  const success = await authStore.login(form.value.login, form.value.password);
-  
+  routeError.value = null;
+
+  const success = await authStore.emailLogin(emailForm.value.email, emailForm.value.password);
+
   if (success) {
     const redirect = route.query.redirect as string;
     await router.push(redirect || '/');
@@ -157,15 +183,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Ensure Password component takes full width */
 :deep(.p-password) {
   width: 100%;
 }
-
 :deep(.p-password-input) {
   width: 100%;
 }
-
 :deep(.p-input-icon) {
   color: var(--text-secondary);
 }

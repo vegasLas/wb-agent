@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { authenticate } from '@/middleware/auth.middleware';
+import { authenticate, authenticateUser } from '@/middleware/auth.middleware';
 import { userService } from '@/services/user/';
 import { ApiError } from '@/utils/errors';
 
 const router = Router();
 
 // GET /api/v1/user
-router.get('/', authenticate, async (req, res, next) => {
+router.get('/', authenticateUser, async (req, res, next) => {
   try {
     const user = await userService.findById(req.user!.id);
 
@@ -17,8 +17,7 @@ router.get('/', authenticate, async (req, res, next) => {
 
     res.json({
       id: user.id,
-      login: user.login,
-      name: user.name,
+      name: user.profile?.name,
       autobookingCount: user.autobookingCount,
       subscriptionExpiresAt: user.subscriptionExpiresAt,
       agreeTerms: user.agreeTerms,

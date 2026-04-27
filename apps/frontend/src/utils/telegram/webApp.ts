@@ -245,3 +245,76 @@ export function closeWebApp(options?: { return_back?: boolean }): boolean {
 
   return postEvent('web_app_close', params);
 }
+
+/**
+ * Expand the WebApp to full height
+ * This removes the bottom gap and expands to the full available height.
+ *
+ * @returns true if expand command was sent successfully
+ */
+export function expandWebApp(): boolean {
+  if (!isTelegramWebApp()) {
+    console.log('[Telegram.WebApp] Not in Telegram WebApp context, skipping expand');
+    return false;
+  }
+
+  return postEvent('web_app_expand');
+}
+
+/**
+ * Notify Telegram that the WebApp is ready to be displayed.
+ * This tells Telegram to hide the loading indicator and show the app.
+ *
+ * @returns true if ready command was sent successfully
+ */
+export function readyWebApp(): boolean {
+  if (!isTelegramWebApp()) {
+    console.log('[Telegram.WebApp] Not in Telegram WebApp context, skipping ready');
+    return false;
+  }
+
+  return postEvent('web_app_ready');
+}
+
+/**
+ * Request fullscreen mode for Telegram Mini Apps.
+ * Requires Telegram WebApp v8.0+.
+ *
+ * In fullscreen mode, the Telegram header is hidden and the app
+ * takes up the entire screen.
+ *
+ * @returns true if request was sent successfully
+ */
+export function requestFullscreen(): boolean {
+  if (!isTelegramWebApp()) {
+    console.log('[Telegram.WebApp] Not in Telegram WebApp context, skipping requestFullscreen');
+    return false;
+  }
+
+  if (!versionAtLeast('8.0')) {
+    console.warn('[Telegram.WebApp] Method requestFullscreen is not supported in version ' + getWebAppVersion());
+    return false;
+  }
+
+  return postEvent('web_app_request_fullscreen');
+}
+
+/**
+ * Exit fullscreen mode for Telegram Mini Apps.
+ * Requires Telegram WebApp v8.0+.
+ *
+ * @returns true if exit command was sent successfully
+ */
+export function exitFullscreen(): boolean {
+  if (!isTelegramWebApp()) {
+    console.log('[Telegram.WebApp] Not in Telegram WebApp context, skipping exitFullscreen');
+    return false;
+  }
+
+  if (!versionAtLeast('8.0')) {
+    console.warn('[Telegram.WebApp] Method exitFullscreen is not supported in version ' + getWebAppVersion());
+    return false;
+  }
+
+  return postEvent('web_app_exit_fullscreen');
+}

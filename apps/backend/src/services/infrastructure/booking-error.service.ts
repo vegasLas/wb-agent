@@ -1,5 +1,5 @@
 import { prisma } from '@/config/database';
-import type { Autobooking, AutobookingReschedule, User } from '@prisma/client';
+import type { Autobooking, AutobookingReschedule } from '@prisma/client';
 import { TBOT } from '@/utils/TBOT';
 
 /**
@@ -88,7 +88,7 @@ const CRITICAL_BOOKING_ERRORS: Record<string, ErrorConfig> = {
 interface HandleCriticalErrorParams {
   error: Error | { message?: string };
   entity: Autobooking | AutobookingReschedule;
-  user: User;
+  user: { id: number; chatId?: string | null };
   warehouseName: string;
   effectiveDate: Date;
   type: 'reschedule' | 'autobooking';
@@ -157,12 +157,12 @@ async function handleCriticalBookingError({
 
     // Notify admin
     const adminUser = await prisma.user.findFirst({
-      where: {
-        id: 4,
-      },
+      where: { id: 4 },
+      include: { telegram: true },
     });
-    if (adminUser?.chatId && TBOT) {
-      await TBOT.sendMessage(adminUser.chatId, notificationMessage, {
+    const adminChatId = adminUser?.telegram?.chatId;
+    if (adminChatId && TBOT) {
+      await TBOT.sendMessage(adminChatId, notificationMessage, {
         reply_markup: {
           inline_keyboard: [
             [{ text: '❌ Закрыть', callback_data: 'close_menu' }],

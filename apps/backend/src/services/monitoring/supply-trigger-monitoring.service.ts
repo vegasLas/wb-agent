@@ -315,7 +315,7 @@ export class SupplyTriggerMonitoringService {
         );
 
         // Update user's chatId to null in the database
-        await prisma.user.update({
+        await prisma.telegram.updateMany({
           where: { chatId },
           data: { chatId: null },
         });

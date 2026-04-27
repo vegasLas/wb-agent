@@ -3,19 +3,14 @@ import { TBOT } from '@/utils/TBOT';
 import { logger } from '@/utils/logger';
 import { channelSubscriptionService } from './channel-subscription.service';
 import { userService } from '@/services/user/';
+import { identityService } from '@/services/auth/identity.service';
 import { generateUserEnvInfo } from '@/utils/userEnvInfo';
+import { AuthProvider } from '@prisma/client';
+import { prisma } from '@/config/database';
 
 const URL = process.env.FRONTEND_URL || process.env.URL || '';
 
-/**
- * Service for sending Telegram notifications and handling bot interactions
- * Wraps the TBOT instance with convenience methods
- */
 export class TelegramService {
-  /**
-   * Send main menu to user with web app buttons
-   * @param params - Menu parameters
-   */
   async sendMainMenu({
     chatId,
     firstName,
@@ -85,9 +80,6 @@ export class TelegramService {
     });
   }
 
-  /**
-   * Handle subscription check callback
-   */
   private async handleSubscriptionCheck(
     userId: number,
     chatId: string,
@@ -103,7 +95,6 @@ export class TelegramService {
       try {
         await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
       } catch (deleteError) {
-        // Silently ignore delete errors (message may already be deleted)
         const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
         if (
           !errorMsg.includes("message can't be deleted for everyone") &&
@@ -129,7 +120,6 @@ export class TelegramService {
           show_alert: true,
         });
       } catch (answerError) {
-        // Silently ignore errors for old/invalid queries
         const errorMsg = answerError instanceof Error ? answerError.message : String(answerError);
         if (
           !errorMsg.includes('query is too old') &&
@@ -142,9 +132,6 @@ export class TelegramService {
     }
   }
 
-  /**
-   * Handle callback queries
-   */
   async handleCallbackQuery(
     callbackQuery: TelegramBot.CallbackQuery,
   ): Promise<void> {
@@ -175,7 +162,6 @@ export class TelegramService {
             try {
               await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
             } catch (deleteError) {
-              // Silently ignore delete errors (message may already be deleted)
               const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
               if (
                 !errorMsg.includes("Bad Request: message can't be deleted for everyone") &&
@@ -197,7 +183,7 @@ export class TelegramService {
             const messageDate = callbackQuery.message.date;
             const currentTime = Math.floor(Date.now() / 1000);
             const messageAge = currentTime - messageDate;
-            const MAX_DELETE_AGE = 48 * 60 * 60; // 48 hours in seconds
+            const MAX_DELETE_AGE = 48 * 60 * 60;
 
             if (messageAge > MAX_DELETE_AGE) {
               try {
@@ -206,7 +192,6 @@ export class TelegramService {
                   show_alert: true,
                 });
               } catch (answerError) {
-                // Silently ignore if answering fails (query too old)
                 const errorMsg = answerError instanceof Error ? answerError.message : String(answerError);
                 if (
                   !errorMsg.includes('query is too old') &&
@@ -223,7 +208,6 @@ export class TelegramService {
                   callbackQuery.message.message_id,
                 );
               } catch (deleteError) {
-                // Silently ignore delete errors (message may already be deleted)
                 const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
                 if (
                   !errorMsg.includes("Bad Request: message can't be deleted for everyone") &&
@@ -273,7 +257,6 @@ export class TelegramService {
             show_alert: true,
           });
         } catch (answerError) {
-          // Silently ignore if answering fails (query too old)
           const answerErrorMsg = answerError instanceof Error ? answerError.message : String(answerError);
           if (
             !answerErrorMsg.includes('query is too old') &&
@@ -291,7 +274,6 @@ export class TelegramService {
             show_alert: true,
           });
         } catch (answerError) {
-          // Silently ignore if answering fails (query too old)
           const answerErrorMsg = answerError instanceof Error ? answerError.message : String(answerError);
           if (
             !answerErrorMsg.includes('query is too old') &&
@@ -305,17 +287,10 @@ export class TelegramService {
     }
   }
 
-  /**
-   * Get user statistics
-   */
   private async getStatistics(userId: number) {
     return userService.getUserStats(userId);
   }
 
-  /**
-   * Process /start command - register or update user
-   * @param msg - Telegram message
-   */
   async processStart(msg: TelegramBot.Message): Promise<void> {
     if (!msg.from || msg.from?.is_bot || !TBOT) return;
 
@@ -323,31 +298,42 @@ export class TelegramService {
     let isNewUser = false;
 
     try {
-      const existingUser = await userService.findByTelegramId(
-        BigInt(msg.from.id),
-      );
+      // Find user by TELEGRAM identity
+      let identity = await prisma.userIdentity.findUnique({
+        where: {
+          provider_providerId: {
+            provider: AuthProvider.TELEGRAM,
+            providerId: String(msg.from.id),
+          },
+        },
+        include: { user: true },
+      });
+
+      let existingUser = identity?.user ?? null;
 
       if (existingUser) {
         if (existingUser.chatId !== currentChatId) {
-          await userService.updateChatId(BigInt(msg.from.id), currentChatId);
+          await userService.updateChatId(existingUser.id, currentChatId);
         }
       } else {
         const envInfo = await generateUserEnvInfo();
         isNewUser = true;
-        await userService.createUser({
-          telegramId: BigInt(msg.from.id),
-          username: msg.from.username,
-          languageCode: msg.from.language_code,
-          chatId: currentChatId,
-          name: `${msg.from.first_name} ${msg.from.last_name || ''}`.trim(),
-          envInfo: envInfo,
-        });
 
-        // Note: New user subscription (14 days free) should be handled separately
-        // as it requires additional business logic
+        await identityService.createUserWithIdentity(
+          {
+            name: `${msg.from.first_name} ${msg.from.last_name || ''}`.trim(),
+            username: msg.from.username,
+            languageCode: msg.from.language_code,
+            chatId: currentChatId,
+            envInfo: envInfo as any,
+          },
+          {
+            provider: AuthProvider.TELEGRAM,
+            providerId: String(msg.from.id),
+          },
+        );
       }
 
-      // Check channel subscription
       const isSubscribed =
         await channelSubscriptionService.checkUserSubscription(msg.from.id);
 
@@ -374,19 +360,23 @@ export class TelegramService {
     }
   }
 
-  /**
-   * Handle incoming messages
-   */
   async handleMessage(msg: TelegramBot.Message): Promise<void> {
     if (!msg.text || !msg.from || !TBOT) return;
 
     const userId = msg.from.id;
     const chatId = String(msg.chat.id);
 
-    const user = await userService.findByTelegramId(BigInt(userId));
-    if (!user) return;
+    const identity = await prisma.userIdentity.findUnique({
+      where: {
+        provider_providerId: {
+          provider: AuthProvider.TELEGRAM,
+          providerId: String(userId),
+        },
+      },
+    });
 
-    // Handle main menu request
+    if (!identity) return;
+
     if (msg.text === '🏠 Главное меню') {
       await this.sendMainMenu({
         chatId,
@@ -396,12 +386,6 @@ export class TelegramService {
     }
   }
 
-  /**
-   * Send a text message to a chat
-   * @param chatId - Telegram chat ID
-   * @param text - Message text (supports HTML formatting)
-   * @param options - Additional message options
-   */
   async sendMessage(
     chatId: string,
     text: string,
@@ -430,11 +414,6 @@ export class TelegramService {
     }
   }
 
-  /**
-   * Send a trigger notification to a user
-   * @param chatId - Telegram chat ID
-   * @param triggerData - Trigger notification data
-   */
   async sendTriggerNotification(
     chatId: string,
     triggerData: {
@@ -461,11 +440,6 @@ export class TelegramService {
     await this.sendMessage(chatId, message);
   }
 
-  /**
-   * Send a booking success notification
-   * @param chatId - Telegram chat ID
-   * @param bookingData - Booking notification data
-   */
   async sendBookingSuccess(
     chatId: string,
     bookingData: {
@@ -485,11 +459,6 @@ export class TelegramService {
     await this.sendMessage(chatId, message);
   }
 
-  /**
-   * Send a booking error notification
-   * @param chatId - Telegram chat ID
-   * @param errorData - Error notification data
-   */
   async sendBookingError(
     chatId: string,
     errorData: {
@@ -508,11 +477,6 @@ ${errorData.error}
     await this.sendMessage(chatId, message);
   }
 
-  /**
-   * Send subscription expiration notification
-   * @param chatId - Telegram chat ID
-   * @param daysRemaining - Days until expiration
-   */
   async sendSubscriptionExpirationWarning(
     chatId: string,
     daysRemaining: number,
@@ -526,11 +490,6 @@ ${errorData.error}
     await this.sendMessage(chatId, message);
   }
 
-  /**
-   * Send autobooking completion notification
-   * @param chatId - Telegram chat ID
-   * @param data - Completion data
-   */
   async sendAutobookingCompleted(
     chatId: string,
     data: {
@@ -549,9 +508,6 @@ ${errorData.error}
     await this.sendMessage(chatId, message);
   }
 
-  /**
-   * Helper to pluralize Russian words
-   */
   private pluralize(n: number, one: string, few: string, many: string): string {
     const mod10 = n % 10;
     const mod100 = n % 100;

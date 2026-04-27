@@ -6,8 +6,6 @@ import axios, {
 } from 'axios';
 import { getInitData } from '../utils/telegram';
 
-// Token storage key for browser auth (legacy single token, kept for compatibility)
-const AUTH_TOKEN_KEY = 'auth_token';
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 const TOKEN_EXPIRES_AT_KEY = 'auth_token_expires_at';
@@ -38,12 +36,7 @@ function getAuthToken(): string | null {
     return getInitData();
   }
 
-  // Prefer the new access token, fallback to legacy token
-  const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-  if (accessToken) return accessToken;
-
-  // Fallback to legacy token for backward compatibility
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 /**
@@ -80,11 +73,8 @@ export function setAuthToken(token: string | null): void {
 
   if (token) {
     localStorage.setItem(ACCESS_TOKEN_KEY, token);
-    // Also set legacy key for compatibility during transition
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
   } else {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(AUTH_TOKEN_KEY);
   }
 }
 
@@ -96,7 +86,6 @@ function clearAllTokens(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(TOKEN_EXPIRES_AT_KEY);
-  localStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
 // Refresh promise lock to prevent concurrent refresh requests
@@ -126,8 +115,6 @@ async function performRefresh(): Promise<boolean> {
       localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
       localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
       localStorage.setItem(TOKEN_EXPIRES_AT_KEY, String(Date.now() + expiresIn * 1000));
-      // Also update legacy token for compatibility
-      localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
 
       console.log('[API Client] Tokens refreshed successfully');
       return true;

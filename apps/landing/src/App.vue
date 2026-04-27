@@ -3,7 +3,10 @@
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-deep-bg/80 backdrop-blur-xl border-b border-deep-border/50">
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="/" class="text-2xl font-bold text-gradient">WBOI</a>
+        <a href="/" class="flex items-center gap-2">
+          <img src="/logo.png" alt="WBOI" class="h-8 w-auto block" draggable="false" />
+          <span class="text-2xl font-bold text-gradient">WBOI</span>
+        </a>
 
         <div class="hidden md:flex items-center gap-8">
           <a href="#features" class="text-gray-400 hover:text-white transition-colors">Возможности</a>
