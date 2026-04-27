@@ -210,9 +210,6 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
       listStore.autobookings.unshift(autobooking);
       listStore.statusCounts['ACTIVE'] = (listStore.statusCounts['ACTIVE'] || 0) + 1;
 
-      // Decrease user's autobooking count
-      userStore.decreaseAutobookingCount();
-
       // Show success toast with warehouse name
       const warehouseName = autobooking.warehouseId 
         ? warehouseStore.getWarehouseName(autobooking.warehouseId)

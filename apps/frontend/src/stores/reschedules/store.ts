@@ -140,9 +140,6 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         // Clear cache since data has changed
         clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
-        // Decrease user's autobooking count as 1 credit was consumed
-        userStore.decreaseAutobookingCount();
-
         // Show success toast
         const warehouseName = warehouseStore.getWarehouseName(response.warehouseId);
         toastHelpers.success(
@@ -221,9 +218,6 @@ export const useRescheduleStore = defineStore('reschedule', () => {
         // Clear cache since data has changed
         clearStatusCache();
         await fetchReschedules(currentPage.value); // Refresh list
-        // Increase user's autobooking count as 1 credit was returned
-        userStore.increaseAutobookingCount();
-
         // Show success toast
         const warehouseName = reschedule
           ? warehouseStore.getWarehouseName(reschedule.warehouseId)

@@ -28,8 +28,7 @@
         :selected-status="listStore.selectedStatus"
         :search-query="listStore.searchQuery"
         search-placeholder="Поиск по складу..."
-        :title="`доступно кредитов: ${userStore.user.autobookingCount}`"
-        :add-button-disabled="userStore.user.autobookingCount === 0"
+        title="Автобронирования"
         add-button-text="добавить"
         :empty-message="noBookingsMessage"
         :show-empty="!listStore.filteredBookings.length"
@@ -38,26 +37,8 @@
         @update:search-query="listStore.searchQuery = $event"
         @add="openCreateDialog"
       >
-        <!-- Warning Slot -->
-        <template #warning>
-          <Message
-            v-if="userStore.user.autobookingCount === 0"
-            severity="error"
-            class="w-full"
-          >
-            <div class="flex items-center justify-between w-full">
-              <span>Приобретите пакет кредитов, чтобы создать новые, или удалите
-                архивные.</span>
-              <Button
-                variant="outlined"
-                severity="primary"
-                size="small"
-                @click="navigateToStoreBookings"
-              >
-                купить
-              </Button>
-            </div>
-          </Message>
+        <template #header-extra>
+          <AutobookingSlotCounter :used="activeCount" :max="maxSlots" />
         </template>
 
         <!-- List Content -->
@@ -85,12 +66,11 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInfiniteScroll } from '@vueuse/core';
-import { AUTOBOOKING_STATUSES } from '../../constants';
+import { AUTOBOOKING_STATUSES, AUTOBOOKING_SLOTS } from '../../constants';
 import { useUserStore } from '@/stores/user';
 import { useAutobookingListStore } from '@/stores/autobooking';
 import { draftsAPI } from '../../api';
-import Button from 'primevue/button';
-import Message from 'primevue/message';
+import AutobookingSlotCounter from '@/components/global/AutobookingSlotCounter.vue';
 import TaskListLayout from './TaskListLayout.vue';
 import TaskBookingCard from './TaskBookingCard.vue';
 import AutobookingDraftGoodsModal from '../autobooking/DraftGoodsModal.vue';
@@ -116,6 +96,9 @@ const emit = defineEmits<{
 const router = useRouter();
 const userStore = useUserStore();
 const listStore = useAutobookingListStore();
+
+const activeCount = computed(() => listStore.statusCounts[AUTOBOOKING_STATUSES.ACTIVE] || 0);
+const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'LITE' | 'PRO' | 'MAX'] || 2);
 
 // Dialog state
 const showCreateDialog = ref(false);
@@ -169,10 +152,6 @@ function handleCreated() {
 function handleUpdated() {
   // Refresh the list after update
   listStore.fetchData();
-}
-
-function navigateToStoreBookings() {
-  router.push({ name: 'StoreBookings' });
 }
 
 // Handle view goods event from BookingCard
