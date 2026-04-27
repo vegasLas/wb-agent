@@ -77,7 +77,7 @@ Base path: `/api/v1/user`
 ```typescript
 interface User {
   name?: string;
-  autobookingCount: number;
+  subscriptionTier?: 'LITE' | 'PRO' | 'MAX';
   subscriptionExpiresAt: string | null;
   agreeTerms: boolean;
   selectedAccountId?: string;
