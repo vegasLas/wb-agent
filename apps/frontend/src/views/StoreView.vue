@@ -1,13 +1,12 @@
 <template>
   <div class="store-component space-y-6">
-    <!-- Header with Subscription Status Badge and Toggle Buttons -->
+    <!-- Header with Subscription Status Badge -->
     <div class="flex justify-between mb-6 items-center">
-      <!-- Subscription Status Badge -->
-      <div class="flex items-center">
+      <div class="flex items-center gap-2">
         <Tag
           v-if="userStore.subscriptionActive"
           severity="success"
-          :value="`осталось дней: ${userStore.subscriptionRemainingDays}`"
+          :value="`Подписка ${userStore.subscriptionTier} · ${userStore.subscriptionRemainingDays} дн.`"
         />
         <Tag
           v-else
@@ -16,82 +15,203 @@
           value="нет подписки"
         />
       </div>
-
-      <!-- Toggle Buttons Group -->
-      <div class="flex gap-2">
-        <Button
-          :severity="activeTab === 'subscription' ? 'primary' : 'secondary'"
-          size="small"
-          @click="activeTab = 'subscription'"
-        >
-          подписка
-        </Button>
-        <Button
-          :severity="activeTab === 'bookings' ? 'primary' : 'secondary'"
-          size="small"
-          @click="activeTab = 'bookings'"
-        >
-          кредиты
-        </Button>
-      </div>
     </div>
 
-    <!-- Content -->
-    <div class="tab-content">
-      <!-- Subscription Tab -->
-      <div v-if="activeTab === 'subscription'">
-        <Card class="mb-4">
-          <template #title>
-            <h3 class="font-medium">
-              Статус подписки
-            </h3>
-          </template>
-          <template #content>
-            <div
-              v-if="userStore.subscriptionActive"
-              class="text-green-600 dark:text-green-400"
-            >
-              <i class="pi pi-check-circle mr-1" />
-              Активна до {{ formatDate(userStore.user.subscriptionExpiresAt) }}
-            </div>
-            <div
-              v-else
-              class="text-red-500 dark:text-red-400"
-            >
-              <i class="pi pi-times-circle mr-1" />
-              Не активна
-            </div>
-          </template>
-        </Card>
-        <SubscriptionTariffs @select="onSelectTariff" />
-      </div>
+    <!-- Current Plan Info -->
+    <Card v-if="userStore.subscriptionActive" class="mb-4">
+      <template #content>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">Текущий план</div>
+            <div class="text-xl font-bold">{{ userStore.subscriptionTier }}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-gray-500 dark:text-gray-400">Действует до</div>
+            <div class="text-lg font-medium">{{ formatDate(userStore.user.subscriptionExpiresAt) }}</div>
+          </div>
+        </div>
+      </template>
+    </Card>
 
-      <!-- Bookings/Credits Tab -->
-      <div v-else-if="activeTab === 'bookings'">
-        <PaymentTariffs @select="onSelectBookingTariff" />
-      </div>
+    <!-- Three Tier Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card
+        v-for="tier in tiers"
+        :key="tier.key"
+        :class="[
+          'hover:shadow-lg transition-shadow',
+          currentTier === tier.key ? 'ring-2 ring-green-500' : '',
+        ]"
+      >
+        <template #title>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">{{ tier.label }}</h3>
+            <Tag v-if="tier.popular" severity="warn" value="★ Popular" />
+            <Tag v-if="currentTier === tier.key" severity="success" value="Активен" />
+          </div>
+        </template>
+
+        <template #content>
+          <div class="space-y-4">
+            <div class="text-center">
+              <p class="text-3xl font-bold">{{ tier.price }} ₽</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">/ месяц</p>
+            </div>
+
+            <ul class="space-y-2 text-sm">
+              <li class="flex items-center gap-2">
+                <i class="pi pi-check text-green-500" />
+                <span>{{ tier.slots }} активных броней</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="pi pi-check text-green-500" />
+                <span>{{ tier.accounts }} WB аккаунт{{ tier.accounts === 1 ? '' : tier.accounts === 3 ? 'а' : 'ов' }}</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="pi pi-check text-green-500" />
+                <span>AI чат: {{ tier.aiBudget }}₽/мес</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="pi pi-check text-green-500" />
+                <span>Отзывы: {{ tier.feedbackQuota }}</span>
+              </li>
+              <li
+                v-for="feature in tier.features"
+                :key="feature"
+                class="flex items-center gap-2"
+              >
+                <i class="pi pi-check text-green-500" />
+                <span>{{ feature }}</span>
+              </li>
+            </ul>
+
+            <!-- Period Selector -->
+            <div class="flex gap-2 justify-center">
+              <Button
+                v-for="tariff in tier.tariffs"
+                :key="tariff.id"
+                size="small"
+                :severity="selectedTariff?.id === tariff.id ? 'primary' : 'secondary'"
+                @click="selectedTariff = tariff"
+              >
+                {{ tariff.days === 30 ? '1 мес' : tariff.days === 90 ? '3 мес' : '1 год' }}
+              </Button>
+            </div>
+
+            <div class="space-y-2">
+              <Button
+                v-if="selectedTariff?.tier === tier.key"
+                class="w-full"
+                @click="onSelectTariff(selectedTariff)"
+              >
+                Оформить за {{ selectedTariff.price }} ₽
+              </Button>
+              <Button
+                v-else
+                class="w-full"
+                severity="secondary"
+                @click="selectedTariff = tier.tariffs[0]"
+              >
+                Выбрать
+              </Button>
+
+              <Button
+                v-if="!userStore.subscriptionActive && !userStore.user.trialUsedAt"
+                class="w-full"
+                severity="secondary"
+                variant="outlined"
+                @click="activateTrial(tier.key)"
+              >
+                Пробный период 14 дней
+              </Button>
+            </div>
+          </div>
+        </template>
+      </Card>
     </div>
+
+    <!-- Payment Modal -->
+    <PaymentModal
+      v-if="selectedTariffForModal && showPaymentModal"
+      v-model="showPaymentModal"
+      :tariff-id="selectedTariffForModal.id"
+      :tariff-name="selectedTariffForModal.name || ''"
+      :tariff-price="selectedTariffForModal.price"
+      @update:model-value="handleModalClose"
+      @success="handleModalSuccess"
+      @fail="handleModalFail"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useViewReady } from '../composables/ui';
+import { paymentsAPI } from '@/api/payments/api';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
-import SubscriptionTariffs from '../components/payment/SubscriptionTariffs.vue';
-import PaymentTariffs from '../components/payment/PaymentTariffs.vue';
+import { useToast } from 'primevue/usetoast';
+import PaymentModal from '../components/payment/PaymentModal.vue';
 
-import type { SubscriptionTariff, BookingTariff } from '../constants';
+import {
+  LITE_TARIFFS,
+  PRO_TARIFFS,
+  MAX_TARIFFS,
+  AUTOBOOKING_SLOTS,
+  MAX_ACCOUNTS,
+  AI_CHAT_BUDGET_USD,
+  FEEDBACK_QUOTA,
+} from '../constants';
+import type { SubscriptionTariff, SubscriptionTier } from '../constants';
 
-// Skeleton control
+const toast = useToast();
 const { viewReady } = useViewReady();
-
 const userStore = useUserStore();
 
-const activeTab = ref<'subscription' | 'bookings'>('subscription');
+const selectedTariff = ref<SubscriptionTariff | null>(null);
+const showPaymentModal = ref(false);
+const selectedTariffForModal = ref<SubscriptionTariff | null>(null);
+
+const currentTier = computed(() => userStore.subscriptionTier);
+
+const tiers = [
+  {
+    key: 'LITE' as SubscriptionTier,
+    label: 'Lite',
+    price: LITE_TARIFFS[0].price,
+    slots: AUTOBOOKING_SLOTS.LITE,
+    accounts: MAX_ACCOUNTS.LITE,
+    aiBudget: AI_CHAT_BUDGET_USD.LITE,
+    feedbackQuota: FEEDBACK_QUOTA.LITE,
+    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама', 'MPStats Basic'],
+    tariffs: LITE_TARIFFS,
+  },
+  {
+    key: 'PRO' as SubscriptionTier,
+    label: 'Pro',
+    price: PRO_TARIFFS[0].price,
+    slots: AUTOBOOKING_SLOTS.PRO,
+    accounts: MAX_ACCOUNTS.PRO,
+    aiBudget: AI_CHAT_BUDGET_USD.PRO,
+    feedbackQuota: FEEDBACK_QUOTA.PRO,
+    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама', 'MPStats Advanced'],
+    tariffs: PRO_TARIFFS,
+    popular: true,
+  },
+  {
+    key: 'MAX' as SubscriptionTier,
+    label: 'Max',
+    price: MAX_TARIFFS[0].price,
+    slots: AUTOBOOKING_SLOTS.MAX,
+    accounts: '∞',
+    aiBudget: AI_CHAT_BUDGET_USD.MAX,
+    feedbackQuota: '∞',
+    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама', 'MPStats Advanced'],
+    tariffs: MAX_TARIFFS,
+  },
+];
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '-';
@@ -104,32 +224,43 @@ function formatDate(dateString: string | null): string {
 }
 
 function onSelectTariff(tariff: SubscriptionTariff) {
-  // Handle tariff selection - will be implemented in Plan 12
-  console.log('Selected subscription tariff:', tariff);
+  selectedTariffForModal.value = tariff;
+  showPaymentModal.value = true;
 }
 
-function onSelectBookingTariff(tariff: BookingTariff) {
-  // Handle booking tariff selection - will be implemented in Plan 12
-  console.log('Selected booking tariff:', tariff);
+function handleModalClose() {
+  showPaymentModal.value = false;
+  selectedTariffForModal.value = null;
 }
 
-// Listen for custom event to switch to subscription tab
-function handleSwitchToSubscription() {
-  activeTab.value = 'subscription';
+function handleModalSuccess() {
+  showPaymentModal.value = false;
+  selectedTariffForModal.value = null;
 }
 
-onMounted(() => {
-  window.addEventListener(
-    'switch-to-subscription-tab',
-    handleSwitchToSubscription,
-  );
-  viewReady();
-});
+function handleModalFail() {
+  // Keep modal open to show error
+}
 
-onUnmounted(() => {
-  window.removeEventListener(
-    'switch-to-subscription-tab',
-    handleSwitchToSubscription,
-  );
-});
+async function activateTrial(tier: SubscriptionTier) {
+  try {
+    const response = await paymentsAPI.activateTrial(tier);
+    toast.add({
+      severity: 'success',
+      summary: 'Пробный период активирован',
+      detail: response.message,
+      life: 5000,
+    });
+    await userStore.fetchUser();
+  } catch (error: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Ошибка',
+      detail: error?.response?.data?.message || 'Не удалось активировать пробный период',
+      life: 5000,
+    });
+  }
+}
+
+viewReady();
 </script>
