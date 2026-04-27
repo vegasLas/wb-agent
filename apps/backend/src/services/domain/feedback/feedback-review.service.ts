@@ -25,6 +25,7 @@ function sleep(ms: number): Promise<void> {
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
 import type { FeedbackRule } from '@prisma/client';
+import { FEEDBACK_QUOTA } from '@/constants/payments';
 
 export interface ProcessResult {
   processed: number;
@@ -63,6 +64,29 @@ export class FeedbackReviewService {
    * Used by both cron job and manual "Answer All" button.
    * When nmIds is provided, only feedbacks for those nmIds are processed.
    */
+  private async checkFeedbackQuota(
+    userId: number,
+    tier: 'LITE' | 'PRO' | 'MAX',
+  ): Promise<{ allowed: boolean; used: number; max: number }> {
+    const max = FEEDBACK_QUOTA[tier];
+    if (max === Infinity) {
+      return { allowed: true, used: 0, max: Infinity };
+    }
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const used = await prisma.feedbackAutoAnswer.count({
+      where: {
+        userId,
+        createdAt: { gte: startOfMonth },
+        status: { in: ['PENDING', 'POSTED'] },
+      },
+    });
+
+    return { allowed: used < max, used, max };
+  }
+
   async processUnansweredFeedbacks(
     userId: number,
     supplierId: string,
@@ -74,6 +98,20 @@ export class FeedbackReviewService {
       skipped: 0,
       failed: 0,
     };
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { subscriptionTier: true },
+    });
+    const tier = (user?.subscriptionTier ?? 'LITE') as 'LITE' | 'PRO' | 'MAX';
+
+    const quota = await this.checkFeedbackQuota(userId, tier);
+    if (!quota.allowed) {
+      logger.info(
+        `Feedback quota exceeded for user ${userId}: ${quota.used}/${quota.max}`,
+      );
+      return result;
+    }
 
     const globalSettings = await prisma.feedbackSettings.findUnique({
       where: {
@@ -196,7 +234,16 @@ export class FeedbackReviewService {
         }
       }
 
+      let quotaRemaining = quota.max === Infinity ? Infinity : quota.max - quota.used;
+
       for (const feedback of unansweredFeedbacks) {
+        if (quotaRemaining !== Infinity && quotaRemaining <= 0) {
+          logger.info(
+            `Feedback quota reached for user ${userId} during batch processing`,
+          );
+          break;
+        }
+
         try {
           const nmId = feedback.productInfo?.wbArticle;
           const rejectedAnswers = nmId
@@ -236,7 +283,10 @@ export class FeedbackReviewService {
           );
 
           result.processed++;
-          if (processResult === 'posted') result.posted++;
+          if (processResult === 'posted') {
+            result.posted++;
+            if (quotaRemaining !== Infinity) quotaRemaining--;
+          }
           else if (processResult === 'skipped') result.skipped++;
         } catch (error) {
           result.failed++;
@@ -277,6 +327,20 @@ export class FeedbackReviewService {
       skipped: 0,
       failed: 0,
     };
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { subscriptionTier: true },
+    });
+    const tier = (user?.subscriptionTier ?? 'LITE') as 'LITE' | 'PRO' | 'MAX';
+
+    const quota = await this.checkFeedbackQuota(userId, tier);
+    if (!quota.allowed) {
+      logger.info(
+        `Feedback quota exceeded for user ${userId} (manual): ${quota.used}/${quota.max}`,
+      );
+      return result;
+    }
 
     try {
       const [answeredFeedbacks, unansweredFeedbacksArr] = await Promise.all([
@@ -395,14 +459,19 @@ export class FeedbackReviewService {
         rejectedAnswersByNmId.set(nmId, rejected);
       }
 
-      // Phase 1: Generate all answers in parallel
+      // Phase 1: Generate all answers in parallel (respect quota)
       type GeneratedItem = {
         feedback: FeedbackItem;
         answerText: string;
         nmId: number;
       };
 
+      let quotaRemaining = quota.max === Infinity ? Infinity : quota.max - quota.used;
+
       const generationTasks = unansweredFeedbacks.map(async (feedback) => {
+        if (quotaRemaining !== Infinity && quotaRemaining <= 0) {
+          return null;
+        }
         try {
           const nmId = feedback.productInfo?.wbArticle;
           if (!nmId) {
@@ -526,6 +595,7 @@ export class FeedbackReviewService {
             },
           });
 
+          if (quotaRemaining !== Infinity) quotaRemaining--;
           return { feedback, answerText, nmId };
         } catch (error) {
           logger.error(

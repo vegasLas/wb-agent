@@ -1,5 +1,6 @@
 import { prisma } from '@/config/database';
 import type { Autobooking } from '@prisma/client';
+import { AUTOBOOKING_SLOTS } from '@/constants/payments';
 
 /**
  * Valid date types for autobooking
@@ -128,13 +129,13 @@ export class AutobookingService {
 
   /**
    * Create a new autobooking
-   * Checks subscription, validates account, manages credits
+   * Checks subscription, validates account, checks slot limits
    */
   async createAutobooking(
     userId: number,
     data: CreateAutobookingDto,
   ): Promise<Autobooking> {
-    // Get user for subscription and credit check
+    // Get user for subscription and slot check
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -176,21 +177,6 @@ export class AutobookingService {
       );
     }
 
-    // Calculate required credits
-    const requiredCount =
-      data.dateType === 'CUSTOM_DATES' && data.customDates?.length
-        ? data.customDates.length
-        : 1;
-
-    // Check credits
-    if (user.autobookingCount < requiredCount) {
-      throw new AutobookingUpdateError(
-        `У вас недостаточно кредитов. Требуется: ${requiredCount}, доступно: ${user.autobookingCount}`,
-        'INSUFFICIENT_CREDITS',
-        403,
-      );
-    }
-
     // Normalize dates to UTC midnight
     const normalizedStartDate = data.startDate
       ? new Date(
@@ -218,9 +204,21 @@ export class AutobookingService {
           ),
       ) || [];
 
-    // Create autobooking and decrement credits in transaction
-    const [autobooking] = await prisma.$transaction([
-      prisma.autobooking.create({
+    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'LITE'];
+
+    // Check active slot limit and create atomically
+    const autobooking = await prisma.$transaction(async (tx) => {
+      const activeCount = await tx.autobooking.count({
+        where: { userId, status: { in: ['PENDING', 'ACTIVE'] } },
+      });
+      if (activeCount >= maxSlots) {
+        throw new AutobookingUpdateError(
+          `Достигнут лимит активных броней (${maxSlots}). Обновите подписку для увеличения лимита.`,
+          'SLOT_LIMIT_REACHED',
+          403,
+        );
+      }
+      return tx.autobooking.create({
         data: {
           userId,
           supplierId: account.selectedSupplierId,
@@ -236,19 +234,15 @@ export class AutobookingService {
           maxCoefficient: data.maxCoefficient,
           monopalletCount: data.monopalletCount,
         },
-      }),
-      prisma.user.update({
-        where: { id: userId },
-        data: { autobookingCount: { decrement: requiredCount } },
-      }),
-    ]);
+      });
+    });
 
     return autobooking;
   }
 
   /**
    * Update an autobooking
-   * Validates ownership, handles credit adjustments
+   * Validates ownership, validates update parameters
    */
   async updateAutobooking(
     userId: number,
@@ -287,24 +281,7 @@ export class AutobookingService {
       );
     }
 
-    // Calculate credit adjustment
-    const countAdjustment = this.calculateCountAdjustment(existing, data);
-
-    // Validate user has enough credits if adjustment is positive
-    if (countAdjustment > 0) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { autobookingCount: true },
-      });
-
-      if (!user || user.autobookingCount < countAdjustment) {
-        throw new AutobookingUpdateError(
-          'Insufficient autobooking count. Required: ' + countAdjustment,
-          'INSUFFICIENT_AUTOBOOKING_COUNT',
-          403,
-        );
-      }
-    }
+    // Note: credit-based logic removed. Slot limits are checked at creation time only.
 
     // Build update data with validation
     const updateData: Partial<Autobooking> = {};
@@ -390,31 +367,16 @@ export class AutobookingService {
     // Validate business rules
     this.validateBusinessRules(updateData, data);
 
-    // Perform update with credit adjustment
-    return await prisma.$transaction(async (tx) => {
-      const updated = await tx.autobooking.update({
-        where: { id: data.id },
-        data: updateData,
-      });
-
-      if (countAdjustment !== 0) {
-        await tx.user.update({
-          where: { id: userId },
-          data: {
-            autobookingCount: {
-              increment: -countAdjustment,
-            },
-          },
-        });
-      }
-
-      return updated;
+    // Perform update
+    return await prisma.autobooking.update({
+      where: { id: data.id },
+      data: updateData,
     });
   }
 
   /**
    * Delete an autobooking
-   * Returns credits if not completed
+   * Slots are freed automatically when the record is deleted
    */
   async deleteAutobooking(
     userId: number,
@@ -432,52 +394,12 @@ export class AutobookingService {
       );
     }
 
-    // Calculate return count
-    const returnCount =
-      autobooking.dateType === 'CUSTOM_DATES' &&
-      Array.isArray(autobooking.customDates)
-        ? autobooking.customDates.length
-        : 1;
-
-    await prisma.$transaction(async (tx) => {
-      await tx.autobooking.delete({ where: { id: autobookingId } });
-
-      // Return credits if not completed
-      if (autobooking.status !== 'COMPLETED') {
-        await tx.user.update({
-          where: { id: userId },
-          data: { autobookingCount: { increment: returnCount } },
-        });
-      }
-    });
+    await prisma.autobooking.delete({ where: { id: autobookingId } });
 
     return {
-      message:
-        autobooking.status !== 'COMPLETED'
-          ? `Автобронирование успешно удалено. Вам возвращено ${returnCount} кредитов`
-          : 'Автобронирование успешно удалено',
-      returnedCredits: autobooking.status !== 'COMPLETED' ? returnCount : 0,
+      message: 'Автобронирование успешно удалено',
+      returnedCredits: 0,
     };
-  }
-
-  /**
-   * Calculate credit adjustment for update
-   */
-  private calculateCountAdjustment(
-    existing: Autobooking,
-    update: UpdateAutobookingDto,
-  ): number {
-    const currentDateType = this.validateDateType(existing.dateType);
-    const currentCost = this.calculateCost(
-      currentDateType,
-      existing.customDates || [],
-    );
-
-    const newDateType = update.dateType || currentDateType;
-    const newCustomDates = update.customDates || existing.customDates || [];
-    const newCost = this.calculateCost(newDateType, newCustomDates);
-
-    return newCost - currentCost;
   }
 
   /**
@@ -499,27 +421,6 @@ export class AutobookingService {
       );
     }
     return dateType as AutobookingDateType;
-  }
-
-  /**
-   * Calculate cost based on date type
-   */
-  private calculateCost(
-    dateType: AutobookingDateType,
-    customDates: Date[],
-  ): number {
-    switch (dateType) {
-      case 'CUSTOM_DATES':
-        return customDates.length;
-      case 'CUSTOM_DATES_SINGLE':
-        return 1;
-      case 'WEEK':
-      case 'MONTH':
-      case 'CUSTOM_PERIOD':
-        return 1;
-      default:
-        return 1;
-    }
   }
 
   /**

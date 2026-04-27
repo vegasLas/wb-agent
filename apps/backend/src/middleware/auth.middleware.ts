@@ -11,6 +11,7 @@ export interface AuthUser {
   id: number;
   authType: 'telegram' | 'browser';
   subscriptionExpiresAt?: Date | null;
+  subscriptionTier?: 'LITE' | 'PRO' | 'MAX';
   selectedAccountId?: string | null;
   chatId?: string | null;
 }
@@ -78,6 +79,7 @@ async function tryTelegramAuth(req: Request): Promise<AuthUser | null> {
       authType: 'telegram',
       selectedAccountId: user.selectedAccountId,
       subscriptionExpiresAt: user.subscriptionExpiresAt,
+      subscriptionTier: user.subscriptionTier ?? 'LITE',
       chatId: user.telegram?.chatId ?? null,
     };
   } catch (error) {
@@ -114,6 +116,7 @@ async function tryJWTAuth(req: Request): Promise<AuthUser | null> {
       authType: 'browser',
       selectedAccountId: user.selectedAccountId,
       subscriptionExpiresAt: user.subscriptionExpiresAt,
+      subscriptionTier: user.subscriptionTier ?? 'LITE',
       chatId: user.telegram?.chatId ?? null,
     };
   } catch (error) {
@@ -212,6 +215,7 @@ export const authenticate = async (
               authType: 'telegram',
               selectedAccountId: user.selectedAccountId,
               subscriptionExpiresAt: user.subscriptionExpiresAt,
+              subscriptionTier: user.subscriptionTier ?? 'LITE',
               chatId: user.telegram?.chatId ?? null,
             };
           }
