@@ -1,6 +1,7 @@
 import { prisma } from '@/config/database';
 import type { AutobookingReschedule } from '@prisma/client';
 import { AutobookingUpdateError } from './autobooking.service';
+import { RESCHEDULE_SLOTS } from '@/constants/payments';
 
 /**
  * Valid date types for reschedule
@@ -116,14 +117,14 @@ export class RescheduleService {
 
   /**
    * Create a new reschedule
-   * Checks subscription, validates account, manages credits
+   * Checks subscription, validates account, checks slot limits
    */
   async createReschedule(
     userId: number,
     selectedAccountId: string | null,
     data: CreateRescheduleDto,
   ): Promise<AutobookingReschedule> {
-    // Get user for subscription and credit check
+    // Get user for subscription and slot check
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -174,18 +175,6 @@ export class RescheduleService {
       );
     }
 
-    // Calculate required autobooking count (always 1 for reschedule)
-    const requiredCount = 1;
-
-    // Check if user has enough autobooking slots
-    if (user.autobookingCount < requiredCount) {
-      throw new AutobookingUpdateError(
-        `У вас недостаточно кредитов. Требуется: ${requiredCount}, доступно: ${user.autobookingCount}`,
-        'INSUFFICIENT_CREDITS',
-        403,
-      );
-    }
-
     // Normalize dates to UTC midnight (matching deprecated project)
     const normalizedStartDate = data.startDate
       ? new Date(new Date(data.startDate).setUTCHours(0, 0, 0, 0))
@@ -204,9 +193,21 @@ export class RescheduleService {
         )
       : [];
 
-    // Create reschedule and decrement credits in transaction
-    const [reschedule] = await prisma.$transaction([
-      prisma.autobookingReschedule.create({
+    const maxSlots = RESCHEDULE_SLOTS[user.subscriptionTier ?? 'LITE'];
+
+    // Check active reschedule slot limit and create atomically
+    const reschedule = await prisma.$transaction(async (tx) => {
+      const activeCount = await tx.autobookingReschedule.count({
+        where: { userId, status: { in: ['PENDING', 'ACTIVE'] } },
+      });
+      if (activeCount >= maxSlots) {
+        throw new AutobookingUpdateError(
+          `Достигнут лимит активных перепланирований (${maxSlots}). Обновите подписку для увеличения лимита.`,
+          'SLOT_LIMIT_REACHED',
+          403,
+        );
+      }
+      return tx.autobookingReschedule.create({
         data: {
           userId,
           supplierId: account.selectedSupplierId,
@@ -220,16 +221,8 @@ export class RescheduleService {
           supplyType: data.supplyType,
           supplyId: data.supplyId,
         },
-      }),
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          autobookingCount: {
-            decrement: requiredCount,
-          },
-        },
-      }),
-    ]);
+      });
+    });
 
     return reschedule;
   }
@@ -326,7 +319,7 @@ export class RescheduleService {
 
   /**
    * Delete a reschedule
-   * Returns 1 credit if not completed
+   * Slots are freed automatically when the record is deleted
    */
   async deleteReschedule(
     userId: number,
@@ -356,25 +349,14 @@ export class RescheduleService {
       );
     }
 
-    // Delete reschedule and return 1 autobooking count in a transaction
-    await prisma.$transaction([
-      prisma.autobookingReschedule.delete({
-        where: { id: rescheduleId },
-      }),
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          autobookingCount: {
-            increment: 1,
-          },
-        },
-      }),
-    ]);
+    // Delete reschedule
+    await prisma.autobookingReschedule.delete({
+      where: { id: rescheduleId },
+    });
 
     return {
-      message:
-        'Перенос автобронирования успешно удален. Вам возвращено 1 кредит',
-      returnedCredits: 1,
+      message: 'Перенос автобронирования успешно удален',
+      returnedCredits: 0,
     };
   }
 
