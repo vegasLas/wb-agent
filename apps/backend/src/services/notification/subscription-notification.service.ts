@@ -7,6 +7,7 @@ interface SubscriptionNotification {
   chatId: string;
   daysLeft: number;
   subscriptionExpiresAt: Date;
+  user?: { subscriptionTier?: string } | null;
 }
 
 export class SubscriptionNotificationService {
@@ -82,6 +83,7 @@ export class SubscriptionNotificationService {
             chatId,
             daysLeft,
             subscriptionExpiresAt: user.subscriptionExpiresAt,
+            user: { subscriptionTier: user.subscriptionTier ?? 'LITE' },
           });
 
           // Mark as sent
@@ -119,26 +121,34 @@ export class SubscriptionNotificationService {
 
       let message = '';
 
+      const tierNames: Record<string, string> = {
+        LITE: 'Lite',
+        PRO: 'Pro',
+        MAX: 'Max',
+      };
+      const tierName = tierNames[notification.user?.subscriptionTier ?? 'LITE'] ?? '';
+      const tierLabel = tierName ? ` ${tierName}` : '';
+
       if (daysLeft === 7) {
         message =
-          `📅 <b>Подписка истекает через 7 дней</b>\n\n` +
-          `Ваша подписка истекает <b>${expirationDate}</b>.\n\n` +
+          `📅 <b>Подписка${tierLabel} истекает через 7 дней</b>\n\n` +
+          `Ваша подписка${tierLabel} истекает <b>${expirationDate}</b>.\n\n` +
           `🚨 Через 7 дней перестанут работать:\n` +
           `• 📅 Таймслоты - мониторинг доступных слотов\n` +
           `• 🤖 Автобронирования - автоматическое бронирование\n\n` +
           `Не забудьте продлить подписку!`;
       } else if (daysLeft === 3) {
         message =
-          `⚠️ <b>Подписка истекает через 3 дня</b>\n\n` +
-          `Ваша подписка истекает <b>${expirationDate}</b>.\n\n` +
+          `⚠️ <b>Подписка${tierLabel} истекает через 3 дня</b>\n\n` +
+          `Ваша подписка${tierLabel} истекает <b>${expirationDate}</b>.\n\n` +
           `🚨 Через 3 дня перестанут работать:\n` +
           `• 📅 Таймслоты - мониторинг доступных слотов\n` +
           `• 🤖 Автобронирования - автоматическое бронирование\n\n` +
           `Не забудьте продлить подписку!`;
       } else if (daysLeft === 1) {
         message =
-          `🚨 <b>Подписка истекает завтра!</b>\n\n` +
-          `Ваша подписка истекает <b>${expirationDate}</b>.\n\n` +
+          `🚨 <b>Подписка${tierLabel} истекает завтра!</b>\n\n` +
+          `Ваша подписка${tierLabel} истекает <b>${expirationDate}</b>.\n\n` +
           `🚨 Завтра перестанут работать:\n` +
           `• 📅 Таймслоты - мониторинг доступных слотов\n` +
           `• 🤖 Автобронирования - автоматическое бронирование\n\n` +
