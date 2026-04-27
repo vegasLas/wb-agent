@@ -2,6 +2,13 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticate, authenticateUser } from '@/middleware/auth.middleware';
 import { userService } from '@/services/user/';
+import { prisma } from '@/config/database';
+import {
+  AUTOBOOKING_SLOTS,
+  RESCHEDULE_SLOTS,
+  FEEDBACK_QUOTA,
+  AI_CHAT_BUDGET_USD,
+} from '@/constants/payments';
 import { ApiError } from '@/utils/errors';
 
 const router = Router();
@@ -18,8 +25,9 @@ router.get('/', authenticateUser, async (req, res, next) => {
     res.json({
       id: user.id,
       name: user.profile?.name,
-      autobookingCount: user.autobookingCount,
+      subscriptionTier: user.subscriptionTier,
       subscriptionExpiresAt: user.subscriptionExpiresAt,
+      maxAccounts: user.maxAccounts,
       agreeTerms: user.agreeTerms,
       selectedAccountId: user.selectedAccountId || undefined,
       payments: (user.payments || [])
@@ -119,5 +127,80 @@ router.post(
     }
   },
 );
+
+// GET /api/v1/user/limits - Return current tier limits
+router.get('/limits', authenticateUser, async (req, res, next) => {
+  try {
+    const user = await userService.findById(req.user!.id);
+
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    const tier = user.subscriptionTier ?? 'LITE';
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Count active autobooking slots
+    const activeAutobookings = await prisma.autobooking.count({
+      where: {
+        userId: user.id,
+        status: { in: ['PENDING', 'ACTIVE'] },
+      },
+    });
+
+    const activeReschedules = await prisma.autobookingReschedule.count({
+      where: {
+        userId: user.id,
+        status: { in: ['PENDING', 'ACTIVE'] },
+      },
+    });
+
+    // Count monthly feedback AI replies
+    const feedbackRepliesThisMonth = await prisma.feedbackAutoAnswer.count({
+      where: {
+        userId: user.id,
+        createdAt: { gte: startOfMonth },
+        status: { in: ['PENDING', 'POSTED'] },
+      },
+    });
+
+    // Sum AI chat usage
+    const aiChatSpentResult = await prisma.aiUsageLog.aggregate({
+      _sum: { cost: true },
+      where: {
+        userId: user.id,
+        feature: 'ai_chat',
+        createdAt: { gte: startOfMonth },
+      },
+    });
+    const aiChatSpentUsd = aiChatSpentResult._sum.cost ?? 0;
+
+    res.json({
+      tier,
+      subscriptionExpiresAt: user.subscriptionExpiresAt,
+      maxAccounts: user.maxAccounts,
+      autobookingSlots: {
+        used: activeAutobookings,
+        max: AUTOBOOKING_SLOTS[tier],
+      },
+      rescheduleSlots: {
+        used: activeReschedules,
+        max: RESCHEDULE_SLOTS[tier],
+      },
+      feedbackQuota: {
+        used: feedbackRepliesThisMonth,
+        max: FEEDBACK_QUOTA[tier] === Infinity ? null : FEEDBACK_QUOTA[tier],
+      },
+      aiChatBudget: {
+        spent: Math.round(aiChatSpentUsd * 1000) / 1000,
+        max: AI_CHAT_BUDGET_USD[tier],
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
