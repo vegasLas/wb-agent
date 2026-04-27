@@ -33,22 +33,8 @@
           </div>
         </div>
 
-        <!-- Tabs -->
-        <div class="flex gap-2 mb-6 p-1 bg-[var(--color-elevated)] rounded-xl">
-          <button
-            v-for="tab in tabs"
-            :key="tab.key"
-            class="flex-1 py-2 text-sm font-medium rounded-lg transition-colors"
-            :class="activeTab === tab.key ? 'bg-purple text-white' : 'text-secondary hover:text-theme'"
-            @click="activeTab = tab.key"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-
         <!-- Email Login Form -->
         <form
-          v-if="activeTab === 'email'"
           class="space-y-4"
           @submit.prevent="handleEmailLogin"
         >
@@ -100,62 +86,6 @@
             type="submit"
             :loading="authStore.isLoading"
             :disabled="authStore.isLoading || !emailForm.email || !emailForm.password"
-            class="w-full mt-2"
-            label="Войти"
-            icon="pi pi-sign-in"
-          />
-        </form>
-
-        <!-- Legacy Login Form -->
-        <form
-          v-else-if="activeTab === 'legacy'"
-          class="space-y-4"
-          @submit.prevent="handleLegacyLogin"
-        >
-          <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-            <div class="flex items-start gap-3">
-              <i class="pi pi-info-circle text-blue-500 mt-0.5" />
-              <div class="text-blue-500 text-sm">
-                <p class="font-medium mb-1">Нужны данные для входа?</p>
-                <p>Откройте Telegram и отправьте <code class="bg-blue-500/20 px-1.5 py-0.5 rounded">/login</code> боту @wb_booking_bot</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-secondary mb-1.5">
-              Логин
-            </label>
-            <InputText
-              v-model="legacyForm.login"
-              type="text"
-              required
-              placeholder="Введите ваш логин"
-              class="w-full"
-              :disabled="authStore.isLoading"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-secondary mb-1.5">
-              Пароль
-            </label>
-            <Password
-              v-model="legacyForm.password"
-              required
-              placeholder="Введите ваш пароль"
-              class="w-full"
-              :disabled="authStore.isLoading"
-              :feedback="false"
-              toggle-mask
-              input-class="w-full"
-            />
-          </div>
-
-          <Button
-            type="submit"
-            :loading="authStore.isLoading"
-            :disabled="authStore.isLoading || !legacyForm.login || !legacyForm.password"
             class="w-full mt-2"
             label="Войти"
             icon="pi pi-sign-in"
@@ -218,22 +148,11 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useBrowserAuthStore();
 
-const tabs = [
-  { key: 'email', label: 'Email' },
-  { key: 'legacy', label: 'Логин' },
-] as const;
-
-const activeTab = ref<'email' | 'legacy'>('email');
 const rememberMe = ref(false);
 const routeError = ref((route.query.error as string) || null);
 
 const emailForm = ref({
   email: '',
-  password: '',
-});
-
-const legacyForm = ref({
-  login: '',
   password: '',
 });
 
@@ -247,18 +166,6 @@ async function handleEmailLogin() {
   routeError.value = null;
 
   const success = await authStore.emailLogin(emailForm.value.email, emailForm.value.password);
-
-  if (success) {
-    const redirect = route.query.redirect as string;
-    await router.push(redirect || '/');
-  }
-}
-
-async function handleLegacyLogin() {
-  authStore.clearError();
-  routeError.value = null;
-
-  const success = await authStore.login(legacyForm.value.login, legacyForm.value.password);
 
   if (success) {
     const redirect = route.query.redirect as string;

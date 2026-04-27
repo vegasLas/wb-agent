@@ -113,6 +113,23 @@
             />
           </div>
 
+          <div>
+            <label class="block text-sm font-medium text-secondary mb-1.5">
+              Код из Telegram бота <span class="text-xs text-secondary/60">(необязательно)</span>
+            </label>
+            <InputText
+              v-model="form.telegramCode"
+              type="text"
+              placeholder="ABC123"
+              class="w-full"
+              :disabled="isLoading"
+              maxlength="6"
+            />
+            <p class="text-xs text-secondary/60 mt-1">
+              Если вы получили код в Telegram боте, введите его здесь для привязки аккаунта
+            </p>
+          </div>
+
           <Button
             type="submit"
             :loading="isLoading"
@@ -156,7 +173,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const vkAuthUrl = computed(() => {
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
@@ -172,6 +192,14 @@ const form = ref({
   email: '',
   password: '',
   confirmPassword: '',
+  telegramCode: '',
+});
+
+onMounted(() => {
+  const codeFromUrl = route.query.telegramCode;
+  if (typeof codeFromUrl === 'string' && codeFromUrl) {
+    form.value.telegramCode = codeFromUrl.slice(0, 6);
+  }
 });
 
 const isLoading = ref(false);
@@ -197,11 +225,15 @@ async function handleRegister() {
   isLoading.value = true;
 
   try {
-    await apiClient.post('/auth/register', {
+    const payload: any = {
       name: form.value.name.trim(),
       email: form.value.email.trim(),
       password: form.value.password,
-    });
+    };
+    if (form.value.telegramCode.trim()) {
+      payload.telegramCode = form.value.telegramCode.trim();
+    }
+    await apiClient.post('/auth/register', payload);
     success.value = true;
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Ошибка регистрации';

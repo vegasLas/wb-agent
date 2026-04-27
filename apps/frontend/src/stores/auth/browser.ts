@@ -10,7 +10,6 @@ import { resetAppState } from '@/router';
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 const TOKEN_EXPIRES_AT_KEY = 'auth_token_expires_at';
-const LEGACY_TOKEN_KEY = 'auth_token'; // For migration cleanup
 
 /**
  * Browser authentication store for JWT-based auth
@@ -43,28 +42,6 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   function isTokenExpired(): boolean {
     if (!tokenExpiresAt.value) return true;
     return Date.now() >= tokenExpiresAt.value;
-  }
-
-  /**
-   * Login with legacy bot-generated credentials
-   */
-  async function login(login: string, password: string): Promise<boolean> {
-    try {
-      isLoading.value = true;
-      error.value = null;
-
-      const response = await apiClient.post('/auth/login', {
-        login,
-        password,
-      });
-
-      return handleAuthResponse(response.data);
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Ошибка входа';
-      return false;
-    } finally {
-      isLoading.value = false;
-    }
   }
 
   /**
@@ -108,9 +85,6 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
 
     // Set access token in API client
     setAuthToken(newAccessToken);
-
-    // Clean up legacy token
-    localStorage.removeItem(LEGACY_TOKEN_KEY);
 
     // Fetch full user data from userStore
     try {
@@ -206,13 +180,6 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
    * @param skipUserFetch If true, skip fetching user data (use when already fetched)
    */
   async function initAuth(skipUserFetch = false): Promise<boolean> {
-    // Migrate legacy single token if present
-    const legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
-    if (legacyToken && !accessToken.value) {
-      localStorage.removeItem(LEGACY_TOKEN_KEY);
-      console.log('[BrowserAuth] Cleared legacy auth_token');
-    }
-
     if (!accessToken.value || !refreshToken.value) {
       setAuthToken(null);
       return false;
@@ -290,7 +257,6 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
     isTokenExpired,
 
     // Actions
-    login,
     emailLogin,
     logout,
     doRefreshToken,
