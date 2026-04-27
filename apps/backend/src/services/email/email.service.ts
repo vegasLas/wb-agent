@@ -9,10 +9,12 @@ export class EmailService {
 
   constructor() {
     if (env.EMAIL_SMTP_HOST && env.EMAIL_SMTP_USER && env.EMAIL_SMTP_PASS) {
-      this.transporter = nodemailer.createTransporter({
+      const port = parseInt(env.EMAIL_SMTP_PORT, 10);
+      this.transporter = nodemailer.createTransport({
         host: env.EMAIL_SMTP_HOST,
-        port: parseInt(env.EMAIL_SMTP_PORT, 10),
-        secure: parseInt(env.EMAIL_SMTP_PORT, 10) === 465,
+        port,
+        secure: port === 465,
+        tls: port === 587 ? { rejectUnauthorized: false } : undefined,
         auth: {
           user: env.EMAIL_SMTP_USER,
           pass: env.EMAIL_SMTP_PASS,
@@ -20,7 +22,9 @@ export class EmailService {
       });
       logger.info('Email transporter configured');
     } else {
-      logger.warn('SMTP not configured — emails will be logged to console only');
+      logger.warn(
+        'SMTP not configured — emails will be logged to console only',
+      );
     }
   }
 
@@ -52,6 +56,8 @@ export class EmailService {
 
   async sendVerificationEmail(to: string, token: string): Promise<void> {
     const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${token}`;
+    logger.info(`sendVerificationEmail() called — to=${to}, frontendUrl=${env.FRONTEND_URL}`);
+    logger.info(`Verification link: ${verifyUrl}`);
 
     await this.send({
       to,
@@ -69,10 +75,14 @@ export class EmailService {
         </div>
       `,
     });
+
+    logger.info(`sendVerificationEmail() completed for ${to}`);
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
     const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${token}`;
+    logger.info(`sendPasswordResetEmail() called — to=${to}, frontendUrl=${env.FRONTEND_URL}`);
+    logger.info(`Password reset link: ${resetUrl}`);
 
     await this.send({
       to,
@@ -90,6 +100,8 @@ export class EmailService {
         </div>
       `,
     });
+
+    logger.info(`sendPasswordResetEmail() completed for ${to}`);
   }
 }
 

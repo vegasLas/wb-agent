@@ -1,4 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
 import { env } from '@/config/env';
 import { createLogger } from '@/utils/logger';
 
@@ -45,12 +47,29 @@ const messageRateLimiter = new RateLimiter(60000, 20, 'message');
 const commandRateLimiter = new RateLimiter(60000, 10, 'command');
 const callbackRateLimiter = new RateLimiter(60000, 30, 'callback');
 
+/**
+ * Build proxy agent for Telegram API requests.
+ * Priority:
+ *   1. TELEGRAM_PROXY_URL (http://user:pass@host:port)
+ *   2. First proxy from PROXY_LIST (login:password@ip:port format)
+ */
+function buildProxyAgent(): HttpsProxyAgent<string> | undefined {
+  // Option 1: dedicated Telegram proxy URL
+  if (process.env.TELEGRAM_PROXY_URL) {
+    const url = process.env.TELEGRAM_PROXY_URL;
+    return new HttpsProxyAgent(new URL(url));
+  }
+  return undefined;
+}
+
 // Initialize bot only if token is available
 let bot: TelegramBot | null = null;
 
 if (env.TELEGRAM_BOT_TOKEN) {
   try {
-    bot = new TelegramBot(env.TELEGRAM_BOT_TOKEN, {
+    const proxyAgent = buildProxyAgent();
+
+    const botOptions: TelegramBot.ConstructorOptions = {
       polling: {
         interval: 2000,
         autoStart: true,
@@ -59,19 +78,46 @@ if (env.TELEGRAM_BOT_TOKEN) {
           allowed_updates: ['message', 'callback_query'],
         },
       },
-    });
+    };
+
+    if (proxyAgent) {
+      (botOptions as any).request = { agent: proxyAgent };
+      console.log('[TBOT] Proxy agent configured');
+    } else {
+      console.log('[TBOT] No proxy configured');
+    }
+
+    console.log('[TBOT] Bot options:', JSON.stringify(botOptions, null, 2));
+    bot = new TelegramBot(env.TELEGRAM_BOT_TOKEN, botOptions);
 
     // Handle polling errors
-    bot.on('polling_error', (error: Error & { code?: string }) => {
-      if (
-        error.message?.includes('ESOCKETTIMEDOUT') ||
-        error.message?.includes('ETIMEDOUT') ||
-        error.code === 'EFATAL'
-      ) {
-        return;
-      }
-      logger.error('Telegram polling error:', error.message);
-    });
+    bot.on(
+      'polling_error',
+      (error: Error & { code?: string; errno?: string; syscall?: string }) => {
+        console.log(
+          '[TBOT] Polling error full:',
+          JSON.stringify(
+            {
+              message: error.message,
+              code: error.code,
+              errno: error.errno,
+              syscall: error.syscall,
+              stack: error.stack,
+            },
+            null,
+            2,
+          ),
+        );
+        if (
+          error.message?.includes('ESOCKETTIMEDOUT') ||
+          error.message?.includes('ETIMEDOUT') ||
+          error.code === 'EFATAL'
+        ) {
+          return;
+        }
+        logger.error('Telegram polling error:', error.message);
+      },
+    );
 
     // Rate limiting for messages
     bot.on('message', async (msg) => {

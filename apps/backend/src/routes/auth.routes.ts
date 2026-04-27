@@ -47,26 +47,45 @@ router.post(
   '/register',
   strictAuthLimiter,
   [
-    body('name').trim().isLength({ min: 2 }).withMessage('Имя должно быть не менее 2 символов'),
-    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
-    body('password').isLength({ min: 8 }).withMessage('Пароль должен быть не менее 8 символов'),
+    body('name')
+      .trim()
+      .isLength({ min: 2 })
+      .withMessage('Имя должно быть не менее 2 символов'),
+    body('email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Неверный формат email'),
+    body('password')
+      .isLength({ min: 8 })
+      .withMessage('Пароль должен быть не менее 8 символов'),
+    body('telegramCode').optional().trim().isLength({ min: 6, max: 6 }).withMessage('Код должен быть 6 символов'),
   ],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+        throw ApiError.validation('Ошибка валидации', {
+          errors: errors.array(),
+        });
       }
 
-      const { name, email, password } = req.body;
-      const result = await emailAuthService.register({ name, email, password });
+      const { name, email, password, telegramCode } = req.body;
+      logger.info(`[POST /register] Request — email=${email}, name=${name}, hasTelegramCode=${!!telegramCode}, ip=${req.ip}`);
+
+      const result = await emailAuthService.register({ name, email, password, telegramCode });
+
+      const message = telegramCode
+        ? 'Email успешно привязан к вашему Telegram-аккаунту.'
+        : 'Регистрация успешна. Проверьте email для подтверждения.';
+      logger.info(`[POST /register] Response — userId=${result.userId}, message="${message}"`);
 
       res.status(201).json({
         success: true,
-        message: 'Регистрация успешна. Проверьте email для подтверждения.',
+        message,
         userId: result.userId,
       });
     } catch (error) {
+      logger.warn(`[POST /register] FAILED — email=${req.body.email}, error=${error instanceof Error ? error.message : String(error)}`);
       next(error);
     }
   },
@@ -75,23 +94,26 @@ router.post(
 // POST /api/v1/auth/verify-email - Verify email (public)
 router.post(
   '/verify-email',
-  [
-    body('token').isString().notEmpty().withMessage('Токен обязателен'),
-  ],
+  [body('token').isString().notEmpty().withMessage('Токен обязателен')],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+        throw ApiError.validation('Ошибка валидации', {
+          errors: errors.array(),
+        });
       }
 
+      logger.info(`[POST /verify-email] Request — token=${req.body.token.substring(0, 20)}...`);
       await emailAuthService.verifyEmail(req.body.token);
+      logger.info(`[POST /verify-email] SUCCESS — email verified`);
 
       res.json({
         success: true,
         message: 'Email успешно подтвержден. Теперь вы можете войти.',
       });
     } catch (error) {
+      logger.warn(`[POST /verify-email] FAILED — error=${error instanceof Error ? error.message : String(error)}`);
       next(error);
     }
   },
@@ -102,22 +124,40 @@ router.post(
   '/resend-verification',
   authLimiter,
   [
-    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
+    body('email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Неверный формат email'),
   ],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+        throw ApiError.validation('Ошибка валидации', {
+          errors: errors.array(),
+        });
       }
 
       const normalizedEmail = req.body.email.toLowerCase().trim();
+      logger.info(`[POST /resend-verification] Request — email=${normalizedEmail}`);
+
       const identity = await prisma.userIdentity.findUnique({
-        where: { provider_email: { provider: 'EMAIL', email: normalizedEmail } },
+        where: {
+          provider_email: { provider: 'EMAIL', email: normalizedEmail },
+        },
       });
 
       if (identity && !identity.emailVerifiedAt) {
-        await emailAuthService.sendVerificationEmail(identity.id, normalizedEmail);
+        logger.info(`[POST /resend-verification] Identity found and not verified — sending email, identityId=${identity.id}`);
+        await emailAuthService.sendVerificationEmail(
+          identity.id,
+          normalizedEmail,
+        );
+        logger.info(`[POST /resend-verification] Email sent (or mocked) for ${normalizedEmail}`);
+      } else if (identity && identity.emailVerifiedAt) {
+        logger.info(`[POST /resend-verification] Identity already verified — no email sent, identityId=${identity.id}`);
+      } else {
+        logger.info(`[POST /resend-verification] Identity not found — returning generic success to prevent enumeration, email=${normalizedEmail}`);
       }
 
       // Always return success to prevent email enumeration
@@ -126,6 +166,7 @@ router.post(
         message: 'Если пользователь существует, письмо отправлено.',
       });
     } catch (error) {
+      logger.warn(`[POST /resend-verification] FAILED — error=${error instanceof Error ? error.message : String(error)}`);
       next(error);
     }
   },
@@ -136,22 +177,32 @@ router.post(
   '/forgot-password',
   authLimiter,
   [
-    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
+    body('email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Неверный формат email'),
   ],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+        throw ApiError.validation('Ошибка валидации', {
+          errors: errors.array(),
+        });
       }
 
-      await emailAuthService.requestPasswordReset(req.body.email);
+      const email = req.body.email;
+      logger.info(`[POST /forgot-password] Request — email=${email}`);
+      await emailAuthService.requestPasswordReset(email);
+      logger.info(`[POST /forgot-password] Completed — email=${email}`);
 
       res.json({
         success: true,
-        message: 'Если пользователь существует, письмо для сброса пароля отправлено.',
+        message:
+          'Если пользователь существует, письмо для сброса пароля отправлено.',
       });
     } catch (error) {
+      logger.warn(`[POST /forgot-password] FAILED — error=${error instanceof Error ? error.message : String(error)}`);
       next(error);
     }
   },
@@ -163,13 +214,17 @@ router.post(
   strictAuthLimiter,
   [
     body('token').isString().notEmpty().withMessage('Токен обязателен'),
-    body('password').isLength({ min: 8 }).withMessage('Пароль должен быть не менее 8 символов'),
+    body('password')
+      .isLength({ min: 8 })
+      .withMessage('Пароль должен быть не менее 8 символов'),
   ],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+        throw ApiError.validation('Ошибка валидации', {
+          errors: errors.array(),
+        });
       }
 
       await emailAuthService.resetPassword(req.body.token, req.body.password);
@@ -189,18 +244,25 @@ router.post(
   '/email-login',
   authLimiter,
   [
-    body('email').isEmail().normalizeEmail().withMessage('Неверный формат email'),
+    body('email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Неверный формат email'),
     body('password').exists().withMessage('Пароль обязателен'),
   ],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+        throw ApiError.validation('Ошибка валидации', {
+          errors: errors.array(),
+        });
       }
 
       const { email, password } = req.body;
+      logger.info(`[POST /email-login] Request — email=${email}`);
       const result = await jwtAuthService.emailLogin(email, password);
+      logger.info(`[POST /email-login] SUCCESS — userId=${result.user.id}`);
 
       res.json({
         success: true,
@@ -210,37 +272,7 @@ router.post(
         expiresIn: result.expiresIn,
       });
     } catch (error) {
-      next(error);
-    }
-  },
-);
-
-// POST /api/v1/auth/login - Legacy browser login (public)
-router.post(
-  '/login',
-  authLimiter,
-  [
-    body('login').trim().isLength({ min: 3 }).withMessage('Логин должен быть не менее 3 символов'),
-    body('password').exists().withMessage('Пароль обязателен'),
-  ],
-  async (req, res, next) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
-      }
-
-      const { login, password } = req.body;
-      const result = await jwtAuthService.browserLogin(login, password);
-
-      res.json({
-        success: true,
-        user: result.user,
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresIn: result.expiresIn,
-      });
-    } catch (error) {
+      logger.warn(`[POST /email-login] FAILED — email=${req.body.email}, error=${error instanceof Error ? error.message : String(error)}`);
       next(error);
     }
   },
@@ -272,7 +304,12 @@ router.get('/vk/callback', async (req, res, next) => {
       return res.redirect(`${env.FRONTEND_URL}/login?error=vk_denied`);
     }
 
-    if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
+    if (
+      !code ||
+      !state ||
+      typeof code !== 'string' ||
+      typeof state !== 'string'
+    ) {
       return res.redirect(`${env.FRONTEND_URL}/login?error=invalid_request`);
     }
 
@@ -299,19 +336,27 @@ router.get('/vk/callback', async (req, res, next) => {
 router.post(
   '/refresh',
   [
-    body('refreshToken').isString().notEmpty().withMessage('Refresh token is required'),
+    body('refreshToken')
+      .isString()
+      .notEmpty()
+      .withMessage('Refresh token is required'),
   ],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw ApiError.validation('Ошибка валидации', { errors: errors.array() });
+        throw ApiError.validation('Ошибка валидации', {
+          errors: errors.array(),
+        });
       }
 
       const { refreshToken } = req.body;
 
       const { userId } = await jwtAuthService.verifyRefreshToken(refreshToken);
-      const newRefreshToken = await jwtAuthService.rotateRefreshToken(refreshToken, userId);
+      const newRefreshToken = await jwtAuthService.rotateRefreshToken(
+        refreshToken,
+        userId,
+      );
 
       const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -324,8 +369,14 @@ router.post(
         throw ApiError.unauthorized('Пользователь не найден');
       }
 
-      if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
-        throw ApiError.forbidden('Требуется активная подписка', 'SUBSCRIPTION_REQUIRED');
+      if (
+        !user.subscriptionExpiresAt ||
+        new Date(user.subscriptionExpiresAt) <= new Date()
+      ) {
+        throw ApiError.forbidden(
+          'Требуется активная подписка',
+          'SUBSCRIPTION_REQUIRED',
+        );
       }
 
       // Get primary identity for token

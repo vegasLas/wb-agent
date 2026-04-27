@@ -67,51 +67,6 @@ export class JWTAuthService {
   }
 
   /**
-   * Legacy browser login with bot-generated login + password
-   */
-  async browserLogin(login: string, password: string): Promise<BrowserAuthResult> {
-    if (!this.isConfigured()) {
-      throw ApiError.internal('JWT authentication is not configured');
-    }
-
-    const found = await identityService.findByLegacyLogin(login);
-
-    if (!found || !found.identity.passwordHash) {
-      throw ApiError.unauthorized('Неверные учетные данные');
-    }
-
-    const isValid = await this.comparePassword(password, found.identity.passwordHash);
-    if (!isValid) {
-      throw ApiError.unauthorized('Неверные учетные данные');
-    }
-
-    if (!found.user.subscriptionExpiresAt || new Date(found.user.subscriptionExpiresAt) <= new Date()) {
-      throw ApiError.forbidden('Требуется активная подписка', 'SUBSCRIPTION_REQUIRED');
-    }
-
-    const accessToken = this.generateAccessToken({
-      userId: found.user.id,
-      identityId: found.identity.id,
-      authType: 'browser',
-    });
-
-    const refreshToken = await this.generateRefreshToken(found.user.id);
-    const expiresIn = this.parseExpiresIn(this.JWT_ACCESS_EXPIRES_IN);
-
-    logger.info(`Browser login successful: ${login}`);
-
-    return {
-      user: {
-        id: found.user.id,
-        name: found.user.profile?.name || '',
-      },
-      accessToken,
-      refreshToken,
-      expiresIn,
-    };
-  }
-
-  /**
    * Email login with email + password
    */
   async emailLogin(email: string, password: string): Promise<BrowserAuthResult> {
@@ -289,60 +244,6 @@ export class JWTAuthService {
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
-  }
-
-  /**
-   * Generate unique login and password (for legacy bot commands)
-   */
-  generateCredentials(telegramUsername?: string): {
-    login: string;
-    password: string;
-    passwordHash: string;
-  } {
-    const suffix = this.generateRandomString(6, 'lower');
-    const prefix = telegramUsername
-      ? this.sanitizeUsername(telegramUsername)
-      : 'user';
-    const login = `${prefix}_${suffix}`;
-    const password = this.generateRandomString(12, 'mixed');
-    const passwordHash = this.hashPassword(password);
-
-    return { login, password, passwordHash };
-  }
-
-  /**
-   * Generate random string
-   */
-  private generateRandomString(
-    length: number,
-    type: 'lower' | 'upper' | 'mixed' | 'numeric'
-  ): string {
-    const chars = {
-      lower: 'abcdefghijklmnopqrstuvwxyz',
-      upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-      numeric: '0123456789',
-      mixed: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*',
-    };
-
-    const charSet = chars[type];
-    let result = '';
-
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * charSet.length);
-      result += charSet.charAt(randomIndex);
-    }
-
-    return result;
-  }
-
-  /**
-   * Sanitize username for use in login
-   */
-  private sanitizeUsername(username: string): string {
-    return username
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, '')
-      .substring(0, 20);
   }
 
   /**

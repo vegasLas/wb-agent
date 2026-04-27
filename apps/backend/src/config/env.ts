@@ -48,7 +48,9 @@ const envSchema = z.object({
   // VK OAuth
   VK_APP_ID: z.string().optional(),
   VK_SECRET_KEY: z.string().optional(),
-  VK_REDIRECT_URI: z.string().default('http://localhost:3001/v1/auth/vk/callback'),
+  VK_REDIRECT_URI: z
+    .string()
+    .default('http://localhost:3001/v1/auth/vk/callback'),
 
   // WB API Base URL
   WB_API_BASE_URL: z.string().default('https://seller-supply.wildberries.ru'),

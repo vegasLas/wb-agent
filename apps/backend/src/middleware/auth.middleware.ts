@@ -4,6 +4,8 @@ import { parseInitData } from '@/utils/parseInitData';
 import { prisma } from '@/config/database';
 import { logger } from '@/utils/logger';
 import { jwtAuthService } from '@/services/user/jwt-auth.service';
+import { identityService } from '@/services/auth/identity.service';
+import { AuthProvider } from '@prisma/client';
 
 export interface AuthUser {
   id: number;
@@ -39,7 +41,6 @@ export const authenticate = async (
       path.includes('_nuxt_icon') ||
       path.includes('payments/check') ||
       path.includes('webhooks/yookassa') ||
-      path.includes('auth/login') ||
       path.includes('auth/register') ||
       path.includes('auth/verify-email') ||
       path.includes('auth/resend-verification') ||
@@ -113,11 +114,34 @@ export const authenticate = async (
           include: { user: { include: { telegram: true } } },
         });
 
-        if (!identity) {
-          throw ApiError.unauthorized('Пользователь не найден');
-        }
+        let user = identity?.user ?? null;
 
-        const user = identity.user;
+        if (!user) {
+          // Auto-create user on first Mini App open with valid initData
+          const telegramUser = initData.user;
+          logger.info(`Auto-creating user from initData: ${telegramUser.id}`);
+
+          const result = await identityService.createUserWithIdentity(
+            {
+              name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+              username: telegramUser.username,
+              languageCode: telegramUser.language_code,
+            },
+            {
+              provider: AuthProvider.TELEGRAM,
+              providerId: String(telegramUser.id),
+            },
+          );
+
+          user = await prisma.user.findUnique({
+            where: { id: result.userId },
+            include: { telegram: true },
+          });
+
+          if (!user) {
+            throw ApiError.internal('Failed to create user from initData');
+          }
+        }
 
         if (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()) {
           throw ApiError.forbidden(

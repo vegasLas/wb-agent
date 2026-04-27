@@ -50,6 +50,7 @@ model User {
   refreshTokens          RefreshToken[]
   authTokens             AuthToken[]
   identities             UserIdentity[]
+  linkCodes              LinkCode[]
 
   profile  Profile?
   telegram Telegram?
@@ -146,6 +147,19 @@ model AuthToken {
 
   @@index([userId])
   @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model LinkCode {
+  id        String    @id @default(uuid())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([code])
   @@index([expiresAt])
 }
 
