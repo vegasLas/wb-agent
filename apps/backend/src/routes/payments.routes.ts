@@ -15,7 +15,7 @@ import { prisma } from '@/config/database';
 import { TBOT } from '@/utils/TBOT';
 import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
-import { PAYMENT_TARIFFS } from '@/constants/payments';
+import { ALL_SUBSCRIPTION_TARIFFS, TRIAL_DAYS } from '@/constants/payments';
 
 const router = Router();
 
@@ -23,7 +23,7 @@ const router = Router();
 const getPaymentTemplate = (
   type: 'success' | 'pending' | 'canceled' | 'error' | 'waiting_for_capture',
   data?: {
-    tariff?: { name?: string; days?: number; bookingCount?: number };
+    tariff?: { name?: string; days?: number };
     amount?: number;
     errorMessage?: string;
   },
@@ -37,10 +37,8 @@ const getPaymentTemplate = (
         <div class="amount">${data?.amount} ₽</div>
         <div class="details">
           ${
-            data?.tariff
-              ? 'days' in data.tariff
-                ? `В течение нескольких минут ваша подписка будет продлена на <b>${data.tariff.days} дней</b>`
-                : `В течение нескольких минут будет добавлено <b>${data.tariff.bookingCount}</b> автоброней`
+            data?.tariff?.days
+              ? `В течение нескольких минут ваша подписка будет продлена на <b>${data.tariff.days} дней</b>`
               : ''
           }
         </div>
@@ -199,7 +197,7 @@ router.post(
       const { tariffId, email } = req.body;
 
       // Find tariff
-      const tariff = PAYMENT_TARIFFS.find((t) => t.id === tariffId);
+      const tariff = ALL_SUBSCRIPTION_TARIFFS.find((t) => t.id === tariffId);
       if (!tariff) {
         throw new ApiError(400, 'Invalid tariff ID');
       }
@@ -341,14 +339,14 @@ router.get('/check', query('key').notEmpty(), async (req, res) => {
 
     // Check if payment is already processed successfully
     if (dbPayment.status === 'succeeded' && dbPayment.paidAt) {
-      const tariff = PAYMENT_TARIFFS.find((t) => t.id === dbPayment.tariffId);
+      const tariff = ALL_SUBSCRIPTION_TARIFFS.find((t) => t.id === dbPayment.tariffId);
       return res.send(
         getPaymentTemplate('success', { tariff, amount: dbPayment.amount }),
       );
     }
 
     // Find the tariff
-    const tariff = PAYMENT_TARIFFS.find((t) => t.id === dbPayment.tariffId);
+    const tariff = ALL_SUBSCRIPTION_TARIFFS.find((t) => t.id === dbPayment.tariffId);
     if (!tariff) {
       return res
         .status(404)
@@ -428,5 +426,61 @@ router.get('/history', authenticate, (async (
     next(error);
   }
 }) as RequestHandler);
+
+// POST /api/v1/payments/trial - Activate 14-day free trial
+router.post(
+  '/trial',
+  authenticate,
+  body('tier').isIn(['LITE', 'PRO', 'MAX']).withMessage('Valid tier is required'),
+  (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ApiError(400, errors.array()[0].msg);
+      }
+
+      const { tier } = req.body as { tier: 'LITE' | 'PRO' | 'MAX' };
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+      });
+
+      if (!user) {
+        throw ApiError.notFound('Пользователь не найден');
+      }
+
+      if (user.trialUsedAt) {
+        throw ApiError.badRequest('Пробный период уже был использован');
+      }
+
+      if (user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()) {
+        throw ApiError.badRequest('У вас уже есть активная подписка');
+      }
+
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + TRIAL_DAYS);
+
+      const { MAX_ACCOUNTS } = await import('@/constants/payments');
+
+      await prisma.user.update({
+        where: { id: req.user!.id },
+        data: {
+          subscriptionTier: tier,
+          subscriptionExpiresAt: expiry,
+          trialUsedAt: new Date(),
+          maxAccounts: MAX_ACCOUNTS[tier],
+        },
+      });
+
+      res.json({
+        success: true,
+        message: `Пробный период ${tier} активирован на ${TRIAL_DAYS} дней`,
+        expiresAt: expiry.toISOString(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler,
+);
 
 export default router;
