@@ -97,6 +97,16 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/error/subscription-required',
+    name: 'SubscriptionRequired',
+    component: () => import('../components/layout/ErrorLayout.vue'),
+    meta: {
+      title: 'Требуется подписка',
+      errorType: 'subscription_required',
+      public: true,
+    },
+  },
+  {
     path: '/error/not-found',
     name: 'UserNotFound',
     component: () => import('../components/layout/ErrorLayout.vue'),
@@ -259,6 +269,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/content-cards/TariffsView.vue'),
         meta: {
           title: 'Тарифы',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -267,6 +278,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StoreView.vue'),
         meta: {
           title: 'Store',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -276,6 +288,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Store - Subscription',
           initialTab: 'subscription',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -285,6 +298,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Store - Bookings',
           initialTab: 'bookings',
+          skipSubscriptionCheck: true,
         },
       },
       {
@@ -293,6 +307,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/PaymentsView.vue'),
         meta: {
           title: 'Payments',
+          skipSubscriptionCheck: true,
         },
       },
     ],
@@ -321,7 +336,7 @@ const router = createRouter({
 
 // Global app state
 let isAppInitialized = false;
-let initError: 'session_expired' | 'maintenance' | 'not_found' | null = null;
+let initError: 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' | null = null;
 let isBrowserAuthInitialized = false;
 
 /**
@@ -475,13 +490,19 @@ async function initializeApp(): Promise<void> {
 // Classify error type
 function classifyError(
   error: any,
-): 'session_expired' | 'maintenance' | 'not_found' {
+): 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' {
   if (error?.data?.data?.expired === true) {
     return 'session_expired';
   }
 
-  if (error?.status === 503 || error?.statusCode === 503) {
+  const status = error?.response?.status || error?.status || error?.statusCode;
+
+  if (status === 503) {
     return 'maintenance';
+  }
+
+  if (status === 403) {
+    return 'subscription_required';
   }
 
   return 'not_found';
@@ -492,6 +513,7 @@ function errorToRouteName(error: string): string {
   const map: Record<string, string> = {
     session_expired: 'SessionExpired',
     maintenance: 'Maintenance',
+    subscription_required: 'SubscriptionRequired',
     not_found: 'UserNotFound',
   };
   return map[error] || 'UserNotFound';
