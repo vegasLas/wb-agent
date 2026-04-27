@@ -1,12 +1,9 @@
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center p-4">
     <!-- Logo / Brand -->
-    <div class="mb-8">
-      <div
-        class="w-16 h-16 bg-blue-600 dark:bg-blue-700 rounded-xl flex items-center justify-center shadow-lg"
-      >
-        <i class="pi pi-box text-theme text-3xl" />
-      </div>
+    <div class="mb-8 flex items-center gap-3">
+      <AppLogo :size="48" />
+      <span class="text-xl font-bold text-theme">WBOI</span>
     </div>
 
     <!-- Loading Indicator -->
@@ -24,5 +21,6 @@
 </template>
 
 <script setup lang="ts">
+import AppLogo from './AppLogo.vue';
 import ProgressSpinner from 'primevue/progressspinner';
 </script>
