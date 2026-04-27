@@ -551,7 +551,7 @@ router.post('/cancel', async (req, res, next) => {
 // POST /api/v1/auth/logout
 router.post('/logout', authenticate, async (req, res, next) => {
   try {
-    const { refreshToken, allDevices, accountId } = req.body;
+    const { refreshToken, allDevices } = req.body;
 
     if (allDevices || !refreshToken) {
       await jwtAuthService.revokeAllUserRefreshTokens(req.user!.id);
@@ -559,14 +559,8 @@ router.post('/logout', authenticate, async (req, res, next) => {
       await jwtAuthService.revokeRefreshToken(refreshToken);
     }
 
-    if (accountId) {
-      await userService.logoutAccount(req.user!.id, accountId);
-    } else {
-      await userService.logoutWb(req.user!.id);
-
-      if (req.user?.authType === 'telegram' && req.user?.chatId) {
-        await sendLogoutNotification(req.user.chatId);
-      }
+    if (req.user?.authType === 'telegram' && req.user?.chatId) {
+      await sendLogoutNotification(req.user.chatId);
     }
 
     res.json({ success: true, message: 'Logged out successfully' });
