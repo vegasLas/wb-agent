@@ -7,7 +7,7 @@ import { confirmPromise } from '@/utils/ui';
 export const useUserStore = defineStore('user', () => {
   const user = ref<User>({
     name: '',
-    autobookingCount: 0,
+    subscriptionTier: 'LITE',
     subscriptionExpiresAt: null,
     payments: [],
     agreeTerms: false,
@@ -35,7 +35,7 @@ export const useUserStore = defineStore('user', () => {
   function reset() {
     user.value = {
       name: '',
-      autobookingCount: 0,
+      subscriptionTier: 'LITE',
       subscriptionExpiresAt: null,
       payments: [],
       agreeTerms: false,
@@ -48,8 +48,12 @@ export const useUserStore = defineStore('user', () => {
     notFound.value = false;
   }
 
-  // Computed property to check if user has autobooking credits
-  const hasAutobookingCredits = computed(() => user.value.autobookingCount > 0);
+  // Subscription tier computed properties
+  const subscriptionTier = computed(() => user.value.subscriptionTier ?? 'LITE');
+  const isPro = computed(() => subscriptionTier.value === 'PRO' || subscriptionTier.value === 'MAX');
+  const isMax = computed(() => subscriptionTier.value === 'MAX');
+  const maxAccounts = computed(() => user.value.maxAccounts ?? 1);
+  const canAddAccount = computed(() => (user.value.accounts?.length ?? 0) < maxAccounts.value);
 
   const subscriptionRemainingDays = computed(() => {
     if (!user.value.subscriptionExpiresAt) return 0;
@@ -142,14 +146,6 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  function decreaseAutobookingCount() {
-    user.value.autobookingCount--;
-  }
-
-  function increaseAutobookingCount() {
-    user.value.autobookingCount++;
-  }
-
   async function logout() {
     const confirmed = await confirmPromise({
       header: 'Выход из аккаунта',
@@ -190,7 +186,11 @@ export const useUserStore = defineStore('user', () => {
     notFound,
     subscriptionActive,
     subscriptionRemainingDays,
-    hasAutobookingCredits,
+    subscriptionTier,
+    isPro,
+    isMax,
+    maxAccounts,
+    canAddAccount,
     selectedAccount,
     hasValidSupplier,
     activeSupplier,
@@ -199,8 +199,6 @@ export const useUserStore = defineStore('user', () => {
     isAuthenticated,
 
     fetchUser,
-    decreaseAutobookingCount,
-    increaseAutobookingCount,
     getSupplierById,
     getAccountIdBySupplierId,
     reset,
