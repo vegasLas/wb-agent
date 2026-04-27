@@ -154,10 +154,7 @@ async function initializePayment() {
   try {
     // Import the API function dynamically to avoid circular dependencies
     const { paymentsAPI } = await import('../../api');
-    await paymentsAPI.createPaymentWithEmail({
-      tariffId: props.tariffId,
-      email: emailInput.value,
-    });
+    await paymentsAPI.createPayment(props.tariffId, emailInput.value);
 
     paymentInitiated.value = true;
   } catch (e: unknown) {
