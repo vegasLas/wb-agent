@@ -6,8 +6,8 @@ import { safeTool, loggedTool } from './safe-tool.utils';
 export function userContextTools(userId: number): Record<string, Tool> {
   return {
     getUserContext: tool({
-      description: `Get the current user's context: autobooking credits, suppliers, recent autobookings, and recent supply triggers.
-Call this when you need to know the user's credits before creating an autobooking, or when the user asks about their suppliers, recent autobookings, or triggers.
+      description: `Get the current user's context: autobooking slot usage, suppliers, recent autobookings, and recent supply triggers.
+Call this when you need to know the user's slot limits before creating an autobooking, or when the user asks about their suppliers, recent autobookings, or triggers.
 Required: none.`,
       inputSchema: z.object({}),
       execute: safeTool('getUserContext', async () => {
@@ -25,8 +25,16 @@ Required: none.`,
 
           const suppliers = user.accounts.flatMap((a) => a.suppliers);
 
+          const activeSlots = user.autobookings.filter(
+            (ab) => ab.status === 'PENDING' || ab.status === 'ACTIVE',
+          ).length;
+          const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
+          const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'LITE'];
+
           return {
-            credits: user.autobookingCount ?? 0,
+            activeSlots,
+            maxSlots,
+            slotUsagePercent: Math.round((activeSlots / maxSlots) * 100),
             suppliers: suppliers.map((s) => s.supplierName),
             recentAutobookings: user.autobookings.map((ab) => ({
               id: ab.id,
