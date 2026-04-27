@@ -654,22 +654,6 @@ export class AuthService {
       const supplierId = cookies.find(
         (cookie: Cookie) => cookie.name === 'x-supplier-id',
       );
-      if (supplierId) {
-        const { checkIfShouldAddBonus } = await import('../../utils/userBonus');
-        const shouldAddBonus = await checkIfShouldAddBonus(
-          session.userId,
-          supplierId.value,
-        );
-        if (shouldAddBonus) {
-          await prisma.user.update({
-            where: { id: session.userId },
-            data: {
-              autobookingCount: { increment: 5 },
-            },
-          });
-        }
-      }
-
       console.log('[AuthService] Collecting localStorage data...');
       // Collect localStorage data from browser context via Playwright
       const localStorage = await session.page.evaluate(() => {
