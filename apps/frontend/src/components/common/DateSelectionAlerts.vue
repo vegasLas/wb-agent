@@ -11,8 +11,8 @@
       </div>
       <ul class="ml-4 space-y-1 text-sm">
         <li>
-          • <strong>Стоимость:</strong> Использует только 1 кредит независимо от
-          количества выбранных дат
+          • <strong>Стоимость:</strong> Использует 1 слот автобронирования
+          независимо от количества выбранных дат
         </li>
         <li>
           • <strong>Логика работы:</strong> Система попытается забронировать
@@ -41,8 +41,8 @@
         </div>
         <ul class="ml-4 space-y-1 text-sm">
           <li>
-            • <strong>Стоимость:</strong> Каждая выбранная дата использует 1
-            кредит
+            • <strong>Стоимость:</strong> Каждое автобронирование использует 1
+            слот
           </li>
           <li>
             • <strong>Логика работы:</strong> Система попытается забронировать
@@ -63,7 +63,7 @@
                 : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
             "
           >
-            {{ remainingCount }} кредитов.
+            {{ remainingCount }} слотов осталось.
           </span>
         </p>
         <div
@@ -75,7 +75,7 @@
             size="small"
             @click="navigateToStore"
           >
-            Купить
+            Обновить подписку
           </Button>
         </div>
       </div>

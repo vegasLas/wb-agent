@@ -24,10 +24,10 @@
       <Card class="text-center">
         <template #content>
           <div class="text-2xl font-bold text-blue-600">
-            {{ userStore.user.autobookingCount || 0 }}
+            {{ userStore.subscriptionTier }}
           </div>
           <div class="text-xs text-gray-500">
-            Кредитов
+            Тариф
           </div>
         </template>
       </Card>
