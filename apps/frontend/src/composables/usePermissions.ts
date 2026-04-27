@@ -11,7 +11,7 @@ const PERMISSION_ROUTE_MAP: Record<string, Permission[]> = {
   Tariffs: ['SUPPLIES'],
   AutobookingList: ['SUPPLIES'],
   ReschedulesList: ['SUPPLIES'],
-  TriggersList: ['SUPPLIES'],
+  TriggersList: [],
   Chat: [],
   MPStats: [],
   Payments: [],
@@ -32,7 +32,9 @@ export function usePermissions() {
 
   function hasAnyPermission(permissions: Permission[]): boolean {
     if (permissions.length === 0) return true;
-    return permissions.some((p) => selectedSupplierPermissions.value.includes(p));
+    return permissions.some((p) =>
+      selectedSupplierPermissions.value.includes(p),
+    );
   }
 
   function canAccessRoute(routeName: string): boolean {

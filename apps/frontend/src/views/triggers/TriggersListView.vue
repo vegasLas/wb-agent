@@ -6,14 +6,7 @@
       @created="handleCreated"
     />
 
-    <!-- Display content only if user has selected account, valid supplier and subscription is active -->
-    <template
-      v-if="
-        userStore.selectedAccount &&
-          userStore.hasValidSupplier &&
-          userStore.subscriptionActive
-      "
-    >
+
       <Message
         v-if="triggerStore.activeTriggersCount >= 30"
         severity="warn"
@@ -255,7 +248,6 @@
       >
         {{ getEmptyStateMessage() }}
       </div>
-    </template>
   </div>
 </template>
 

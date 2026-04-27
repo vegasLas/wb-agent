@@ -130,6 +130,7 @@ const routes: RouteRecordRaw[] = [
         component: TasksView,
         meta: {
           title: 'Задачи',
+          requiresAccount: true,
         },
       },
       {
@@ -138,6 +139,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/ai/ChatView.vue'),
         meta: {
           title: 'AI Чат',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -150,6 +153,7 @@ const routes: RouteRecordRaw[] = [
         component: AdvertsView,
         meta: {
           title: 'Реклама',
+          requiresAccount: true,
         },
       },
       {
@@ -158,6 +162,7 @@ const routes: RouteRecordRaw[] = [
         component: RegionSalesView,
         meta: {
           title: 'Продажи по регионам',
+          requiresAccount: true,
         },
       },
       {
@@ -175,6 +180,8 @@ const routes: RouteRecordRaw[] = [
         component: AutobookingListView,
         meta: {
           title: 'Автобронирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       // Reschedules Routes (flat structure - each view is standalone)
@@ -184,6 +191,8 @@ const routes: RouteRecordRaw[] = [
         component: ReschedulesListView,
         meta: {
           title: 'Перепланирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -192,6 +201,8 @@ const routes: RouteRecordRaw[] = [
         component: ReschedulesCreateView,
         meta: {
           title: 'Создание перепланирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -200,6 +211,8 @@ const routes: RouteRecordRaw[] = [
         component: ReschedulesUpdateView,
         meta: {
           title: 'Редактирование перепланирования',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       // Triggers Routes (flat structure - each view is standalone)
@@ -217,6 +230,8 @@ const routes: RouteRecordRaw[] = [
         component: PromotionsView,
         meta: {
           title: 'Акции',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -225,6 +240,8 @@ const routes: RouteRecordRaw[] = [
         component: FeedbacksView,
         meta: {
           title: 'Отзывы',
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -233,6 +250,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/ReportsView.vue'),
         meta: {
           title: 'Reports',
+          requiresAccount: true,
         },
       },
       {
