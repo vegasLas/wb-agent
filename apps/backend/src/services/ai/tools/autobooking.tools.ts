@@ -159,7 +159,7 @@ Workflow rules — follow them strictly:
 16. Dates are REQUIRED only if missing: If the user says "с 25 по 30", "с 25.04 по 30.04", "25-30 апреля", or any similar phrase, map it immediately to CUSTOM_PERIOD with the correct startDate and endDate. Do NOT ask "какой тип периода" — they already gave you the range. Only ask about dates if they are completely absent.
 17. Supply type labels: When asking the user to choose a supply type, present the options exactly as: 1. Короба, 2. Монопаллеты, 3. Суперсейф.
 18. Optional params: Before the final summary, ask the user: "Какой максимальный коэффициент приёмки допустим? (0 — только бесплатные слоты, по умолчанию 0)". If the user does not specify, use 0. For Монопаллеты, also ask for the monopallet count.
-19. Success message format: After creating an autobooking, summarize the result in plain Russian. Do NOT show the autobooking UUID, the warehouse numeric ID, or the draft UUID. Show only: склад (name), тип поставки, период/даты, количество товаров в черновике (if known), сколько кредитов осталось.
+19. Success message format: After creating an autobooking, summarize the result in plain Russian. Do NOT show the autobooking UUID, the warehouse numeric ID, or the draft UUID. Show only: склад (name), тип поставки, период/даты, количество товаров в черновике (if known), сколько активных слотов осталось.
 
 Parameter behaviour:
 - Use warehouseId = origid of the warehouse.
