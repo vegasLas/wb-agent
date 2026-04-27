@@ -7,7 +7,7 @@ import { Router } from 'express';
 import { yookassaService } from '@/services/admin/';
 import { prisma } from '@/config/database';
 import { logger } from '@/utils/logger';
-import { PAYMENT_TARIFFS } from '@/constants/payments';
+import { ALL_SUBSCRIPTION_TARIFFS } from '@/constants/payments';
 import { YooKassaWebhookPayload } from '@/types/payments';
 import { isIPv4, isIPv6 } from 'net';
 
@@ -115,7 +115,7 @@ router.post('/yookassa', async (req, res) => {
     }
 
     // Find the tariff
-    const tariff = PAYMENT_TARIFFS.find((t) => t.id === dbPayment.tariffId);
+    const tariff = ALL_SUBSCRIPTION_TARIFFS.find((t) => t.id === dbPayment.tariffId);
     if (!tariff) {
       logger.error('Tariff not found for payment:', body.object.id);
       return res.json({ success: true });

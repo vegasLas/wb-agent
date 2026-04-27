@@ -1,10 +1,12 @@
 /**
- * Payment constants - migrated from deprecated project
- * Source: /Users/muhammad/Documents/wb/constants/index.ts
+ * Payment constants - Tiered subscription model (Lite / Pro / Max)
  */
+
+export type SubscriptionTier = 'LITE' | 'PRO' | 'MAX';
 
 export interface SubscriptionTariff {
   id: string;
+  tier: SubscriptionTier;
   name: string;
   price: number;
   days: number;
@@ -12,89 +14,66 @@ export interface SubscriptionTariff {
   discount?: number;
 }
 
-export interface BookingTariff {
-  id: string;
-  name: string;
-  price: number;
-  bookingCount: number;
-  description: string;
-  discount?: number;
-}
-
-export const SUBSCRIPTION_TARIFFS: SubscriptionTariff[] = [
-  {
-    id: 'subscription-30',
-    name: '1 месяц',
-    price: 190,
-    days: 30,
-    description: 'Базовая подписка на 30 дней',
-  },
-  {
-    id: 'subscription-90',
-    name: '3 месяца',
-    price: 490,
-    days: 90,
-    description: 'Проверка складов на 90 дней',
-    discount: 15,
-  },
-  {
-    id: 'subscription-180',
-    name: '6 месяцев',
-    price: 890,
-    days: 180,
-    description: 'Проверка складов на 180 дней',
-    discount: 25,
-  },
-  {
-    id: 'subscription-365',
-    name: '1 год',
-    price: 1590,
-    days: 365,
-    description: 'Проверка складов на 365 дней',
-    discount: 40,
-  },
+// ─── Lite: базовый доступ ───
+export const LITE_TARIFFS: SubscriptionTariff[] = [
+  { id: 'lite-30',  tier: 'LITE', name: 'Lite 1 мес',   price: 790,  days: 30,  description: 'Базовый доступ' },
+  { id: 'lite-90',  tier: 'LITE', name: 'Lite 3 мес',   price: 1990, days: 90,  description: 'Экономия 16%', discount: 16 },
+  { id: 'lite-365', tier: 'LITE', name: 'Lite 1 год',   price: 6990, days: 365, description: 'Экономия 26%', discount: 26 },
 ];
 
-export const BOOKING_TARIFFS: BookingTariff[] = [
-  {
-    id: 'booking-1',
-    name: '1 кредит',
-    price: 210,
-    bookingCount: 1,
-    description: 'Одна автоматическая бронь',
-  },
-  {
-    id: 'booking-5',
-    name: '5 кредитов',
-    price: 950,
-    bookingCount: 5,
-    description: 'Пакет из 5 автоматических броней',
-    discount: 10,
-  },
-  {
-    id: 'booking-10',
-    name: '10 кредитов',
-    price: 1790,
-    bookingCount: 10,
-    description: 'Пакет из 10 автоматических броней',
-    discount: 15,
-  },
-  {
-    id: 'booking-30',
-    name: '30 кредитов',
-    price: 5150,
-    bookingCount: 30,
-    description: 'Пакет из 30 автоматических броней',
-    discount: 20,
-  },
-  {
-    id: 'booking-100',
-    name: '100 кредитов',
-    price: 17400,
-    bookingCount: 100,
-    description: 'Пакет из 100 автоматических броней',
-    discount: 25,
-  },
+// ─── Pro: полный доступ ───
+export const PRO_TARIFFS: SubscriptionTariff[] = [
+  { id: 'pro-30',   tier: 'PRO', name: 'Pro 1 мес',    price: 2490, days: 30,  description: 'Полный доступ' },
+  { id: 'pro-90',   tier: 'PRO', name: 'Pro 3 мес',    price: 5990, days: 90,  description: 'Экономия 20%', discount: 20 },
+  { id: 'pro-365',  tier: 'PRO', name: 'Pro 1 год',    price: 19900, days: 365, description: 'Экономия 33%', discount: 33 },
 ];
 
-export const PAYMENT_TARIFFS = [...SUBSCRIPTION_TARIFFS, ...BOOKING_TARIFFS];
+// ─── Max: агентский доступ ───
+export const MAX_TARIFFS: SubscriptionTariff[] = [
+  { id: 'max-30',   tier: 'MAX', name: 'Max 1 мес',    price: 6990, days: 30,  description: 'Агентский доступ' },
+  { id: 'max-90',   tier: 'MAX', name: 'Max 3 мес',    price: 17990, days: 90,  description: 'Экономия 14%', discount: 14 },
+  { id: 'max-365',  tier: 'MAX', name: 'Max 1 год',    price: 59900, days: 365, description: 'Экономия 29%', discount: 29 },
+];
+
+export const ALL_SUBSCRIPTION_TARIFFS = [
+  ...LITE_TARIFFS,
+  ...PRO_TARIFFS,
+  ...MAX_TARIFFS,
+];
+
+// ─── Slot limits per tier ───
+export const AUTOBOOKING_SLOTS: Record<SubscriptionTier, number> = {
+  LITE: 2,
+  PRO: 10,
+  MAX: 30,
+};
+
+export const RESCHEDULE_SLOTS: Record<SubscriptionTier, number> = {
+  LITE: 2,
+  PRO: 10,
+  MAX: 30,
+};
+
+// ─── Account limits per tier ───
+export const MAX_ACCOUNTS: Record<SubscriptionTier, number> = {
+  LITE: 1,
+  PRO: 3,
+  MAX: Infinity,
+};
+
+// ─── Feedback reply quotas per tier ───
+export const FEEDBACK_QUOTA: Record<SubscriptionTier, number> = {
+  LITE: 100,
+  PRO: 1000,
+  MAX: Infinity,
+};
+
+// ─── AI chat token budget per tier (in USD) ───
+export const AI_CHAT_BUDGET_USD: Record<SubscriptionTier, number> = {
+  LITE: 0.59,
+  PRO: 1.76,
+  MAX: 5.88,
+};
+
+// ─── Trial duration ───
+export const TRIAL_DAYS = 14;

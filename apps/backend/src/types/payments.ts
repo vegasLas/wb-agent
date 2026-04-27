@@ -84,29 +84,4 @@ export interface YooKassaWebhookPayload {
   };
 }
 
-export interface PaymentTariff {
-  id: string;
-  name: string;
-  price: number;
-  bookingCount: number;
-  description: string;
-  discount?: number;
-}
-
-export interface SubscriptionTariff {
-  id: string;
-  name: string;
-  price: number;
-  days: number;
-  description: string;
-  discount?: number;
-}
-
-export interface BookingTariff {
-  id: string;
-  name: string;
-  price: number;
-  bookingCount: number;
-  description: string;
-  discount?: number;
-}
+// Tariff types are defined in constants/payments.ts as the single source of truth.
