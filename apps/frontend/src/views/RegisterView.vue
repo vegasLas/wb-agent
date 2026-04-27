@@ -140,8 +140,8 @@
           />
         </form>
 
-        <!-- VK Login -->
-        <div v-if="!success" class="mt-4">
+        <!-- VK Login (temporarily hidden) -->
+        <div v-if="false" class="mt-4">
           <div class="relative flex items-center justify-center my-4">
             <div class="absolute inset-0 flex items-center">
               <div class="w-full border-t border-[var(--color-border)]" />
