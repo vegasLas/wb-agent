@@ -5,7 +5,7 @@
     :block-scroll="true"
     :show-close-icon="false"
     :pt="{
-      root: { class: 'w-[260px] border-r border-deep-border' },
+      root: { class: ['w-[260px] border-r border-deep-border', { 'pt-[100px]': hasInitData && isMobile }] },
       content: { class: 'p-0 flex flex-col h-full' },
     }"
   >
@@ -120,6 +120,7 @@ import { useBrowserAuthStore } from '@/stores/auth/browser';
 import { useNavigation } from '@/composables/useNavigation';
 import { usePermissions } from '@/composables/usePermissions';
 import { confirmPromise } from '@/utils/ui';
+import { getInitData } from '@/utils/telegram';
 import type { MenuItem } from 'primevue/menu';
 
 const props = defineProps<{
@@ -136,6 +137,9 @@ const router = useRouter();
 const { primaryNav, secondaryNav, isActive } = useNavigation();
 const userStore = useUserStore();
 const { hasAnyPermission } = usePermissions();
+
+const hasInitData = computed(() => !!getInitData());
+const isMobile = computed(() => /iPhone|iPad|Android|webOS|BlackBerry/i.test(navigator.userAgent));
 
 const visiblePrimaryNav = computed(() =>
   primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions)),

@@ -33,7 +33,10 @@ export class BotCommandsService {
       // Find user by TELEGRAM identity
       const identity = await prisma.userIdentity.findUnique({
         where: {
-          provider_providerId: { provider: AuthProvider.TELEGRAM, providerId: telegramId },
+          provider_providerId: {
+            provider: AuthProvider.TELEGRAM,
+            providerId: telegramId,
+          },
         },
         include: { user: true },
       });
@@ -42,7 +45,7 @@ export class BotCommandsService {
         await TBOT.sendMessage(
           chatId,
           '❌ Вы не зарегистрированы.\n\n' +
-          'Отправьте /start для создания аккаунта.'
+            'Отправьте /start для создания аккаунта.',
         );
         return;
       }
@@ -55,7 +58,8 @@ export class BotCommandsService {
       if (emailIdentity) {
         await TBOT.sendMessage(
           chatId,
-          '✅ У вас уже привязан email: ' + (emailIdentity.email || 'неизвестно'),
+          '✅ У вас уже привязан email: ' +
+            (emailIdentity.email || 'неизвестно'),
         );
         return;
       }
@@ -68,18 +72,16 @@ export class BotCommandsService {
       await TBOT.sendMessage(
         chatId,
         '🔗 <b>Привязка email</b>\n\n' +
-        `Ваш код: <code>${code}</code>\n\n` +
-        `1. Откройте ${url}/register\n` +
-        '2. Заполните email, имя, пароль\n' +
-        `3. Введите код <code>${code}</code> в поле "Код из Telegram"\n\n` +
-        '⏳ Код действителен 1 час.',
+          `Ваш код: <code>${code}</code>\n\n` +
+          `1. Откройте ${url}/register\n` +
+          '2. Заполните email, имя, пароль\n' +
+          `3. Введите код <code>${code}</code> в поле "Код из Telegram"\n\n` +
+          '⏳ Код действителен 1 час.',
         {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [
-                { text: '📋 Копировать код', copy_text: { text: code } },
-              ],
+              [{ text: '📋 Копировать код', copy_text: { text: code } }],
             ],
           },
         },
@@ -101,10 +103,10 @@ export class BotCommandsService {
     await TBOT.sendMessage(
       msg.chat.id,
       '🤖 <b>Доступные команды</b>\n\n' +
-      '/link_email - Получить код для привязки email\n' +
-      '/help - Показать это сообщение\n\n' +
-      '💡 <b>Совет:</b> Привяжите email для входа через браузер!\n' +
-      'Откройте веб-приложение через кнопку меню бота.',
+        '/link_email - Получить код для привязки email\n' +
+        '/help - Показать это сообщение\n\n' +
+        '💡 <b>Совет:</b> Привяжите email для входа через браузер!\n' +
+        'Откройте веб-приложение через кнопку меню бота.',
       { parse_mode: 'HTML' },
     );
   }

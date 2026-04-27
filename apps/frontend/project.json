@@ -48,7 +48,14 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "scp -r dist/apps/frontend/* wbsupplier:/var/www/html/wbmentor/"
+        "command": "scp -r dist/apps/frontend/* wbsupplier:/var/www/html/app.wboi/"
+      }
+    },
+    "deploy-dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "scp -r dist/apps/frontend/* wbsupplier:/var/www/html/wboitest/"
       }
     }
   }

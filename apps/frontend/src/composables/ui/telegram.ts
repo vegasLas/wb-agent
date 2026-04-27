@@ -1,5 +1,11 @@
 import { ref, onMounted, type Ref } from 'vue';
 import { confirmPromise } from '@/utils/ui';
+import {
+  expandWebApp,
+  readyWebApp,
+  requestFullscreen as requestFullscreenNative,
+  exitFullscreen as exitFullscreenNative,
+} from '@/utils/telegram/webApp';
 
 // Telegram WebApp types (subset we need)
 interface TelegramUser {
@@ -50,6 +56,8 @@ interface UseTelegramReturn {
   ) => void;
   getUser: () => TelegramUser | undefined;
   getInitData: () => string | undefined;
+  requestFullscreen: () => void;
+  exitFullscreen: () => void;
 }
 
 // Telegram WebApp composable for easy access to Telegram features
@@ -88,15 +96,13 @@ export function useTelegram(): UseTelegramReturn {
       colorScheme.value = tg.colorScheme;
       themeParams.value = tg.themeParams;
 
-      // Expand the WebApp to full height
-      if (tg.expand) {
-        tg.expand();
+      // Expand the WebApp to full height when running inside Telegram
+      if (initData) {
+        expandWebApp();
       }
 
       // Notify Telegram that the app is ready
-      if (tg.ready) {
-        tg.ready();
-      }
+      readyWebApp();
     } else if (isTelegramMode && initDataFromURL) {
       // Telegram mode detected via URL but WebApp not loaded
       // This happens when testing with tgWebAppData in URL outside Telegram
@@ -135,9 +141,11 @@ export function useTelegram(): UseTelegramReturn {
           resolve(confirmed);
         });
       } else {
-        confirmPromise({ header: 'Подтверждение', message }).then((confirmed) => {
-          resolve(confirmed);
-        });
+        confirmPromise({ header: 'Подтверждение', message }).then(
+          (confirmed) => {
+            resolve(confirmed);
+          },
+        );
       }
     });
   };
@@ -146,10 +154,20 @@ export function useTelegram(): UseTelegramReturn {
   const hapticFeedback = (
     type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light',
   ) => {
-    const tg = (window as unknown as { Telegram?: { WebApp?: { HapticFeedback?: {
-      impactOccurred: (style: 'light' | 'medium' | 'heavy') => void;
-      notificationOccurred: (type: 'success' | 'error' | 'warning') => void;
-    } } } }).Telegram?.WebApp;
+    const tg = (
+      window as unknown as {
+        Telegram?: {
+          WebApp?: {
+            HapticFeedback?: {
+              impactOccurred: (style: 'light' | 'medium' | 'heavy') => void;
+              notificationOccurred: (
+                type: 'success' | 'error' | 'warning',
+              ) => void;
+            };
+          };
+        };
+      }
+    ).Telegram?.WebApp;
     const haptic = tg?.HapticFeedback;
 
     if (!haptic) return;
@@ -184,6 +202,16 @@ export function useTelegram(): UseTelegramReturn {
     return initData || window.__TELEGRAM_INIT_DATA__ || undefined;
   };
 
+  // Request fullscreen mode (requires Telegram WebApp v8.0+)
+  const requestFullscreen = () => {
+    requestFullscreenNative();
+  };
+
+  // Exit fullscreen mode
+  const exitFullscreen = () => {
+    exitFullscreenNative();
+  };
+
   return {
     // State
     isReady,
@@ -205,6 +233,8 @@ export function useTelegram(): UseTelegramReturn {
     hapticFeedback,
     getUser,
     getInitData,
+    requestFullscreen,
+    exitFullscreen,
   };
 }
 
@@ -332,4 +362,20 @@ export function useBackButton(): UseBackButtonReturn {
     onBackButtonClick,
     offBackButtonClick,
   };
+}
+
+/**
+ * Request fullscreen mode for Telegram Mini Apps.
+ * Uses the native postEvent implementation (requires WebApp v8.0+).
+ */
+export function requestFullscreen(): void {
+  requestFullscreenNative();
+}
+
+/**
+ * Exit fullscreen mode for Telegram Mini Apps.
+ * Uses the native postEvent implementation (requires WebApp v8.0+).
+ */
+export function exitFullscreen(): void {
+  exitFullscreenNative();
 }

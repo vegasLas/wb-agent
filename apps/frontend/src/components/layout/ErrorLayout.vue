@@ -27,7 +27,7 @@ import { useRoute } from 'vue-router';
 
 const route = useRoute();
 
-type ErrorType = 'session_expired' | 'maintenance' | 'not_found';
+type ErrorType = 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found';
 
 const errorType = computed(
   () => (route.meta.errorType as ErrorType) || 'not_found',
@@ -57,6 +57,13 @@ const errorConfig: Record<
     icon: 'pi pi-wrench',
     iconBg: 'bg-blue-100 dark:bg-blue-900/30',
     iconColor: 'text-blue-600 dark:text-blue-400',
+  },
+  subscription_required: {
+    title: 'Требуется подписка',
+    message: 'Для использования сервиса требуется активная подписка. Пожалуйста, оформите подписку для продолжения работы.',
+    icon: 'pi pi-exclamation-triangle',
+    iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
+    iconColor: 'text-yellow-600 dark:text-yellow-400',
   },
   not_found: {
     title: 'Пользователь не найден',
