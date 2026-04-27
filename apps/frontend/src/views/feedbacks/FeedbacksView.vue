@@ -18,14 +18,20 @@
         class="text-sm"
       />
 
-      <!-- Right: Actions -->
-      <FeedbacksActionsBar
-        :active-tab="activeTab"
-        :settings-loading="feedbacksStore.settingsLoading"
-        :answer-all-loading="feedbacksStore.answerAllLoading"
-        @open-auto-answers="showAutoAnswersDrawer = true"
-        @answer-all="onAnswerAll"
-      />
+      <!-- Right: Actions + Quota -->
+      <div class="flex items-center gap-3">
+        <FeedbackQuotaBadge
+          :used="feedbackQuota.used"
+          :max="feedbackQuota.max"
+        />
+        <FeedbacksActionsBar
+          :active-tab="activeTab"
+          :settings-loading="feedbacksStore.settingsLoading"
+          :answer-all-loading="feedbacksStore.answerAllLoading"
+          @open-auto-answers="showAutoAnswersDrawer = true"
+          @answer-all="onAnswerAll"
+        />
+      </div>
     </div>
 
     <!-- Error Message -->
@@ -299,6 +305,8 @@ import Message from 'primevue/message';
 import { useFeedbacksStore } from '@/stores/feedbacks';
 import { useViewReady } from '@/composables/ui';
 import { useFeedbacksDialog } from '@/composables/feedbacks/useFeedbacksDialog';
+import FeedbackQuotaBadge from '@/components/global/FeedbackQuotaBadge.vue';
+import apiClient from '@/api/client';
 import {
   FeedbacksStatsCards,
   FeedbacksActionsBar,
@@ -316,6 +324,17 @@ import type { FeedbackItem, FeedbackTab } from '@/stores/feedbacks';
 const feedbacksStore = useFeedbacksStore();
 const { viewReady } = useViewReady();
 const dialog = useFeedbacksDialog();
+
+const feedbackQuota = ref({ used: 0, max: null as number | null });
+
+async function fetchFeedbackQuota() {
+  try {
+    const response = await apiClient.get('/user/limits');
+    feedbackQuota.value = response.data.feedbackQuota || { used: 0, max: null };
+  } catch (error) {
+    // ignore
+  }
+}
 
 const tabs: FeedbackTab[] = ['unanswered', 'ai-posted', 'ai-pending'];
 
@@ -577,6 +596,7 @@ onMounted(async () => {
       feedbacksStore.fetchRules(),
       feedbacksStore.fetchRejectedAnswers(),
       feedbacksStore.fetchGoodsGroups(),
+      fetchFeedbackQuota(),
     ]);
     // Prefetch counts for other tabs so tab labels show numbers immediately
     await Promise.all([
