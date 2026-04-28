@@ -58,13 +58,6 @@ export const useAutobookingUpdateStore = defineStore(
     const warehouseStore = useWarehousesStore();
 
     // Getters
-    // In the slot-based model, updating an autobooking does not change slot count
-    // (it's the same record). No credit math needed.
-    const remainingAutobookingCount = computed(() => {
-      // Always allow updates since slot count doesn't change
-      return 999;
-    });
-
     const isValid = computed(() => {
       if (!form.value.warehouseId) return false;
       if (!form.value.draftId) return false;
@@ -401,7 +394,6 @@ export const useAutobookingUpdateStore = defineStore(
       isValid,
       canSubmit,
       hasChanges,
-      remainingAutobookingCount,
 
       // Actions
       openUpdate,

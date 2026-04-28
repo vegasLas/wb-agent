@@ -2,6 +2,7 @@ import { tool, Tool } from 'ai';
 import { z } from 'zod';
 import { prisma } from '@/config/database';
 import { safeTool, loggedTool } from './safe-tool.utils';
+import { calculateSlotCount } from '@/utils/slot-utils';
 
 export function userContextTools(userId: number): Record<string, Tool> {
   return {
@@ -25,9 +26,12 @@ Required: none.`,
 
           const suppliers = user.accounts.flatMap((a) => a.suppliers);
 
-          const activeSlots = user.autobookings.filter(
-            (ab) => ab.status === 'PENDING' || ab.status === 'ACTIVE',
-          ).length;
+          const activeSlots = user.autobookings
+            .filter((ab) => ab.status === 'PENDING' || ab.status === 'ACTIVE')
+            .reduce(
+              (sum, ab) => sum + calculateSlotCount(ab.dateType, ab.customDates as Date[]),
+              0,
+            );
           const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
           const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
 

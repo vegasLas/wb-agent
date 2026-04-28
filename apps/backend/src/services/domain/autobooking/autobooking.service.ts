@@ -1,6 +1,7 @@
 import { prisma } from '@/config/database';
 import type { Autobooking } from '@prisma/client';
 import { AUTOBOOKING_SLOTS } from '@/constants/payments';
+import { calculateSlotCount } from '@/utils/slot-utils';
 
 /**
  * Valid date types for autobooking
@@ -206,12 +207,19 @@ export class AutobookingService {
 
     const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
 
-    // Check active slot limit and create atomically
+    // Check active slot limit (sum of slots) and create atomically
     const autobooking = await prisma.$transaction(async (tx) => {
-      const activeCount = await tx.autobooking.count({
+      const activeAutobookings = await tx.autobooking.findMany({
         where: { userId, status: { in: ['PENDING', 'ACTIVE'] } },
+        select: { dateType: true, customDates: true },
       });
-      if (activeCount >= maxSlots) {
+      const usedSlots = activeAutobookings.reduce(
+        (sum, ab) =>
+          sum + calculateSlotCount(ab.dateType, ab.customDates as Date[]),
+        0,
+      );
+      const newSlots = calculateSlotCount(data.dateType, normalizedCustomDates);
+      if (usedSlots + newSlots > maxSlots) {
         throw new AutobookingUpdateError(
           `Достигнут лимит активных броней (${maxSlots}). Обновите подписку для увеличения лимита.`,
           'SLOT_LIMIT_REACHED',
@@ -280,8 +288,6 @@ export class AutobookingService {
         400,
       );
     }
-
-    // Note: credit-based logic removed. Slot limits are checked at creation time only.
 
     // Build update data with validation
     const updateData: Partial<Autobooking> = {};
@@ -367,6 +373,9 @@ export class AutobookingService {
     // Validate business rules
     this.validateBusinessRules(updateData, data);
 
+    // Check slot limits on status activation or on expanding custom dates
+    await this.checkUpdateSlotLimits(userId, existing, updateData, data);
+
     // Perform update
     return await prisma.autobooking.update({
       where: { id: data.id },
@@ -381,7 +390,7 @@ export class AutobookingService {
   async deleteAutobooking(
     userId: number,
     autobookingId: string,
-  ): Promise<{ message: string; returnedCredits: number }> {
+  ): Promise<{ message: string }> {
     const autobooking = await prisma.autobooking.findFirst({
       where: { id: autobookingId, userId },
     });
@@ -398,7 +407,6 @@ export class AutobookingService {
 
     return {
       message: 'Автобронирование успешно удалено',
-      returnedCredits: 0,
     };
   }
 
@@ -568,6 +576,85 @@ export class AutobookingService {
         'END_DATE_REQUIRED',
         400,
       );
+    }
+  }
+
+  /**
+   * Check slot limits when updating an autobooking.
+   * Blocks activation if it would exceed the user's max slots,
+   * and blocks expanding customDates on an already-active record.
+   */
+  private async checkUpdateSlotLimits(
+    userId: number,
+    existing: Autobooking,
+    updateData: Partial<Autobooking>,
+  ): Promise<void> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
+
+    const isActivating =
+      updateData.status === 'ACTIVE' &&
+      !['PENDING', 'ACTIVE'].includes(existing.status);
+
+    const newDateType = (updateData.dateType ?? existing.dateType) as string;
+    const newCustomDates =
+      updateData.customDates ?? (existing.customDates as Date[]);
+    const newSlotCount = calculateSlotCount(newDateType, newCustomDates);
+
+    // Case 1: Activating a non-active autobooking
+    if (isActivating) {
+      const activeAutobookings = await prisma.autobooking.findMany({
+        where: {
+          userId,
+          status: { in: ['PENDING', 'ACTIVE'] },
+          id: { not: existing.id },
+        },
+        select: { dateType: true, customDates: true },
+      });
+      const usedSlots = activeAutobookings.reduce(
+        (sum, ab) =>
+          sum + calculateSlotCount(ab.dateType, ab.customDates as Date[]),
+        0,
+      );
+      if (usedSlots + newSlotCount > maxSlots) {
+        throw new AutobookingUpdateError(
+          `Достигнут лимит активных броней (${maxSlots}). Обновите подписку для увеличения лимита.`,
+          'SLOT_LIMIT_REACHED',
+          403,
+        );
+      }
+      return;
+    }
+
+    // Case 2: Already active and expanding slot count (e.g. adding more custom dates)
+    if (['PENDING', 'ACTIVE'].includes(existing.status)) {
+      const existingSlots = calculateSlotCount(
+        existing.dateType,
+        existing.customDates as Date[],
+      );
+      if (newSlotCount > existingSlots) {
+        const activeAutobookings = await prisma.autobooking.findMany({
+          where: {
+            userId,
+            status: { in: ['PENDING', 'ACTIVE'] },
+            id: { not: existing.id },
+          },
+          select: { dateType: true, customDates: true },
+        });
+        const usedSlots = activeAutobookings.reduce(
+          (sum, ab) =>
+            sum + calculateSlotCount(ab.dateType, ab.customDates as Date[]),
+          0,
+        );
+        if (usedSlots + newSlotCount > maxSlots) {
+          throw new AutobookingUpdateError(
+            `Достигнут лимит активных броней (${maxSlots}). Обновите подписку для увеличения лимита.`,
+            'SLOT_LIMIT_REACHED',
+            403,
+          );
+        }
+      }
     }
   }
 }

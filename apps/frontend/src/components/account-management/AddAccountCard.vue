@@ -1,7 +1,10 @@
 <template>
   <div
     class="flex items-center justify-between p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-    @click="$emit('add-account')"
+    :class="{
+      'opacity-50 cursor-not-allowed pointer-events-none': disabled,
+    }"
+    @click="!disabled && $emit('add-account')"
   >
     <div class="flex items-center gap-3">
       <div
@@ -23,6 +26,14 @@
 </template>
 
 <script setup lang="ts">
+interface Props {
+  disabled?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+  disabled: false,
+});
+
 defineEmits<{
   'add-account': [];
 }>();

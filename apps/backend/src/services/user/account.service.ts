@@ -246,6 +246,27 @@ export class AccountService {
   }
 
   /**
+   * Check whether the user has reached their account limit.
+   * Throws if the limit is reached.
+   */
+  async checkAccountLimit(userId: number): Promise<void> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { accounts: true },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.accounts.length >= user.maxAccounts) {
+      throw new Error(
+        `Лимит аккаунтов (${user.maxAccounts}) достигнут. Обновите подписку для добавления новых аккаунтов.`,
+      );
+    }
+  }
+
+  /**
    * Save supplier info after successful authentication
    * Creates account and fetches all suppliers for the account
    */
