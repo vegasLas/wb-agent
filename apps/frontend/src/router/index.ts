@@ -472,6 +472,18 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
+// Refresh notification unread count on every route change (lightweight polling)
+router.afterEach((to) => {
+  if (!to.meta.public) {
+    import('@/stores/notifications').then(({ useNotificationsStore }) => {
+      const store = useNotificationsStore();
+      store.fetchUnreadCount();
+    }).catch(() => {
+      // Silently ignore if store isn't available
+    });
+  }
+});
+
 // Initialize app (Telegram + user data)
 async function initializeApp(): Promise<void> {
   const { initTelegram, initUserData } = useAppState();

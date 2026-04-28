@@ -507,6 +507,76 @@ export const PrimevalPreset = definePreset(Aura, {
         weight: 600,
       },
     },
+    // Badge styling - override severity colors to match semantic palette
+    badge: {
+      borderRadius: '{borderRadius.md}',
+      font: {
+        size: '0.75rem',
+        weight: 700,
+      },
+      colorScheme: {
+        light: {
+          root: {
+            background: '{surface.200}',
+            color: '{text.color}',
+          },
+          secondary: {
+            background: '{secondary.background}',
+            color: '{secondary.color}',
+          },
+          info: {
+            background: '{info.background}',
+            color: '{info.color}',
+          },
+          success: {
+            background: '{success.background}',
+            color: '{success.color}',
+          },
+          warn: {
+            background: '{warn.background}',
+            color: '{warn.color}',
+          },
+          danger: {
+            background: '{danger.background}',
+            color: '{danger.color}',
+          },
+          contrast: {
+            background: '{surface.950}',
+            color: '{surface.0}',
+          },
+        },
+        dark: {
+          root: {
+            background: '{surface.800}',
+            color: '{surface.0}',
+          },
+          secondary: {
+            background: '{secondary.background}',
+            color: '{secondary.color}',
+          },
+          info: {
+            background: '{info.background}',
+            color: '{info.color}',
+          },
+          success: {
+            background: '{success.background}',
+            color: '{success.color}',
+          },
+          warn: {
+            background: '{warn.background}',
+            color: '{warn.color}',
+          },
+          danger: {
+            background: '{danger.background}',
+            color: '{danger.color}',
+          },
+          contrast: {
+            background: '{surface.0}',
+            color: '{surface.950}',
+          },
+        },
+      },
+    },
     // Toast styling
     toast: {
       borderRadius: '16px',

@@ -54,3 +54,24 @@ export function getMonthEndDate(startDate: string | Date): Date {
   date.setMonth(date.getMonth() + 1);
   return date;
 }
+
+/**
+ * Format a date as a relative "time ago" string in Russian
+ */
+export function formatTimeAgo(date: string | Date): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '';
+
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return 'только что';
+  if (diffMin < 60) return `${diffMin} мин. назад`;
+  if (diffHour < 24) return `${diffHour} ч. назад`;
+  if (diffDay < 7) return `${diffDay} дн. назад`;
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
