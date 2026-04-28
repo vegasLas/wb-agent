@@ -31,6 +31,16 @@ enum AuthProvider {
   LEGACY
 }
 
+enum InAppNotificationType {
+  SYSTEM
+  SUBSCRIPTION
+  AUTOBOOKING
+  RESCHEDULE
+  TRIGGER
+  FEEDBACK
+  PAYMENT
+}
+
 model User {
   id                    Int               @id @default(autoincrement())
   wbAuthUpdatedAt       DateTime?
@@ -60,6 +70,7 @@ model User {
   authTokens             AuthToken[]
   identities             UserIdentity[]
   linkCodes              LinkCode[]
+  inAppNotifications     InAppNotification[]
 
   profile  Profile?
   telegram Telegram?
@@ -182,6 +193,24 @@ model LinkCode {
 
   @@index([code])
   @@index([expiresAt])
+}
+
+model InAppNotification {
+  id        String                  @id @default(uuid())
+  userId    Int
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      InAppNotificationType
+  title     String
+  message   String
+  link      String?
+  metadata  Json?
+  readAt    DateTime?
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([type])
 }
 
 model Account {
