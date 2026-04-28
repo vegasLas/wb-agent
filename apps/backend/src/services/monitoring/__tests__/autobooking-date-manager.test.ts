@@ -11,7 +11,7 @@
 
 import { autobookingDateManagerService } from '@/services/monitoring/autobooking-date-manager.service';
 import { prisma } from '@/config/database';
-import { TBOT } from '@/utils/TBOT';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 import type { Autobooking, User } from '@prisma/client';
 
 // Mock dependencies
@@ -27,9 +27,9 @@ jest.mock('../../../config/database', () => ({
   },
 }));
 
-jest.mock('../../../utils/TBOT', () => ({
-  TBOT: {
-    sendMessage: jest.fn(),
+jest.mock('../shared/notification-dispatcher.service', () => ({
+  notificationDispatcher: {
+    notify: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -122,13 +122,12 @@ describe('AutobookingDateManagerService', () => {
 
       const mockUser = {
         id: 'user1',
-        chatId: '123456',
+        telegram: { chatId: '123456' },
       } as User;
 
       (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(mockUser);
 
       // Act
-       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
@@ -136,19 +135,25 @@ describe('AutobookingDateManagerService', () => {
       // Assert
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user1' },
+        include: {
+          telegram: true,
+        },
       });
 
-      expect(TBOT.sendMessage).toHaveBeenCalledWith(
-        '123456',
-        expect.stringContaining('Неактуальное автобронирование архивировано'),
+      expect(notificationDispatcher.notify).toHaveBeenCalledWith(
         expect.objectContaining({
-          reply_markup: expect.any(Object),
-          disable_notification: true,
+          userId: 'user1',
+          chatId: '123456',
+          message: expect.stringContaining('Неактуальное автобронирование архивировано'),
+          subject: 'Автобронирование архивировано — wboi',
+          type: 'AUTOBOOKING',
+          title: 'Автобронирование архивировано',
+          link: '/autobooking',
         }),
       );
     });
 
-    it('should not send notification if user has no chatId', async () => {
+    it('should send in-app notification even if user has no chatId', async () => {
       // Arrange
       const mockAutobooking = {
         id: '1',
@@ -157,19 +162,25 @@ describe('AutobookingDateManagerService', () => {
 
       const mockUser = {
         id: 'user1',
-        chatId: null,
+        telegram: { chatId: null },
       } as User;
 
       (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(mockUser);
 
       // Act
-       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert
-      expect(TBOT.sendMessage).not.toHaveBeenCalled();
+      expect(notificationDispatcher.notify).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user1',
+          chatId: undefined,
+          type: 'AUTOBOOKING',
+          title: 'Автобронирование архивировано',
+        }),
+      );
     });
 
     it('should not send notification if user not found', async () => {
@@ -182,13 +193,12 @@ describe('AutobookingDateManagerService', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
       // Act
-       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert
-      expect(TBOT.sendMessage).not.toHaveBeenCalled();
+      expect(notificationDispatcher.notify).not.toHaveBeenCalled();
     });
 
     it('should not attempt to find user if userId is not provided', async () => {
@@ -199,14 +209,13 @@ describe('AutobookingDateManagerService', () => {
       } as unknown as Autobooking;
 
       // Act
-       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert
       expect(prisma.user.findUnique).not.toHaveBeenCalled();
-      expect(TBOT.sendMessage).not.toHaveBeenCalled();
+      expect(notificationDispatcher.notify).not.toHaveBeenCalled();
     });
 
     it('should handle errors when sending notification', async () => {
@@ -222,22 +231,21 @@ describe('AutobookingDateManagerService', () => {
 
       const mockUser = {
         id: 'user1',
-        chatId: '123456',
+        telegram: { chatId: '123456' },
       } as User;
 
       (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(mockUser);
-      (TBOT.sendMessage as jest.Mock).mockRejectedValueOnce(
-        new Error('TBOT error'),
+      (notificationDispatcher.notify as jest.Mock).mockRejectedValueOnce(
+        new Error('Dispatcher error'),
       );
 
       // Act - should not throw
-       
       await (
         autobookingDateManagerService as any
       ).notifyUserAboutArchivedAutobooking(mockAutobooking);
 
       // Assert - error was logged
-      expect(TBOT.sendMessage).toHaveBeenCalled();
+      expect(notificationDispatcher.notify).toHaveBeenCalled();
     });
   });
 

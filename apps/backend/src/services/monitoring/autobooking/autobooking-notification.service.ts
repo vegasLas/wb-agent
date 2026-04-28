@@ -5,7 +5,7 @@
  * Handles success notifications and status updates for autobookings.
  */
 
-import { sharedTelegramNotificationService } from '@/services/monitoring/shared/telegram-notification.service';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 import { sharedStatusUpdateService } from '@/services/monitoring/shared/status-update.service';
 import { createLogger } from '@/utils/logger';
 
@@ -20,29 +20,26 @@ export class AutobookingNotificationService
    * Sends a success notification to the user via Telegram
    */
   async sendSuccessNotification(
+    userId: number,
     chatId: string,
     warehouseName: string,
     date: Date,
     coefficient: number,
     transitWarehouseName?: string | null,
   ): Promise<void> {
-    const message =
-      sharedTelegramNotificationService.buildBookingSuccessMessage(
-        warehouseName,
-        date,
-        coefficient,
-        transitWarehouseName,
-        false, // isReschedule = false
-      );
-
     logger.info(
-      `Sending success notification to chat ${chatId} for ${warehouseName}`,
+      `Sending success notification to user ${userId} / chat ${chatId || 'none'} for ${warehouseName}`,
     );
 
-    await sharedTelegramNotificationService.sendSuccessNotification(
+    await notificationDispatcher.notifyBookingSuccess({
+      userId,
       chatId,
-      message,
-    );
+      warehouseName,
+      date,
+      coefficient,
+      transitWarehouseName,
+      isReschedule: false,
+    });
   }
 
   /**

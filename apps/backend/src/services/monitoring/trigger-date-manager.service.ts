@@ -10,7 +10,7 @@
 
 import { prisma } from '@/config/database';
 import type { SupplyTrigger } from '@prisma/client';
-import { TBOT } from '@/utils/TBOT';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('TriggerDateManager');
@@ -163,11 +163,13 @@ export class TriggerDateManagerService {
 
       const user = await prisma.user.findUnique({
         where: { id: trigger.userId },
-        include: { telegram: true },
+        include: {
+          telegram: true,
+        },
       });
 
-      const chatId = user?.telegram?.chatId;
-      if (!chatId || !TBOT) return;
+      const chatId = user?.telegram?.chatId || undefined;
+      if (!user) return;
 
       const warehouseNames = this.getWarehouseNames(trigger.warehouseIds);
 
@@ -177,18 +179,19 @@ export class TriggerDateManagerService {
         `${warehouseNames ? `🏬 Склады: ${warehouseNames}\n` : ''}` +
         `📅 Создан: ${new Date(trigger.createdAt).toLocaleDateString('ru-RU')}`;
 
-      await TBOT.sendMessage(chatId, message, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '❌ Закрыть',
-                callback_data: 'close_menu',
-              },
-            ],
-          ],
+      await notificationDispatcher.notify({
+        userId: trigger.userId,
+        chatId,
+        message,
+        subject: 'Таймслот истек — wboi',
+        type: 'TRIGGER',
+        title: 'Таймслот истек',
+        link: '/triggers',
+        metadata: {
+          triggerId: trigger.id,
+          searchMode: trigger.searchMode,
+          warehouseIds: trigger.warehouseIds,
         },
-        disable_notification: true, // Send without sound
       });
     } catch (error) {
       logger.error(
