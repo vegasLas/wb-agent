@@ -6,11 +6,12 @@ export class UserService {
     return prisma.user.findUnique({
       where: { id },
       include: {
-        accounts: { include: { suppliers: true } },
+        accounts: { where: { isDisabled: false }, include: { suppliers: true } },
         supplierApiKey: true,
         payments: true,
         profile: true,
         telegram: true,
+        subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 },
       },
     });
   }
@@ -112,7 +113,7 @@ export class UserService {
   async updateSelectedAccount(userId: number, accountId: string | null) {
     if (accountId) {
       const account = await prisma.account.findFirst({
-        where: { id: accountId, userId },
+        where: { id: accountId, userId, isDisabled: false },
       });
       if (!account) {
         throw new Error('Account not found');

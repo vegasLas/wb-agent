@@ -6,6 +6,7 @@ import { prisma } from '@/config/database';
 import { identityService } from '@/services/auth/identity.service';
 import { ApiError } from '@/utils/errors';
 import { createLogger } from '@/utils/logger';
+
 import { AuthProvider } from '@prisma/client';
 
 const logger = createLogger('JWTAuth');
@@ -91,10 +92,6 @@ export class JWTAuthService {
     const isValid = await this.comparePassword(password, found.identity.passwordHash);
     if (!isValid) {
       throw ApiError.unauthorized('Неверные учетные данные');
-    }
-
-    if (!found.user.subscriptionExpiresAt || new Date(found.user.subscriptionExpiresAt) <= new Date()) {
-      throw ApiError.forbidden('Требуется активная подписка', 'SUBSCRIPTION_REQUIRED');
     }
 
     const accessToken = this.generateAccessToken({

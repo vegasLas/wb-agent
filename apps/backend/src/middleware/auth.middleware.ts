@@ -10,8 +10,7 @@ import { AuthProvider } from '@prisma/client';
 export interface AuthUser {
   id: number;
   authType: 'telegram' | 'browser';
-  subscriptionExpiresAt?: Date | null;
-  subscriptionTier?: 'FREE' | 'LITE' | 'PRO' | 'MAX';
+  subscriptionTier: 'FREE' | 'LITE' | 'PRO' | 'MAX';
   selectedAccountId?: string | null;
   chatId?: string | null;
 }
@@ -42,7 +41,7 @@ async function tryTelegramAuth(req: Request): Promise<AuthUser | null> {
           providerId: String(initData.user.id),
         },
       },
-      include: { user: { include: { telegram: true } } },
+      include: { user: { include: { telegram: true, subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } } } }
     });
 
     let user = identity?.user ?? null;
@@ -74,12 +73,12 @@ async function tryTelegramAuth(req: Request): Promise<AuthUser | null> {
       }
     }
 
+    const currentSub = user.subscriptions?.[0];
     return {
       id: user.id,
       authType: 'telegram',
       selectedAccountId: user.selectedAccountId,
-      subscriptionExpiresAt: user.subscriptionExpiresAt,
-      subscriptionTier: user.subscriptionTier ?? 'FREE',
+      subscriptionTier: currentSub?.tier ?? 'FREE',
       chatId: user.telegram?.chatId ?? null,
     };
   } catch (error) {
@@ -104,19 +103,19 @@ async function tryJWTAuth(req: Request): Promise<AuthUser | null> {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      include: { telegram: true },
+      include: { telegram: true, subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
 
     if (!user) {
       throw ApiError.unauthorized('Пользователь не найден');
     }
 
+    const currentSub = user.subscriptions?.[0];
     return {
       id: user.id,
       authType: 'browser',
       selectedAccountId: user.selectedAccountId,
-      subscriptionExpiresAt: user.subscriptionExpiresAt,
-      subscriptionTier: user.subscriptionTier ?? 'FREE',
+      subscriptionTier: currentSub?.tier ?? 'FREE',
       chatId: user.telegram?.chatId ?? null,
     };
   } catch (error) {
@@ -206,16 +205,16 @@ export const authenticate = async (
           logger.info('Technical mode: allowing user', userId);
           const user = await prisma.user.findUnique({
             where: { id: parseInt(userId) },
-            include: { identities: { where: { provider: 'TELEGRAM' } }, telegram: true },
+            include: { identities: { where: { provider: 'TELEGRAM' } }, telegram: true, subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
           });
 
           if (user) {
+            const currentSub = user.subscriptions?.[0];
             req.user = {
               id: user.id,
               authType: 'telegram',
               selectedAccountId: user.selectedAccountId,
-              subscriptionExpiresAt: user.subscriptionExpiresAt,
-              subscriptionTier: user.subscriptionTier ?? 'FREE',
+              subscriptionTier: currentSub?.tier ?? 'FREE',
               chatId: user.telegram?.chatId ?? null,
             };
           }
@@ -245,14 +244,10 @@ export const authenticate = async (
     const authUser = await tryTelegramAuth(req);
 
     if (authUser) {
-      if (authUser.subscriptionTier !== 'FREE') {
-      if (!authUser.subscriptionExpiresAt || new Date(authUser.subscriptionExpiresAt) <= new Date()) {
-        throw ApiError.forbidden(
-          'Требуется активная подписка.',
-          'SUBSCRIPTION_REQUIRED',
-        );
-      }
-    }
+      // With relational subscription model, tier is always derived from active subscription.
+    // FREE = free user or expired-downgraded user (allowed access).
+    // Non-FREE = active paid subscription (allowed access).
+    // No expiration check needed here.
 
     req.user = authUser;
     return next();
@@ -261,14 +256,10 @@ export const authenticate = async (
     // Try JWT auth (Authorization: Bearer <token> header)
     const jwtUser = await tryJWTAuth(req);
     if (jwtUser) {
-      if (jwtUser.subscriptionTier !== 'FREE') {
-        if (!jwtUser.subscriptionExpiresAt || new Date(jwtUser.subscriptionExpiresAt) <= new Date()) {
-          throw ApiError.forbidden(
-            'Требуется активная подписка.',
-            'SUBSCRIPTION_REQUIRED',
-          );
-        }
-      }
+        // With relational subscription model, tier is always derived from active subscription.
+        // FREE = free user or expired-downgraded user (allowed access).
+        // Non-FREE = active paid subscription (allowed access).
+        // No expiration check needed here.
 
       req.user = jwtUser;
       return next();
