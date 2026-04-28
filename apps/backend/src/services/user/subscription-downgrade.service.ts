@@ -1,13 +1,13 @@
 /**
  * Subscription Downgrade Service
  * Handles downgrading expired paid users to FREE tier,
- * including archiving excess autobookings/reschedules and disabling excess accounts.
+ * including archiving excess autobookings/reschedules and deleting excess accounts.
  *
  * NOTE: We do NOT touch UserSubscription records here.
  * A subscription is considered active/inactive based on its endedAt field.
  * When a paid subscription expires (endedAt < now), the user automatically
  * falls back to FREE tier. This service only performs the cleanup:
- * resetting maxAccounts, archiving excess slots, and disabling excess accounts.
+ * resetting maxAccounts, archiving excess slots, and deleting excess accounts.
  */
 
 import { prisma } from '@/config/database';
@@ -24,7 +24,7 @@ const logger = createLogger('SubscriptionDowngrade');
  * 1. Resetting maxAccounts to 1
  * 2. Archiving excess autobookings beyond FREE slot limit
  * 3. Archiving excess reschedules beyond FREE slot limit
- * 4. Disabling excess accounts (keep selected account, disable others)
+ * 4. Deleting excess accounts (keep selected account, delete others)
  *
  * We do NOT create or modify UserSubscription records — endedAt already
  * determines whether a subscription is active.
@@ -45,8 +45,8 @@ export async function downgradeUserToFree(userId: number): Promise<void> {
     // 3. Archive excess reschedules
     await archiveExcessReschedules(tx, userId);
 
-    // 4. Disable excess accounts
-    await disableExcessAccounts(tx, userId);
+    // 4. Delete excess accounts
+    await deleteExcessAccounts(tx, userId);
   });
 
   logger.info(`User ${userId} successfully downgraded to FREE`);
@@ -120,7 +120,7 @@ async function archiveExcessReschedules(
   }
 }
 
-async function disableExcessAccounts(
+async function deleteExcessAccounts(
   tx: typeof prisma,
   userId: number,
 ): Promise<void> {
@@ -129,20 +129,29 @@ async function disableExcessAccounts(
     select: { selectedAccountId: true },
   });
 
-  const selectedAccountId = user?.selectedAccountId;
+  let keepAccountId = user?.selectedAccountId;
 
-  // Disable all accounts except the selected one
-  const updateResult = await tx.account.updateMany({
+  // If no selected account, keep the most recently created one
+  if (!keepAccountId) {
+    const latestAccount = await tx.account.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+    keepAccountId = latestAccount?.id ?? null;
+  }
+
+  // Delete all accounts except the one to keep
+  const deleteResult = await tx.account.deleteMany({
     where: {
       userId,
-      id: { not: selectedAccountId ?? undefined },
+      id: { not: keepAccountId ?? undefined },
     },
-    data: { isDisabled: true },
   });
 
-  if (updateResult.count > 0) {
+  if (deleteResult.count > 0) {
     logger.info(
-      `Disabled ${updateResult.count} excess accounts for user ${userId}`,
+      `Deleted ${deleteResult.count} excess accounts for user ${userId}`,
     );
   }
 }
@@ -158,7 +167,7 @@ async function userNeedsDowngrade(userId: number): Promise<boolean> {
       maxAccounts: true,
       _count: {
         select: {
-          accounts: { where: { isDisabled: false } },
+          accounts: true,
           autobookings: { where: { status: { in: ['PENDING', 'ACTIVE'] } } },
           autobookingReschedules: {
             where: { status: { in: ['PENDING', 'ACTIVE'] } },

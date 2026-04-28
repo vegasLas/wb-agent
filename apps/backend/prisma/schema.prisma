@@ -193,7 +193,6 @@ model Account {
   phoneWb            String?
   selectedSupplierId String?
   lastUpdatedCookie  DateTime?
-  isDisabled         Boolean    @default(false)
   suppliers          Supplier[]
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt

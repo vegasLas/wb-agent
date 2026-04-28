@@ -32,16 +32,9 @@ export class AccountRepository extends BaseRepository<
     });
   }
 
-  async findEnabledById(id: string): Promise<Account | null> {
-    return this.prisma.account.findFirst({
-      where: { id, isDisabled: false },
-      include: { suppliers: true },
-    });
-  }
-
   async findByUserId(userId: number): Promise<Account[]> {
     return this.prisma.account.findMany({
-      where: { userId, isDisabled: false },
+      where: { userId },
       include: { suppliers: true },
       orderBy: { createdAt: 'desc' },
     });
