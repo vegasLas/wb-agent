@@ -10,8 +10,10 @@ import { ICreatePayment, ICreatePaymentResponse } from '@/types/payments';
 import { TBOT } from '@/utils/TBOT';
 import {
   ALL_SUBSCRIPTION_TARIFFS,
+  MAX_ACCOUNTS,
   SubscriptionTariff,
 } from '@/constants/payments';
+import { createSubscription } from '@/utils/subscription';
 
 type Tariff = SubscriptionTariff;
 import { logger } from '@/utils/logger';
@@ -120,10 +122,15 @@ export class YookassaService {
     });
 
     // Handle subscription tariff
-    const currentExpiry = user?.subscriptionExpiresAt;
+    // Find active subscription to determine extension base date
+    const activeSub = await prisma.userSubscription.findFirst({
+      where: { userId },
+      orderBy: { startedAt: 'desc' },
+    });
+
     const baseDate =
-      currentExpiry && new Date(currentExpiry) > new Date()
-        ? new Date(currentExpiry)
+      activeSub?.endedAt && activeSub.endedAt > new Date()
+        ? new Date(activeSub.endedAt)
         : new Date();
 
     const newExpiry = new Date(baseDate);
@@ -132,13 +139,11 @@ export class YookassaService {
     const tier = tariff.tier;
     const maxAccounts = MAX_ACCOUNTS[tier];
 
+    // Create new subscription record and update user limits
+    await createSubscription(userId, tier, newExpiry);
     await prisma.user.update({
       where: { id: userId },
-      data: {
-        subscriptionTier: tier,
-        subscriptionExpiresAt: newExpiry,
-        maxAccounts,
-      },
+      data: { maxAccounts },
     });
 
     // Send Telegram notification
