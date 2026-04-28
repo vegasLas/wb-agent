@@ -334,6 +334,19 @@ export class AuthService {
   }
 
   async verifyPhone(request: PhoneVerificationRequest): Promise<AuthResult> {
+    // Early account-limit check — fail fast before spinning up a browser
+    try {
+      await accountService.checkAccountLimit(request.userId);
+    } catch (limitError) {
+      return {
+        success: false,
+        error:
+          limitError instanceof Error
+            ? limitError
+            : new Error('Account limit reached'),
+      };
+    }
+
     let sessionId: string | undefined;
     try {
       const initResult = await this.initializeAuth(request.userId);
