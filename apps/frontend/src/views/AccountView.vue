@@ -53,10 +53,17 @@
                 :value="subscriptionTier"
                 :severity="
                   subscriptionTier === 'MAX' ? 'warn' :
-                  subscriptionTier === 'PRO' ? 'info' : 'secondary'
+                  subscriptionTier === 'PRO' ? 'info' :
+                  subscriptionTier === 'FREE' ? 'info' : 'secondary'
                 "
               />
               <Tag
+                v-if="subscriptionTier === 'FREE'"
+                value="Бесплатный план"
+                severity="info"
+              />
+              <Tag
+                v-else
                 :value="
                   subscriptionActive
                     ? `осталось дней: ${subscriptionRemainingDays}`

@@ -5,7 +5,7 @@
       v-if="
         userStore.selectedAccount &&
           userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+          (userStore.subscriptionActive || userStore.isFree)
       "
     >
       <!-- Status Filter Buttons -->
@@ -105,7 +105,7 @@ const supplyDetailsStore = useSupplyDetailsStore();
 const { viewReady } = useViewReady();
 
 const activeCount = computed(() => listStore.statusCounts['ACTIVE'] || 0);
-const maxSlots = computed(() => RESCHEDULE_SLOTS[userStore.subscriptionTier as 'LITE' | 'PRO' | 'MAX'] || 2);
+const maxSlots = computed(() => RESCHEDULE_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
 
 const noReschedulesMessage = computed(() => {
   return `Нет ${listStore.selectedStatus === 'ACTIVE' ? 'активных' : listStore.selectedStatus === 'COMPLETED' ? 'завершенных' : 'архивных'} перепланирований`;

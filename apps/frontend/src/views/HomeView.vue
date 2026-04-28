@@ -34,10 +34,10 @@
       <Card class="text-center">
         <template #content>
           <div class="text-2xl font-bold text-green-600">
-            {{ subscriptionDays }}
+            {{ userStore.isFree ? '∞' : subscriptionDays }}
           </div>
           <div class="text-xs text-gray-500">
-            Дней подписки
+            {{ userStore.isFree ? 'Дней FREE' : 'Дней подписки' }}
           </div>
         </template>
       </Card>

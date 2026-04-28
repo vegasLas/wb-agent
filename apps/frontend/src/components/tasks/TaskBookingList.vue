@@ -18,7 +18,7 @@
       v-if="
         userStore.selectedAccount &&
           userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+          (userStore.subscriptionActive || userStore.isFree)
       "
     >
       <TaskListLayout
@@ -98,7 +98,7 @@ const userStore = useUserStore();
 const listStore = useAutobookingListStore();
 
 const activeCount = computed(() => listStore.statusCounts[AUTOBOOKING_STATUSES.ACTIVE] || 0);
-const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'LITE' | 'PRO' | 'MAX'] || 2);
+const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
 
 // Dialog state
 const showCreateDialog = ref(false);

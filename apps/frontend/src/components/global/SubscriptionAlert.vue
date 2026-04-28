@@ -1,6 +1,6 @@
 <template>
   <Message
-    v-if="!userStore.subscriptionActive"
+    v-if="!userStore.subscriptionActive && !userStore.isFree"
     severity="error"
     :closable="false"
     class="w-full"
