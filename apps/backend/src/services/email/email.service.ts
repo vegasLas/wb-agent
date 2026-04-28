@@ -103,6 +103,20 @@ export class EmailService {
 
     logger.info(`sendPasswordResetEmail() completed for ${to}`);
   }
+
+  async sendNotificationEmail(
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<void> {
+    const wrappedHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2 style="color: #7c3aed;">wboi</h2>
+        ${html}
+      </div>
+    `;
+    await this.send({ to, subject, html: wrappedHtml });
+  }
 }
 
 export const emailService = new EmailService();

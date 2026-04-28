@@ -11,7 +11,7 @@
 
 import { SupplyTriggerMonitoringService } from '@/services/monitoring/supply-trigger-monitoring.service';
 import { triggerService } from '@/services/external/wb/trigger.service';
-import { TBOT } from '@/utils/TBOT';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 import { SUPPLY_TYPES } from '@/constants/triggers';
 import type {
   WarehouseAvailability,
@@ -27,9 +27,9 @@ jest.mock('../../external/wb/trigger.service', () => ({
   },
 }));
 
-jest.mock('../../../utils/TBOT', () => ({
-  TBOT: {
-    sendMessage: jest.fn().mockResolvedValue({ message_id: 1 }),
+jest.mock('../shared/notification-dispatcher.service', () => ({
+  notificationDispatcher: {
+    notifyTriggerSlots: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -52,13 +52,13 @@ jest.mock('../../../config/database', () => ({
 
 describe('SupplyTriggerMonitoringService', () => {
   let service: SupplyTriggerMonitoringService;
-  let mockSendMessage: jest.Mock;
+  let mockNotifyTriggerSlots: jest.Mock;
   let mockUpdateTriggerStatus: jest.Mock;
   let mockUpdateLastNotificationTime: jest.Mock;
 
   beforeEach(() => {
     service = new SupplyTriggerMonitoringService();
-    mockSendMessage = TBOT.sendMessage as jest.Mock;
+    mockNotifyTriggerSlots = notificationDispatcher.notifyTriggerSlots as jest.Mock;
     mockUpdateTriggerStatus = triggerService.updateTriggerStatus as jest.Mock;
     mockUpdateLastNotificationTime =
       triggerService.updateLastNotificationTime as jest.Mock;
@@ -115,13 +115,21 @@ describe('SupplyTriggerMonitoringService', () => {
   });
 
   describe('processAvailabilities', () => {
-    it('should skip users without chatId', async () => {
+    it('should notify users without chatId via in-app only', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2024-01-01T12:00:00Z'));
+
       const user = createMockUser({ chatId: undefined });
       const availabilities = [createMockAvailability()];
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 1,
+          chatId: undefined,
+        }),
+      );
     });
 
     it('should skip users without supply triggers', async () => {
@@ -130,7 +138,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
 
     it('should process valid user with matching availability', async () => {
@@ -142,12 +150,10 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalledWith(
-        'chat123',
-        expect.any(String),
+      expect(mockNotifyTriggerSlots).toHaveBeenCalledWith(
         expect.objectContaining({
-          parse_mode: 'Markdown',
-          reply_markup: expect.any(Object),
+          chatId: 'chat123',
+          availabilities: expect.any(Array),
         }),
       );
     });
@@ -161,7 +167,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
 
     it('should process triggers with RELEVANT status', async () => {
@@ -174,7 +180,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
   });
 
@@ -186,7 +192,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
 
     it('should match correct warehouse ID', async () => {
@@ -199,7 +205,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
   });
 
@@ -214,7 +220,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should match MONOPALLETE supply type', async () => {
@@ -229,7 +235,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should reject mismatched supply types', async () => {
@@ -239,7 +245,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
   });
 
@@ -262,9 +268,7 @@ describe('SupplyTriggerMonitoringService', () => {
       await service.processAvailabilities([user], availabilities);
 
       // Should send notification with only free slots
-      expect(mockSendMessage).toHaveBeenCalled();
-      const message = mockSendMessage.mock.calls[0][1];
-      expect(message).toContain('Бесплатно');
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should accept slots within max coefficient', async () => {
@@ -281,7 +285,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should reject slots above max coefficient', async () => {
@@ -295,7 +299,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
   });
 
@@ -323,9 +327,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
-      const message = mockSendMessage.mock.calls[0][1];
-      expect(message).toContain('01 янв');
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should filter TOMORROW dates correctly', async () => {
@@ -339,7 +341,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should filter CUSTOM_DATES correctly', async () => {
@@ -359,9 +361,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
-      const message = mockSendMessage.mock.calls[0][1];
-      expect(message).toContain('15 янв');
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should filter RANGE dates correctly', async () => {
@@ -379,7 +379,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should filter WEEK dates correctly', async () => {
@@ -396,7 +396,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
   });
 
@@ -445,7 +445,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
 
     it('should notify when notification interval has passed', async () => {
@@ -463,7 +463,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
   });
 
@@ -483,13 +483,12 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalledWith(
-        'chat123',
-        expect.stringContaining('Электросталь'),
-        expect.any(Object),
+      expect(mockNotifyTriggerSlots).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chatId: 'chat123',
+          availabilities: expect.any(Array),
+        }),
       );
-      const message = mockSendMessage.mock.calls[0][1];
-      expect(message).toContain('Короб');
     });
 
     it('should format free slots correctly', async () => {
@@ -506,8 +505,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      const message = mockSendMessage.mock.calls[0][1];
-      expect(message).toContain('Бесплатно');
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
 
     it('should format paid slots correctly', async () => {
@@ -524,8 +522,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      const message = mockSendMessage.mock.calls[0][1];
-      expect(message).toContain('1.5');
+      expect(mockNotifyTriggerSlots).toHaveBeenCalled();
     });
   });
 
@@ -535,7 +532,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], []);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
 
     it('should handle empty selectedDates for CUSTOM_DATES', async () => {
@@ -548,7 +545,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
 
     it('should handle missing dates for RANGE', async () => {
@@ -562,7 +559,7 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).not.toHaveBeenCalled();
+      expect(mockNotifyTriggerSlots).not.toHaveBeenCalled();
     });
 
     it('should handle multiple triggers per user', async () => {
@@ -578,16 +575,16 @@ describe('SupplyTriggerMonitoringService', () => {
 
       await service.processAvailabilities([user], availabilities);
 
-      expect(mockSendMessage).toHaveBeenCalledTimes(2);
+      expect(mockNotifyTriggerSlots).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle TBOT not being initialized', async () => {
+    it('should handle dispatcher errors gracefully', async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date('2024-01-01T12:00:00Z'));
 
-      // Temporarily set TBOT to null
-      const originalTBOT = (TBOT as any).sendMessage;
-      (TBOT as any).sendMessage = null;
+      (notificationDispatcher.notifyTriggerSlots as jest.Mock).mockRejectedValueOnce(
+        new Error('Dispatcher error'),
+      );
 
       const user = createMockUser();
       const availabilities = [createMockAvailability()];
@@ -596,9 +593,6 @@ describe('SupplyTriggerMonitoringService', () => {
       await expect(
         service.processAvailabilities([user], availabilities),
       ).resolves.not.toThrow();
-
-      // Restore
-      (TBOT as any).sendMessage = originalTBOT;
     });
   });
 });

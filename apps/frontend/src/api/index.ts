@@ -23,6 +23,7 @@ export * from './mpstats';
 export * from './content-cards';
 export * from './feedbacks';
 export * from './ai';
+export * from './notifications';
 
 // Generic API methods
 export const api = {

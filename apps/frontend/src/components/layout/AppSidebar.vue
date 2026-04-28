@@ -3,14 +3,17 @@
     class="w-[260px] h-screen sticky top-0 shrink-0 bg-card border-r border-deep-border flex flex-col"
   >
     <!-- Brand -->
-    <div class="h-16 flex items-center gap-3 px-5 border-b border-deep-border shrink-0">
-      <AppLogo :size="32" />
-      <div>
-        <div class="font-semibold text-theme text-sm leading-none">WBOI</div>
-        <div class="text-[11px] text-muted leading-none mt-1">
-          Панель управления
+    <div class="h-16 flex items-center justify-between px-5 border-b border-deep-border shrink-0">
+      <div class="flex items-center gap-3">
+        <AppLogo :size="32" />
+        <div>
+          <div class="font-semibold text-theme text-sm leading-none">WBOI</div>
+          <div class="text-[11px] text-muted leading-none mt-1">
+            Панель управления
+          </div>
         </div>
       </div>
+      <NotificationBell />
     </div>
 
     <!-- Primary Navigation -->
@@ -129,6 +132,7 @@
 
 <script setup lang="ts">
 import AppLogo from './AppLogo.vue';
+import NotificationBell from '@/components/notifications/NotificationBell.vue';
 import { computed, ref, inject, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';

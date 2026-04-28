@@ -18,3 +18,8 @@ export {
   subscriptionNotificationService,
   SubscriptionNotificationService,
 } from './subscription-notification.service';
+
+export {
+  inAppNotificationService,
+  InAppNotificationService,
+} from './in-app-notification.service';

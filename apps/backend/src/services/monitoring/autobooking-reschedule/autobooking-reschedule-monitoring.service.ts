@@ -160,6 +160,7 @@ export class AutobookingRescheduleMonitoringService
 
         // Send success notification to user
         await autobookingRescheduleNotificationService.sendSuccessNotification(
+          reschedule.userId,
           reschedule.chatId,
           reschedule.warehouseName,
           reschedule.effectiveDate,

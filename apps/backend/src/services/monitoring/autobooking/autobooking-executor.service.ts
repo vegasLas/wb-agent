@@ -205,6 +205,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
     const { user, warehouseName, effectiveDate, coefficient, booking } = params;
 
     successfulBookings.push({
+      userId: user.userId,
       chatId: user.chatId as string,
       warehouseName,
       effectiveDate,

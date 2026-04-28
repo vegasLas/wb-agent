@@ -19,6 +19,10 @@ export {
   sharedTelegramNotificationService,
 } from '@/services/monitoring/shared/telegram-notification.service';
 export {
+  NotificationDispatcherService,
+  notificationDispatcher,
+} from '@/services/monitoring/shared/notification-dispatcher.service';
+export {
   SharedStatusUpdateService,
   sharedStatusUpdateService,
 } from '@/services/monitoring/shared/status-update.service';

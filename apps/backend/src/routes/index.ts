@@ -20,6 +20,7 @@ import contentCardsRoutes from '@/routes/content-cards.routes';
 import feedbacksRoutes from '@/routes/feedbacks.routes';
 import aiRoutes from '@/routes/ai.routes';
 import adminRoutes from '@/routes/admin.routes';
+import notificationRoutes from '@/routes/notifications.routes';
 import { authenticate } from '@/middleware/auth.middleware';
 
 const router = Router();
@@ -50,6 +51,7 @@ router.get('/', (req, res) => {
       contentCards: '/api/v1/content-cards',
       feedbacks: '/api/v1/feedbacks',
       ai: '/api/v1/ai',
+      notifications: '/api/v1/notifications',
     },
   });
 });
@@ -113,6 +115,9 @@ router.use('/ai', authenticate, aiRoutes);
 
 // Admin routes (protected + admin only)
 router.use('/admin', authenticate, adminRoutes);
+
+// Notification routes (protected)
+router.use('/notifications', authenticate, notificationRoutes);
 
 // Webhook routes (public - called by YooKassa)
 router.use('/webhooks', webhookRoutes);

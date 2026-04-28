@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useRescheduleStore } from '@/stores/reschedules';
+import { useNotificationsStore } from '@/stores/notifications';
 import { useAccountSupplierModalStore } from '@/stores/ui';
 import router from './index';
 import { isTelegramWebApp, getTelegramColorScheme, getInitData } from '../utils/telegram';
@@ -30,6 +31,7 @@ export function useAppState() {
   const userStore = useUserStore();
   const warehouseStore = useWarehousesStore();
   const rescheduleStore = useRescheduleStore();
+  const notificationsStore = useNotificationsStore();
   const accountModalStore = useAccountSupplierModalStore();
 
   // Initialize Telegram mode (just check URL params, no WebApp object needed)
@@ -100,6 +102,7 @@ export function useAppState() {
     // Fetch background data
     rescheduleStore.fetchReschedules();
     warehouseStore.fetchWarehouses();
+    notificationsStore.fetchUnreadCount();
 
     // Handle auth query param
     const query = router.currentRoute.value.query;

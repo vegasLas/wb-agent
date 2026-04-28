@@ -30,6 +30,7 @@ export interface BookingTask {
  * Represents a successfully completed booking
  */
 export interface SuccessfulBooking {
+  userId: number;
   chatId: string;
   warehouseName: string;
   effectiveDate: Date;
@@ -137,6 +138,7 @@ export interface IAutobookingNotificationService {
    * Send success notification to user
    */
   sendSuccessNotification(
+    userId: number,
     chatId: string,
     warehouseName: string,
     date: Date,
