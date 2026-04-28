@@ -12,6 +12,7 @@ import {
   readinessCheck,
   livenessCheck,
 } from '@/controllers/health.controller';
+import { startSubscriptionDowngradeCron } from '@/cron/subscription-downgrade';
 
 /**
  * Create and configure the Express application
@@ -83,5 +84,8 @@ export async function startServer(): Promise<void> {
 
     // Initialize monitoring cleanup cron jobs
     // initializeMonitoringCleanupJobs();
+
+    // Initialize subscription downgrade cron job
+    startSubscriptionDowngradeCron();
   });
 }
