@@ -22,11 +22,12 @@ router.get('/', authenticateUser, async (req, res, next) => {
       throw ApiError.notFound('User not found');
     }
 
+    const currentSub = user.subscriptions?.[0];
     res.json({
       id: user.id,
       name: user.profile?.name,
-      subscriptionTier: user.subscriptionTier,
-      subscriptionExpiresAt: user.subscriptionExpiresAt,
+      subscriptionTier: currentSub?.tier ?? 'FREE',
+      subscriptionExpiresAt: currentSub?.endedAt ?? null,
       maxAccounts: user.maxAccounts,
       agreeTerms: user.agreeTerms,
       selectedAccountId: user.selectedAccountId || undefined,
@@ -137,7 +138,8 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
       throw ApiError.notFound('User not found');
     }
 
-    const tier = user.subscriptionTier ?? 'FREE';
+    const currentSub = user.subscriptions?.[0];
+    const tier = currentSub?.tier ?? 'FREE';
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -179,7 +181,7 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
 
     res.json({
       tier,
-      subscriptionExpiresAt: user.subscriptionExpiresAt,
+      subscriptionExpiresAt: currentSub?.endedAt ?? null,
       maxAccounts: user.maxAccounts,
       autobookingSlots: {
         used: activeAutobookings,

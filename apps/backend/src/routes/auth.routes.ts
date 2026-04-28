@@ -12,6 +12,7 @@ import { sendLogoutNotification } from '@/utils/TBOT';
 import { ApiError } from '@/utils/errors';
 import { createLogger } from '@/utils/logger';
 
+
 const logger = createLogger('AuthRoutes');
 const router = Router();
 
@@ -362,21 +363,12 @@ router.post(
         where: { id: userId },
         include: {
           profile: { select: { name: true } },
+          subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 },
         },
       });
 
       if (!user) {
         throw ApiError.unauthorized('Пользователь не найден');
-      }
-
-      if (
-        !user.subscriptionExpiresAt ||
-        new Date(user.subscriptionExpiresAt) <= new Date()
-      ) {
-        throw ApiError.forbidden(
-          'Требуется активная подписка',
-          'SUBSCRIPTION_REQUIRED',
-        );
       }
 
       // Get primary identity for token
