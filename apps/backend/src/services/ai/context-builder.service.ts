@@ -13,7 +13,7 @@ const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
 export async function buildContextMessage(userId: number): Promise<string> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, subscriptionTier: true },
+    include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
   });
 
   const activeAutobookings = await prisma.autobooking.findMany({
@@ -25,7 +25,7 @@ export async function buildContextMessage(userId: number): Promise<string> {
     0,
   );
   const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
-  const maxSlots = AUTOBOOKING_SLOTS[user?.subscriptionTier ?? 'FREE'];
+  const maxSlots = AUTOBOOKING_SLOTS[user?.subscriptions?.[0]?.tier ?? 'FREE'];
 
   if (!user) throw new Error('User not found');
 

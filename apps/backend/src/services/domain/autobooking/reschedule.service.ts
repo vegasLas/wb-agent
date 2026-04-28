@@ -128,6 +128,7 @@ export class RescheduleService {
     // Get user for subscription and slot check
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
 
     if (!user) {
@@ -194,7 +195,7 @@ export class RescheduleService {
         )
       : [];
 
-    const maxSlots = RESCHEDULE_SLOTS[user.subscriptionTier ?? 'FREE'];
+    const maxSlots = RESCHEDULE_SLOTS[user.subscriptions?.[0]?.tier ?? 'FREE'];
 
     // Check active reschedule slot limit (sum of slots) and create atomically
     const reschedule = await prisma.$transaction(async (tx) => {
@@ -521,9 +522,17 @@ export class RescheduleService {
     existing: AutobookingReschedule,
     updateData: Partial<AutobookingReschedule>,
   ): Promise<void> {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        subscriptions: {
+          orderBy: { startedAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
     if (!user) return;
-    const maxSlots = RESCHEDULE_SLOTS[user.subscriptionTier ?? 'FREE'];
+    const maxSlots = RESCHEDULE_SLOTS[user.subscriptions?.[0]?.tier ?? 'FREE'];
 
     const isActivating =
       updateData.status === 'ACTIVE' &&

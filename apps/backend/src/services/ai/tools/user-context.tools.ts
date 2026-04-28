@@ -19,6 +19,7 @@ Required: none.`,
               accounts: { include: { suppliers: true } },
               autobookings: { orderBy: { createdAt: 'desc' }, take: 5 },
               supplyTriggers: { orderBy: { createdAt: 'desc' }, take: 5 },
+              subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 },
             },
           });
 
@@ -33,7 +34,7 @@ Required: none.`,
               0,
             );
           const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
-          const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
+          const maxSlots = AUTOBOOKING_SLOTS[user.subscriptions?.[0]?.tier ?? 'FREE'];
 
           return {
             activeSlots,

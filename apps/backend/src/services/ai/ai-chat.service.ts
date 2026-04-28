@@ -81,9 +81,9 @@ export class AIChatService {
     // 0. Check token budget
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { subscriptionTier: true },
+      include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
-    const tier = (user?.subscriptionTier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
+    const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
     const budget = await this.checkChatBudget(userId, tier);
 
     if (!budget.allowed) {
