@@ -18,7 +18,7 @@
       v-if="
         userStore.selectedAccount &&
           userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+          (userStore.subscriptionActive || userStore.isFree)
       "
     >
       <!-- Status Filter Buttons -->
@@ -55,35 +55,8 @@
           placeholder="Поиск по складу..."
           class="w-full"
         />
-        <Message
-          v-if="userStore.user.autobookingCount === 0"
-          severity="error"
-          class="w-full"
-        >
-          <div class="flex items-center justify-between w-full">
-            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите
-              архивные.</span>
-            <Button
-              variant="outlined"
-              severity="primary"
-              size="small"
-              @click="navigateToStoreBookings"
-            >
-              купить
-            </Button>
-          </div>
-        </Message>
-        <div
-          v-else
-          class="flex justify-between items-center"
-        >
-          <Tag
-            :severity="
-              userStore.user.autobookingCount === 0 ? 'danger' : 'info'
-            "
-          >
-            доступно кредитов: {{ userStore.user.autobookingCount }}
-          </Tag>
+        <div class="flex justify-between items-center">
+          <AutobookingSlotCounter :used="activeCount" :max="maxSlots" />
           <Button
             severity="primary leading-none"
             @click="openCreateDialog"
@@ -129,7 +102,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInfiniteScroll } from '@vueuse/core';
-import { AUTOBOOKING_STATUSES } from '../../constants';
+import { AUTOBOOKING_STATUSES, AUTOBOOKING_SLOTS } from '../../constants';
 import { useUserStore } from '@/stores/user';
 import { useAutobookingListStore } from '@/stores/autobooking';
 import { useSupplierStore } from '@/stores/suppliers';
@@ -137,8 +110,7 @@ import { draftsAPI } from '../../api';
 import { useViewReady } from '../../composables/ui';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-import Tag from 'primevue/tag';
-import Message from 'primevue/message';
+import AutobookingSlotCounter from '@/components/global/AutobookingSlotCounter.vue';
 import AutobookingBookingCard from '../../components/autobooking/BookingCard.vue';
 import AutobookingDraftGoodsModal from '../../components/autobooking/DraftGoodsModal.vue';
 import AutobookingCreateDialog from '../../components/autobooking/CreateDialog.vue';
@@ -149,6 +121,9 @@ const router = useRouter();
 const userStore = useUserStore();
 const listStore = useAutobookingListStore();
 const { viewReady } = useViewReady();
+
+const activeCount = computed(() => listStore.statusCounts[AUTOBOOKING_STATUSES.ACTIVE] || 0);
+const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
 
 // Dialog state
 const showCreateDialog = ref(false);
@@ -224,10 +199,6 @@ function handleUpdated() {
   // Clear cache and refresh the list after update
   listStore.clearStatusCache();
   listStore.fetchData();
-}
-
-function navigateToStoreBookings() {
-  router.push({ name: 'StoreBookings' });
 }
 
 // Handle view goods event from BookingCard

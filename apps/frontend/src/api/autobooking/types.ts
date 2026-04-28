@@ -33,7 +33,6 @@ export interface UpdateAutobookingResponse {
 export interface DeleteAutobookingResponse {
   success: boolean;
   message: string;
-  returnedCredits: number;
 }
 
 export interface AutobookingErrorResponse {

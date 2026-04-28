@@ -5,7 +5,7 @@
       v-if="
         userStore.user.selectedAccountId &&
         userStore.hasValidSupplier &&
-        userStore.subscriptionActive
+        (userStore.subscriptionActive || userStore.isFree)
       "
     >
       <!-- Date Range Selection -->

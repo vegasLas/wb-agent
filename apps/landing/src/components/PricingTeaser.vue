@@ -12,7 +12,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div
-          v-for="(plan, index) in plans"
+          v-for="plan in plans"
           :key="plan.name"
           ref="planRefs"
           class="relative p-6 md:p-8 rounded-3xl border transition-all duration-500"
@@ -35,7 +35,7 @@
           <div class="mb-6">
             <span class="text-4xl font-bold text-white">{{ plan.price }}</span>
             <span class="text-gray-400"> ₽</span>
-            <span class="text-gray-500 text-sm"> / {{ plan.period }}</span>
+            <span class="text-gray-500 text-sm"> / мес</span>
           </div>
 
           <ul class="space-y-3 mb-8">
@@ -48,7 +48,7 @@
           </ul>
 
           <a
-            :href="`https://app.wboi.ru/store/subscription`"
+            :href="`https://app.wboi.ru/store?plan=${plan.key}`"
             class="block w-full text-center py-3 rounded-2xl font-semibold transition-all duration-300"
             :class="[
               plan.popular
@@ -76,28 +76,49 @@ const planRefs = ref<HTMLElement[]>([]);
 
 const plans = [
   {
-    name: '30 дней',
-    description: 'Для знакомства с платформой',
-    price: '990',
-    period: 'мес',
+    key: 'lite',
+    name: 'Lite',
+    description: 'Для начинающих продавцов',
+    price: '790',
     popular: false,
-    features: ['Все модули платформы', '1 поставщик', 'Базовая поддержка'],
+    features: [
+      '2 активные брони',
+      '1 WB аккаунт',
+      'AI чат: 50₽/мес',
+      '100 ответов на отзывы/мес',
+      'Триггеры, тарифы, отчеты',
+      'MPStats Basic',
+    ],
   },
   {
-    name: '90 дней',
+    key: 'pro',
+    name: 'Pro',
     description: 'Оптимальный выбор',
     price: '2.490',
-    period: '3 мес',
     popular: true,
-    features: ['Все модули платформы', 'До 3 поставщиков', 'Приоритетная поддержка', 'Экономия 20%'],
+    features: [
+      '10 активных броней',
+      '3 WB аккаунта',
+      'AI чат: 150₽/мес',
+      '1.000 ответов на отзывы/мес',
+      'Триггеры, тарифы, отчеты',
+      'MPStats Advanced',
+    ],
   },
   {
-    name: '365 дней',
+    key: 'max',
+    name: 'Max',
     description: 'Для крупного бизнеса',
-    price: '7.990',
-    period: 'год',
+    price: '6.990',
     popular: false,
-    features: ['Все модули платформы', 'Неограниченные поставщики', 'VIP поддержка', 'Экономия 35%'],
+    features: [
+      '30 активных броней',
+      'Неограниченные аккаунты',
+      'AI чат: 500₽/мес',
+      'Неограниченные ответы',
+      'Триггеры, тарифы, отчеты',
+      'MPStats Advanced',
+    ],
   },
 ];
 

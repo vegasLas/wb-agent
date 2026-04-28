@@ -17,6 +17,13 @@ enum Permission {
   SUPPLIES
 }
 
+enum SubscriptionTier {
+  FREE
+  LITE
+  PRO
+  MAX
+}
+
 enum AuthProvider {
   EMAIL
   TELEGRAM
@@ -25,10 +32,12 @@ enum AuthProvider {
 }
 
 model User {
-  id                    Int     @id @default(autoincrement())
+  id                    Int               @id @default(autoincrement())
   wbAuthUpdatedAt       DateTime?
-  autobookingCount      Int             @default(0)
-  subscriptionExpiresAt DateTime?
+  autobookingCount      Int               @default(0)
+  maxAccounts           Int               @default(1)
+  trialUsedAt           DateTime?
+  subscriptions         UserSubscription[]
   supplyTriggers        SupplyTrigger[]
   payments              Payment[]
   autobookings          Autobooking[]
@@ -54,6 +63,18 @@ model User {
 
   profile  Profile?
   telegram Telegram?
+}
+
+model UserSubscription {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier      SubscriptionTier
+  startedAt DateTime         @default(now())
+  endedAt   DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
 }
 
 model Profile {
@@ -282,17 +303,18 @@ model SupplyTrigger {
 // ============== PAYMENTS ==============
 
 model Payment {
-  id             String    @id @default(uuid())
+  id             String           @id @default(uuid())
   userId         Int
-  user           User      @relation(fields: [userId], references: [id])
+  user           User             @relation(fields: [userId], references: [id])
   amount         Float
-  currency       String    @default("RUB")
+  currency       String           @default("RUB")
   status         String
-  paymentId      String    @unique
+  paymentId      String           @unique
   tariffId       String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  idempotencyKey String    @unique
+  tier           SubscriptionTier @default(FREE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  idempotencyKey String           @unique
   paidAt         DateTime?
 
   @@index([userId])

@@ -3,8 +3,9 @@ import type {
   Payment,
   PaymentTariff,
   CreatePaymentResponse,
+  TrialResponse,
 } from './types';
-import { PAYMENT_TARIFFS } from './types';
+import { ALL_SUBSCRIPTION_TARIFFS } from '@/constants';
 
 export const paymentsAPI = {
   /**
@@ -22,6 +23,15 @@ export const paymentsAPI = {
         email,
       },
     );
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/payments/trial
+   * Activate 14-day free trial
+   */
+  async activateTrial(): Promise<TrialResponse> {
+    const response = await apiClient.post<TrialResponse>('/payments/trial', {});
     return response.data;
   },
 
@@ -50,6 +60,6 @@ export const paymentsAPI = {
    * Get available tariffs
    */
   getTariffs(): PaymentTariff[] {
-    return PAYMENT_TARIFFS;
+    return ALL_SUBSCRIPTION_TARIFFS as PaymentTariff[];
   },
 };

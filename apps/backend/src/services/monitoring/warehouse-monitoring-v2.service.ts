@@ -51,6 +51,7 @@ interface UserData {
   envInfo: JsonValue;
   telegram?: { chatId?: string | null } | null;
   accounts: AccountData[];
+  subscriptions?: { tier: string }[];
 }
 
 type UserWithBookings = UserData;
@@ -176,12 +177,10 @@ export class WarehouseMonitoringV2Service {
       // Check for technical mode - if TECHNICAL_MODE_USER_ID is set, only process that user
       const technicalModeUserId = process.env.TECHNICAL_MODE_USER_ID;
       let activeUserCondition: {
-        chatId?: { not: null };
-        subscriptionExpiresAt?: { gt: Date };
+        telegram?: { isNot: null };
         id?: number;
       } = {
         telegram: { isNot: null },
-        subscriptionExpiresAt: { gt: new Date() },
       };
 
       // In technical mode, override user condition to only select the specified user
@@ -200,6 +199,7 @@ export class WarehouseMonitoringV2Service {
         accounts: {
           include: { suppliers: true },
         },
+        subscriptions: { orderBy: { startedAt: 'desc' }, take: 1, select: { tier: true } },
       };
 
       // Parallel queries for performance
@@ -441,6 +441,7 @@ export class WarehouseMonitoringV2Service {
       proxy: envInfo.proxy,
       userAgent: envInfo.userAgent,
       chatId: user.telegram?.chatId || undefined,
+      subscriptionTier: (user.subscriptions?.[0]?.tier ?? 'FREE') as SubscriptionTier,
       autobookings,
       supplyTriggers,
       reschedules,

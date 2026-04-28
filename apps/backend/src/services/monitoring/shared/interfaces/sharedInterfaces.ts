@@ -8,6 +8,7 @@ import type {
   AutobookingReschedule,
   SupplyTrigger,
 } from '@prisma/client';
+import type { SubscriptionTier } from '@/constants/payments';
 
 // ============== Common Types ==============
 
@@ -413,6 +414,7 @@ export interface MonitoringUser {
   userAgent: string;
   proxy: Proxy;
   chatId?: string;
+  subscriptionTier: SubscriptionTier;
   autobookings: Autobooking[];
   supplyTriggers: SupplyTrigger[];
   reschedules: AutobookingReschedule[];

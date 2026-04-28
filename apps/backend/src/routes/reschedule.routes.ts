@@ -259,7 +259,6 @@ router.delete(
       res.json({
         success: true,
         message: result.message,
-        returnedCredits: result.returnedCredits,
       });
     } catch (error) {
       if (error instanceof AutobookingUpdateError) {

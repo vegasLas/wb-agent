@@ -11,6 +11,7 @@ export class UserService {
         payments: true,
         profile: true,
         telegram: true,
+        subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 },
       },
     });
   }

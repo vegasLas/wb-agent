@@ -84,9 +84,6 @@
     <DateSelectionAlerts
       :date-type="props.form.dateType"
       :custom-dates="props.form.customDates"
-      :available-count="userStore.user.autobookingCount"
-      :is-update-mode="isUpdateMode"
-      :remaining-count="remainingCount"
     />
 
     <!-- Monopallet Count (only for MONOPALLETE supply type) -->
@@ -226,26 +223,7 @@ const prevTransitWarehouseId = ref<number | null>(
   props.form.transitWarehouseId,
 );
 
-// Check if we're in update mode
-const isUpdateMode = computed(() => !!updateStore.currentAutobooking);
-
-// Calculate available autobooking count considering update mode
-const availableCount = computed(() => {
-  if (isUpdateMode.value) {
-    return updateStore.remainingAutobookingCount;
-  }
-  return userStore.user.autobookingCount;
-});
-
-// Calculate remaining count after selecting dates
-const remainingCount = computed(() => {
-  if (isUpdateMode.value) {
-    return updateStore.remainingAutobookingCount;
-  } else {
-    const requiredCount = props.form.customDates?.length || 0;
-    return availableCount.value - requiredCount;
-  }
-});
+// Slot-based model: server-side enforces the limit. Client-side just shows info.
 
 // Emit individual field update - avoids circular updates
 function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
@@ -433,18 +411,8 @@ function handleCustomDatesChange(newDates: (string | Date)[]) {
   const requiredCount =
     props.form.dateType === 'CUSTOM_DATES_SINGLE' ? 1 : newDates.length;
 
-  // In update mode, check against remaining count after adjustment
-  const checkCount = isUpdateMode.value
-    ? updateStore.remainingAutobookingCount -
-      (requiredCount - (props.form.customDates?.length || 0))
-    : availableCount.value;
-
-  if (checkCount < 0) {
-    alert(
-      'Недостаточно кредитов. Выберите меньше дат или приобретите больше кредитов.',
-    );
-    return;
-  }
+  // Slot limits are enforced server-side. No per-date credit math needed.
+  // The user will see a clear error from the API if they exceed their slot limit.
 
   // Update the dates
   updateField('customDates', newDates);

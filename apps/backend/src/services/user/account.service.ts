@@ -246,6 +246,27 @@ export class AccountService {
   }
 
   /**
+   * Check whether the user has reached their account limit.
+   * Throws if the limit is reached.
+   */
+  async checkAccountLimit(userId: number): Promise<void> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { accounts: true },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.accounts.length >= user.maxAccounts) {
+      throw new Error(
+        `Лимит аккаунтов (${user.maxAccounts}) достигнут. Обновите подписку для добавления новых аккаунтов.`,
+      );
+    }
+  }
+
+  /**
    * Save supplier info after successful authentication
    * Creates account and fetches all suppliers for the account
    */
@@ -257,14 +278,31 @@ export class AccountService {
       throw new Error('WB cookies are required to save supplier info');
     }
 
-    // Create account
-    const account = await prisma.account.create({
-      data: {
-        userId,
-        wbCookies,
-        wbLocalStorage,
-        phoneWb,
-      },
+    // Check account limit and create atomically
+    const account = await prisma.$transaction(async (tx) => {
+      const userWithAccounts = await tx.user.findUnique({
+        where: { id: userId },
+        include: { accounts: true },
+      });
+
+      if (!userWithAccounts) {
+        throw new Error('User not found');
+      }
+
+      if (userWithAccounts.accounts.length >= userWithAccounts.maxAccounts) {
+        throw new Error(
+          `Лимит аккаунтов (${userWithAccounts.maxAccounts}) достигнут. Обновите подписку для добавления новых аккаунтов.`,
+        );
+      }
+
+      return tx.account.create({
+        data: {
+          userId,
+          wbCookies,
+          wbLocalStorage,
+          phoneWb,
+        },
+      });
     });
 
     try {

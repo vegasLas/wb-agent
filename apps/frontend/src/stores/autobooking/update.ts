@@ -58,67 +58,6 @@ export const useAutobookingUpdateStore = defineStore(
     const warehouseStore = useWarehousesStore();
 
     // Getters
-    // Calculate remaining autobooking count for update mode
-    const remainingAutobookingCount = computed(() => {
-      const availableCount = userStore.user.autobookingCount;
-
-      if (!currentAutobooking.value) return availableCount;
-
-      // Get the count of dates in the current form
-      let currentFormCount = 0;
-      if (form.value.dateType === 'CUSTOM_DATES' && form.value.customDates) {
-        currentFormCount = form.value.customDates.length;
-      } else if (
-        form.value.dateType === 'CUSTOM_DATES_SINGLE' &&
-        form.value.customDates
-      ) {
-        currentFormCount = 1; // CUSTOM_DATES_SINGLE uses only 1 credit
-      } else if (
-        (form.value.dateType === 'WEEK' || form.value.dateType === 'MONTH') &&
-        form.value.startDate
-      ) {
-        // For week/month, uses 1 credit
-        currentFormCount = 1;
-      } else if (
-        form.value.dateType === 'CUSTOM_PERIOD' &&
-        form.value.startDate &&
-        form.value.endDate
-      ) {
-        // For custom period, uses 1 credit
-        currentFormCount = 1;
-      }
-
-      // Get the original count from the autobooking
-      let originalCount = 0;
-      if (
-        currentAutobooking.value.dateType === 'CUSTOM_DATES' &&
-        currentAutobooking.value.customDates
-      ) {
-        originalCount = currentAutobooking.value.customDates.length;
-      } else if (
-        currentAutobooking.value.dateType === 'CUSTOM_DATES_SINGLE' &&
-        currentAutobooking.value.customDates
-      ) {
-        originalCount = 1;
-      } else if (
-        (currentAutobooking.value.dateType === 'WEEK' ||
-          currentAutobooking.value.dateType === 'MONTH') &&
-        currentAutobooking.value.startDate
-      ) {
-        originalCount = 1;
-      } else if (
-        currentAutobooking.value.dateType === 'CUSTOM_PERIOD' &&
-        currentAutobooking.value.startDate &&
-        currentAutobooking.value.endDate
-      ) {
-        originalCount = 1;
-      }
-
-      // The adjustment: original uses X credits, new uses Y credits
-      // Available = available + original - new
-      return availableCount + originalCount - currentFormCount;
-    });
-
     const isValid = computed(() => {
       if (!form.value.warehouseId) return false;
       if (!form.value.draftId) return false;
@@ -455,7 +394,6 @@ export const useAutobookingUpdateStore = defineStore(
       isValid,
       canSubmit,
       hasChanges,
-      remainingAutobookingCount,
 
       // Actions
       openUpdate,

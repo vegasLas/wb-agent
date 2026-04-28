@@ -1,5 +1,6 @@
 import { prisma } from '@/config/database';
 import type { Permission } from '@prisma/client';
+import { calculateSlotCount } from '@/utils/slot-utils';
 
 const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   PROMOTIONS: 'управление акциями и промо',
@@ -12,8 +13,19 @@ const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
 export async function buildContextMessage(userId: number): Promise<string> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, autobookingCount: true },
+    include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
   });
+
+  const activeAutobookings = await prisma.autobooking.findMany({
+    where: { userId, status: { in: ['PENDING', 'ACTIVE'] } },
+    select: { dateType: true, customDates: true },
+  });
+  const activeSlots = activeAutobookings.reduce(
+    (sum, ab) => sum + calculateSlotCount(ab.dateType, ab.customDates as Date[]),
+    0,
+  );
+  const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
+  const maxSlots = AUTOBOOKING_SLOTS[user?.subscriptions?.[0]?.tier ?? 'FREE'];
 
   if (!user) throw new Error('User not found');
 
@@ -74,7 +86,7 @@ You help manage автобронирования and таймслоты.
 10. Always briefly summarize tool results in your own words for the user.
 11. If an ID or account is missing, ask the user. Never guess IDs.
 12. Single, sequential, and parallel tool calls are supported.
-13. Before creating an autobooking, call getUserContext to verify the user's credit balance.
+13. Before creating an autobooking, call getUserContext to check the user's active slot limit.
 14. If you need the user's suppliers, recent autobookings, or triggers, call getUserContext.
 15. ALWAYS format tool results as a Markdown table when the data is a list of objects with comparable fields (e.g., lists of advert campaigns, keywords, product cards, warehouses, tariffs, categories, SKUs, promotions, goods, supplies, balances, triggers, autobookings, sales report items, or coefficient reports).
 16. NEVER use tables for single objects, deeply nested structures, confirmation messages, success/error responses, or objects that contain sub-objects as values. For those, use plain text or bullet lists.
@@ -98,6 +110,6 @@ ${unavailableFeatures}
 Today is ${todayStr} (current year is ${today.getFullYear()}).
 
 User ID: ${user.id}
-Credits: ${user.autobookingCount ?? 0}
+Active autobooking slots: ${activeSlots}/${maxSlots}
 `;
 }

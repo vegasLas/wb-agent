@@ -19,10 +19,10 @@ export interface IdentityWithUser {
   };
   user: {
     id: number;
-    subscriptionExpiresAt: Date | null;
     selectedAccountId: string | null;
     profile: { name: string } | null;
     telegram: { chatId: string | null } | null;
+    subscriptions: { tier: string; endedAt: Date | null }[];
   };
 }
 
@@ -40,10 +40,10 @@ export class IdentityService {
         user: {
           select: {
             id: true,
-            subscriptionExpiresAt: true,
             selectedAccountId: true,
             profile: { select: { name: true } },
             telegram: { select: { chatId: true } },
+            subscriptions: { orderBy: { startedAt: 'desc' }, take: 1, select: { tier: true, endedAt: true } },
           },
         },
       },
@@ -65,10 +65,10 @@ export class IdentityService {
         user: {
           select: {
             id: true,
-            subscriptionExpiresAt: true,
             selectedAccountId: true,
             profile: { select: { name: true } },
             telegram: { select: { chatId: true } },
+            subscriptions: { orderBy: { startedAt: 'desc' }, take: 1, select: { tier: true, endedAt: true } },
           },
         },
       },

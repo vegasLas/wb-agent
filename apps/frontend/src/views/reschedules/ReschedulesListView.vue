@@ -5,7 +5,7 @@
       v-if="
         userStore.selectedAccount &&
           userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+          (userStore.subscriptionActive || userStore.isFree)
       "
     >
       <!-- Status Filter Buttons -->
@@ -42,35 +42,8 @@
           placeholder="Поиск по ID поставки или поставщику..."
           class="w-full"
         />
-        <Message
-          v-if="userStore.user.autobookingCount === 0"
-          severity="error"
-          class="w-full"
-        >
-          <div class="flex items-center justify-between w-full">
-            <span>Приобретите пакет кредитов, чтобы создать новые, или удалите
-              архивные.</span>
-            <Button
-              variant="outlined"
-              severity="primary"
-              size="small"
-              @click="navigateToStoreBookings"
-            >
-              купить
-            </Button>
-          </div>
-        </Message>
-        <div
-          v-else
-          class="flex justify-between items-center"
-        >
-          <Tag
-            :severity="
-              userStore.user.autobookingCount === 0 ? 'danger' : 'info'
-            "
-          >
-            доступно кредитов: {{ userStore.user.autobookingCount }}
-          </Tag>
+        <div class="flex justify-between items-center">
+          <AutobookingSlotCounter :used="activeCount" :max="maxSlots" />
           <Button
             severity="primary"
             @click="navigateToCreate"
@@ -113,11 +86,11 @@ import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-import Message from 'primevue/message';
-import Tag from 'primevue/tag';
+import AutobookingSlotCounter from '@/components/global/AutobookingSlotCounter.vue';
 import { useUserStore } from '@/stores/user';
 import { useRescheduleStore } from '@/stores/reschedules';
 import { useRescheduleListStore } from '@/stores/reschedules';
+import { RESCHEDULE_SLOTS } from '../../constants';
 import { useSupplyDetailsStore } from '@/stores/supplies';
 import { useViewReady } from '../../composables/ui';
 import ReschedulesCard from '../../components/reschedules/Card.vue';
@@ -130,6 +103,9 @@ const rescheduleStore = useRescheduleStore();
 const listStore = useRescheduleListStore();
 const supplyDetailsStore = useSupplyDetailsStore();
 const { viewReady } = useViewReady();
+
+const activeCount = computed(() => listStore.statusCounts['ACTIVE'] || 0);
+const maxSlots = computed(() => RESCHEDULE_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
 
 const noReschedulesMessage = computed(() => {
   return `Нет ${listStore.selectedStatus === 'ACTIVE' ? 'активных' : listStore.selectedStatus === 'COMPLETED' ? 'завершенных' : 'архивных'} перепланирований`;
@@ -172,10 +148,6 @@ async function handleStatusClick(status: RescheduleStatus) {
 // Navigation functions
 function navigateToCreate() {
   router.push({ name: 'ReschedulesCreate' });
-}
-
-function navigateToStoreBookings() {
-  router.push({ name: 'StoreBookings' });
 }
 
 // Event handlers

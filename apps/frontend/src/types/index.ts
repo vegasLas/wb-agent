@@ -33,8 +33,10 @@ export interface User {
   id?: number;
   name?: string;
   username?: string;
-  autobookingCount: number;
+  subscriptionTier?: 'FREE' | 'LITE' | 'PRO' | 'MAX';
   subscriptionExpiresAt: string | null;
+  maxAccounts?: number;
+  trialUsedAt?: string | null;
   agreeTerms: boolean;
   selectedAccountId?: string;
   payments: Payment[];

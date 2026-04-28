@@ -9,12 +9,13 @@ import { prisma } from '@/config/database';
 import { ICreatePayment, ICreatePaymentResponse } from '@/types/payments';
 import { TBOT } from '@/utils/TBOT';
 import {
-  PAYMENT_TARIFFS,
+  ALL_SUBSCRIPTION_TARIFFS,
+  MAX_ACCOUNTS,
   SubscriptionTariff,
-  BookingTariff,
 } from '@/constants/payments';
+import { createSubscription } from '@/utils/subscription';
 
-type Tariff = SubscriptionTariff | BookingTariff;
+type Tariff = SubscriptionTariff;
 import { logger } from '@/utils/logger';
 
 const YOOKASSA_API_URL = 'https://api.yookassa.ru/v3';
@@ -108,7 +109,7 @@ export class YookassaService {
     });
 
     // Find tariff
-    const tariff = PAYMENT_TARIFFS.find((t) => t.id === tariffId);
+    const tariff = ALL_SUBSCRIPTION_TARIFFS.find((t) => t.id === tariffId);
     if (!tariff) {
       logger.error(`Tariff not found: ${tariffId}`);
       return;
@@ -120,80 +121,56 @@ export class YookassaService {
       include: { telegram: true },
     });
 
-    // Handle subscription tariff (has 'days' property)
-    if ('days' in tariff) {
-      const currentExpiry = user?.subscriptionExpiresAt;
-      const baseDate =
-        currentExpiry && new Date(currentExpiry) > new Date()
-          ? new Date(currentExpiry)
-          : new Date();
+    // Handle subscription tariff
+    // Find active subscription to determine extension base date
+    const activeSub = await prisma.userSubscription.findFirst({
+      where: { userId },
+      orderBy: { startedAt: 'desc' },
+    });
 
-      const newExpiry = new Date(baseDate);
-      newExpiry.setDate(newExpiry.getDate() + tariff.days);
+    const baseDate =
+      activeSub?.endedAt && activeSub.endedAt > new Date()
+        ? new Date(activeSub.endedAt)
+        : new Date();
 
-      await prisma.user.update({
-        where: { id: userId },
-        data: { subscriptionExpiresAt: newExpiry },
-      });
+    const newExpiry = new Date(baseDate);
+    newExpiry.setDate(newExpiry.getDate() + tariff.days);
 
-      // Send Telegram notification
-      const chatId = user?.telegram?.chatId;
-      if (chatId) {
-        await this.sendSuccessNotification(chatId, tariff, 'subscription');
-      }
-    }
-    // Handle booking tariff (has 'bookingCount' property)
-    else if ('bookingCount' in tariff) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          autobookingCount: {
-            increment: tariff.bookingCount,
-          },
-        },
-      });
+    const tier = tariff.tier;
+    const maxAccounts = MAX_ACCOUNTS[tier];
 
-      // Send Telegram notification
-      const chatId = user?.telegram?.chatId;
-      if (chatId) {
-        await this.sendSuccessNotification(chatId, tariff, 'booking');
-      }
+    // Create new subscription record and update user limits
+    await createSubscription(userId, tier, newExpiry);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { maxAccounts },
+    });
+
+    // Send Telegram notification
+    const chatId = user?.telegram?.chatId;
+    if (chatId) {
+      await this.sendSuccessNotification(chatId, tariff, 'subscription');
     }
   }
 
   private async sendSuccessNotification(
     chatId: string,
     tariff: Tariff,
-    type: 'subscription' | 'booking',
+    type: 'subscription',
   ): Promise<void> {
     const URL = process.env.FRONTEND_URL || process.env.URL || '';
 
-    let message: string;
-    if (type === 'subscription') {
-      const subTariff = tariff as SubscriptionTariff;
-      message = [
-        '✅ *Оплата прошла успешно!*',
-        '',
-        `Тариф: *${subTariff.name}*`,
-        `Сумма: *${subTariff.price} ₽*`,
-        '',
-        `🎉 В течение нескольких минут ваша подписка будет продлена на *${subTariff.days} дней*, если возникнут проблемы, напишите в поддержку`,
-        '',
-        'Спасибо за доверие! Приятного использования бота!',
-      ].join('\n');
-    } else {
-      const bookingTariff = tariff as BookingTariff;
-      message = [
-        '✅ *Оплата прошла успешно!*',
-        '',
-        `Тариф: *${bookingTariff.name}*`,
-        `Сумма: *${bookingTariff.price} ₽*`,
-        '',
-        `🎉 В течение 5 минут будет добавлено *${bookingTariff.bookingCount}* автоброней, если возникнут проблемы, напишите в поддержку`,
-        '',
-        'Спасибо за доверие! Приятного использования бота!',
-      ].join('\n');
-    }
+    const message = [
+      '✅ *Оплата прошла успешно!*',
+      '',
+      `Тариф: *${tariff.name}*`,
+      `План: *${tariff.tier}*`,
+      `Сумма: *${tariff.price} ₽*`,
+      '',
+      `🎉 В течение нескольких минут ваша подписка будет продлена на *${tariff.days} дней*, если возникнут проблемы, напишите в поддержку`,
+      '',
+      'Спасибо за доверие! Приятного использования бота!',
+    ].join('\n');
 
     try {
       if (!TBOT) return;

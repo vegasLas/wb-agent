@@ -64,19 +64,12 @@ export const getSalesReport = async ({
             suppliers: true,
           },
         },
+        subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 },
       },
     });
 
     if (!user) {
       throw new Error('User not found');
-    }
-
-    // Check subscription
-    if (
-      !user.subscriptionExpiresAt ||
-      new Date(user.subscriptionExpiresAt) <= new Date()
-    ) {
-      throw new Error('Для получения отчетов требуется активная подписка');
     }
 
     // Get selected account

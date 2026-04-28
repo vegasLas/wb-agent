@@ -87,23 +87,6 @@ export class UserRepository {
     });
   }
 
-  async decrementAutobookingCount(userId: number, count = 1): Promise<User> {
-    return this.prismaClient.user.update({
-      where: { id: userId },
-      data: {
-        autobookingCount: { decrement: count },
-      },
-    });
-  }
-
-  async incrementAutobookingCount(userId: number, count = 1): Promise<User> {
-    return this.prismaClient.user.update({
-      where: { id: userId },
-      data: {
-        autobookingCount: { increment: count },
-      },
-    });
-  }
 }
 
 export const userRepository = new UserRepository(prisma);

@@ -334,6 +334,19 @@ export class AuthService {
   }
 
   async verifyPhone(request: PhoneVerificationRequest): Promise<AuthResult> {
+    // Early account-limit check — fail fast before spinning up a browser
+    try {
+      await accountService.checkAccountLimit(request.userId);
+    } catch (limitError) {
+      return {
+        success: false,
+        error:
+          limitError instanceof Error
+            ? limitError
+            : new Error('Account limit reached'),
+      };
+    }
+
     let sessionId: string | undefined;
     try {
       const initResult = await this.initializeAuth(request.userId);
@@ -654,22 +667,6 @@ export class AuthService {
       const supplierId = cookies.find(
         (cookie: Cookie) => cookie.name === 'x-supplier-id',
       );
-      if (supplierId) {
-        const { checkIfShouldAddBonus } = await import('../../utils/userBonus');
-        const shouldAddBonus = await checkIfShouldAddBonus(
-          session.userId,
-          supplierId.value,
-        );
-        if (shouldAddBonus) {
-          await prisma.user.update({
-            where: { id: session.userId },
-            data: {
-              autobookingCount: { increment: 5 },
-            },
-          });
-        }
-      }
-
       console.log('[AuthService] Collecting localStorage data...');
       // Collect localStorage data from browser context via Playwright
       const localStorage = await session.page.evaluate(() => {

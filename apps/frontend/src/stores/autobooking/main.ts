@@ -24,7 +24,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
     autobookings.value.filter((a) => a.status !== 'ACTIVE'),
   );
 
-  const autobookingCount = computed(() => autobookings.value.length);
+  const totalAutobookings = computed(() => autobookings.value.length);
 
   const getAutobookingById = computed(() => {
     return (id: string) => autobookings.value.find((a) => a.id === id);
@@ -206,7 +206,7 @@ export const useAutobookingStore = defineStore('autobooking', () => {
     // Getters
     activeAutobookings,
     inactiveAutobookings,
-    autobookingCount,
+    totalAutobookings,
     getAutobookingById,
 
     // Actions
