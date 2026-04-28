@@ -18,6 +18,7 @@ enum Permission {
 }
 
 enum SubscriptionTier {
+  FREE
   LITE
   PRO
   MAX
@@ -35,7 +36,7 @@ model User {
   wbAuthUpdatedAt       DateTime?
   autobookingCount      Int               @default(0)
   subscriptionExpiresAt DateTime?
-  subscriptionTier      SubscriptionTier  @default(LITE)
+  subscriptionTier      SubscriptionTier  @default(FREE)
   maxAccounts           Int               @default(1)
   trialUsedAt           DateTime?
   supplyTriggers        SupplyTrigger[]
@@ -299,7 +300,7 @@ model Payment {
   status         String
   paymentId      String           @unique
   tariffId       String
-  tier           SubscriptionTier @default(LITE)
+  tier           SubscriptionTier @default(FREE)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   idempotencyKey String           @unique
