@@ -271,12 +271,15 @@ function getTariffTitle(tariffId?: string): string {
   const map: Record<string, string> = {
     'lite-30': 'Lite 1 мес',
     'lite-90': 'Lite 3 мес',
+    'lite-180': 'Lite 6 мес',
     'lite-365': 'Lite 1 год',
     'pro-30': 'Pro 1 мес',
     'pro-90': 'Pro 3 мес',
+    'pro-180': 'Pro 6 мес',
     'pro-365': 'Pro 1 год',
     'max-30': 'Max 1 мес',
     'max-90': 'Max 3 мес',
+    'max-180': 'Max 6 мес',
     'max-365': 'Max 1 год',
   };
   return map[tariffId] || tariffId;
