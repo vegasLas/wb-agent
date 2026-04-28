@@ -40,6 +40,33 @@
         </div>
       </div>
     </div>
+
+    <!-- Account Limit Reached -->
+    <div
+      v-else-if="!userStore.canAddAccount"
+      class="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+    >
+      <div class="flex items-start gap-3">
+        <i
+          class="pi pi-ban text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"
+        />
+        <div class="flex-1">
+          <h5 class="font-medium text-red-900 dark:text-red-100 mb-1">
+            Достигнут лимит аккаунтов
+          </h5>
+          <p class="text-sm text-red-800 dark:text-red-200 mb-2">
+            Вы не можете добавить больше аккаунтов. Обновите подписку для увеличения лимита.
+          </p>
+          <Button
+            label="Купить подписку"
+            size="small"
+            severity="danger"
+            @click="openShop"
+          />
+        </div>
+      </div>
+    </div>
+
     <AddAccountCard
       v-else
       @add-account="$emit('add-account')"

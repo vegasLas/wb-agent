@@ -84,9 +84,6 @@
     <DateSelectionAlerts
       :date-type="props.form.dateType"
       :custom-dates="props.form.customDates"
-      :available-count="999"
-      :is-update-mode="isUpdateMode"
-      :remaining-count="remainingCount"
     />
 
     <!-- Monopallet Count (only for MONOPALLETE supply type) -->
@@ -226,18 +223,7 @@ const prevTransitWarehouseId = ref<number | null>(
   props.form.transitWarehouseId,
 );
 
-// Check if we're in update mode
-const isUpdateMode = computed(() => !!updateStore.currentAutobooking);
-
-// Slot-based model: each autobooking uses 1 slot regardless of date type.
-// Server-side enforces the limit. Client-side just shows info.
-const availableCount = computed(() => {
-  return 999;
-});
-
-const remainingCount = computed(() => {
-  return 999;
-});
+// Slot-based model: server-side enforces the limit. Client-side just shows info.
 
 // Emit individual field update - avoids circular updates
 function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {

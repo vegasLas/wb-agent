@@ -33,7 +33,6 @@ export interface UpdateRescheduleResponse {
 export interface DeleteRescheduleResponse {
   success: boolean;
   message: string;
-  returnedCredits: number;
 }
 
 export interface RescheduleSupplyDetailsResponse {

@@ -41,8 +41,10 @@
         </div>
         <ul class="ml-4 space-y-1 text-sm">
           <li>
-            • <strong>Стоимость:</strong> Каждое автобронирование использует 1
-            слот
+            • <strong>Стоимость:</strong> Будет использовано
+            <strong>{{ slotsUsed }}</strong>
+            {{ slotsUsed === 1 ? 'слот' : 'слота' }}
+            (по 1 на каждую выбранную дату)
           </li>
           <li>
             • <strong>Логика работы:</strong> Система попытается забронировать
@@ -53,31 +55,6 @@
             бронирования всех дат
           </li>
         </ul>
-        <p class="mt-2 text-sm">
-          У вас останется
-          <span
-            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-            :class="
-              remainingCount <= 0
-                ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-            "
-          >
-            {{ remainingCount }} слотов осталось.
-          </span>
-        </p>
-        <div
-          v-if="availableCount < (customDates?.length || 0)"
-          class="mt-3"
-        >
-          <Button
-            severity="primary"
-            size="small"
-            @click="navigateToStore"
-          >
-            Обновить подписку
-          </Button>
-        </div>
       </div>
     </Message>
   </div>
@@ -85,48 +62,22 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import Message from 'primevue/message';
-import Button from 'primevue/button';
-import { useAutobookingUpdateStore } from '@/stores/autobooking';
 
 interface Props {
   dateType?: string;
   customDates?: (string | Date)[];
-  availableCount: number;
-  isUpdateMode?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isUpdateMode: false,
   dateType: undefined,
   customDates: undefined,
 });
 
-const router = useRouter();
-const updateStore = useAutobookingUpdateStore();
-
-// Calculate available autobooking count considering update mode
-const availableCount = computed(() => {
-  if (props.isUpdateMode) {
-    return updateStore.remainingAutobookingCount;
+const slotsUsed = computed(() => {
+  if (props.dateType === 'CUSTOM_DATES') {
+    return props.customDates?.length || 0;
   }
-  return props.availableCount;
+  return 1;
 });
-
-// Calculate remaining count after selecting dates
-const remainingCount = computed(() => {
-  if (props.isUpdateMode) {
-    // In update mode, use the store's calculation which accounts for the adjustment
-    return updateStore.remainingAutobookingCount;
-  } else {
-    // In create mode, subtract the required count from available count
-    const requiredCount = props.customDates?.length || 0;
-    return props.availableCount - requiredCount;
-  }
-});
-
-function navigateToStore() {
-  router.push({ name: 'StoreSubscription' });
-}
 </script>
