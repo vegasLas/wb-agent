@@ -15,6 +15,7 @@ import { prisma } from '@/config/database';
 import { TBOT } from '@/utils/TBOT';
 import { ApiError } from '@/utils/errors';
 import { logger } from '@/utils/logger';
+import { createSubscription } from '@/utils/subscription';
 import { ALL_SUBSCRIPTION_TARIFFS, TRIAL_DAYS } from '@/constants/payments';
 
 const router = Router();
@@ -443,6 +444,7 @@ router.post(
 
       const user = await prisma.user.findUnique({
         where: { id: req.user!.id },
+        include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
       });
 
       if (!user) {
@@ -453,12 +455,15 @@ router.post(
         throw ApiError.badRequest('Пробный период уже был использован');
       }
 
-      if (user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()) {
+      const currentSub = user.subscriptions?.[0];
+      const currentTier = currentSub?.tier ?? 'FREE';
+
+      if (currentSub?.endedAt && currentSub.endedAt > new Date()) {
         throw ApiError.badRequest('У вас уже есть активная подписка');
       }
 
       // FREE users can activate trial; paid tier users cannot
-      if (user.subscriptionTier !== 'FREE' && user.subscriptionTier !== 'LITE') {
+      if (currentTier !== 'FREE' && currentTier !== 'LITE') {
         throw ApiError.badRequest('Пробный период доступен только для пользователей без подписки');
       }
 
@@ -467,11 +472,10 @@ router.post(
 
       const { MAX_ACCOUNTS } = await import('@/constants/payments');
 
+      await createSubscription(req.user!.id, tier, expiry);
       await prisma.user.update({
         where: { id: req.user!.id },
         data: {
-          subscriptionTier: tier,
-          subscriptionExpiresAt: expiry,
           trialUsedAt: new Date(),
           maxAccounts: MAX_ACCOUNTS[tier],
         },
