@@ -71,7 +71,7 @@ export class AccountService {
    */
   async getUserAccounts(userId: number) {
     return await prisma.account.findMany({
-      where: { userId, isDisabled: false },
+      where: { userId },
       include: {
         suppliers: true,
       },
@@ -84,7 +84,7 @@ export class AccountService {
    */
   async getAccountById(accountId: string, userId: number) {
     return prisma.account.findFirst({
-      where: { id: accountId, userId, isDisabled: false },
+      where: { id: accountId, userId },
       include: { suppliers: true },
     });
   }
@@ -133,7 +133,6 @@ export class AccountService {
       where: {
         id: accountId,
         userId,
-        isDisabled: false,
         suppliers: {
           some: { supplierId },
         },
@@ -177,7 +176,6 @@ export class AccountService {
     return await prisma.account.findFirst({
       where: {
         userId,
-        isDisabled: false,
         suppliers: {
           some: {
             supplierId,
@@ -254,7 +252,7 @@ export class AccountService {
   async checkAccountLimit(userId: number): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { accounts: { where: { isDisabled: false } } },
+      include: { accounts: true },
     });
 
     if (!user) {
@@ -284,7 +282,7 @@ export class AccountService {
     const account = await prisma.$transaction(async (tx) => {
       const userWithAccounts = await tx.user.findUnique({
         where: { id: userId },
-        include: { accounts: { where: { isDisabled: false } } },
+        include: { accounts: true },
       });
 
       if (!userWithAccounts) {
