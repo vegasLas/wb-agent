@@ -20,7 +20,7 @@
 
     <!-- Subscription Required -->
     <div
-      v-if="!userStore.subscriptionActive"
+      v-if="!userStore.subscriptionActive && !userStore.isFree"
       class="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"
     >
       <div class="flex items-start gap-3">

@@ -10,16 +10,16 @@
               <p
                 :class="[
                   'text-lg font-semibold',
-                  userStore.subscriptionActive ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+                  (userStore.subscriptionActive || userStore.isFree) ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
                 ]"
               >
-                {{ userStore.subscriptionActive ? `Активна, ${userStore.subscriptionRemainingDays} дн.` : 'Не активна' }}
+                {{ userStore.subscriptionActive ? `Активна, ${userStore.subscriptionRemainingDays} дн.` : userStore.isFree ? 'FREE план' : 'Не активна' }}
               </p>
             </div>
             <i
               :class="[
                 'pi text-2xl',
-                userStore.subscriptionActive ? 'pi-check-circle text-green-600 dark:text-green-400' : 'pi-times-circle text-red-500 dark:text-red-400'
+                (userStore.subscriptionActive || userStore.isFree) ? 'pi-check-circle text-green-600 dark:text-green-400' : 'pi-times-circle text-red-500 dark:text-red-400'
               ]"
             />
           </div>

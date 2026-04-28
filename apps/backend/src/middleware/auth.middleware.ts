@@ -11,7 +11,7 @@ export interface AuthUser {
   id: number;
   authType: 'telegram' | 'browser';
   subscriptionExpiresAt?: Date | null;
-  subscriptionTier?: 'LITE' | 'PRO' | 'MAX';
+  subscriptionTier?: 'FREE' | 'LITE' | 'PRO' | 'MAX';
   selectedAccountId?: string | null;
   chatId?: string | null;
 }
@@ -79,7 +79,7 @@ async function tryTelegramAuth(req: Request): Promise<AuthUser | null> {
       authType: 'telegram',
       selectedAccountId: user.selectedAccountId,
       subscriptionExpiresAt: user.subscriptionExpiresAt,
-      subscriptionTier: user.subscriptionTier ?? 'LITE',
+      subscriptionTier: user.subscriptionTier ?? 'FREE',
       chatId: user.telegram?.chatId ?? null,
     };
   } catch (error) {
@@ -116,7 +116,7 @@ async function tryJWTAuth(req: Request): Promise<AuthUser | null> {
       authType: 'browser',
       selectedAccountId: user.selectedAccountId,
       subscriptionExpiresAt: user.subscriptionExpiresAt,
-      subscriptionTier: user.subscriptionTier ?? 'LITE',
+      subscriptionTier: user.subscriptionTier ?? 'FREE',
       chatId: user.telegram?.chatId ?? null,
     };
   } catch (error) {
@@ -215,7 +215,7 @@ export const authenticate = async (
               authType: 'telegram',
               selectedAccountId: user.selectedAccountId,
               subscriptionExpiresAt: user.subscriptionExpiresAt,
-              subscriptionTier: user.subscriptionTier ?? 'LITE',
+              subscriptionTier: user.subscriptionTier ?? 'FREE',
               chatId: user.telegram?.chatId ?? null,
             };
           }
@@ -245,25 +245,29 @@ export const authenticate = async (
     const authUser = await tryTelegramAuth(req);
 
     if (authUser) {
+      if (authUser.subscriptionTier !== 'FREE') {
       if (!authUser.subscriptionExpiresAt || new Date(authUser.subscriptionExpiresAt) <= new Date()) {
         throw ApiError.forbidden(
           'Требуется активная подписка.',
           'SUBSCRIPTION_REQUIRED',
         );
       }
+    }
 
-      req.user = authUser;
-      return next();
+    req.user = authUser;
+    return next();
     }
 
     // Try JWT auth (Authorization: Bearer <token> header)
     const jwtUser = await tryJWTAuth(req);
     if (jwtUser) {
-      if (!jwtUser.subscriptionExpiresAt || new Date(jwtUser.subscriptionExpiresAt) <= new Date()) {
-        throw ApiError.forbidden(
-          'Требуется активная подписка.',
-          'SUBSCRIPTION_REQUIRED',
-        );
+      if (jwtUser.subscriptionTier !== 'FREE') {
+        if (!jwtUser.subscriptionExpiresAt || new Date(jwtUser.subscriptionExpiresAt) <= new Date()) {
+          throw ApiError.forbidden(
+            'Требуется активная подписка.',
+            'SUBSCRIPTION_REQUIRED',
+          );
+        }
       }
 
       req.user = jwtUser;

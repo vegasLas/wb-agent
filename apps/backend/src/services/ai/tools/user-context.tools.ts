@@ -29,7 +29,7 @@ Required: none.`,
             (ab) => ab.status === 'PENDING' || ab.status === 'ACTIVE',
           ).length;
           const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
-          const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'LITE'];
+          const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
 
           return {
             activeSlots,

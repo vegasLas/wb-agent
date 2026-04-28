@@ -51,7 +51,7 @@ function getMessageText(message: UIMessage): string {
 export class AIChatService {
   private async checkChatBudget(
     userId: number,
-    tier: 'LITE' | 'PRO' | 'MAX',
+    tier: 'FREE' | 'LITE' | 'PRO' | 'MAX',
   ): Promise<{ allowed: boolean; spent: number; max: number }> {
     const max = AI_CHAT_BUDGET_USD[tier];
     const now = new Date();
@@ -83,7 +83,7 @@ export class AIChatService {
       where: { id: userId },
       select: { subscriptionTier: true },
     });
-    const tier = (user?.subscriptionTier ?? 'LITE') as 'LITE' | 'PRO' | 'MAX';
+    const tier = (user?.subscriptionTier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
     const budget = await this.checkChatBudget(userId, tier);
 
     if (!budget.allowed) {

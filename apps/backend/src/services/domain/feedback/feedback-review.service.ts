@@ -66,7 +66,7 @@ export class FeedbackReviewService {
    */
   private async checkFeedbackQuota(
     userId: number,
-    tier: 'LITE' | 'PRO' | 'MAX',
+    tier: 'FREE' | 'LITE' | 'PRO' | 'MAX',
   ): Promise<{ allowed: boolean; used: number; max: number }> {
     const max = FEEDBACK_QUOTA[tier];
     if (max === Infinity) {
@@ -103,7 +103,7 @@ export class FeedbackReviewService {
       where: { id: userId },
       select: { subscriptionTier: true },
     });
-    const tier = (user?.subscriptionTier ?? 'LITE') as 'LITE' | 'PRO' | 'MAX';
+    const tier = (user?.subscriptionTier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
 
     const quota = await this.checkFeedbackQuota(userId, tier);
     if (!quota.allowed) {
@@ -332,7 +332,7 @@ export class FeedbackReviewService {
       where: { id: userId },
       select: { subscriptionTier: true },
     });
-    const tier = (user?.subscriptionTier ?? 'LITE') as 'LITE' | 'PRO' | 'MAX';
+    const tier = (user?.subscriptionTier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
 
     const quota = await this.checkFeedbackQuota(userId, tier);
     if (!quota.allowed) {

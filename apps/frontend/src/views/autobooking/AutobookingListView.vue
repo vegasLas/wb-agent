@@ -18,7 +18,7 @@
       v-if="
         userStore.selectedAccount &&
           userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+          (userStore.subscriptionActive || userStore.isFree)
       "
     >
       <!-- Status Filter Buttons -->
@@ -123,7 +123,7 @@ const listStore = useAutobookingListStore();
 const { viewReady } = useViewReady();
 
 const activeCount = computed(() => listStore.statusCounts[AUTOBOOKING_STATUSES.ACTIVE] || 0);
-const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'LITE' | 'PRO' | 'MAX'] || 2);
+const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
 
 // Dialog state
 const showCreateDialog = ref(false);

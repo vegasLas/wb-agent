@@ -132,6 +132,7 @@ const drawerVisible = ref(false);
 
 const canShowView = computed(() => {
   if (route.meta.skipSubscriptionCheck) return true;
+  if (userStore.isFree) return true;
   if (!userStore.subscriptionActive) return false;
   if (route.meta.requiresAccount && !userStore.user.selectedAccountId) return false;
   if (route.meta.requiresSupplier && !userStore.hasValidSupplier) return false;

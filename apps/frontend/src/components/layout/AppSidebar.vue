@@ -219,6 +219,9 @@ const subscriptionLabel = computed(() => {
   if (userStore.subscriptionActive) {
     return `${userStore.subscriptionRemainingDays} дн.`;
   }
+  if (userStore.isFree) {
+    return 'FREE';
+  }
   return 'Не активна';
 });
 </script>

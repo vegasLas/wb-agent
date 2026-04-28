@@ -5,7 +5,7 @@
       v-if="
         userStore.selectedAccount &&
           userStore.hasValidSupplier &&
-          userStore.subscriptionActive
+          (userStore.subscriptionActive || userStore.isFree)
       "
     >
       <!-- Status Filter Buttons -->
@@ -102,7 +102,7 @@
           Пожалуйста, выберите поставщика для продолжения
         </p>
       </template>
-      <template v-else-if="!userStore.subscriptionActive">
+      <template v-else-if="!userStore.subscriptionActive && !userStore.isFree">
         <i class="pi pi-calendar-times text-4xl mb-4 block" />
         <p class="text-lg font-medium">
           Подписка не активна
@@ -143,7 +143,7 @@ const listStore = useRescheduleListStore();
 const supplyDetailsStore = useSupplyDetailsStore();
 
 const activeCount = computed(() => listStore.statusCounts['ACTIVE'] || 0);
-const maxSlots = computed(() => RESCHEDULE_SLOTS[userStore.subscriptionTier as 'LITE' | 'PRO' | 'MAX'] || 2);
+const maxSlots = computed(() => RESCHEDULE_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
 
 // Note: Data fetching and viewReady() are handled in parent ReschedulesView.vue
 

@@ -9,6 +9,11 @@
           :value="`Подписка ${userStore.subscriptionTier} · ${userStore.subscriptionRemainingDays} дн.`"
         />
         <Tag
+          v-else-if="userStore.isFree"
+          severity="info"
+          :value="`FREE план`"
+        />
+        <Tag
           v-else
           severity="danger"
           icon="pi pi-exclamation-triangle"
@@ -33,8 +38,29 @@
       </template>
     </Card>
 
+    <!-- FREE Plan Info -->
+    <Card v-if="userStore.isFree" class="mb-4 border-blue-200">
+      <template #content>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">Текущий план</div>
+            <div class="text-xl font-bold text-blue-600">FREE</div>
+            <div class="text-xs text-gray-500 mt-1">
+              {{ AUTOBOOKING_SLOTS.FREE }} бронь, {{ MAX_ACCOUNTS.FREE }} аккаунт, {{ FEEDBACK_QUOTA.FREE }} отзывов
+            </div>
+          </div>
+          <Button
+            severity="primary"
+            @click="scrollToTariffs"
+          >
+            Оформить подписку
+          </Button>
+        </div>
+      </template>
+    </Card>
+
     <!-- Three Tier Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div ref="tariffsSection" class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card
         v-for="tier in tiers"
         :key="tier.key"
@@ -116,7 +142,7 @@
               </Button>
 
               <Button
-                v-if="!userStore.subscriptionActive && !userStore.user.trialUsedAt"
+                v-if="tier.key === 'LITE' && userStore.isFree && !userStore.user.trialUsedAt"
                 class="w-full"
                 severity="secondary"
                 variant="outlined"
@@ -149,6 +175,11 @@ import { ref, computed } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useViewReady } from '../composables/ui';
 import { paymentsAPI } from '@/api/payments/api';
+
+const tariffsSection = ref<HTMLElement | null>(null);
+function scrollToTariffs() {
+  tariffsSection.value?.scrollIntoView({ behavior: 'smooth' });
+}
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
@@ -243,8 +274,9 @@ function handleModalFail() {
 }
 
 async function activateTrial(tier: SubscriptionTier) {
+  if (tier !== 'LITE') return;
   try {
-    const response = await paymentsAPI.activateTrial(tier);
+    const response = await paymentsAPI.activateTrial();
     toast.add({
       severity: 'success',
       summary: 'Пробный период активирован',

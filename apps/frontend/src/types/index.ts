@@ -33,7 +33,7 @@ export interface User {
   id?: number;
   name?: string;
   username?: string;
-  subscriptionTier?: 'LITE' | 'PRO' | 'MAX';
+  subscriptionTier?: 'FREE' | 'LITE' | 'PRO' | 'MAX';
   subscriptionExpiresAt: string | null;
   maxAccounts?: number;
   trialUsedAt?: string | null;

@@ -83,7 +83,7 @@ export class SubscriptionNotificationService {
             chatId,
             daysLeft,
             subscriptionExpiresAt: user.subscriptionExpiresAt,
-            user: { subscriptionTier: user.subscriptionTier ?? 'LITE' },
+            user: { subscriptionTier: user.subscriptionTier ?? 'FREE' },
           });
 
           // Mark as sent
@@ -126,7 +126,7 @@ export class SubscriptionNotificationService {
         PRO: 'Pro',
         MAX: 'Max',
       };
-      const tierName = tierNames[notification.user?.subscriptionTier ?? 'LITE'] ?? '';
+      const tierName = tierNames[notification.user?.subscriptionTier ?? 'FREE'] ?? '';
       const tierLabel = tierName ? ` ${tierName}` : '';
 
       if (daysLeft === 7) {

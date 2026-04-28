@@ -30,10 +30,8 @@ export const paymentsAPI = {
    * POST /api/v1/payments/trial
    * Activate 14-day free trial
    */
-  async activateTrial(tier: 'LITE' | 'PRO' | 'MAX'): Promise<TrialResponse> {
-    const response = await apiClient.post<TrialResponse>('/payments/trial', {
-      tier,
-    });
+  async activateTrial(): Promise<TrialResponse> {
+    const response = await apiClient.post<TrialResponse>('/payments/trial', {});
     return response.data;
   },
 

@@ -8,23 +8,11 @@
   >
     <div class="space-y-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Выберите план для 14-дневного пробного периода. Пробный период можно активировать только один раз.
+        Активируйте 14-дневный пробный период для тарифа Lite. Пробный период можно активировать только один раз.
       </p>
 
-      <div class="grid grid-cols-3 gap-2">
-        <Button
-          v-for="tier in tiers"
-          :key="tier"
-          :severity="selectedTier === tier ? 'primary' : 'secondary'")
-          class="w-full"
-          @click="selectedTier = tier"
-        >
-          {{ tier }}
-        </Button>
-      </div>
-
-      <div v-if="selectedTier" class="rounded-lg bg-gray-50 dark:bg-gray-800 p-3 text-sm">
-        <p class="font-medium">{{ selectedTier }} включает:</p>
+      <div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-3 text-sm">
+        <p class="font-medium">Lite включает:</p>
         <ul class="mt-1 space-y-1 text-gray-600 dark:text-gray-400">
           <li>• {{ slots }} активных броней</li>
           <li>• {{ accounts }} WB аккаунт{{ accounts === 1 ? '' : 'а' }}</li>
@@ -36,7 +24,6 @@
       <Button
         class="w-full"
         :loading="loading"
-        :disabled="!selectedTier"
         @click="activate"
       >
         Активировать пробный период
@@ -75,26 +62,20 @@ const visible = computed({
   set: (value) => emit('update:modelValue', value),
 });
 
-const selectedTier = ref<SubscriptionTier | null>(null);
 const loading = ref(false);
 
-const tiers: SubscriptionTier[] = ['LITE', 'PRO', 'MAX'];
-
-const slots = computed(() => selectedTier.value ? AUTOBOOKING_SLOTS[selectedTier.value] : 0);
-const accounts = computed(() => selectedTier.value ? MAX_ACCOUNTS[selectedTier.value] : 0);
-const aiBudget = computed(() => selectedTier.value ? AI_CHAT_BUDGET_USD[selectedTier.value] : 0);
+const slots = computed(() => AUTOBOOKING_SLOTS['LITE']);
+const accounts = computed(() => MAX_ACCOUNTS['LITE']);
+const aiBudget = computed(() => AI_CHAT_BUDGET_USD['LITE']);
 const feedbackQuota = computed(() => {
-  if (!selectedTier.value) return 0;
-  const q = FEEDBACK_QUOTA[selectedTier.value];
+  const q = FEEDBACK_QUOTA['LITE'];
   return q === Infinity ? '∞' : q;
 });
 
 async function activate() {
-  if (!selectedTier.value) return;
-
   loading.value = true;
   try {
-    const response = await paymentsAPI.activateTrial(selectedTier.value);
+    const response = await paymentsAPI.activateTrial();
     toast.add({
       severity: 'success',
       summary: 'Пробный период активирован',

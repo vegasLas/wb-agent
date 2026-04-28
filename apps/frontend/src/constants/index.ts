@@ -27,7 +27,7 @@ export const TRIGGER_INTERVALS = [
 ];
 
 // ─── Subscription Tiers ───
-export type SubscriptionTier = 'LITE' | 'PRO' | 'MAX';
+export type SubscriptionTier = 'FREE' | 'LITE' | 'PRO' | 'MAX';
 
 export interface SubscriptionTariff {
   id: string;
@@ -65,19 +65,22 @@ export const ALL_SUBSCRIPTION_TARIFFS = [
 
 // ─── Slot limits per tier ───
 export const AUTOBOOKING_SLOTS: Record<SubscriptionTier, number> = {
-  LITE: 2,
-  PRO: 10,
-  MAX: 30,
+  FREE: 1,
+  LITE: 6,
+  PRO: 30,
+  MAX: 90,
 };
 
 export const RESCHEDULE_SLOTS: Record<SubscriptionTier, number> = {
-  LITE: 2,
-  PRO: 10,
-  MAX: 30,
+  FREE: 1,
+  LITE: 6,
+  PRO: 30,
+  MAX: 90,
 };
 
 // ─── Account limits per tier ───
 export const MAX_ACCOUNTS: Record<SubscriptionTier, number> = {
+  FREE: 1,
   LITE: 1,
   PRO: 3,
   MAX: Infinity,
@@ -85,16 +88,18 @@ export const MAX_ACCOUNTS: Record<SubscriptionTier, number> = {
 
 // ─── Feedback reply quotas per tier ───
 export const FEEDBACK_QUOTA: Record<SubscriptionTier, number> = {
-  LITE: 100,
-  PRO: 1000,
+  FREE: 10,
+  LITE: 200,
+  PRO: 2000,
   MAX: Infinity,
 };
 
 // ─── AI chat token budget per tier (in USD) ───
 export const AI_CHAT_BUDGET_USD: Record<SubscriptionTier, number> = {
-  LITE: 0.59,
-  PRO: 1.76,
-  MAX: 5.88,
+  FREE: 0.197,
+  LITE: 1.18,
+  PRO: 3.52,
+  MAX: 11.76,
 };
 
 // ─── Trial duration ───

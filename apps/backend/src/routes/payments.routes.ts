@@ -431,7 +431,7 @@ router.get('/history', authenticate, (async (
 router.post(
   '/trial',
   authenticate,
-  body('tier').isIn(['LITE', 'PRO', 'MAX']).withMessage('Valid tier is required'),
+  // Trial always activates LITE tier
   (async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const errors = validationResult(req);
@@ -439,7 +439,7 @@ router.post(
         throw new ApiError(400, errors.array()[0].msg);
       }
 
-      const { tier } = req.body as { tier: 'LITE' | 'PRO' | 'MAX' };
+      const tier = 'LITE';
 
       const user = await prisma.user.findUnique({
         where: { id: req.user!.id },
@@ -455,6 +455,11 @@ router.post(
 
       if (user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()) {
         throw ApiError.badRequest('У вас уже есть активная подписка');
+      }
+
+      // FREE users can activate trial; paid tier users cannot
+      if (user.subscriptionTier !== 'FREE' && user.subscriptionTier !== 'LITE') {
+        throw ApiError.badRequest('Пробный период доступен только для пользователей без подписки');
       }
 
       const expiry = new Date();
@@ -474,7 +479,7 @@ router.post(
 
       res.json({
         success: true,
-        message: `Пробный период ${tier} активирован на ${TRIAL_DAYS} дней`,
+        message: `Пробный период Lite активирован на ${TRIAL_DAYS} дней`,
         expiresAt: expiry.toISOString(),
       });
     } catch (error) {

@@ -19,7 +19,7 @@ export async function buildContextMessage(userId: number): Promise<string> {
     where: { userId, status: { in: ['PENDING', 'ACTIVE'] } },
   });
   const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
-  const maxSlots = AUTOBOOKING_SLOTS[user?.subscriptionTier ?? 'LITE'];
+  const maxSlots = AUTOBOOKING_SLOTS[user?.subscriptionTier ?? 'FREE'];
 
   if (!user) throw new Error('User not found');
 

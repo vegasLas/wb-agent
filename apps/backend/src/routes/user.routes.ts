@@ -137,7 +137,7 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
       throw ApiError.notFound('User not found');
     }
 
-    const tier = user.subscriptionTier ?? 'LITE';
+    const tier = user.subscriptionTier ?? 'FREE';
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
