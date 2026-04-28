@@ -121,6 +121,7 @@ export class AutobookingRescheduleExecutorService
       params;
 
     successfulReschedules.push({
+      userId: user.userId,
       chatId: user.chatId as string,
       warehouseName,
       effectiveDate,

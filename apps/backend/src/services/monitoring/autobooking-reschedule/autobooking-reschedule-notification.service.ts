@@ -6,7 +6,7 @@
  */
 
 import { prisma } from '@/config/database';
-import { sharedTelegramNotificationService } from '@/services/monitoring/shared/telegram-notification.service';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 import { sharedStatusUpdateService } from '@/services/monitoring/shared/status-update.service';
 import { logger } from '@/utils/logger';
 import type {
@@ -37,25 +37,22 @@ export class AutobookingRescheduleNotificationService
    * Sends success notification for reschedule
    */
   async sendSuccessNotification(
+    userId: number,
     chatId: string,
     warehouseName: string,
     date: Date,
     coefficient: number,
     transitWarehouseName?: string,
   ): Promise<void> {
-    const message =
-      sharedTelegramNotificationService.buildBookingSuccessMessage(
-        warehouseName,
-        date,
-        coefficient,
-        transitWarehouseName, // optional transit warehouse for reschedule
-        true, // isReschedule = true
-      );
-
-    await sharedTelegramNotificationService.sendSuccessNotification(
+    await notificationDispatcher.notifyBookingSuccess({
+      userId,
       chatId,
-      message,
-    );
+      warehouseName,
+      date,
+      coefficient,
+      transitWarehouseName,
+      isReschedule: true,
+    });
   }
 
   /**
@@ -88,26 +85,25 @@ export class AutobookingRescheduleNotificationService
         },
       });
 
-      const uniqueChatIds = new Set(
-        reschedules
-          .map((r: { user: { telegram: { chatId: string | null } | null } }) => r.user.telegram?.chatId)
-          .filter((chatId: string | null): chatId is string => chatId !== null),
-      );
+      const recipients = reschedules
+        .map((r) => ({
+          userId: r.userId,
+          chatId: r.user.telegram?.chatId ?? undefined,
+        }))
+        .filter(
+          (r, index, self) => index === self.findIndex((t) => t.userId === r.userId),
+        );
 
-      if (uniqueChatIds.size === 0) return;
+      if (recipients.length === 0) return;
 
-      const message = sharedTelegramNotificationService.buildBannedDateMessage(
+      await notificationDispatcher.notifyBannedDateBulk({
+        recipients,
         warehouseName,
         date,
         supplyType,
         error,
-        true, // isReschedule = true
-      );
-
-      await sharedTelegramNotificationService.sendBulkNotification(
-        uniqueChatIds,
-        message,
-      );
+        isReschedule: true,
+      });
     } catch (error) {
       logger.error(
         '[RescheduleNotification] Failed to send banned date notification:',

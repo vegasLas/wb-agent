@@ -10,7 +10,7 @@
 
 import { prisma } from '@/config/database';
 import type { Autobooking } from '@prisma/client';
-import { TBOT } from '@/utils/TBOT';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 import { logger } from '@/utils/logger';
 
 /**
@@ -155,11 +155,13 @@ export class AutobookingDateManagerService {
 
       const user = await prisma.user.findUnique({
         where: { id: autobooking.userId },
-        include: { telegram: true },
+        include: {
+          telegram: true,
+        },
       });
 
-      const chatId = user?.telegram?.chatId;
-      if (!chatId || !TBOT) return;
+      const chatId = user?.telegram?.chatId || undefined;
+      if (!user) return;
 
       const message =
         `ℹ️ Неактуальное автобронирование архивировано 🕒\n\n` +
@@ -169,18 +171,19 @@ export class AutobookingDateManagerService {
         `📅 Тип периода: ${this.getDateTypeText(autobooking.dateType)}\n` +
         `📅 Создан: ${new Date(autobooking.createdAt).toLocaleDateString('ru-RU')}`;
 
-      await TBOT.sendMessage(chatId, message, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '❌ Закрыть',
-                callback_data: 'close_menu',
-              },
-            ],
-          ],
+      await notificationDispatcher.notify({
+        userId: autobooking.userId,
+        chatId,
+        message,
+        subject: 'Автобронирование архивировано — wboi',
+        type: 'AUTOBOOKING',
+        title: 'Автобронирование архивировано',
+        link: '/autobooking',
+        metadata: {
+          autobookingId: autobooking.id,
+          warehouseId: autobooking.warehouseId,
+          supplyType: autobooking.supplyType,
         },
-        disable_notification: true, // Send without sound
       });
     } catch (error) {
       logger.error(

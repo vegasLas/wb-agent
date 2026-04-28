@@ -177,11 +177,8 @@ export class WarehouseMonitoringV2Service {
       // Check for technical mode - if TECHNICAL_MODE_USER_ID is set, only process that user
       const technicalModeUserId = process.env.TECHNICAL_MODE_USER_ID;
       let activeUserCondition: {
-        telegram?: { isNot: null };
         id?: number;
-      } = {
-        telegram: { isNot: null },
-      };
+      } = {};
 
       // In technical mode, override user condition to only select the specified user
       if (technicalModeUserId) {
@@ -372,7 +369,6 @@ export class WarehouseMonitoringV2Service {
     const { user } = trigger;
 
     // Early validation returns
-    if (!user.telegram?.chatId) return null;
     if (!this.shouldNotifyTrigger(trigger)) return null;
     if (trigger.warehouseIds.length === 0) return null;
 

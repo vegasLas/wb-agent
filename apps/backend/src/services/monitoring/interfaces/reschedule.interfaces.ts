@@ -33,6 +33,7 @@ export interface RescheduleBookingTask {
  * Successful reschedule record
  */
 export interface SuccessfulReschedule {
+  userId: number;
   chatId: string;
   warehouseName: string;
   effectiveDate: Date;
@@ -227,6 +228,7 @@ export interface IRescheduleNotificationService {
    * Sends success notification for reschedule
    */
   sendSuccessNotification(
+    userId: number,
     chatId: string,
     warehouseName: string,
     date: Date,

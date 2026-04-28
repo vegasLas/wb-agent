@@ -1,6 +1,6 @@
 import { prisma } from '@/config/database';
 import type { Autobooking, AutobookingReschedule } from '@prisma/client';
-import { TBOT } from '@/utils/TBOT';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 
 /**
  * Error configuration with status and message
@@ -144,16 +144,21 @@ async function handleCriticalBookingError({
 ❗️ ${errorConfig.message}
 ℹ️ Статус этого задания ${taskType} был изменен на "${errorConfig.status === 'ARCHIVED' ? 'АРХИВНЫЙ' : 'ОШИБКА'}" и помещен в список с архивными. Задание больше не будет активно.`;
 
-    if (user.chatId && TBOT) {
-      await TBOT.sendMessage(user.chatId, notificationMessage, {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: 'ℹ️ Поддержка', url: 'https://t.me/wb_booking_support' }],
-            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-          ],
-        },
-      });
-    }
+    await notificationDispatcher.notify({
+      userId: user.id,
+      chatId: user.chatId || undefined,
+      message: notificationMessage,
+      subject: `Ошибка ${operationType} — wboi`,
+      type: isReschedule ? 'RESCHEDULE' : 'AUTOBOOKING',
+      title: `Ошибка ${operationType}`,
+      link: isReschedule ? '/reschedules' : '/autobooking',
+      metadata: {
+        warehouseName,
+        date: effectiveDate,
+        errorMessage,
+        status: errorConfig.status,
+      },
+    });
 
     // Notify admin
     const adminUser = await prisma.user.findFirst({

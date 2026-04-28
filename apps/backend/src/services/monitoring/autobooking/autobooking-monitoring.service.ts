@@ -258,6 +258,7 @@ export class AutobookingMonitoringService
 
         // Send success notification to user
         await autobookingNotificationService.sendSuccessNotification(
+          booking.userId,
           booking.chatId,
           booking.warehouseName,
           booking.effectiveDate,

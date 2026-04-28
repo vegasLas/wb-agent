@@ -62,7 +62,7 @@ jest.mock(
   }),
 );
 
-jest.mock('../../autobooking-control.service', () => ({
+jest.mock('../../infrastructure/autobooking-control.service', () => ({
   isAutobookingProcessingActive: jest.fn().mockReturnValue(true),
 }));
 
@@ -81,6 +81,12 @@ jest.mock('../../../config/database', () => ({
 }));
 
 jest.mock('../../../utils/logger', () => ({
+  createLogger: () => ({
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  }),
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -117,6 +123,7 @@ describe('WarehouseMonitoringV2Service', () => {
     supplierId: 'supplier123',
     chatId: 'chat123',
     subscriptionExpiresAt: new Date('2025-12-31'),
+    telegram: { chatId: 'chat123' },
     accounts: [
       {
         id: 'account123',
@@ -297,7 +304,9 @@ describe('WarehouseMonitoringV2Service', () => {
       expect(result[0].userId).toBe(1);
       expect(result[0].autobookings).toHaveLength(1);
       expect(result[0].supplyTriggers).toHaveLength(0);
-      expect(result[0].accounts).toEqual({ account123: ['supplier123'] });
+      expect(result[0].accounts).toEqual({
+        account123: { supplierIds: ['supplier123'], wbCookies: 'account-cookies' },
+      });
     });
 
     it('should group multiple autobookings for same user', () => {
@@ -429,8 +438,8 @@ describe('WarehouseMonitoringV2Service', () => {
       expect(result).toHaveLength(0);
     });
 
-    it('should skip supply triggers without chatId', () => {
-      const userWithoutChat = { ...mockUser, chatId: null };
+    it('should include supply triggers for users without chatId', () => {
+      const userWithoutChat = { ...mockUser, chatId: null, telegram: { chatId: null } };
       const autobookings: (typeof mockAutobooking)[] = [];
       const supplyTriggers = [{ ...mockSupplyTrigger, user: userWithoutChat }];
       const reschedules: (typeof mockAutobookingReschedule)[] = [];
@@ -441,7 +450,8 @@ describe('WarehouseMonitoringV2Service', () => {
         reschedules,
       });
 
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(1);
+      expect(result[0].chatId).toBeUndefined();
     });
 
     it('should group reschedules with existing user', () => {
@@ -927,15 +937,16 @@ describe('WarehouseMonitoringV2Service', () => {
       expect(result.user.id).toBe(1);
     });
 
-    it('should return null for user without chatId', () => {
+    it('should return trigger for user without chatId', () => {
       const trigger = {
         ...mockSupplyTrigger,
-        user: { ...mockUser, chatId: null },
+        user: { ...mockUser, chatId: null, telegram: { chatId: null } },
       };
 
       const result = (service as any).prepareSupplyTrigger(trigger);
 
-      expect(result).toBeNull();
+      expect(result).not.toBeNull();
+      expect(result.processedItem.id).toBe('trigger123');
     });
 
     it('should return null when notification interval has not passed', () => {

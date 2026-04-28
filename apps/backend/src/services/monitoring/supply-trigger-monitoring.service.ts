@@ -1,6 +1,6 @@
 import { prisma } from '@/config/database';
 import { triggerService } from '@/services/external/wb/trigger.service';
-import { TBOT } from '@/utils/TBOT';
+import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
 import { logger } from '@/utils/logger';
 import { SUPPLY_TYPES, BOX_TYPE_IDS } from '@/constants/triggers';
 import type {
@@ -26,7 +26,7 @@ export class SupplyTriggerMonitoringService {
   ): Promise<void> {
     await Promise.all(
       monitoringUsers.map(async (user) => {
-        if (!user.chatId || !user.supplyTriggers.length) return;
+        if (!user.supplyTriggers.length) return;
         await this.processUserTriggers(user, availabilities);
       }),
     );
@@ -58,10 +58,18 @@ export class SupplyTriggerMonitoringService {
         } else {
           await triggerService.updateLastNotificationTime(trigger.id);
         }
-        await this.sendNotification(
-          user.chatId as string,
-          matchingAvailabilities,
-        );
+        try {
+          await notificationDispatcher.notifyTriggerSlots({
+            userId: user.userId,
+            chatId: user.chatId,
+            availabilities: matchingAvailabilities,
+          });
+        } catch (error) {
+          logger.error(
+            `Error sending trigger notification to user ${user.userId}:`,
+            error,
+          );
+        }
       }
     }
   }
@@ -264,64 +272,6 @@ export class SupplyTriggerMonitoringService {
     );
   }
 
-  /**
-   * Send notification to user via Telegram
-   */
-  private async sendNotification(
-    chatId: string,
-    availabilities: WarehouseAvailability[],
-  ): Promise<void> {
-    if (!TBOT) {
-      logger.warn('TBOT not initialized, cannot send notification');
-      return;
-    }
-
-    const message = this.createNotificationMessage(availabilities);
-    try {
-      await TBOT.sendMessage(chatId, message, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-          ],
-        },
-      });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      logger.error(
-        `Error sending notification to chat ${chatId}:`,
-        errorMessage,
-      );
-
-      // Check if the error indicates the bot was blocked by the user
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code === 'ETELEGRAM' &&
-        'response' in error &&
-        error.response &&
-        typeof error.response === 'object' &&
-        'body' in error.response &&
-        error.response.body &&
-        typeof error.response.body === 'object' &&
-        'description' in error.response.body &&
-        typeof error.response.body.description === 'string' &&
-        error.response.body.description.includes('bot was blocked by the user')
-      ) {
-        logger.info(
-          `User with chatId ${chatId} has blocked the bot. Setting chatId to null.`,
-        );
-
-        // Update user's chatId to null in the database
-        await prisma.telegram.updateMany({
-          where: { chatId },
-          data: { chatId: null },
-        });
-      }
-    }
-  }
 }
 
 export const supplyTriggerMonitoringService =
