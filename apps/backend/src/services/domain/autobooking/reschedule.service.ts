@@ -193,7 +193,7 @@ export class RescheduleService {
         )
       : [];
 
-    const maxSlots = RESCHEDULE_SLOTS[user.subscriptionTier ?? 'LITE'];
+    const maxSlots = RESCHEDULE_SLOTS[user.subscriptionTier ?? 'FREE'];
 
     // Check active reschedule slot limit and create atomically
     const reschedule = await prisma.$transaction(async (tx) => {

@@ -204,7 +204,7 @@ export class AutobookingService {
           ),
       ) || [];
 
-    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'LITE'];
+    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
 
     // Check active slot limit and create atomically
     const autobooking = await prisma.$transaction(async (tx) => {
