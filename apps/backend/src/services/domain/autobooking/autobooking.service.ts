@@ -139,6 +139,7 @@ export class AutobookingService {
     // Get user for subscription and slot check
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
 
     if (!user) {
@@ -205,7 +206,7 @@ export class AutobookingService {
           ),
       ) || [];
 
-    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
+    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptions?.[0]?.tier ?? 'FREE'];
 
     // Check active slot limit (sum of slots) and create atomically
     const autobooking = await prisma.$transaction(async (tx) => {
@@ -589,9 +590,17 @@ export class AutobookingService {
     existing: Autobooking,
     updateData: Partial<Autobooking>,
   ): Promise<void> {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        subscriptions: {
+          orderBy: { startedAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
     if (!user) return;
-    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptionTier ?? 'FREE'];
+    const maxSlots = AUTOBOOKING_SLOTS[user.subscriptions?.[0]?.tier ?? 'FREE'];
 
     const isActivating =
       updateData.status === 'ACTIVE' &&

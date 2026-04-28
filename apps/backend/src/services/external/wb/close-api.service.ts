@@ -557,14 +557,6 @@ export class CloseApiService {
           wbCookies: { not: null },
           user: {
             envInfo: { not: undefined },
-            OR: [
-              { subscriptionExpiresAt: { gt: new Date() } },
-              {
-                id: process.env.TECHNICAL_MODE_USER_ID
-                  ? parseInt(process.env.TECHNICAL_MODE_USER_ID)
-                  : undefined,
-              },
-            ],
           },
         },
         include: {
