@@ -1,5 +1,6 @@
 import { prisma } from '@/config/database';
 import type { Permission } from '@prisma/client';
+import { calculateSlotCount } from '@/utils/slot-utils';
 
 const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   PROMOTIONS: 'управление акциями и промо',
@@ -15,9 +16,14 @@ export async function buildContextMessage(userId: number): Promise<string> {
     select: { id: true, subscriptionTier: true },
   });
 
-  const activeSlots = await prisma.autobooking.count({
+  const activeAutobookings = await prisma.autobooking.findMany({
     where: { userId, status: { in: ['PENDING', 'ACTIVE'] } },
+    select: { dateType: true, customDates: true },
   });
+  const activeSlots = activeAutobookings.reduce(
+    (sum, ab) => sum + calculateSlotCount(ab.dateType, ab.customDates as Date[]),
+    0,
+  );
   const { AUTOBOOKING_SLOTS } = await import('@/constants/payments');
   const maxSlots = AUTOBOOKING_SLOTS[user?.subscriptionTier ?? 'FREE'];
 
