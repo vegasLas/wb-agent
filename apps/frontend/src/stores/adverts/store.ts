@@ -51,7 +51,7 @@ export const useAdvertsStore = defineStore('adverts', () => {
       error.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive) {
+    if (!userStore.subscriptionActive && !userStore.isFree) {
       error.value = 'Необходимо активировать подписку';
       return;
     }
@@ -97,7 +97,7 @@ export const useAdvertsStore = defineStore('adverts', () => {
       presetError.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive) {
+    if (!userStore.subscriptionActive && !userStore.isFree) {
       presetError.value = 'Необходимо активировать подписку';
       return;
     }

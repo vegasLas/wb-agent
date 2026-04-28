@@ -45,7 +45,7 @@ export const useContentCardsStore = defineStore('contentCards', () => {
       error.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive) {
+    if (!userStore.subscriptionActive && !userStore.isFree) {
       error.value = 'Необходимо активировать подписку';
       return;
     }
@@ -113,7 +113,7 @@ export const useContentCardsStore = defineStore('contentCards', () => {
       commissionsError.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive) {
+    if (!userStore.subscriptionActive && !userStore.isFree) {
       commissionsError.value = 'Необходимо активировать подписку';
       return;
     }
@@ -143,7 +143,7 @@ export const useContentCardsStore = defineStore('contentCards', () => {
       tariffsError.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive) {
+    if (!userStore.subscriptionActive && !userStore.isFree) {
       tariffsError.value = 'Необходимо активировать подписку';
       return;
     }

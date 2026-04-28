@@ -7,7 +7,7 @@ import { confirmPromise } from '@/utils/ui';
 export const useUserStore = defineStore('user', () => {
   const user = ref<User>({
     name: '',
-    subscriptionTier: 'LITE',
+    subscriptionTier: 'FREE',
     subscriptionExpiresAt: null,
     payments: [],
     agreeTerms: false,
@@ -35,7 +35,7 @@ export const useUserStore = defineStore('user', () => {
   function reset() {
     user.value = {
       name: '',
-      subscriptionTier: 'LITE',
+      subscriptionTier: 'FREE',
       subscriptionExpiresAt: null,
       payments: [],
       agreeTerms: false,
@@ -49,7 +49,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // Subscription tier computed properties
-  const subscriptionTier = computed(() => user.value.subscriptionTier ?? 'LITE');
+  const subscriptionTier = computed(() => user.value.subscriptionTier ?? 'FREE');
+  const isFree = computed(() => subscriptionTier.value === 'FREE');
   const isPro = computed(() => subscriptionTier.value === 'PRO' || subscriptionTier.value === 'MAX');
   const isMax = computed(() => subscriptionTier.value === 'MAX');
   const maxAccounts = computed(() => user.value.maxAccounts ?? 1);
