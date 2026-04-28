@@ -120,7 +120,7 @@
                 :severity="selectedTariff?.id === tariff.id ? 'primary' : 'secondary'"
                 @click="selectedTariff = tariff"
               >
-                {{ tariff.days === 30 ? '1 мес' : tariff.days === 90 ? '3 мес' : '1 год' }}
+                {{ tariff.days === 30 ? '1 мес' : tariff.days === 90 ? '3 мес' : tariff.days === 180 ? '6 мес' : '1 год' }}
               </Button>
             </div>
 
