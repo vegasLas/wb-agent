@@ -12,9 +12,9 @@ interface ModelPricing {
 const DEFAULT_PRICING: Record<string, ModelPricing> = {
   'deepseek-v4-flash': {
     inputPricePer1M:
-      parseFloat(process.env.DEEPSEEK_V4_FLASH_INPUT_PRICE_PER_1M || '0.07'),
+      parseFloat(process.env.DEEPSEEK_V4_FLASH_INPUT_PRICE_PER_1M || '0.14'),
     outputPricePer1M:
-      parseFloat(process.env.DEEPSEEK_V4_FLASH_OUTPUT_PRICE_PER_1M || '0.30'),
+      parseFloat(process.env.DEEPSEEK_V4_FLASH_OUTPUT_PRICE_PER_1M || '0.28'),
   },
 };
 

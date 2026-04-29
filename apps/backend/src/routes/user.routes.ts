@@ -11,6 +11,9 @@ import {
 } from '@/constants/payments';
 import { getBillingPeriodStart } from '@/utils/subscription';
 import { ApiError } from '@/utils/errors';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('UserRoutes');
 
 const router = Router();
 
@@ -188,6 +191,10 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
       },
     });
     const aiChatSpentUsd = aiChatSpentResult._sum.cost ?? 0;
+
+    logger.info(
+      `[USER-LIMITS] User ${user.id} | Tier: ${tier} | AI Chat Spent: $${Math.round(aiChatSpentUsd * 1000) / 1000} / $${AI_CHAT_BUDGET_USD[tier]} | Reset: ${aiChatResetDate.toISOString()}`,
+    );
 
     res.json({
       tier,

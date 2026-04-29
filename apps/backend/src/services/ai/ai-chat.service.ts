@@ -15,6 +15,8 @@ import { filterToolsByPermissions } from './ai-tool-permissions';
 import { AI_CHAT_BUDGET_USD, UserTier } from '@/constants/payments';
 import { getBillingPeriodStart } from '@/utils/subscription';
 import { ApiError } from '@/utils/errors';
+import { createLogger } from '@/utils/logger';
+import { calculateCost } from '@/config/ai-pricing';
 import { autobookingTools } from './tools/autobooking.tools';
 import { triggerTools } from './tools/trigger.tools';
 import { externalTools } from './tools/external.tools';
@@ -35,6 +37,8 @@ interface HandleChatInput {
   attachments?: AttachmentMeta[];
   abortSignal?: AbortSignal;
 }
+
+const logger = createLogger('AIChatService');
 
 interface ChatResult {
   result: any;
@@ -273,18 +277,40 @@ export class AIChatService {
         await saveToDb(text, toolCalls, toolResults);
 
         if (usage) {
+          let promptTokens = usage.promptTokens ?? 0;
+          let completionTokens = usage.completionTokens ?? 0;
+          const totalTokens = usage.totalTokens ?? 0;
+
+          // Fallback: some providers return totalTokens but omit the breakdown
+          if (promptTokens === 0 && completionTokens === 0 && totalTokens > 0) {
+            logger.warn(
+              `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | Provider returned totalTokens=${totalTokens} but prompt/completion breakdown is missing. Raw usage: ${JSON.stringify(usage)}`,
+            );
+            // Attribute all tokens to completion (output is more expensive — conservative estimate)
+            completionTokens = totalTokens;
+          }
+
+          const cost = calculateCost('deepseek-v4-flash', promptTokens, completionTokens);
+
+          logger.info(
+            `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | Tokens: ${totalTokens} (${promptTokens} prompt / ${completionTokens} completion) | Cost: $${cost}`,
+          );
+
           aiUsageTrackingService.trackUsage({
             userId,
             feature: 'ai_chat',
             model: 'deepseek-v4-flash',
             usage: {
-              promptTokens: usage.promptTokens ?? 0,
-              completionTokens: usage.completionTokens ?? 0,
-              totalTokens: usage.totalTokens ?? 0,
+              promptTokens,
+              completionTokens,
+              totalTokens,
             },
             conversationId: convId,
             messageId: assistantMessage.id,
-            metadata: { toolCount: toolCalls?.length ?? 0 },
+            metadata: {
+              toolCount: toolCalls?.length ?? 0,
+              usageBreakdownMissing: promptTokens === 0 && completionTokens === totalTokens && totalTokens > 0,
+            },
           });
         }
       },

@@ -64,9 +64,17 @@ export class AiUsageTrackingService {
       metadata,
     } = input;
 
-    const promptTokens = usage.promptTokens ?? 0;
-    const completionTokens = usage.completionTokens ?? 0;
+    let promptTokens = usage.promptTokens ?? 0;
+    let completionTokens = usage.completionTokens ?? 0;
     const totalTokens = usage.totalTokens ?? promptTokens + completionTokens;
+
+    // Fallback: some providers return totalTokens but omit the breakdown
+    if (promptTokens === 0 && completionTokens === 0 && totalTokens > 0) {
+      logger.warn(
+        `[AI-USAGE] User ${userId} | Feature ${feature} | Provider returned totalTokens=${totalTokens} but prompt/completion breakdown is missing. Attributing all to completion tokens.`,
+      );
+      completionTokens = totalTokens;
+    }
 
     const cost = calculateCost(model, promptTokens, completionTokens);
 
