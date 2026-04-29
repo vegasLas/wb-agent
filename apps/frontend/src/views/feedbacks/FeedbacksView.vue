@@ -430,6 +430,7 @@ async function onConfirmBulk(nmIds: number[]) {
   if (!nmIds || nmIds.length === 0) return;
   try {
     await feedbacksStore.answerAllFeedbacks(nmIds);
+    await fetchFeedbackQuota();
   } catch {
     toastHelpers.error('Ошибка', 'Не удалось запустить обработку отзывов');
   }
@@ -447,6 +448,7 @@ async function onPostPending() {
 
   try {
     const result = await feedbacksStore.postPendingAnswers();
+    await fetchFeedbackQuota();
     toastHelpers.info(
       'Публикация запущена',
       `Публикация ${result.pendingCount} AI-ответов запущена в фоновом режиме.`,
@@ -462,6 +464,7 @@ async function onGenerate(feedback: FeedbackItem) {
 
   try {
     await feedbacksStore.generateAnswer(feedback.id, feedback);
+    await fetchFeedbackQuota();
   } catch {
     // Error handled in store
   }
@@ -473,6 +476,7 @@ async function onAcceptAnswer(feedbackId: string) {
     await feedbacksStore.acceptAnswer(feedbackId);
     await feedbacksStore.fetchStatistics();
     await feedbacksStore.fetchRejectedAnswers();
+    await fetchFeedbackQuota();
     dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store
@@ -489,6 +493,7 @@ async function onRejectAnswer(feedbackId: string, userFeedback?: string) {
     }
     await feedbacksStore.fetchStatistics();
     await feedbacksStore.fetchRejectedAnswers();
+    await fetchFeedbackQuota();
     dialog.closeGenerateDrawer();
   } catch {
     // Error handled in store
@@ -501,6 +506,7 @@ async function onRegenerateAnswer(feedbackId: string, userFeedback?: string) {
 
   try {
     await feedbacksStore.regenerateAnswer(feedbackId, feedback, userFeedback);
+    await fetchFeedbackQuota();
   } catch {
     // Error handled in store
   }
