@@ -157,9 +157,10 @@ const { primaryNav, secondaryNav, isActive } = useNavigation(pendingRouteName);
 const userStore = useUserStore();
 const { hasAnyPermission } = usePermissions();
 
-const visiblePrimaryNav = computed(() =>
-  primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions)),
-);
+const visiblePrimaryNav = computed(() => {
+  if (!userStore.user.selectedAccountId) return primaryNav;
+  return primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions));
+});
 
 // Theme toggle
 const colorMode = useColorMode({

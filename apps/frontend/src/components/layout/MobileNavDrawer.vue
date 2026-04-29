@@ -141,9 +141,10 @@ const { hasAnyPermission } = usePermissions();
 const hasInitData = computed(() => !!getInitData());
 const isMobile = computed(() => /iPhone|iPad|Android|webOS|BlackBerry/i.test(navigator.userAgent));
 
-const visiblePrimaryNav = computed(() =>
-  primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions)),
-);
+const visiblePrimaryNav = computed(() => {
+  if (!userStore.user.selectedAccountId) return primaryNav;
+  return primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions));
+});
 
 // Theme toggle
 const colorMode = useColorMode({
