@@ -20,7 +20,12 @@
         </div>
 
         <!-- Desktop new chat -->
-        <SkeletonBlock class="hidden md:block" preset="button" width="6rem" height="1.5rem" />
+        <SkeletonBlock
+          class="hidden md:block"
+          preset="button"
+          width="6rem"
+          height="1.5rem"
+        />
       </div>
 
       <!-- Messages -->
@@ -28,10 +33,7 @@
         <div
           v-for="i in messageCount"
           :key="`msg-${i}`"
-          :class="[
-            'flex',
-            i % 2 === 0 ? 'justify-start' : 'justify-end',
-          ]"
+          :class="['flex', i % 2 === 0 ? 'justify-start' : 'justify-end']"
         >
           <div
             :class="[
@@ -78,9 +80,9 @@
 </template>
 
 <script setup lang="ts">
+import Skeleton from 'primevue/skeleton';
 import SkeletonBlock from './SkeletonBlock.vue';
 import SkeletonListItem from './SkeletonListItem.vue';
-
 interface Props {
   messageCount?: number;
   sidebarItems?: number;

@@ -13,6 +13,7 @@ import Tooltip from 'primevue/tooltip';
 import App from './app/App.vue';
 import router from './router';
 import { PrimevalPreset } from './theme/primeval-theme';
+import { readyWebApp } from './utils';
 
 const app = createApp(App);
 
@@ -38,7 +39,6 @@ app.use(PrimeVue, {
 app.use(ConfirmationService);
 app.use(DialogService);
 app.use(ToastService);
-
 // Register directives
 app.directive('maska', vMaska);
 app.directive('tooltip', Tooltip);
