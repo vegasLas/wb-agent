@@ -92,10 +92,10 @@
             <span class="text-sm">Автобронирования</span>
             <span class="text-sm font-medium">{{ limits?.autobookingSlots?.used ?? 0 }} / {{ limits?.autobookingSlots?.max ?? '-' }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <!-- <div class="flex items-center justify-between">
             <span class="text-sm">Перепланирования</span>
             <span class="text-sm font-medium">{{ limits?.rescheduleSlots?.used ?? 0 }} / {{ limits?.rescheduleSlots?.max ?? '-' }}</span>
-          </div>
+          </div> -->
           <div class="flex items-center justify-between">
             <span class="text-sm">Отзывы (AI/мес)</span>
             <span class="text-sm font-medium">{{ limits?.feedbackQuota?.used ?? 0 }} / {{ limits?.feedbackQuota?.max ?? '∞' }}</span>

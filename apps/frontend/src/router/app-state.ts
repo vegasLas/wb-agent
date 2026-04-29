@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useWarehousesStore } from '@/stores/warehouses';
-import { useRescheduleStore } from '@/stores/reschedules';
+// import { useRescheduleStore } from '@/stores/reschedules';
 import { useNotificationsStore } from '@/stores/notifications';
 import { useAccountSupplierModalStore } from '@/stores/ui';
 import router from './index';
@@ -30,7 +30,7 @@ function detectTelegramMode(): boolean {
 export function useAppState() {
   const userStore = useUserStore();
   const warehouseStore = useWarehousesStore();
-  const rescheduleStore = useRescheduleStore();
+  // const rescheduleStore = useRescheduleStore();
   const notificationsStore = useNotificationsStore();
   const accountModalStore = useAccountSupplierModalStore();
 
@@ -100,7 +100,7 @@ export function useAppState() {
     await userStore.fetchUser();
 
     // Fetch background data
-    rescheduleStore.fetchReschedules();
+    // rescheduleStore.fetchReschedules();
     warehouseStore.fetchWarehouses();
     notificationsStore.fetchUnreadCount();
 

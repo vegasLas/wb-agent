@@ -46,10 +46,10 @@ export const useViewStore = defineStore('view', () => {
       return 'autobookings-main';
     if (routeName === 'Triggers' || routeName === 'TriggersList')
       return 'triggers-main';
-    if (routeName === 'Reschedules' || routeName === 'ReschedulesList')
-      return 'reschedules-main';
-    if (routeName === 'ReschedulesCreate') return 'reschedules-form';
-    if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
+    // if (routeName === 'Reschedules' || routeName === 'ReschedulesList')
+    //   return 'reschedules-main';
+    // if (routeName === 'ReschedulesCreate') return 'reschedules-form';
+    // if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
     if (routeName === 'Promotions') return 'promotions';
@@ -78,9 +78,9 @@ export const useViewStore = defineStore('view', () => {
     const routeMap: Record<string, string> = {
       'autobookings-main': 'Autobooking',
       'triggers-main': 'Triggers',
-      'reschedules-main': 'Reschedules',
-      'reschedules-form': 'ReschedulesCreate',
-      'reschedules-update': 'ReschedulesUpdate',
+      // 'reschedules-main': 'Reschedules',
+      // 'reschedules-form': 'ReschedulesCreate',
+      // 'reschedules-update': 'ReschedulesUpdate',
       account: 'Account',
       report: 'Reports',
       promotions: 'Promotions',
@@ -117,8 +117,8 @@ export const useViewStore = defineStore('view', () => {
    */
   const isForm = computed(() => {
     const formRoutes = [
-      'ReschedulesCreate',
-      'ReschedulesUpdate',
+      // 'ReschedulesCreate',
+      // 'ReschedulesUpdate',
     ];
     return route ? formRoutes.includes(route.name as string) : false;
   });
@@ -130,7 +130,7 @@ export const useViewStore = defineStore('view', () => {
     const routeName = route?.name as string;
     if (routeName?.startsWith('Autobooking')) return 'autobookings';
     if (routeName?.startsWith('Trigger')) return 'triggers';
-    if (routeName?.startsWith('Reschedule')) return 'reschedules';
+    // if (routeName?.startsWith('Reschedule')) return 'reschedules';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
     if (routeName === 'Promotions') return 'promotions';

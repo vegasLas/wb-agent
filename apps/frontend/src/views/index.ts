@@ -9,11 +9,11 @@ export {
 } from './autobooking';
 
 // Reschedules Views
-export {
-  ReschedulesListView,
-  ReschedulesCreateView,
-  ReschedulesUpdateView,
-} from './reschedules';
+// export {
+//   ReschedulesListView,
+//   ReschedulesCreateView,
+//   ReschedulesUpdateView,
+// } from './reschedules';
 
 // Triggers Views
 export { TriggersListView } from './triggers';

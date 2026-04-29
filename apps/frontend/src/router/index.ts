@@ -3,11 +3,11 @@ import { useAppState } from './app-state';
 import { isTelegramWebApp, getInitData } from '../utils/telegram';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
-import {
-  ReschedulesListView,
-  ReschedulesCreateView,
-  ReschedulesUpdateView,
-} from '../views/reschedules';
+// import {
+//   ReschedulesListView,
+//   ReschedulesCreateView,
+//   ReschedulesUpdateView,
+// } from '../views/reschedules';
 import { TriggersListView } from '../views/triggers';
 import { PromotionsView } from '../views/promotions';
 import { FeedbacksView } from '../views/feedbacks';
@@ -194,36 +194,36 @@ const routes: RouteRecordRaw[] = [
         },
       },
       // Reschedules Routes (flat structure - each view is standalone)
-      {
-        path: 'reschedules',
-        name: 'ReschedulesList',
-        component: ReschedulesListView,
-        meta: {
-          title: 'Перепланирования',
-          requiresAccount: true,
-          requiresSupplier: true,
-        },
-      },
-      {
-        path: 'reschedules/create',
-        name: 'ReschedulesCreate',
-        component: ReschedulesCreateView,
-        meta: {
-          title: 'Создание перепланирования',
-          requiresAccount: true,
-          requiresSupplier: true,
-        },
-      },
-      {
-        path: 'reschedules/update/:id',
-        name: 'ReschedulesUpdate',
-        component: ReschedulesUpdateView,
-        meta: {
-          title: 'Редактирование перепланирования',
-          requiresAccount: true,
-          requiresSupplier: true,
-        },
-      },
+      // {
+      //   path: 'reschedules',
+      //   name: 'ReschedulesList',
+      //   component: ReschedulesListView,
+      //   meta: {
+      //     title: 'Перепланирования',
+      //     requiresAccount: true,
+      //     requiresSupplier: true,
+      //   },
+      // },
+      // {
+      //   path: 'reschedules/create',
+      //   name: 'ReschedulesCreate',
+      //   component: ReschedulesCreateView,
+      //   meta: {
+      //     title: 'Создание перепланирования',
+      //     requiresAccount: true,
+      //     requiresSupplier: true,
+      //   },
+      // },
+      // {
+      //   path: 'reschedules/update/:id',
+      //   name: 'ReschedulesUpdate',
+      //   component: ReschedulesUpdateView,
+      //   meta: {
+      //     title: 'Редактирование перепланирования',
+      //     requiresAccount: true,
+      //     requiresSupplier: true,
+      //   },
+      // },
       // Triggers Routes (flat structure - each view is standalone)
       {
         path: 'triggers',

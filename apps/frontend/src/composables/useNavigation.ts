@@ -60,13 +60,13 @@ export const primaryNav: NavItem[] = [
     route: 'RegionSales',
     permissions: ['REPORTS'],
   },
-  {
-    id: 'reschedules',
-    label: 'Перепланирования',
-    icon: 'pi pi-calendar-clock',
-    route: 'ReschedulesList',
-    permissions: ['SUPPLIES'],
-  },
+  // {
+  //   id: 'reschedules',
+  //   label: 'Перепланирования',
+  //   icon: 'pi pi-calendar-clock',
+  //   route: 'ReschedulesList',
+  //   permissions: ['SUPPLIES'],
+  // },
   {
     id: 'tariffs',
     label: 'Тарифы',
