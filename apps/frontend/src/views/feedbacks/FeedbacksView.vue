@@ -8,15 +8,18 @@
       class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface-0 dark:bg-surface-800 rounded-lg shadow-sm"
     >
       <!-- Left: View Mode Switch -->
-      <SelectButton
-        v-model="viewMode"
-        :options="viewModeOptions"
-        option-label="label"
-        option-value="value"
-        :allow-empty="false"
-        size="small"
-        class="text-sm"
-      />
+      <div class="flex items-center gap-2">
+        <Button
+          v-for="option in viewModeOptions"
+          :key="option.value"
+          :severity="viewMode === option.value ? 'primary' : 'secondary'"
+          :text="viewMode !== option.value"
+          size="small"
+          @click="viewMode = option.value"
+        >
+          {{ option.label }}
+        </Button>
+      </div>
 
       <!-- Right: Actions + Quota -->
       <div class="flex items-center gap-3">
@@ -296,7 +299,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Button from 'primevue/button';
-import SelectButton from 'primevue/selectbutton';
+
 import Select from 'primevue/select';
 import Paginator from 'primevue/paginator';
 import Chip from 'primevue/chip';
@@ -476,6 +479,7 @@ async function onAcceptAnswer(feedbackId: string) {
     await feedbacksStore.acceptAnswer(feedbackId);
     await feedbacksStore.fetchStatistics();
     await feedbacksStore.fetchRejectedAnswers();
+    await feedbacksStore.fetchFeedbacks('unanswered', false, true);
     await fetchFeedbackQuota();
     dialog.closeGenerateDrawer();
   } catch {
@@ -493,6 +497,7 @@ async function onRejectAnswer(feedbackId: string, userFeedback?: string) {
     }
     await feedbacksStore.fetchStatistics();
     await feedbacksStore.fetchRejectedAnswers();
+    await feedbacksStore.fetchFeedbacks('unanswered', false, true);
     await fetchFeedbackQuota();
     dialog.closeGenerateDrawer();
   } catch {
