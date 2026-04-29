@@ -6,11 +6,12 @@ import { logger } from '@/utils/logger';
 import { jwtAuthService } from '@/services/user/jwt-auth.service';
 import { identityService } from '@/services/auth/identity.service';
 import { AuthProvider } from '@prisma/client';
+import { UserTier } from '@/constants/payments';
 
 export interface AuthUser {
   id: number;
   authType: 'telegram' | 'browser';
-  subscriptionTier: 'FREE' | 'LITE' | 'PRO' | 'MAX';
+  subscriptionTier: UserTier;
   selectedAccountId?: string | null;
   chatId?: string | null;
 }
