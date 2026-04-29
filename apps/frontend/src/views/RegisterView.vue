@@ -22,13 +22,31 @@
 
         <!-- Error Message -->
         <div
-          v-if="error"
+          v-if="displayError"
           class="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
         >
           <div class="flex items-start gap-3">
             <i class="pi pi-exclamation-circle text-red-500 mt-0.5" />
-            <p class="text-red-500 text-sm">
-              {{ error }}
+            <div class="text-red-500 text-sm">
+              <p>{{ displayError }}</p>
+              <div v-if="isEmailExists" class="mt-2">
+                <RouterLink to="/login" class="text-purple hover:underline text-sm">
+                  Перейти ко входу
+                </RouterLink>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rate limit info -->
+        <div
+          v-if="isRateLimited"
+          class="mb-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20"
+        >
+          <div class="flex items-start gap-3">
+            <i class="pi pi-clock text-yellow-500 mt-0.5" />
+            <p class="text-yellow-500 text-sm">
+              Слишком много попыток регистрации. Пожалуйста, подождите немного перед следующей попыткой.
             </p>
           </div>
         </div>
@@ -64,7 +82,11 @@
               placeholder="Введите ваше имя"
               class="w-full"
               :disabled="isLoading"
+              :class="{ 'p-invalid': fieldErrors.name }"
             />
+            <small v-if="fieldErrors.name" class="p-error text-xs mt-1 block">
+              {{ fieldErrors.name }}
+            </small>
           </div>
 
           <div>
@@ -78,7 +100,11 @@
               placeholder="your@email.com"
               class="w-full"
               :disabled="isLoading"
+              :class="{ 'p-invalid': fieldErrors.email }"
             />
+            <small v-if="fieldErrors.email" class="p-error text-xs mt-1 block">
+              {{ fieldErrors.email }}
+            </small>
           </div>
 
           <div>
@@ -94,7 +120,11 @@
               :feedback="true"
               toggle-mask
               input-class="w-full"
+              :class="{ 'p-invalid': fieldErrors.password }"
             />
+            <small v-if="fieldErrors.password" class="p-error text-xs mt-1 block">
+              {{ fieldErrors.password }}
+            </small>
           </div>
 
           <div>
@@ -111,6 +141,9 @@
               toggle-mask
               input-class="w-full"
             />
+            <small v-if="passwordMismatch" class="p-error text-xs mt-1 block">
+              Пароли не совпадают
+            </small>
           </div>
 
           <div>
@@ -124,7 +157,11 @@
               class="w-full"
               :disabled="isLoading"
               maxlength="6"
+              :class="{ 'p-invalid': fieldErrors.telegramCode }"
             />
+            <small v-if="fieldErrors.telegramCode" class="p-error text-xs mt-1 block">
+              {{ fieldErrors.telegramCode }}
+            </small>
             <p class="text-xs text-secondary/60 mt-1">
               Если вы получили код в Telegram боте, введите его здесь для привязки аккаунта
             </p>
@@ -175,6 +212,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import InputText from 'primevue/inputtext';
+import Password from 'primevue/password';
+import Button from 'primevue/button';
+import { register } from '@/api/auth/endpoints';
+import { AuthAPIError } from '@/api/auth/errors';
+import { toastHelpers } from '@/utils/ui/toast';
 
 const route = useRoute();
 
@@ -182,10 +225,6 @@ const vkAuthUrl = computed(() => {
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/v1';
   return `${base}/auth/vk`;
 });
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
-import apiClient from '@/api/client';
 
 const form = ref({
   name: '',
@@ -195,16 +234,17 @@ const form = ref({
   telegramCode: '',
 });
 
+const isLoading = ref(false);
+const error = ref<AuthAPIError | null>(null);
+const success = ref(false);
+const passwordMismatch = ref(false);
+
 onMounted(() => {
   const codeFromUrl = route.query.telegramCode;
   if (typeof codeFromUrl === 'string' && codeFromUrl) {
     form.value.telegramCode = codeFromUrl.slice(0, 6);
   }
 });
-
-const isLoading = ref(false);
-const error = ref<string | null>(null);
-const success = ref(false);
 
 const isFormValid = computed(() => {
   return (
@@ -215,9 +255,55 @@ const isFormValid = computed(() => {
   );
 });
 
+const isRateLimited = computed(() => error.value?.code === 'RATE_LIMITED');
+const isEmailExists = computed(() => {
+  if (error.value?.code !== 'BAD_REQUEST') return false;
+  const msg = error.value.message.toLowerCase();
+  return msg.includes('уже существует') || msg.includes('already exists');
+});
+
+const fieldErrors = computed<Record<string, string>>(() => {
+  if (error.value?.code === 'VALIDATION_ERROR') {
+    return error.value.fieldErrors;
+  }
+  return {};
+});
+
+const displayError = computed(() => {
+  if (!error.value) return null;
+  const code = error.value.code;
+  const message = error.value.message;
+
+  switch (code) {
+    case 'RATE_LIMITED':
+      return null; // shown in separate banner
+    case 'VALIDATION_ERROR':
+      return 'Проверьте правильность заполнения полей.';
+    case 'BAD_REQUEST': {
+      const msg = message.toLowerCase();
+      if (msg.includes('telegram') && msg.includes('привязан')) {
+        return 'Этот Telegram-аккаунт уже привязан к email.';
+      }
+      if (msg.includes('уже существует') || msg.includes('already exists')) {
+        return 'Пользователь с таким email уже существует.';
+      }
+      if (msg.includes('пароль') && msg.includes('8')) {
+        return 'Пароль должен быть не менее 8 символов.';
+      }
+      return message;
+    }
+    case 'INTERNAL_ERROR':
+      return 'Сервис временно недоступен. Попробуйте позже.';
+    default:
+      return message || 'Ошибка регистрации';
+  }
+});
+
 async function handleRegister() {
+  passwordMismatch.value = false;
+
   if (form.value.password !== form.value.confirmPassword) {
-    error.value = 'Пароли не совпадают';
+    passwordMismatch.value = true;
     return;
   }
 
@@ -225,7 +311,12 @@ async function handleRegister() {
   isLoading.value = true;
 
   try {
-    const payload: any = {
+    const payload: {
+      name: string;
+      email: string;
+      password: string;
+      telegramCode?: string;
+    } = {
       name: form.value.name.trim(),
       email: form.value.email.trim(),
       password: form.value.password,
@@ -233,10 +324,15 @@ async function handleRegister() {
     if (form.value.telegramCode.trim()) {
       payload.telegramCode = form.value.telegramCode.trim();
     }
-    await apiClient.post('/auth/register', payload);
+    await register(payload);
     success.value = true;
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Ошибка регистрации';
+    toastHelpers.success('Регистрация успешна', 'Письмо с подтверждением отправлено на ваш email.');
+  } catch (err: unknown) {
+    if (err instanceof AuthAPIError) {
+      error.value = err;
+    } else {
+      error.value = new AuthAPIError(500, 'Ошибка регистрации', 'INTERNAL_ERROR');
+    }
   } finally {
     isLoading.value = false;
   }

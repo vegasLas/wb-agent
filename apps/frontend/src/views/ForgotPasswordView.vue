@@ -24,8 +24,17 @@
 
         <!-- Form -->
         <form v-else class="space-y-4" @submit.prevent="handleSubmit">
-          <div v-if="error" class="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-            <p class="text-red-500 text-sm">{{ error }}</p>
+          <div
+            v-if="displayError"
+            class="p-4 rounded-xl bg-red-500/10 border border-red-500/20"
+          >
+            <p class="text-red-500 text-sm">{{ displayError }}</p>
+          </div>
+
+          <div v-if="isRateLimited" class="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+            <p class="text-yellow-500 text-sm">
+              Слишком много попыток. Пожалуйста, подождите немного перед следующей попыткой.
+            </p>
           </div>
 
           <div>
@@ -37,7 +46,11 @@
               placeholder="your@email.com"
               class="w-full"
               :disabled="isLoading"
+              :class="{ 'p-invalid': fieldErrors.email }"
             />
+            <small v-if="fieldErrors.email" class="p-error text-xs mt-1 block">
+              {{ fieldErrors.email }}
+            </small>
           </div>
 
           <Button
@@ -61,25 +74,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-import apiClient from '@/api/client';
+import { forgotPassword } from '@/api/auth/endpoints';
+import { AuthAPIError } from '@/api/auth/errors';
+import { toastHelpers } from '@/utils/ui/toast';
 
 const email = ref('');
 const isLoading = ref(false);
-const error = ref<string | null>(null);
+const error = ref<AuthAPIError | null>(null);
 const success = ref(false);
+
+const isRateLimited = computed(() => error.value?.code === 'RATE_LIMITED');
+
+const fieldErrors = computed<Record<string, string>>(() => {
+  if (error.value?.code === 'VALIDATION_ERROR') {
+    return error.value.fieldErrors;
+  }
+  return {};
+});
+
+const displayError = computed(() => {
+  if (!error.value) return null;
+  const code = error.value.code;
+  if (code === 'RATE_LIMITED') return null; // shown in separate banner
+  if (code === 'VALIDATION_ERROR') return 'Проверьте правильность заполнения полей.';
+  if (code === 'INTERNAL_ERROR') return 'Сервис временно недоступен. Попробуйте позже.';
+  return error.value.message || 'Ошибка отправки';
+});
 
 async function handleSubmit() {
   error.value = null;
   isLoading.value = true;
 
   try {
-    await apiClient.post('/auth/forgot-password', { email: email.value.trim() });
+    await forgotPassword(email.value.trim());
     success.value = true;
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Ошибка отправки';
+    toastHelpers.success('Письмо отправлено', 'Если пользователь существует, письмо для сброса пароля отправлено.');
+  } catch (err: unknown) {
+    if (err instanceof AuthAPIError) {
+      error.value = err;
+    } else {
+      error.value = new AuthAPIError(500, 'Ошибка отправки', 'INTERNAL_ERROR');
+    }
   } finally {
     isLoading.value = false;
   }

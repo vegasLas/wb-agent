@@ -10,13 +10,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useBrowserAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/user';
 import { setAuthToken } from '@/api/client';
+import { toastHelpers } from '@/utils/ui/toast';
 
 const route = useRoute();
 const router = useRouter();
-const authStore = useBrowserAuthStore();
 const userStore = useUserStore();
 
 onMounted(async () => {
@@ -30,13 +29,19 @@ onMounted(async () => {
       vk_denied: 'Авторизация VK отменена',
       subscription_required: 'Требуется активная подписка',
       auth_failed: 'Ошибка авторизации',
+      invalid_request: 'Неверный запрос авторизации',
+      invalid_state: 'Ошибка безопасности при авторизации',
     };
-    await router.replace({ path: '/login', query: { error: messages[error] || error } });
+    const message = messages[error] || error;
+    toastHelpers.error('Ошибка авторизации', message);
+    await router.replace({ path: '/login', query: { error: message } });
     return;
   }
 
   if (!accessToken || !refreshToken || !expiresIn) {
-    await router.replace({ path: '/login', query: { error: 'invalid_callback' } });
+    const message = 'Некорректный ответ авторизации';
+    toastHelpers.error('Ошибка авторизации', message);
+    await router.replace({ path: '/login', query: { error: message } });
     return;
   }
 
@@ -49,6 +54,7 @@ onMounted(async () => {
   // Populate user store
   try {
     await userStore.fetchUser();
+    toastHelpers.success('Вход выполнен', 'Добро пожаловать!');
     await router.replace('/');
   } catch {
     // Clear tokens on failure
@@ -57,7 +63,9 @@ onMounted(async () => {
     localStorage.removeItem('auth_token_expires_at');
     setAuthToken(null);
     userStore.reset();
-    await router.replace({ path: '/login', query: { error: 'failed_to_fetch_user' } });
+    const message = 'Не удалось получить данные пользователя';
+    toastHelpers.error('Ошибка авторизации', message);
+    await router.replace({ path: '/login', query: { error: message } });
   }
 });
 </script>
