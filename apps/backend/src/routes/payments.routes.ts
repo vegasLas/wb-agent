@@ -254,6 +254,7 @@ router.post(
           currency: 'RUB',
           status: payment.status,
           tariffId: tariff.id,
+          tier: tariff.tier,
           userId: req.user!.id,
           idempotencyKey,
         },
