@@ -47,7 +47,6 @@ import { useSkeleton } from '../composables/ui';
 import {
   SkeletonAccount,
   SkeletonAutobookings,
-  SkeletonStore,
   SkeletonTriggers,
   SkeletonReport,
   SkeletonPayments,
@@ -129,9 +128,6 @@ const routeSkeletonMap: Record<string, any> = {
   TriggersList: SkeletonTriggers,
   Promotions: SkeletonPromotions,
   Reports: SkeletonReport,
-  Store: SkeletonStore,
-  StoreSubscription: SkeletonStore,
-  StoreBookings: SkeletonStore,
   Payments: SkeletonPayments,
   Tasks: SkeletonTasks,
   Home: SkeletonHome,
@@ -196,10 +192,11 @@ onMounted(async () => {
 
   // Expand and ready the WebApp when running inside Telegram
   if (hasInitData.value) {
-    requestFullscreen();
+    if (isPhone.value) {
+      requestFullscreen();
+    }
     readyWebApp();
   }
-
   // Initialize toast for stores
   const { initToast } = await import('../utils/ui');
   initToast(toast);

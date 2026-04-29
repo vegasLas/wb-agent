@@ -46,7 +46,7 @@
       </div>
 
       <!-- Reschedules Section -->
-      <div class="space-y-3">
+      <!-- <div class="space-y-3">
         <div class="flex items-center gap-2">
           <i class="pi pi-refresh text-blue-600 dark:text-blue-400 text-lg" />
           <h4 class="font-medium text-lg text-gray-900 dark:text-white">
@@ -76,7 +76,7 @@
             <li>Отслеживайте статус и историю перепланирований</li>
           </ul>
         </div>
-      </div>
+      </div> -->
 
       <!-- Triggers Section -->
       <div class="space-y-3">

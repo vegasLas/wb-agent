@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { autobookingAPI } from '@/api';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { toastHelpers } from '@/utils/ui';
+import { calculateSlotCount } from '@/utils/autobooking';
 import type {
   Autobooking,
   AutobookingReschedule,
@@ -28,6 +29,39 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
   const fetchedStatuses = ref<Set<string>>(new Set());
 
   const warehouseStore = useWarehousesStore();
+
+  /**
+   * Total slots consumed by ACTIVE and PENDING autobookings.
+   * Searches across all cached status data and current autobookings.
+   */
+  const usedSlots = computed(() => {
+    const allBookings: Autobooking[] = [];
+
+    // Collect from status cache
+    Object.values(statusCache.value).forEach((list) => {
+      allBookings.push(...list);
+    });
+
+    // Also include current autobookings (may not be cached yet)
+    allBookings.push(...autobookings.value);
+
+    // Deduplicate by id and keep only ACTIVE / PENDING
+    const seen = new Set<string>();
+    const activeBookings: Autobooking[] = [];
+
+    for (const b of allBookings) {
+      if (seen.has(b.id)) continue;
+      seen.add(b.id);
+      if (b.status === 'ACTIVE') {
+        activeBookings.push(b);
+      }
+    }
+
+    return activeBookings.reduce(
+      (sum, b) => sum + calculateSlotCount(b.dateType, b.customDates),
+      0,
+    );
+  });
 
   const filteredBookings = computed(() => {
     // Use cached data for the current status if available
@@ -222,8 +256,18 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
         statusCounts.value['ACTIVE'] = (statusCounts.value['ACTIVE'] || 0) + 1;
       }
 
-      // Clear cache for the old status since data has changed
-      clearStatusCache();
+      // Update all status caches
+      Object.keys(statusCache.value).forEach((status) => {
+        const cacheIndex = statusCache.value[status].findIndex(
+          (a) => a.id === booking.id,
+        );
+        if (cacheIndex !== -1) {
+          statusCache.value[status][cacheIndex] = {
+            ...statusCache.value[status][cacheIndex],
+            ...updated,
+          };
+        }
+      });
 
       // Show success toast
       const warehouseName = warehouseStore.getWarehouseName(
@@ -309,6 +353,7 @@ export const useAutobookingListStore = defineStore('autobookingList', () => {
     statusCache,
     fetchedStatuses,
     fetchData,
+    usedSlots,
     fetchDataIfNeeded,
     isStatusFetched,
     clearStatusCache,

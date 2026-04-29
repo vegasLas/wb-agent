@@ -19,10 +19,7 @@ export type ViewType =
   | 'reschedules-form'
   | 'reschedules-update'
   | 'promotions'
-  | 'store'
   | 'account'
-  | 'store-subscription'
-  | 'store-bookings'
   | 'report'
   | 'auth';
 
@@ -92,8 +89,11 @@ export interface SupplierInfo {
 }
 
 export interface ApiKeyStatus {
-  valid: boolean;
-  message?: string;
+  success: boolean;
+  hasApiKey: boolean;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // -----------------------------------------------------------------------------

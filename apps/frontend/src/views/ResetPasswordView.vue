@@ -23,10 +23,42 @@
           </RouterLink>
         </div>
 
+        <!-- Token expired / used -->
+        <div v-else-if="tokenErrorType === 'expired' || tokenErrorType === 'used'" class="py-4 text-center">
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-yellow-500/10 mb-4">
+            <i class="pi pi-clock text-yellow-500 text-2xl" />
+          </div>
+          <h2 class="text-lg font-semibold text-theme mb-2">
+            {{ tokenErrorType === 'used' ? 'Ссылка уже использована' : 'Ссылка устарела' }}
+          </h2>
+          <p class="text-secondary text-sm mb-6">
+            {{ tokenErrorType === 'used'
+              ? 'Эта ссылка для сброса пароля уже была использована ранее.'
+              : 'Срок действия ссылки для сброса пароля истек.' }}
+          </p>
+          <RouterLink to="/forgot-password">
+            <Button label="Запросить новую ссылку" icon="pi pi-send" class="w-full" outlined />
+          </RouterLink>
+          <div class="mt-4">
+            <RouterLink to="/login" class="text-purple hover:underline text-sm">
+              На страницу входа
+            </RouterLink>
+          </div>
+        </div>
+
         <!-- Form -->
         <form v-else class="space-y-4" @submit.prevent="handleSubmit">
-          <div v-if="error" class="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-            <p class="text-red-500 text-sm">{{ error }}</p>
+          <div
+            v-if="displayError"
+            class="p-4 rounded-xl bg-red-500/10 border border-red-500/20"
+          >
+            <p class="text-red-500 text-sm">{{ displayError }}</p>
+          </div>
+
+          <div v-if="isRateLimited" class="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+            <p class="text-yellow-500 text-sm">
+              Слишком много попыток. Пожалуйста, подождите немного перед следующей попыткой.
+            </p>
           </div>
 
           <div>
@@ -40,7 +72,11 @@
               :feedback="true"
               toggle-mask
               input-class="w-full"
+              :class="{ 'p-invalid': fieldErrors.password }"
             />
+            <small v-if="fieldErrors.password" class="p-error text-xs mt-1 block">
+              {{ fieldErrors.password }}
+            </small>
           </div>
 
           <div>
@@ -55,6 +91,9 @@
               toggle-mask
               input-class="w-full"
             />
+            <small v-if="passwordMismatch" class="p-error text-xs mt-1 block">
+              Пароли не совпадают
+            </small>
           </div>
 
           <Button
@@ -73,47 +112,73 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
-import apiClient from '@/api/client';
+import { resetPassword } from '@/api/auth/endpoints';
+import { AuthAPIError } from '@/api/auth/errors';
+import { toastHelpers } from '@/utils/ui/toast';
 
 const route = useRoute();
-const router = useRouter();
-
 const token = ref((route.query.token as string) || '');
 const password = ref('');
 const confirmPassword = ref('');
 const isLoading = ref(false);
-const error = ref<string | null>(null);
+const error = ref<AuthAPIError | null>(null);
 const success = ref(false);
+const passwordMismatch = ref(false);
+const tokenErrorType = ref<'expired' | 'used' | 'invalid' | 'wrong_type' | null>(null);
 
 const isFormValid = computed(() => {
   return password.value.length >= 8 && password.value === confirmPassword.value;
 });
 
+const isRateLimited = computed(() => error.value?.code === 'RATE_LIMITED');
+
+const fieldErrors = computed<Record<string, string>>(() => {
+  if (error.value?.code === 'VALIDATION_ERROR') {
+    return error.value.fieldErrors;
+  }
+  return {};
+});
+
+const displayError = computed(() => {
+  if (!error.value || tokenErrorType.value) return null;
+  const code = error.value.code;
+  if (code === 'RATE_LIMITED') return null;
+  if (code === 'VALIDATION_ERROR') return 'Проверьте правильность заполнения полей.';
+  if (code === 'INTERNAL_ERROR') return 'Сервис временно недоступен. Попробуйте позже.';
+  return error.value.message || 'Ошибка сброса пароля';
+});
+
 async function handleSubmit() {
+  passwordMismatch.value = false;
+
   if (password.value !== confirmPassword.value) {
-    error.value = 'Пароли не совпадают';
+    passwordMismatch.value = true;
     return;
   }
 
   if (!token.value) {
-    error.value = 'Отсутствует токен сброса пароля';
+    error.value = new AuthAPIError(400, 'Отсутствует токен сброса пароля', 'BAD_REQUEST');
     return;
   }
 
   error.value = null;
+  tokenErrorType.value = null;
   isLoading.value = true;
 
   try {
-    await apiClient.post('/auth/reset-password', {
-      token: token.value,
-      password: password.value,
-    });
+    await resetPassword(token.value, password.value);
     success.value = true;
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Ошибка сброса пароля';
+    toastHelpers.success('Пароль изменен', 'Теперь вы можете войти с новым паролем.');
+  } catch (err: unknown) {
+    if (err instanceof AuthAPIError) {
+      error.value = err;
+      tokenErrorType.value = err.tokenErrorType;
+    } else {
+      error.value = new AuthAPIError(500, 'Ошибка сброса пароля', 'INTERNAL_ERROR');
+    }
   } finally {
     isLoading.value = false;
   }

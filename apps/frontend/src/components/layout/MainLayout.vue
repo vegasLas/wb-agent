@@ -39,6 +39,8 @@
 
         <!-- Action Buttons (Right) -->
         <div class="flex items-center gap-2">
+          <NotificationBell />
+
           <Button
             severity="secondary"
             variant="outlined"
@@ -112,12 +114,14 @@ import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import { useAccountSupplierModalStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
+import { usePermissions } from '@/composables/usePermissions';
 import { MainHelpModal } from '../help';
 import { AccountManagementView } from '../account-management';
 import { useSkeleton } from '../../composables/ui';
 import AppSidebar from './AppSidebar.vue';
 import MobileNavDrawer from './MobileNavDrawer.vue';
 import { UserAlerts } from '../global';
+import NotificationBell from '@/components/notifications/NotificationBell.vue';
 import AutobookingCreateDialog from '../autobooking/CreateDialog.vue';
 import TriggerCreateDialog from '../triggers/CreateDialog.vue';
 import type { MenuItem } from 'primevue/menu';
@@ -131,11 +135,12 @@ const showHelpModal = ref(false);
 const drawerVisible = ref(false);
 
 const canShowView = computed(() => {
-  if (route.meta.skipSubscriptionCheck) return true;
-  if (userStore.isFree) return true;
-  if (!userStore.subscriptionActive) return false;
   if (route.meta.requiresAccount && !userStore.user.selectedAccountId) return false;
   if (route.meta.requiresSupplier && !userStore.hasValidSupplier) return false;
+  if (userStore.user.selectedAccountId) {
+    const { canAccessRoute } = usePermissions();
+    return canAccessRoute(route.name as string);
+  }
   return true;
 });
 

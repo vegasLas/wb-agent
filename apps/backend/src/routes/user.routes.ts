@@ -9,7 +9,11 @@ import {
   FEEDBACK_QUOTA,
   AI_CHAT_BUDGET_USD,
 } from '@/constants/payments';
+import { getBillingPeriodStart } from '@/utils/subscription';
 import { ApiError } from '@/utils/errors';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('UserRoutes');
 
 const router = Router();
 
@@ -29,6 +33,7 @@ router.get('/', authenticateUser, async (req, res, next) => {
       subscriptionTier: currentSub?.tier ?? 'FREE',
       subscriptionExpiresAt: currentSub?.endedAt ?? null,
       maxAccounts: user.maxAccounts,
+      trialUsedAt: user.trialUsedAt ?? null,
       agreeTerms: user.agreeTerms,
       selectedAccountId: user.selectedAccountId || undefined,
       payments: (user.payments || [])
@@ -141,8 +146,16 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
     const currentSub = user.subscriptions?.[0];
     const tier = currentSub?.tier ?? 'FREE';
 
+    const periodStart = await getBillingPeriodStart(user.id);
+
+    // Compute AI chat budget reset date
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    let aiChatResetDate: Date;
+    if (currentSub && currentSub.endedAt && currentSub.endedAt > now) {
+      aiChatResetDate = currentSub.endedAt;
+    } else {
+      aiChatResetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
 
     // Count active autobooking slots
     const activeAutobookings = await prisma.autobooking.count({
@@ -163,7 +176,7 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
     const feedbackRepliesThisMonth = await prisma.feedbackAutoAnswer.count({
       where: {
         userId: user.id,
-        createdAt: { gte: startOfMonth },
+        createdAt: { gte: periodStart },
         status: { in: ['PENDING', 'POSTED'] },
       },
     });
@@ -174,10 +187,14 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
       where: {
         userId: user.id,
         feature: 'ai_chat',
-        createdAt: { gte: startOfMonth },
+        createdAt: { gte: periodStart },
       },
     });
     const aiChatSpentUsd = aiChatSpentResult._sum.cost ?? 0;
+
+    logger.info(
+      `[USER-LIMITS] User ${user.id} | Tier: ${tier} | AI Chat Spent: $${Math.round(aiChatSpentUsd * 1000) / 1000} / $${AI_CHAT_BUDGET_USD[tier]} | Reset: ${aiChatResetDate.toISOString()}`,
+    );
 
     res.json({
       tier,
@@ -198,6 +215,7 @@ router.get('/limits', authenticateUser, async (req, res, next) => {
       aiChatBudget: {
         spent: Math.round(aiChatSpentUsd * 1000) / 1000,
         max: AI_CHAT_BUDGET_USD[tier],
+        resetDate: aiChatResetDate.toISOString(),
       },
     });
   } catch (error) {

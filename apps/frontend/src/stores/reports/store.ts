@@ -128,11 +128,6 @@ export const useReportStore = defineStore('report', () => {
       error.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive && !userStore.isFree) {
-      error.value = 'Необходимо активировать подписку';
-      return;
-    }
-
     loading.value = true;
     error.value = null;
     reportPending.value = false;
@@ -182,11 +177,6 @@ export const useReportStore = defineStore('report', () => {
       regionSalesError.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive && !userStore.isFree) {
-      regionSalesError.value = 'Необходимо активировать подписку';
-      return;
-    }
-
     regionSalesLoading.value = true;
     regionSalesError.value = null;
 

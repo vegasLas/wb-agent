@@ -5,6 +5,8 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { getInitData } from '../utils/telegram';
+import { normalizeAuthError } from './auth/errors';
+import { toastHelpers } from '../utils/ui/toast';
 
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -90,6 +92,8 @@ function clearAllTokens(): void {
 
 // Refresh promise lock to prevent concurrent refresh requests
 let refreshPromise: Promise<boolean> | null = null;
+let lastRefreshTime = 0;
+const REFRESH_GRACE_PERIOD_MS = 5000; // 5 seconds
 
 /**
  * Perform token refresh using the refresh token
@@ -116,6 +120,7 @@ async function performRefresh(): Promise<boolean> {
       localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
       localStorage.setItem(TOKEN_EXPIRES_AT_KEY, String(Date.now() + expiresIn * 1000));
 
+      lastRefreshTime = Date.now();
       console.log('[API Client] Tokens refreshed successfully');
       return true;
     }
@@ -212,11 +217,37 @@ apiClient.interceptors.response.use(
       error.message,
     );
 
+    const normalized = normalizeAuthError(error);
+
+    // Handle specific error codes before generic 401 logic
+    if (normalized) {
+      if (normalized.code === 'TECHNICAL_MODE') {
+        toastHelpers.error('Технические работы', normalized.message);
+        if (typeof window !== 'undefined' && window.location.pathname !== '/error/maintenance') {
+          window.location.href = '/error/maintenance';
+        }
+        return Promise.reject(normalized);
+      }
+
+      if (normalized.code === 'SESSION_EXPIRED') {
+        toastHelpers.error('Сессия истекла', normalized.message);
+        if (typeof window !== 'undefined' && window.location.pathname !== '/error/session-expired') {
+          const redirect = encodeURIComponent(window.location.pathname);
+          window.location.href = `/error/session-expired?redirect=${redirect}`;
+        }
+        return Promise.reject(normalized);
+      }
+
+      if (normalized.code === 'RATE_LIMITED') {
+        toastHelpers.warn('Слишком много попыток', 'Пожалуйста, подождите немного перед следующей попыткой.');
+      }
+    }
+
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       // In Telegram mode, just propagate the error
       if (isTelegramMode()) {
-        return Promise.reject(error);
+        return Promise.reject(normalized || error);
       }
 
       // If this was the refresh endpoint itself, refresh token is dead — redirect to login
@@ -226,12 +257,24 @@ apiClient.interceptors.response.use(
         if (window.location.pathname !== '/login') {
           window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
         }
-        return Promise.reject(error);
+        return Promise.reject(normalized || error);
       }
 
       // If we haven't already retried this request, attempt one silent refresh
       if (originalRequest && !originalRequest._retry) {
         originalRequest._retry = true;
+
+        // If a refresh just succeeded (within grace period), retry with current token
+        // instead of triggering another refresh. This prevents race conditions when
+        // multiple concurrent requests fail after a backend redeploy changes JWT_SECRET.
+        if (Date.now() - lastRefreshTime < REFRESH_GRACE_PERIOD_MS) {
+          const newToken = getAuthToken();
+          if (newToken && originalRequest.headers) {
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            console.log('[API Client] Retrying with recently refreshed token');
+            return apiClient(originalRequest);
+          }
+        }
 
         const refreshed = await refreshAccessToken();
         if (refreshed) {
@@ -252,7 +295,7 @@ apiClient.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(normalized || error);
   },
 );
 

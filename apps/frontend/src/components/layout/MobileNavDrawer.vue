@@ -1,11 +1,16 @@
 <template>
-  <Sidebar
+  <Drawer
     v-model:visible="localVisible"
     position="left"
     :block-scroll="true"
     :show-close-icon="false"
     :pt="{
-      root: { class: ['w-[260px] border-r border-deep-border', { 'pt-[100px]': hasInitData && isMobile }] },
+      root: {
+        class: [
+          'w-[260px] border-r border-deep-border',
+          { 'pt-[100px]': hasInitData && isMobile },
+        ],
+      },
       content: { class: 'p-0 flex flex-col h-full' },
     }"
   >
@@ -105,7 +110,7 @@
       </button>
       <Menu ref="profileMenu" :model="profileMenuItems" :popup="true" />
     </div>
-  </Sidebar>
+  </Drawer>
 </template>
 
 <script setup lang="ts">
@@ -113,7 +118,7 @@ import AppLogo from './AppLogo.vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
-import Sidebar from 'primevue/sidebar';
+import Drawer from 'primevue/drawer';
 import Menu from 'primevue/menu';
 import { useUserStore } from '@/stores/user';
 import { useBrowserAuthStore } from '@/stores/auth/browser';
@@ -139,11 +144,16 @@ const userStore = useUserStore();
 const { hasAnyPermission } = usePermissions();
 
 const hasInitData = computed(() => !!getInitData());
-const isMobile = computed(() => /iPhone|iPad|Android|webOS|BlackBerry/i.test(navigator.userAgent));
-
-const visiblePrimaryNav = computed(() =>
-  primaryNav.filter((item) => !item.permissions || hasAnyPermission(item.permissions)),
+const isMobile = computed(() =>
+  /iPhone|iPad|Android|webOS|BlackBerry/i.test(navigator.userAgent),
 );
+
+const visiblePrimaryNav = computed(() => {
+  if (!userStore.user.selectedAccountId) return primaryNav;
+  return primaryNav.filter(
+    (item) => !item.permissions || hasAnyPermission(item.permissions),
+  );
+});
 
 // Theme toggle
 const colorMode = useColorMode({

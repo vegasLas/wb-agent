@@ -9,6 +9,14 @@ import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('JWTAuth');
 
+/**
+ * Compute a stable fingerprint of a secret for logging purposes.
+ * This allows operators to verify that the secret hasn't changed across redeploys.
+ */
+function computeSecretFingerprint(secret: string): string {
+  return crypto.createHash('sha256').update(secret).digest('hex').slice(0, 16);
+}
+
 export interface JWTPayload {
   userId: number;
   identityId: number;
@@ -42,6 +50,10 @@ export class JWTAuthService {
     if (!this.JWT_SECRET || this.JWT_SECRET.length < 32) {
       logger.warn(
         'JWT_SECRET is not set or is too short (< 32 chars). Browser auth will not work properly.',
+      );
+    } else {
+      logger.info(
+        `JWTAuth initialized. Secret fingerprint: ${computeSecretFingerprint(this.JWT_SECRET)}`,
       );
     }
   }

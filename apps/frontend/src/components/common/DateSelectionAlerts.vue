@@ -3,7 +3,7 @@
     <!-- Alert for CUSTOM_DATES_SINGLE -->
     <Message
       v-if="dateType === 'CUSTOM_DATES_SINGLE'"
-      severity="info"
+      :severity="isOverLimit ? 'error' : 'info'"
       icon="pi pi-info-circle"
     >
       <div class="font-semibold mb-2">
@@ -26,13 +26,19 @@
           • <strong>Экономия:</strong> Идеально для случаев, когда вам подходит
           любая из нескольких дат
         </li>
+        <li v-if="maxSlots > 0">
+          • <strong>Осталось слотов:</strong> {{ remainingSlots }} / {{ maxSlots }}
+        </li>
       </ul>
+      <p v-if="isOverLimit" class="mt-2 font-medium text-red-700 dark:text-red-300">
+        Превышен лимит слотов. Удалите даты или обновите подписку.
+      </p>
     </Message>
 
     <!-- Alert for CUSTOM_DATES -->
     <Message
       v-if="dateType === 'CUSTOM_DATES'"
-      severity="warn"
+      :severity="isOverLimit ? 'error' : 'warn'"
       icon="pi pi-exclamation-triangle"
     >
       <div class="space-y-2">
@@ -54,7 +60,13 @@
             • <strong>Завершение:</strong> Автобронирование завершается после
             бронирования всех дат
           </li>
+          <li v-if="maxSlots > 0">
+            • <strong>Останется слотов:</strong> {{ remainingSlots }} / {{ maxSlots }}
+          </li>
         </ul>
+        <p v-if="isOverLimit" class="font-medium text-red-700 dark:text-red-300">
+          Превышен лимит слотов. Удалите даты или обновите подписку.
+        </p>
       </div>
     </Message>
   </div>
@@ -67,11 +79,15 @@ import Message from 'primevue/message';
 interface Props {
   dateType?: string;
   customDates?: (string | Date)[];
+  usedSlots?: number;
+  maxSlots?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   dateType: undefined,
   customDates: undefined,
+  usedSlots: 0,
+  maxSlots: 0,
 });
 
 const slotsUsed = computed(() => {
@@ -79,5 +95,14 @@ const slotsUsed = computed(() => {
     return props.customDates?.length || 0;
   }
   return 1;
+});
+
+const remainingSlots = computed(() => {
+  const remaining = props.maxSlots - props.usedSlots - slotsUsed.value;
+  return Math.max(0, remaining);
+});
+
+const isOverLimit = computed(() => {
+  return props.usedSlots + slotsUsed.value > props.maxSlots;
 });
 </script>

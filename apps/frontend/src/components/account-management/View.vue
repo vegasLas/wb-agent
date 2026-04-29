@@ -40,6 +40,7 @@
           @select-account="selectTempAccount"
           @add-account="startAuth"
           @remove-account="removeAccount"
+          @open-shop="closeModal"
         />
 
         <!-- Supplier Selection -->

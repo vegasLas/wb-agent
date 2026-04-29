@@ -40,9 +40,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
     if (!userStore.hasValidSupplier) {
       return 'Необходимо выбрать поставщика';
     }
-    if (!userStore.subscriptionActive && !userStore.isFree) {
-      return 'Необходимо активировать подписку';
-    }
+
     return null;
   }
 

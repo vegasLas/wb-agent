@@ -84,6 +84,8 @@
     <DateSelectionAlerts
       :date-type="props.form.dateType"
       :custom-dates="props.form.customDates"
+      :used-slots="usedSlots"
+      :max-slots="maxSlots"
     />
 
     <!-- Monopallet Count (only for MONOPALLETE supply type) -->
@@ -151,8 +153,9 @@ import { ref, computed, watch } from 'vue';
 import { SUPPLY_TYPES } from '../../constants';
 import { useDraftStore } from '@/stores/drafts';
 import { useUserStore } from '@/stores/user';
-import { useAutobookingUpdateStore } from '@/stores/autobooking';
+import { useAutobookingUpdateStore, useAutobookingListStore } from '@/stores/autobooking';
 import { useWarehousesStore } from '@/stores/warehouses';
+import { AUTOBOOKING_SLOTS } from '@/constants';
 import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 import Slider from 'primevue/slider';
@@ -215,6 +218,11 @@ const draftStore = useDraftStore();
 const userStore = useUserStore();
 const updateStore = useAutobookingUpdateStore();
 const warehouseStore = useWarehousesStore();
+const listStore = useAutobookingListStore();
+
+// Slot info for date selection alerts
+const usedSlots = computed(() => listStore.usedSlots);
+const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
 
 // Track previous values for change detection
 const prevWarehouseId = ref<number | null>(props.form.warehouseId);
@@ -411,8 +419,7 @@ function handleCustomDatesChange(newDates: (string | Date)[]) {
   const requiredCount =
     props.form.dateType === 'CUSTOM_DATES_SINGLE' ? 1 : newDates.length;
 
-  // Slot limits are enforced server-side. No per-date credit math needed.
-  // The user will see a clear error from the API if they exceed their slot limit.
+  // Slot limits are enforced both client-side (canSubmit) and server-side.
 
   // Update the dates
   updateField('customDates', newDates);

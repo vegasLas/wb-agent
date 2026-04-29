@@ -13,15 +13,7 @@
       @updated="handleUpdated"
     />
 
-    <!-- Display content only if user has selected account, valid supplier and subscription is active -->
-    <template
-      v-if="
-        userStore.selectedAccount &&
-          userStore.hasValidSupplier &&
-          (userStore.subscriptionActive || userStore.isFree)
-      "
-    >
-      <TaskListLayout
+    <TaskListLayout
         ref="layoutRef"
         :active-tab="localActiveTab"
         :status-options="statusOptions"
@@ -50,7 +42,6 @@
           @edit="openUpdateDialog"
         />
       </TaskListLayout>
-    </template>
 
     <!-- Goods Modal -->
     <AutobookingDraftGoodsModal

@@ -27,6 +27,6 @@ import Message from 'primevue/message';
 const router = useRouter();
 
 function goToStore() {
-  router.push({ name: 'Store' });
+  router.push({ name: 'Payments' });
 }
 </script>

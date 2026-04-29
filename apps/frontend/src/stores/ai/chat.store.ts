@@ -13,7 +13,7 @@ import {
 import { getInitData } from '@/utils/telegram';
 import { createToolTrackingStream } from '@/utils/ai/stream';
 
-const AUTH_TOKEN_KEY = 'auth_token';
+const AUTH_TOKEN_KEY = 'auth_access_token';
 
 function isTelegramMode(): boolean {
   if (typeof window === 'undefined') return false;

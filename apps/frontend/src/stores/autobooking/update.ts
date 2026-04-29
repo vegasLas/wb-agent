@@ -7,6 +7,8 @@ import { useUserStore } from '@/stores/user';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useDraftStore } from '@/stores/drafts';
 import { toastHelpers } from '@/utils/ui';
+import { calculateSlotCount } from '@/utils/autobooking';
+import { AUTOBOOKING_SLOTS } from '@/constants';
 import type {
   ValidationResult,
   Autobooking,
@@ -96,7 +98,61 @@ export const useAutobookingUpdateStore = defineStore(
       return true;
     });
 
-    const canSubmit = computed(() => isValid.value && !loading.value);
+    // Slot calculations for update
+    const newSlots = computed(() =>
+      calculateSlotCount(form.value.dateType, form.value.customDates),
+    );
+
+    const existingSlots = computed(() => {
+      if (!currentAutobooking.value) return 0;
+      return calculateSlotCount(
+        currentAutobooking.value.dateType,
+        currentAutobooking.value.customDates,
+      );
+    });
+
+    const usedSlotsExcludingCurrent = computed(() => {
+      const listStore = useAutobookingListStore();
+      let total = listStore.usedSlots;
+      // Subtract current booking's slots if it's active/pending (to avoid double-counting)
+      if (
+        currentAutobooking.value &&
+        currentAutobooking.value.status === 'ACTIVE'
+      ) {
+        total -= existingSlots.value;
+      }
+      return Math.max(0, total);
+    });
+
+    const maxSlots = computed(() => {
+      return AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1;
+    });
+
+    /**
+     * For updates:
+     * - If the booking is already active/pending: net change is newSlots - existingSlots.
+     *   Must not exceed remaining slots.
+     * - If activating an inactive booking: full newSlots must fit.
+     */
+    const hasAvailableSlots = computed(() => {
+      if (!currentAutobooking.value) return true;
+      const isCurrentlyActive =
+        currentAutobooking.value.status === 'ACTIVE';
+      if (isCurrentlyActive) {
+        return usedSlotsExcludingCurrent.value + newSlots.value <= maxSlots.value;
+      }
+      // Inactive → activating
+      return usedSlotsExcludingCurrent.value + newSlots.value <= maxSlots.value;
+    });
+
+    const slotError = computed(() => {
+      if (!hasAvailableSlots.value) {
+        return `Достигнут лимит слотов (${maxSlots.value}). Освободите слоты или обновите подписку.`;
+      }
+      return null;
+    });
+
+    const canSubmit = computed(() => isValid.value && !loading.value && hasAvailableSlots.value);
 
     const hasChanges = computed(() => {
       if (!currentAutobooking.value) return false;
@@ -354,6 +410,16 @@ export const useAutobookingUpdateStore = defineStore(
           listStore.autobookings[listIndex] = autobooking;
         }
 
+        // Update all status caches
+        Object.keys(listStore.statusCache).forEach((status) => {
+          const cacheIndex = listStore.statusCache[status].findIndex(
+            (a) => a.id === autobooking.id,
+          );
+          if (cacheIndex !== -1) {
+            listStore.statusCache[status][cacheIndex] = autobooking;
+          }
+        });
+
         // Show success toast
         const warehouseName = warehouseStore.getWarehouseName(
           autobooking.warehouseId,
@@ -394,6 +460,12 @@ export const useAutobookingUpdateStore = defineStore(
       isValid,
       canSubmit,
       hasChanges,
+      newSlots,
+      existingSlots,
+      usedSlotsExcludingCurrent,
+      maxSlots,
+      hasAvailableSlots,
+      slotError,
 
       // Actions
       openUpdate,

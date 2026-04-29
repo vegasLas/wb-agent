@@ -3,7 +3,7 @@
     <!-- Account Selection Alert -->
     <Message
       v-if="route.meta.requiresAccount && !userStore.user.selectedAccountId"
-      severity="warn"
+      severity="info"
       :closable="false"
       class="w-full"
     >
@@ -29,7 +29,7 @@
     <!-- Supplier Selection Alert -->
     <Message
       v-else-if="route.meta.requiresSupplier && !userStore.hasValidSupplier"
-      severity="error"
+      severity="warn"
       :closable="false"
       class="w-full"
     >
@@ -52,6 +52,23 @@
         </div>
       </div>
     </Message>
+
+    <!-- Permission Alert -->
+    <Message
+      v-else-if="route.name && !canAccessRoute(route.name as string)"
+      severity="warn"
+      :closable="false"
+      class="w-full"
+    >
+      <div class="flex flex-col gap-2">
+        <div class="font-medium">
+          Нет доступа к функции
+        </div>
+        <div class="text-sm opacity-90">
+          Ваш аккаунт WB не имеет доступа к этой функции.
+        </div>
+      </div>
+    </Message>
   </div>
 </template>
 
@@ -61,10 +78,12 @@ import Message from 'primevue/message';
 import Button from 'primevue/button';
 import { useUserStore } from '@/stores/user';
 import { useAccountSupplierModalStore } from '@/stores/ui';
+import { usePermissions } from '@/composables/usePermissions';
 
 const route = useRoute();
 const userStore = useUserStore();
 const accountModalStore = useAccountSupplierModalStore();
+const { canAccessRoute } = usePermissions();
 
 function openAccountModal() {
   accountModalStore.showModal = true;

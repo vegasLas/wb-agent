@@ -1,11 +1,7 @@
 <template>
   <div class="slot-counter">
     <div class="flex items-center gap-2">
-      <Tag
-        :severity="severity"
-        :value="label"
-        class="text-xs"
-      />
+      <Tag :severity="severity" :value="label" class="text-xs" />
       <Button
         v-if="showUpsell"
         size="small"
@@ -13,7 +9,7 @@
         class="text-xs px-2 py-0.5"
         @click="goToStore"
       >
-        Обновить
+        увеличить
       </Button>
     </div>
   </div>
@@ -51,6 +47,6 @@ const label = computed(() => {
 const showUpsell = computed(() => percentage.value >= 90);
 
 function goToStore() {
-  router.push({ name: 'Store' });
+  router.push({ name: 'Payments' });
 }
 </script>

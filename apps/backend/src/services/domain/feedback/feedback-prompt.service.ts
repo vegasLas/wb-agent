@@ -93,14 +93,23 @@ export class FeedbackPromptService {
       });
 
       if (usage) {
+        const inputTokens = usage.inputTokens ?? usage.promptTokens ?? 0;
+        const outputTokens = usage.outputTokens ?? usage.completionTokens ?? 0;
+        const cacheReadTokens = usage.inputTokenDetails?.cacheReadTokens ?? 0;
+        const noCacheTokens = usage.inputTokenDetails?.noCacheTokens ?? 0;
+
         aiUsageTrackingService.trackUsage({
           userId,
           feature: 'feedback_auto_answer',
           model: 'deepseek-v4-flash',
           usage: {
-            promptTokens: usage.promptTokens ?? 0,
-            completionTokens: usage.completionTokens ?? 0,
-            totalTokens: usage.totalTokens ?? 0,
+            promptTokens: inputTokens,
+            completionTokens: outputTokens,
+            totalTokens: usage.totalTokens ?? inputTokens + outputTokens,
+            inputTokens,
+            outputTokens,
+            cacheReadTokens,
+            noCacheTokens,
           },
           metadata: {
             feedbackId: feedback.id,

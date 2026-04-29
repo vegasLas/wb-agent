@@ -20,6 +20,10 @@ export interface TrackAiUsageInput {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
+    inputTokens?: number;
+    outputTokens?: number;
+    cacheReadTokens?: number;
+    noCacheTokens?: number;
   };
   conversationId?: string;
   messageId?: string;
@@ -64,19 +68,32 @@ export class AiUsageTrackingService {
       metadata,
     } = input;
 
-    const promptTokens = usage.promptTokens ?? 0;
-    const completionTokens = usage.completionTokens ?? 0;
-    const totalTokens = usage.totalTokens ?? promptTokens + completionTokens;
+    // Prefer new AI SDK v6 fields (inputTokens/outputTokens) over deprecated aliases
+    let inputTokens = usage.inputTokens ?? usage.promptTokens ?? 0;
+    let outputTokens = usage.outputTokens ?? usage.completionTokens ?? 0;
+    const totalTokens = usage.totalTokens ?? inputTokens + outputTokens;
 
-    const cost = calculateCost(model, promptTokens, completionTokens);
+    // Extract cache breakdown from new fields
+    const cacheReadTokens = usage.cacheReadTokens ?? 0;
+    const noCacheTokens = usage.noCacheTokens ?? Math.max(0, inputTokens - cacheReadTokens);
+
+    // Fallback: if everything is 0 but total > 0, attribute all to output
+    if (inputTokens === 0 && outputTokens === 0 && totalTokens > 0) {
+      logger.warn(
+        `[AI-USAGE] User ${userId} | Feature ${feature} | Provider returned totalTokens=${totalTokens} but input/output breakdown is missing. Attributing all to output tokens.`,
+      );
+      outputTokens = totalTokens;
+    }
+
+    const cost = calculateCost(model, noCacheTokens, cacheReadTokens, outputTokens);
 
     await prisma.aiUsageLog.create({
       data: {
         userId,
         feature,
         model,
-        promptTokens,
-        completionTokens,
+        promptTokens: inputTokens,
+        completionTokens: outputTokens,
         totalTokens,
         cost,
         costCurrency: 'USD',

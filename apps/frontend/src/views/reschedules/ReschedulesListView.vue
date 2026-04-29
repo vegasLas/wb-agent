@@ -1,14 +1,6 @@
 <template>
   <div class="space-y-3">
-    <!-- Display content only if user has selected account, valid supplier and subscription is active -->
-    <template
-      v-if="
-        userStore.selectedAccount &&
-          userStore.hasValidSupplier &&
-          (userStore.subscriptionActive || userStore.isFree)
-      "
-    >
-      <!-- Status Filter Buttons -->
+    <!-- Status Filter Buttons -->
       <div class="flex gap-2">
         <Button
           v-for="stat in statsData"
@@ -71,7 +63,6 @@
           {{ noReschedulesMessage }}
         </div>
       </div>
-    </template>
 
     <!-- Supply Details Modal -->
     <ReschedulesSupplyDetailsModal

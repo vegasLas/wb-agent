@@ -28,6 +28,7 @@ import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from '@/services/domain/feedback/feedback-example.service';
 import type { FeedbackRule } from '@prisma/client';
 import type { RejectedAnswerContext } from '@/services/domain/feedback/feedback-rejected.service';
+import { getBillingPeriodStart } from '@/utils/subscription';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -40,6 +41,9 @@ jest.mock('ai', () => ({
 
 jest.mock('../../../config/database', () => ({
   prisma: {
+    user: {
+      findUnique: jest.fn(),
+    },
     feedbackSettings: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -55,6 +59,7 @@ jest.mock('../../../config/database', () => ({
       upsert: jest.fn(),
       update: jest.fn(),
       findUnique: jest.fn(),
+      count: jest.fn(),
     },
     feedbackGoodsGroup: {
       findMany: jest.fn(),
@@ -98,6 +103,10 @@ jest.mock('../../../utils/logger', () => ({
     error: jest.fn(),
     debug: jest.fn(),
   }),
+}));
+
+jest.mock('../../../utils/subscription', () => ({
+  getBillingPeriodStart: jest.fn(),
 }));
 
 const mockScheduleJob = jest.fn();
@@ -202,6 +211,7 @@ const mockWbFeedback = wbFeedbackService as unknown as jest.Mocked<typeof wbFeed
 const mockExampleService = feedbackExampleService as unknown as jest.Mocked<typeof feedbackExampleService>;
 const mockRejectedService = feedbackRejectedService as unknown as jest.Mocked<typeof feedbackRejectedService>;
 const mockGoodsGroupService = feedbackGoodsGroupService as unknown as jest.Mocked<typeof feedbackGoodsGroupService>;
+const mockGetBillingPeriodStart = getBillingPeriodStart as unknown as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -242,6 +252,18 @@ beforeEach(() => {
   // Default: no rejected answers
   mockRejectedService.getRecentRejectedAnswers.mockResolvedValue([]);
   mockRejectedService.saveRejectedAnswer.mockResolvedValue(undefined);
+
+  // Default: free user (no subscription)
+  (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
+    id: 1,
+    subscriptions: [],
+  });
+
+  // Default: billing period starts at 1st of month
+  mockGetBillingPeriodStart.mockResolvedValue(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+
+  // Default: zero feedback count
+  (mockPrisma.feedbackAutoAnswer.count as jest.Mock).mockResolvedValue(0);
 
   // Default: AI returns text
   mockGenerateText.mockResolvedValue({ text: 'AI generated answer' });

@@ -7,17 +7,22 @@
   >
     <div class="space-y-4">
       <!-- Info Alert -->
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex gap-2">
+      <div
+        class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex gap-2"
+      >
         <i class="pi pi-info-circle text-blue-500 mt-0.5 text-sm" />
         <div class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
           <p class="font-medium mb-1">Как работают правила:</p>
           <p>
-            Выберите товары, диапазон рейтинга и ключевые слова. Если отзыв клиента
+            Выберите товары, диапазон рейтинга и ключевые слова. Если отзыв
+            клиента
             <b>попадает под все условия</b> правила, сработает выбранный режим:
           </p>
           <ul class="list-disc pl-4 mt-1 space-y-0.5">
             <li><b>Пропускать</b> — автоответ не будет создан</li>
-            <li><b>Инструкция</b> — к ответу AI добавится ваша инструкция</li>
+            <li>
+              <b>Инструкция</b> — AI учтет инструкцию при генерации ответа
+            </li>
           </ul>
         </div>
       </div>
@@ -55,18 +60,25 @@
               </div>
               <div class="flex flex-col">
                 <span class="text-sm">{{ slotProps.option.title }}</span>
-                <span class="text-xs text-surface-500">{{ slotProps.option.vendorCode }}</span>
+                <span class="text-xs text-surface-500">{{
+                  slotProps.option.vendorCode
+                }}</span>
               </div>
             </div>
           </template>
           <template #chip="slotProps">
             <Chip
-              :label="goodsMap.get(slotProps.value as number)?.vendorCode ?? String(slotProps.value)"
+              :label="
+                goodsMap.get(slotProps.value as number)?.vendorCode ??
+                String(slotProps.value)
+              "
               class="text-xs py-0 px-1.5"
             />
           </template>
         </MultiSelect>
-        <small v-if="validationErrors.nmIds" class="text-red-500">{{ validationErrors.nmIds }}</small>
+        <small v-if="validationErrors.nmIds" class="text-red-500">{{
+          validationErrors.nmIds
+        }}</small>
       </div>
 
       <!-- Ratings -->
@@ -82,7 +94,9 @@
             placeholder="1-5"
             size="small"
           />
-          <small v-if="validationErrors.minRating" class="text-red-500">{{ validationErrors.minRating }}</small>
+          <small v-if="validationErrors.minRating" class="text-red-500">{{
+            validationErrors.minRating
+          }}</small>
         </div>
         <div class="space-y-1">
           <label class="text-sm font-medium">
@@ -95,15 +109,15 @@
             placeholder="1-5"
             size="small"
           />
-          <small v-if="validationErrors.maxRating" class="text-red-500">{{ validationErrors.maxRating }}</small>
+          <small v-if="validationErrors.maxRating" class="text-red-500">{{
+            validationErrors.maxRating
+          }}</small>
         </div>
       </div>
 
       <!-- Keywords -->
       <div class="space-y-1">
-        <label class="text-sm font-medium">
-          Ключевые слова
-        </label>
+        <label class="text-sm font-medium"> Ключевые слова </label>
         <Textarea
           v-model="keywordsRaw"
           rows="3"
@@ -151,7 +165,11 @@
           />
         </div>
         <p class="text-xs text-surface-500">
-          {{ form.mode === 'skip' ? 'Не отвечать на отзывы, попадающие под условия' : 'Добавить инструкцию к ответу AI для отзывов под условия' }}
+          {{
+            form.mode === 'skip'
+              ? 'Не отвечать на отзывы, попадающие под условия'
+              : 'Добавить инструкцию к ответу AI для отзывов под условия'
+          }}
         </p>
       </div>
 
@@ -166,7 +184,9 @@
           class="w-full"
           placeholder="Например: Если клиент жалуется на размер, предложи обмен или возврат"
         />
-        <small v-if="validationErrors.instruction" class="text-red-500">{{ validationErrors.instruction }}</small>
+        <small v-if="validationErrors.instruction" class="text-red-500">{{
+          validationErrors.instruction
+        }}</small>
       </div>
 
       <!-- Enabled toggle -->
@@ -304,12 +324,22 @@ const validationErrors = computed<Record<string, string>>(() => {
   }
 
   const minVal = form.value.minRating;
-  if (minVal === null || !Number.isInteger(minVal) || minVal < 1 || minVal > 5) {
+  if (
+    minVal === null ||
+    !Number.isInteger(minVal) ||
+    minVal < 1 ||
+    minVal > 5
+  ) {
     e.minRating = 'Должно быть целое число от 1 до 5';
   }
 
   const maxVal = form.value.maxRating;
-  if (maxVal === null || !Number.isInteger(maxVal) || maxVal < 1 || maxVal > 5) {
+  if (
+    maxVal === null ||
+    !Number.isInteger(maxVal) ||
+    maxVal < 1 ||
+    maxVal > 5
+  ) {
     e.maxRating = 'Должно быть целое число от 1 до 5';
   }
 
@@ -324,7 +354,9 @@ const validationErrors = computed<Record<string, string>>(() => {
   return e;
 });
 
-const isValid = computed(() => Object.keys(validationErrors.value).length === 0);
+const isValid = computed(
+  () => Object.keys(validationErrors.value).length === 0,
+);
 
 function submit() {
   if (!isValid.value) return;

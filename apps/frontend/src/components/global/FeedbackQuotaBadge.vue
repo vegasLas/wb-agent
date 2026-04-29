@@ -54,6 +54,6 @@ const label = computed(() => {
 const showUpsell = computed(() => percentage.value >= 90);
 
 function goToStore() {
-  router.push({ name: 'Store' });
+  router.push({ name: 'Payments' });
 }
 </script>

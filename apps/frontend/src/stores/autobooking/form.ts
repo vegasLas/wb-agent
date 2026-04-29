@@ -7,6 +7,8 @@ import { useUserStore } from '@/stores/user';
 import { useDraftStore } from '@/stores/drafts';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { toastHelpers } from '@/utils/ui';
+import { calculateSlotCount } from '@/utils/autobooking';
+import { AUTOBOOKING_SLOTS } from '@/constants';
 import type { AutobookingCreateData, FormState, ValidationResult, DateType, SupplyType } from './types';
 
 // Individual form fields for better reactivity and type safety
@@ -104,7 +106,31 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
     return true;
   });
 
-  const canSubmit = computed(() => isValid.value && !loading.value);
+  // Slot calculations
+  const newSlots = computed(() =>
+    calculateSlotCount(form.value.dateType, form.value.customDates),
+  );
+
+  const usedSlots = computed(() => {
+    const listStore = useAutobookingListStore();
+    return listStore.usedSlots;
+  });
+
+  const maxSlots = computed(() => {
+    const userStore = useUserStore();
+    return AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1;
+  });
+
+  const hasAvailableSlots = computed(() => usedSlots.value + newSlots.value <= maxSlots.value);
+
+  const slotError = computed(() => {
+    if (!hasAvailableSlots.value) {
+      return `Достигнут лимит слотов (${maxSlots.value}). Освободите слоты или обновите подписку.`;
+    }
+    return null;
+  });
+
+  const canSubmit = computed(() => isValid.value && !loading.value && hasAvailableSlots.value);
 
   // ============================================
   // Actions
@@ -208,6 +234,7 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
 
       // Also add to list store so it appears immediately
       listStore.autobookings.unshift(autobooking);
+      listStore.statusCache['ACTIVE'] = [autobooking, ...(listStore.statusCache['ACTIVE'] || [])];
       listStore.statusCounts['ACTIVE'] = (listStore.statusCounts['ACTIVE'] || 0) + 1;
 
       // Show success toast with warehouse name
@@ -302,6 +329,11 @@ export const useAutobookingFormStore = defineStore('autobookingForm', () => {
     // Getters
     isValid,
     canSubmit,
+    newSlots,
+    usedSlots,
+    maxSlots,
+    hasAvailableSlots,
+    slotError,
 
     // Actions
     resetForm,

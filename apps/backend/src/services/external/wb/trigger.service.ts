@@ -2,11 +2,17 @@ import { prisma } from '@/config/database';
 import type { SupplyTrigger } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import { apiKeyRateLimiterService } from '@/services/infrastructure';
+import { inAppNotificationService } from '@/services/notification/in-app-notification.service';
+import { telegramService } from '@/services/notification/telegram.service';
+import { supplierApiKeyService } from '@/services/user/';
+import { createLogger } from '@/utils/logger';
 import {
   DEFAULT_CHECK_INTERVAL,
   DEFAULT_SEARCH_MODE,
 } from '@/constants/triggers';
 import type { Supply } from '@/types/wb';
+
+const logger = createLogger('TriggerService');
 
 export interface CreateTriggerDto {
   warehouseIds: number[];
@@ -62,6 +68,71 @@ export class TriggerService {
   }
 
   /**
+   * Handle deprecated API key by deactivating it and notifying the user
+   */
+  private async handleDeprecatedApiKey(userId: number): Promise<void> {
+    // Hard-delete the key from the user's row
+    try {
+      await supplierApiKeyService.delete(userId);
+    } catch (deleteError) {
+      // Row might already be gone — safe to ignore
+    }
+
+    // Remove from rate-limiter cache
+    await this.deactivateApiKey(userId);
+
+    // Get user with telegram info
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { telegram: true },
+    });
+
+    if (!user) return;
+
+    const notificationMessage =
+      `⚠️ Ваш API-ключ поставщика устарел и был отключен.\n\n` +
+      `Чтобы продолжить пользоваться сервисом, создайте новый ключ:\n` +
+      `1. Перейдите на https://seller.wildberries.ru/api-integrations\n` +
+      `2. Нажмите «Создать токен»\n` +
+      `3. Выберите «Для интеграции вручную»\n` +
+      `4. Тип: «Персональный токен»\n` +
+      `5. Категория: «Поставки»\n` +
+      `6. Доступ: «Только чтение»\n` +
+      `7. Скопируйте и вставьте новый ключ в личном кабинете.`;
+
+    // Create in-app notification
+    try {
+      await inAppNotificationService.create({
+        userId,
+        type: 'SYSTEM',
+        title: 'API-ключ поставщика устарел',
+        message: notificationMessage,
+        link: '/settings',
+      });
+    } catch (notifyError) {
+      // Silently log — don't block the error flow
+      logger?.error?.(
+        `Failed to create in-app notification for deprecated key (user ${userId}):`,
+        notifyError,
+      );
+    }
+
+    // Send Telegram notification if available
+    const chatId = user.telegram?.chatId;
+    if (chatId) {
+      try {
+        await telegramService.sendMessage(chatId, notificationMessage);
+      } catch (tgError) {
+        // Silently log — don't block the error flow
+        logger?.error?.(
+          `Failed to send Telegram notification for deprecated key (user ${userId}):`,
+          tgError,
+        );
+      }
+    }
+  }
+
+  /**
    * Fetch coefficients from WB API
    * Uses rotating API keys with rate limiting
    */
@@ -96,6 +167,16 @@ export class TriggerService {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        const responseDetail = error.response?.data?.detail || '';
+        console.log(error.response?.data?.detail);
+        // Check if the API key is deprecated (WB returns a news URL)
+        if (responseDetail.includes('dev.wildberries.ru/news/281')) {
+          await this.handleDeprecatedApiKey(apiKeyInfo.userId);
+          throw new Error(
+            'API key is deprecated and has been deactivated. Please generate a new one.',
+          );
+        }
+
         // Check if it's an authentication error
         if (error.response?.status === 401 || error.response?.status === 403) {
           await this.deactivateApiKey(apiKeyInfo.userId);
@@ -106,7 +187,7 @@ export class TriggerService {
 
         // Check if it's a rate limiting error
         if (
-          error.response?.data?.detail?.includes('Limited by global limiter') ||
+          responseDetail.includes('Limited by global limiter') ||
           error.message?.includes('Limited by global limiter')
         ) {
           apiKeyRateLimiterService.temporarilyBlockApiKey(
@@ -118,9 +199,7 @@ export class TriggerService {
           );
         }
 
-        throw new Error(
-          error.response?.data?.detail || 'Failed to fetch coefficients',
-        );
+        throw new Error(responseDetail || 'Failed to fetch coefficients');
       }
       throw error;
     }

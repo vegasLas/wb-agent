@@ -13,7 +13,10 @@ import { buildContextMessage } from './context-builder.service';
 import { aiUsageTrackingService } from './ai-usage-tracking.service';
 import { filterToolsByPermissions } from './ai-tool-permissions';
 import { AI_CHAT_BUDGET_USD, UserTier } from '@/constants/payments';
+import { getBillingPeriodStart } from '@/utils/subscription';
 import { ApiError } from '@/utils/errors';
+import { createLogger } from '@/utils/logger';
+import { calculateCost } from '@/config/ai-pricing';
 import { autobookingTools } from './tools/autobooking.tools';
 import { triggerTools } from './tools/trigger.tools';
 import { externalTools } from './tools/external.tools';
@@ -35,6 +38,8 @@ interface HandleChatInput {
   abortSignal?: AbortSignal;
 }
 
+const logger = createLogger('AIChatService');
+
 interface ChatResult {
   result: any;
   assistantMessageId: string;
@@ -54,15 +59,14 @@ export class AIChatService {
     tier: UserTier,
   ): Promise<{ allowed: boolean; spent: number; max: number }> {
     const max = AI_CHAT_BUDGET_USD[tier];
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const periodStart = await getBillingPeriodStart(userId);
 
     const result = await prisma.aiUsageLog.aggregate({
       _sum: { cost: true },
       where: {
         userId,
         feature: 'ai_chat',
-        createdAt: { gte: startOfMonth },
+        createdAt: { gte: periodStart },
       },
     });
 
@@ -273,18 +277,69 @@ export class AIChatService {
         await saveToDb(text, toolCalls, toolResults);
 
         if (usage) {
+          // Read new AI SDK v6 fields (DeepSeek provider populates these correctly)
+          let inputTokens = usage.inputTokens ?? 0;
+          let outputTokens = usage.outputTokens ?? 0;
+          const totalTokens = usage.totalTokens ?? 0;
+          const cacheReadTokens = usage.inputTokenDetails?.cacheReadTokens ?? 0;
+          let noCacheTokens = usage.inputTokenDetails?.noCacheTokens ?? 0;
+
+          // Fallback: read from raw provider data if AI SDK fields are empty
+          if (inputTokens === 0 && outputTokens === 0 && totalTokens > 0 && usage.raw) {
+            const raw = usage.raw as Record<string, number>;
+            logger.warn(
+              `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | AI SDK fields empty, reading from raw usage: ${JSON.stringify(raw)}`,
+            );
+            inputTokens = raw.prompt_tokens ?? 0;
+            outputTokens = raw.completion_tokens ?? 0;
+            const rawCacheHit = raw.prompt_cache_hit_tokens ?? 0;
+            const rawCacheMiss = raw.prompt_cache_miss_tokens ?? 0;
+            if (rawCacheHit || rawCacheMiss) {
+              noCacheTokens = rawCacheMiss;
+            } else {
+              noCacheTokens = Math.max(0, inputTokens - cacheReadTokens);
+            }
+          }
+
+          // Final fallback: if still 0, attribute all to output
+          if (inputTokens === 0 && outputTokens === 0 && totalTokens > 0) {
+            logger.warn(
+              `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | No token breakdown available, attributing all ${totalTokens} tokens to output.`,
+            );
+            outputTokens = totalTokens;
+          }
+
+          const cost = calculateCost(
+            'deepseek-v4-flash',
+            noCacheTokens,
+            cacheReadTokens,
+            outputTokens,
+          );
+
+          logger.info(
+            `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | ` +
+            `Total: ${totalTokens} | Input: ${inputTokens} (cacheMiss=${noCacheTokens} cacheHit=${cacheReadTokens}) | Output: ${outputTokens} | Cost: $${cost}`,
+          );
+
           aiUsageTrackingService.trackUsage({
             userId,
             feature: 'ai_chat',
             model: 'deepseek-v4-flash',
             usage: {
-              promptTokens: usage.promptTokens ?? 0,
-              completionTokens: usage.completionTokens ?? 0,
-              totalTokens: usage.totalTokens ?? 0,
+              promptTokens: inputTokens,
+              completionTokens: outputTokens,
+              totalTokens,
+              inputTokens,
+              outputTokens,
+              cacheReadTokens,
+              noCacheTokens,
             },
             conversationId: convId,
             messageId: assistantMessage.id,
-            metadata: { toolCount: toolCalls?.length ?? 0 },
+            metadata: {
+              toolCount: toolCalls?.length ?? 0,
+              usageBreakdownMissing: inputTokens === 0 && outputTokens === totalTokens && totalTokens > 0,
+            },
           });
         }
       },

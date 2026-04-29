@@ -17,9 +17,6 @@ import type { ViewType } from '@/types';
  * - router.push({ name: 'Reschedules' }) - for reschedules list
  * - router.push({ name: 'ReschedulesCreate' }) - for creating reschedule
  * - router.push({ name: 'ReschedulesUpdate', params: { id } }) - for updating reschedule
- * - router.push({ name: 'Store' }) - for store
- * - router.push({ name: 'StoreSubscription' }) - for subscription tab
- * - router.push({ name: 'StoreBookings' }) - for bookings tab
  * - router.push({ name: 'Account' }) - for account
  *
  * Going back:
@@ -49,13 +46,10 @@ export const useViewStore = defineStore('view', () => {
       return 'autobookings-main';
     if (routeName === 'Triggers' || routeName === 'TriggersList')
       return 'triggers-main';
-    if (routeName === 'Reschedules' || routeName === 'ReschedulesList')
-      return 'reschedules-main';
-    if (routeName === 'ReschedulesCreate') return 'reschedules-form';
-    if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
-    if (routeName === 'Store') return 'store';
-    if (routeName === 'StoreSubscription') return 'store-subscription';
-    if (routeName === 'StoreBookings') return 'store-bookings';
+    // if (routeName === 'Reschedules' || routeName === 'ReschedulesList')
+    //   return 'reschedules-main';
+    // if (routeName === 'ReschedulesCreate') return 'reschedules-form';
+    // if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
     if (routeName === 'Promotions') return 'promotions';
@@ -84,12 +78,9 @@ export const useViewStore = defineStore('view', () => {
     const routeMap: Record<string, string> = {
       'autobookings-main': 'Autobooking',
       'triggers-main': 'Triggers',
-      'reschedules-main': 'Reschedules',
-      'reschedules-form': 'ReschedulesCreate',
-      'reschedules-update': 'ReschedulesUpdate',
-      store: 'Store',
-      'store-subscription': 'StoreSubscription',
-      'store-bookings': 'StoreBookings',
+      // 'reschedules-main': 'Reschedules',
+      // 'reschedules-form': 'ReschedulesCreate',
+      // 'reschedules-update': 'ReschedulesUpdate',
       account: 'Account',
       report: 'Reports',
       promotions: 'Promotions',
@@ -126,8 +117,8 @@ export const useViewStore = defineStore('view', () => {
    */
   const isForm = computed(() => {
     const formRoutes = [
-      'ReschedulesCreate',
-      'ReschedulesUpdate',
+      // 'ReschedulesCreate',
+      // 'ReschedulesUpdate',
     ];
     return route ? formRoutes.includes(route.name as string) : false;
   });
@@ -139,8 +130,7 @@ export const useViewStore = defineStore('view', () => {
     const routeName = route?.name as string;
     if (routeName?.startsWith('Autobooking')) return 'autobookings';
     if (routeName?.startsWith('Trigger')) return 'triggers';
-    if (routeName?.startsWith('Reschedule')) return 'reschedules';
-    if (routeName?.startsWith('Store')) return 'store';
+    // if (routeName?.startsWith('Reschedule')) return 'reschedules';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
     if (routeName === 'Promotions') return 'promotions';

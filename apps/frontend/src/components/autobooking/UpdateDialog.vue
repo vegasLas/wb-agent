@@ -24,7 +24,15 @@
     </div>
 
     <template #footer>
-      <div class="flex gap-2 p-2">
+      <div class="flex flex-col gap-2 p-2">
+        <Message
+          v-if="updateStore.slotError"
+          severity="error"
+          class="w-full"
+        >
+          {{ updateStore.slotError }}
+        </Message>
+        <div class="flex gap-2">
         <Button
           variant="outlined"
           class="flex-1"
@@ -42,6 +50,7 @@
           Обновить
         </Button>
       </div>
+      </div>
     </template>
   </Dialog>
 
@@ -58,6 +67,7 @@
 import { ref, computed, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
+import Message from 'primevue/message';
 import { useAutobookingUpdateStore } from '@/stores/autobooking';
 import { useWarehousesStore } from '@/stores/warehouses';
 import { useDraftStore } from '@/stores/drafts';
@@ -114,6 +124,7 @@ const canSubmit = computed(() => {
   return (
     updateStore.isValid &&
     updateStore.hasChanges &&
+    updateStore.hasAvailableSlots &&
     !updateStore.loading &&
     !isSubmitting.value
   );

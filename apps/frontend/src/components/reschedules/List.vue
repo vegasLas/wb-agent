@@ -1,14 +1,6 @@
 <template>
   <div class="space-y-3">
-    <!-- Display content only if user has selected account, valid supplier and subscription is active -->
-    <template
-      v-if="
-        userStore.selectedAccount &&
-          userStore.hasValidSupplier &&
-          (userStore.subscriptionActive || userStore.isFree)
-      "
-    >
-      <!-- Status Filter Buttons -->
+    <!-- Status Filter Buttons -->
       <div class="flex gap-2">
         <Button
           v-for="stat in statsData"
@@ -77,41 +69,6 @@
 
         <!-- Preloader -->
       </div>
-    </template>
-
-    <!-- Empty states when user conditions are not met -->
-    <div
-      v-else
-      class="text-center py-12 text-gray-500 dark:text-gray-400"
-    >
-      <template v-if="!userStore.selectedAccount">
-        <i class="pi pi-user text-4xl mb-4 block" />
-        <p class="text-lg font-medium">
-          Аккаунт не выбран
-        </p>
-        <p class="text-sm mt-2">
-          Пожалуйста, выберите аккаунт Wildberries для продолжения
-        </p>
-      </template>
-      <template v-else-if="!userStore.hasValidSupplier">
-        <i class="pi pi-building text-4xl mb-4 block" />
-        <p class="text-lg font-medium">
-          Поставщик не выбран
-        </p>
-        <p class="text-sm mt-2">
-          Пожалуйста, выберите поставщика для продолжения
-        </p>
-      </template>
-      <template v-else-if="!userStore.subscriptionActive && !userStore.isFree">
-        <i class="pi pi-calendar-times text-4xl mb-4 block" />
-        <p class="text-lg font-medium">
-          Подписка не активна
-        </p>
-        <p class="text-sm mt-2">
-          Ваша подписка истекла. Пожалуйста, продлите подписку.
-        </p>
-      </template>
-    </div>
 
     <!-- Supply Details Modal -->
     <ReschedulesSupplyDetailsModal

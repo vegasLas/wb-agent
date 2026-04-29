@@ -13,15 +13,7 @@
       @updated="handleUpdated"
     />
 
-    <!-- Display content only if user has selected account, valid supplier and subscription is active -->
-    <template
-      v-if="
-        userStore.selectedAccount &&
-          userStore.hasValidSupplier &&
-          (userStore.subscriptionActive || userStore.isFree)
-      "
-    >
-      <!-- Status Filter Buttons -->
+    <!-- Status Filter Buttons -->
       <div class="flex gap-2">
         <Button
           v-for="stat in statsData"
@@ -56,9 +48,11 @@
           class="w-full"
         />
         <div class="flex justify-between items-center">
-          <AutobookingSlotCounter :used="activeCount" :max="maxSlots" />
+          <AutobookingSlotCounter :used="usedSlots" :max="maxSlots" />
           <Button
             severity="primary leading-none"
+            :disabled="isAtLimit"
+            :title="isAtLimit ? 'Достигнут лимит активных автоброней' : ''"
             @click="openCreateDialog"
           >
             добавить
@@ -86,7 +80,6 @@
           {{ noBookingsMessage }}
         </div>
       </div>
-    </template>
 
     <!-- Goods Modal -->
     <AutobookingDraftGoodsModal
@@ -122,8 +115,9 @@ const userStore = useUserStore();
 const listStore = useAutobookingListStore();
 const { viewReady } = useViewReady();
 
-const activeCount = computed(() => listStore.statusCounts[AUTOBOOKING_STATUSES.ACTIVE] || 0);
+const usedSlots = computed(() => listStore.usedSlots);
 const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
+const isAtLimit = computed(() => usedSlots.value >= maxSlots.value);
 
 // Dialog state
 const showCreateDialog = ref(false);

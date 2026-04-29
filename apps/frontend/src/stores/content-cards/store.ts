@@ -45,11 +45,6 @@ export const useContentCardsStore = defineStore('contentCards', () => {
       error.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive && !userStore.isFree) {
-      error.value = 'Необходимо активировать подписку';
-      return;
-    }
-
     loading.value = true;
     error.value = null;
 
@@ -82,11 +77,6 @@ export const useContentCardsStore = defineStore('contentCards', () => {
       error.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive) {
-      error.value = 'Необходимо активировать подписку';
-      return;
-    }
-
     loading.value = true;
     error.value = null;
 
@@ -113,11 +103,6 @@ export const useContentCardsStore = defineStore('contentCards', () => {
       commissionsError.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive && !userStore.isFree) {
-      commissionsError.value = 'Необходимо активировать подписку';
-      return;
-    }
-
     commissionsLoading.value = true;
     commissionsError.value = null;
     commissionsData.value = [];
@@ -143,11 +128,6 @@ export const useContentCardsStore = defineStore('contentCards', () => {
       tariffsError.value = 'Необходимо выбрать поставщика';
       return;
     }
-    if (!userStore.subscriptionActive && !userStore.isFree) {
-      tariffsError.value = 'Необходимо активировать подписку';
-      return;
-    }
-
     tariffsLoading.value = true;
     tariffsError.value = null;
     tariffsData.value = [];

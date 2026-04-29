@@ -105,6 +105,26 @@ export async function createSubscription(
 }
 
 /**
+ * Get the billing period start date for usage calculations.
+ * - Active paid subscription → subscription startedAt (normalized to start of day)
+ * - Free or expired → 1st day of current calendar month
+ */
+export async function getBillingPeriodStart(userId: number): Promise<Date> {
+  const sub = await getCurrentSubscription(userId);
+  const now = new Date();
+
+  // Active paid subscription → start from subscription date (normalized to start of day)
+  if (sub && sub.endedAt && sub.endedAt > now) {
+    const start = new Date(sub.startedAt);
+    start.setHours(0, 0, 0, 0);
+    return start;
+  }
+
+  // Free or expired → start of current calendar month
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+/**
  * Downgrade a user to FREE tier.
  * Simply ends any active paid subscription.
  * No FREE record is created — FREE is the default (null) state.

@@ -1,14 +1,13 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
 import { isTelegramWebApp, getInitData } from '../utils/telegram';
-import { usePermissions } from '@/composables/usePermissions';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
-import {
-  ReschedulesListView,
-  ReschedulesCreateView,
-  ReschedulesUpdateView,
-} from '../views/reschedules';
+// import {
+//   ReschedulesListView,
+//   ReschedulesCreateView,
+//   ReschedulesUpdateView,
+// } from '../views/reschedules';
 import { TriggersListView } from '../views/triggers';
 import { PromotionsView } from '../views/promotions';
 import { FeedbacksView } from '../views/feedbacks';
@@ -195,36 +194,36 @@ const routes: RouteRecordRaw[] = [
         },
       },
       // Reschedules Routes (flat structure - each view is standalone)
-      {
-        path: 'reschedules',
-        name: 'ReschedulesList',
-        component: ReschedulesListView,
-        meta: {
-          title: 'Перепланирования',
-          requiresAccount: true,
-          requiresSupplier: true,
-        },
-      },
-      {
-        path: 'reschedules/create',
-        name: 'ReschedulesCreate',
-        component: ReschedulesCreateView,
-        meta: {
-          title: 'Создание перепланирования',
-          requiresAccount: true,
-          requiresSupplier: true,
-        },
-      },
-      {
-        path: 'reschedules/update/:id',
-        name: 'ReschedulesUpdate',
-        component: ReschedulesUpdateView,
-        meta: {
-          title: 'Редактирование перепланирования',
-          requiresAccount: true,
-          requiresSupplier: true,
-        },
-      },
+      // {
+      //   path: 'reschedules',
+      //   name: 'ReschedulesList',
+      //   component: ReschedulesListView,
+      //   meta: {
+      //     title: 'Перепланирования',
+      //     requiresAccount: true,
+      //     requiresSupplier: true,
+      //   },
+      // },
+      // {
+      //   path: 'reschedules/create',
+      //   name: 'ReschedulesCreate',
+      //   component: ReschedulesCreateView,
+      //   meta: {
+      //     title: 'Создание перепланирования',
+      //     requiresAccount: true,
+      //     requiresSupplier: true,
+      //   },
+      // },
+      // {
+      //   path: 'reschedules/update/:id',
+      //   name: 'ReschedulesUpdate',
+      //   component: ReschedulesUpdateView,
+      //   meta: {
+      //     title: 'Редактирование перепланирования',
+      //     requiresAccount: true,
+      //     requiresSupplier: true,
+      //   },
+      // },
       // Triggers Routes (flat structure - each view is standalone)
       {
         path: 'triggers',
@@ -269,37 +268,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/content-cards/TariffsView.vue'),
         meta: {
           title: 'Тарифы',
-          skipSubscriptionCheck: true,
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
         path: 'store',
-        name: 'Store',
-        component: () => import('../views/StoreView.vue'),
-        meta: {
-          title: 'Store',
-          skipSubscriptionCheck: true,
-        },
-      },
-      {
-        path: 'store/subscription',
-        name: 'StoreSubscription',
-        component: () => import('../views/StoreView.vue'),
-        meta: {
-          title: 'Store - Subscription',
-          initialTab: 'subscription',
-          skipSubscriptionCheck: true,
-        },
-      },
-      {
-        path: 'store/bookings',
-        name: 'StoreBookings',
-        component: () => import('../views/StoreView.vue'),
-        meta: {
-          title: 'Store - Bookings',
-          initialTab: 'bookings',
-          skipSubscriptionCheck: true,
-        },
+        redirect: { name: 'Payments' },
       },
       {
         path: 'payments',
@@ -428,14 +403,6 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
     
-    // Permission check
-    const { canAccessRoute } = usePermissions();
-    if (!canAccessRoute(to.name as string)) {
-      console.log('[Router] Permission denied for route:', to.name);
-      next({ name: 'Chat', replace: true });
-      return;
-    }
-    
     // Browser user is authenticated, proceed
     console.log('[Router] Browser auth validated, proceeding to:', to.name);
     next();
@@ -455,14 +422,6 @@ router.beforeEach(async (to, from, next) => {
       next({ name: errorToRouteName(initError), replace: true });
       return;
     }
-  }
-
-  // Permission check (applies to both Telegram and Browser modes)
-  const { canAccessRoute } = usePermissions();
-  if (!canAccessRoute(to.name as string)) {
-    console.log('[Router] Permission denied for route:', to.name);
-    next({ name: 'Chat', replace: true });
-    return;
   }
 
   // Note: Authentication is handled via Telegram initData sent with each API request.
@@ -514,7 +473,7 @@ function classifyError(
   }
 
   if (status === 403) {
-    return 'subscription_required';
+    return 'not_found';
   }
 
   return 'not_found';

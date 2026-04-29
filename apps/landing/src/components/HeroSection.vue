@@ -8,8 +8,8 @@
       <div
         class="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-deep-elevated border border-deep-border"
       >
-        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-        <span class="text-sm text-gray-400"
+        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+        <span class="text-sm text-secondary"
           >Работаем со всеми складами Wildberries</span
         >
       </div>
@@ -23,15 +23,15 @@
 
       <p
         ref="subtitleRef"
-        class="text-xl md:text-2xl lg:text-3xl text-gray-400 mb-4 max-w-3xl mx-auto leading-relaxed"
+        class="text-xl md:text-2xl lg:text-3xl text-secondary mb-4 max-w-3xl mx-auto leading-relaxed"
       >
         Интеллектуальная платформа для селлеров
-        <span class="text-white font-semibold">Wildberries</span>
+        <span class="text-theme font-semibold">Wildberries</span>
       </p>
 
       <p
         ref="descRef"
-        class="text-base md:text-lg text-gray-500 mb-10 max-w-2xl mx-auto"
+        class="text-base md:text-lg text-muted mb-10 max-w-2xl mx-auto"
       >
         Автобронирование поставок, AI-ассистент, управление рекламой, аналитика
         продаж по регионам и автоматические ответы на отзывы — всё в одном месте
@@ -67,7 +67,7 @@
           href="https://t.me/wb_booking_bot"
           target="_blank"
           rel="noopener"
-          class="px-8 py-4 rounded-2xl bg-deep-elevated border border-deep-border text-white font-semibold text-lg transition-all duration-300 hover:bg-deep-card hover:border-purple/50 hover:scale-105"
+          class="px-8 py-4 rounded-2xl bg-deep-elevated border border-deep-border text-theme font-semibold text-lg transition-all duration-300 hover:bg-deep-card hover:border-purple/50 hover:scale-105"
         >
           <span class="flex items-center gap-2">
             <svg

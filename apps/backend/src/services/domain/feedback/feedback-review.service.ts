@@ -26,6 +26,7 @@ import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
 import type { FeedbackRule } from '@prisma/client';
 import { FEEDBACK_QUOTA, UserTier } from '@/constants/payments';
+import { getBillingPeriodStart } from '@/utils/subscription';
 
 export interface ProcessResult {
   processed: number;
@@ -73,13 +74,12 @@ export class FeedbackReviewService {
       return { allowed: true, used: 0, max: Infinity };
     }
 
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const periodStart = await getBillingPeriodStart(userId);
 
     const used = await prisma.feedbackAutoAnswer.count({
       where: {
         userId,
-        createdAt: { gte: startOfMonth },
+        createdAt: { gte: periodStart },
         status: { in: ['PENDING', 'POSTED'] },
       },
     });
