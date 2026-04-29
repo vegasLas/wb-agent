@@ -222,7 +222,7 @@ export class AutobookingService {
       const newSlots = calculateSlotCount(data.dateType, normalizedCustomDates);
       if (usedSlots + newSlots > maxSlots) {
         throw new AutobookingUpdateError(
-          `Достигнут лимит активных броней (${maxSlots}). Обновите подписку для увеличения лимита.`,
+          `Достигнут лимит активных автоброней (${maxSlots}). Обновите подписку для увеличения лимита.`,
           'SLOT_LIMIT_REACHED',
           403,
         );
@@ -628,7 +628,7 @@ export class AutobookingService {
       );
       if (usedSlots + newSlotCount > maxSlots) {
         throw new AutobookingUpdateError(
-          `Достигнут лимит активных броней (${maxSlots}). Обновите подписку для увеличения лимита.`,
+          `Достигнут лимит активных автоброней (${maxSlots}). Обновите подписку для увеличения лимита.`,
           'SLOT_LIMIT_REACHED',
           403,
         );
@@ -658,7 +658,7 @@ export class AutobookingService {
         );
         if (usedSlots + newSlotCount > maxSlots) {
           throw new AutobookingUpdateError(
-            `Достигнут лимит активных броней (${maxSlots}). Обновите подписку для увеличения лимита.`,
+            `Достигнут лимит активных автоброней (${maxSlots}). Обновите подписку для увеличения лимита.`,
             'SLOT_LIMIT_REACHED',
             403,
           );
