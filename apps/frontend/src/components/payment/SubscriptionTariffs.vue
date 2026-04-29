@@ -53,12 +53,25 @@
         <template #content>
           <div class="space-y-4">
             <!-- Price -->
-            <div class="flex items-baseline gap-1">
-              <p class="text-4xl font-bold">{{ tier.price }} ₽</p>
-              <div
-                class="text-sm text-gray-500 dark:text-gray-400 leading-tight"
-              >
-                <div>в месяц</div>
+            <div>
+              <div class="flex items-baseline gap-1">
+                <p class="text-4xl font-bold">{{ formatPrice(tier.monthlyPrice) }} ₽</p>
+                <div
+                  class="text-sm text-gray-500 dark:text-gray-400 leading-tight"
+                >
+                  <div>в месяц</div>
+                </div>
+              </div>
+
+              <!-- Savings info -->
+              <div v-if="selectedPeriodIndex > 0 && tier.key !== 'FREE'" class="mt-1 space-y-0.5">
+                <p class="text-sm text-gray-400 dark:text-gray-500">
+                  <span class="line-through">{{ formatPrice(tier.baseMonthly) }} ₽</span>
+                  <span class="text-green-500 ml-1.5 font-medium">−{{ formatPrice(tier.baseMonthly - tier.monthlyPrice) }} ₽/мес</span>
+                </p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                  При оплате {{ periodTotalLabel }} — {{ formatPrice(tier.totalPrice) }} ₽
+                </p>
               </div>
             </div>
 
@@ -188,10 +201,17 @@ const periodOptions = [
 
 const selectedPeriodIndex = ref(0);
 
-// Animated prices
-const animatedLitePrice = ref(LITE_TARIFFS[0].price);
-const animatedProPrice = ref(PRO_TARIFFS[0].price);
-const animatedMaxPrice = ref(MAX_TARIFFS[0].price);
+// Effective monthly prices (total / months)
+const monthsPerIndex = [1, 3, 6, 12];
+
+const liteMonthlyPrices = LITE_TARIFFS.map((t, i) => Math.round(t.price / monthsPerIndex[i]));
+const proMonthlyPrices = PRO_TARIFFS.map((t, i) => Math.round(t.price / monthsPerIndex[i]));
+const maxMonthlyPrices = MAX_TARIFFS.map((t, i) => Math.round(t.price / monthsPerIndex[i]));
+
+// Animated monthly prices for display
+const animatedLiteMonthly = ref(liteMonthlyPrices[0]);
+const animatedProMonthly = ref(proMonthlyPrices[0]);
+const animatedMaxMonthly = ref(maxMonthlyPrices[0]);
 
 function animateValue(
   targetRef: ReturnType<typeof ref<number>>,
@@ -217,70 +237,94 @@ function animateValue(
 }
 
 watch(selectedPeriodIndex, (newIndex, oldIndex) => {
-  animateValue(animatedLitePrice, LITE_TARIFFS[oldIndex].price, LITE_TARIFFS[newIndex].price);
-  animateValue(animatedProPrice, PRO_TARIFFS[oldIndex].price, PRO_TARIFFS[newIndex].price);
-  animateValue(animatedMaxPrice, MAX_TARIFFS[oldIndex].price, MAX_TARIFFS[newIndex].price);
+  animateValue(animatedLiteMonthly, liteMonthlyPrices[oldIndex], liteMonthlyPrices[newIndex]);
+  animateValue(animatedProMonthly, proMonthlyPrices[oldIndex], proMonthlyPrices[newIndex]);
+  animateValue(animatedMaxMonthly, maxMonthlyPrices[oldIndex], maxMonthlyPrices[newIndex]);
 });
 
-const tiers = computed(() => [
-  {
-    key: 'FREE' as SubscriptionTier,
-    label: 'Бесплатный',
-    price: 0,
-    description: 'Базовые возможности для ознакомления.',
-    prevTier: null as string | null,
-    features: [
-      `${AUTOBOOKING_SLOTS.FREE} активная автобронь`,
-      `${MAX_ACCOUNTS.FREE} WB аккаунт`,
-      `${FEEDBACK_QUOTA.FREE} отзывов в месяц`,
-      'AI чат',
-      'Триггеры',
-      'Тарифы и отчеты',
-      'Акции и реклама',
-      'MPStats Basic',
-    ],
-  },
-  {
-    key: 'LITE' as SubscriptionTier,
-    label: 'Лайт',
-    price: animatedLitePrice.value,
-    description: 'Для начинающих продавцов на Wildberries.',
-    prevTier: 'Бесплатного',
-    features: [
-      `${AUTOBOOKING_SLOTS.LITE} активных автоброней`,
-      `${MAX_ACCOUNTS.LITE} WB аккаунт`,
-      `${FEEDBACK_QUOTA.LITE} отзывов в месяц`,
-      'AI чат free x5 limit',
-    ],
-  },
-  {
-    key: 'PRO' as SubscriptionTier,
-    label: 'Про',
-    price: animatedProPrice.value,
-    description: 'Полный доступ для растущего бизнеса.',
-    prevTier: 'Лайта',
-    popular: true,
-    features: [
-      `${AUTOBOOKING_SLOTS.PRO} активных автоброней`,
-      `${MAX_ACCOUNTS.PRO} WB аккаунта`,
-      `${FEEDBACK_QUOTA.PRO} отзывов в месяц`,
-      'AI чат lite x5 limit',
-    ],
-  },
-  {
-    key: 'MAX' as SubscriptionTier,
-    label: 'Максимум',
-    price: animatedMaxPrice.value,
-    description: 'Для агентств и крупных продавцов.',
-    prevTier: 'Про',
-    features: [
-      `${AUTOBOOKING_SLOTS.MAX} активных автоброней`,
-      '∞ WB аккаунтов',
-      '∞ отзывов',
-      'AI чат lite x25 limit',
-    ],
-  },
-]);
+function formatPrice(price: number) {
+  return price.toLocaleString('ru-RU');
+}
+
+const periodTotalLabel = computed(() => {
+  const map: Record<number, string> = {
+    0: 'за 1 мес',
+    2: 'за 6 мес',
+    3: 'за 1 год',
+  };
+  return map[selectedPeriodIndex.value] || '';
+});
+
+const tiers = computed(() => {
+  const idx = selectedPeriodIndex.value;
+  return [
+    {
+      key: 'FREE' as SubscriptionTier,
+      label: 'Бесплатный',
+      monthlyPrice: 0,
+      baseMonthly: 0,
+      totalPrice: 0,
+      description: 'Базовые возможности для ознакомления.',
+      prevTier: null as string | null,
+      features: [
+        `${AUTOBOOKING_SLOTS.FREE} активная автобронь`,
+        `${MAX_ACCOUNTS.FREE} WB аккаунт`,
+        `${FEEDBACK_QUOTA.FREE} отзывов в месяц`,
+        'AI чат',
+        'Триггеры',
+        'Тарифы и отчеты',
+        'Акции и реклама',
+        'MPStats Basic',
+      ],
+    },
+    {
+      key: 'LITE' as SubscriptionTier,
+      label: 'Лайт',
+      monthlyPrice: animatedLiteMonthly.value,
+      baseMonthly: liteMonthlyPrices[0],
+      totalPrice: LITE_TARIFFS[idx].price,
+      description: 'Для начинающих продавцов на Wildberries.',
+      prevTier: 'Бесплатного',
+      features: [
+        `${AUTOBOOKING_SLOTS.LITE} активных автоброней`,
+        `${MAX_ACCOUNTS.LITE} WB аккаунт`,
+        `${FEEDBACK_QUOTA.LITE} отзывов в месяц`,
+        'AI чат free x5 limit',
+      ],
+    },
+    {
+      key: 'PRO' as SubscriptionTier,
+      label: 'Про',
+      monthlyPrice: animatedProMonthly.value,
+      baseMonthly: proMonthlyPrices[0],
+      totalPrice: PRO_TARIFFS[idx].price,
+      description: 'Полный доступ для растущего бизнеса.',
+      prevTier: 'Лайта',
+      popular: true,
+      features: [
+        `${AUTOBOOKING_SLOTS.PRO} активных автоброней`,
+        `${MAX_ACCOUNTS.PRO} WB аккаунта`,
+        `${FEEDBACK_QUOTA.PRO} отзывов в месяц`,
+        'AI чат lite x5 limit',
+      ],
+    },
+    {
+      key: 'MAX' as SubscriptionTier,
+      label: 'Максимум',
+      monthlyPrice: animatedMaxMonthly.value,
+      baseMonthly: maxMonthlyPrices[0],
+      totalPrice: MAX_TARIFFS[idx].price,
+      description: 'Для агентств и крупных продавцов.',
+      prevTier: 'Про',
+      features: [
+        `${AUTOBOOKING_SLOTS.MAX} активных автоброней`,
+        '∞ WB аккаунтов',
+        '∞ отзывов',
+        'AI чат lite x25 limit',
+      ],
+    },
+  ];
+});
 
 function onSelectTier(tier: (typeof tiers.value)[0]) {
   if (tier.key === 'FREE') return;
