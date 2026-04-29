@@ -92,6 +92,8 @@ function clearAllTokens(): void {
 
 // Refresh promise lock to prevent concurrent refresh requests
 let refreshPromise: Promise<boolean> | null = null;
+let lastRefreshTime = 0;
+const REFRESH_GRACE_PERIOD_MS = 5000; // 5 seconds
 
 /**
  * Perform token refresh using the refresh token
@@ -118,6 +120,7 @@ async function performRefresh(): Promise<boolean> {
       localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
       localStorage.setItem(TOKEN_EXPIRES_AT_KEY, String(Date.now() + expiresIn * 1000));
 
+      lastRefreshTime = Date.now();
       console.log('[API Client] Tokens refreshed successfully');
       return true;
     }
@@ -260,6 +263,18 @@ apiClient.interceptors.response.use(
       // If we haven't already retried this request, attempt one silent refresh
       if (originalRequest && !originalRequest._retry) {
         originalRequest._retry = true;
+
+        // If a refresh just succeeded (within grace period), retry with current token
+        // instead of triggering another refresh. This prevents race conditions when
+        // multiple concurrent requests fail after a backend redeploy changes JWT_SECRET.
+        if (Date.now() - lastRefreshTime < REFRESH_GRACE_PERIOD_MS) {
+          const newToken = getAuthToken();
+          if (newToken && originalRequest.headers) {
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            console.log('[API Client] Retrying with recently refreshed token');
+            return apiClient(originalRequest);
+          }
+        }
 
         const refreshed = await refreshAccessToken();
         if (refreshed) {
