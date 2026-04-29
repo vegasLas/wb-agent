@@ -55,6 +55,12 @@ export class FreeWarehouseService {
         })
         .catch((error) => {
           const errorMessage = error?.message || '';
+
+          // Already handled in triggerService — key deactivated and user notified
+          if (errorMessage.includes('deprecated')) {
+            return;
+          }
+
           logger.error('Error fetching free API warehouses:', errorMessage);
 
           // Handle database recovery errors silently - they're expected during maintenance

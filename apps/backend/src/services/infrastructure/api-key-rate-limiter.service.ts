@@ -40,10 +40,12 @@ export class ApiKeyRateLimiterService {
   private async loadActiveApiKeys(): Promise<ApiKeyUsage[]> {
     try {
       const technicalModeUserIds = process.env.TECHNICAL_MODE_USER_IDS;
+      const technicalModeUserId = process.env.TECHNICAL_MODE_USER_ID;
 
       let whereCondition: Record<string, unknown> = { isActive: true };
 
       // In technical mode, only load specified users' API keys
+      // TECHNICAL_MODE_USER_IDS takes precedence, then falls back to TECHNICAL_MODE_USER_ID
       if (technicalModeUserIds) {
         logger.info(
           `Technical mode enabled for user IDs: ${technicalModeUserIds}`,
@@ -54,6 +56,17 @@ export class ApiKeyRateLimiterService {
           },
           isActive: true,
         };
+      } else if (technicalModeUserId) {
+        const userId = parseInt(technicalModeUserId);
+        if (!isNaN(userId)) {
+          logger.info(
+            `Technical mode enabled for user ID: ${technicalModeUserId}`,
+          );
+          whereCondition = {
+            userId,
+            isActive: true,
+          };
+        }
       }
 
       let apiKeys;
@@ -64,13 +77,19 @@ export class ApiKeyRateLimiterService {
         });
       } catch (error) {
         // Fallback if isActive field doesn't exist
-        const fallbackWhere = technicalModeUserIds
-          ? {
-              userId: {
-                in: technicalModeUserIds.split(',').map((id) => parseInt(id)),
-              },
-            }
-          : {};
+        let fallbackWhere: Record<string, unknown> = {};
+        if (technicalModeUserIds) {
+          fallbackWhere = {
+            userId: {
+              in: technicalModeUserIds.split(',').map((id) => parseInt(id)),
+            },
+          };
+        } else if (technicalModeUserId) {
+          const userId = parseInt(technicalModeUserId);
+          if (!isNaN(userId)) {
+            fallbackWhere = { userId };
+          }
+        }
         apiKeys = await prisma.supplierApiKey.findMany({
           where: fallbackWhere,
           orderBy: { updatedAt: 'asc' },
@@ -175,10 +194,14 @@ export class ApiKeyRateLimiterService {
           data: { isActive: false },
         });
       } catch (error) {
-        // Fallback to delete if isActive doesn't exist
-        await prisma.supplierApiKey.delete({
-          where: { userId },
-        });
+        // Fallback to delete if isActive doesn't exist or row is already gone
+        try {
+          await prisma.supplierApiKey.delete({
+            where: { userId },
+          });
+        } catch (deleteError) {
+          // Row might already be deleted — safe to ignore
+        }
       }
 
       this.apiKeyUsage.delete(userId);
