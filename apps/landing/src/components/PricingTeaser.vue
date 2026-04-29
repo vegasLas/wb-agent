@@ -6,7 +6,8 @@
           Прозрачные <span class="text-gradient">тарифы</span>
         </h2>
         <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-          Выберите подходящий план и начните автоматизировать свой бизнес на Wildberries
+          Выберите подходящий план и начните автоматизировать свой бизнес на
+          Wildberries
         </p>
       </div>
 
@@ -39,9 +40,23 @@
           </div>
 
           <ul class="space-y-3 mb-8">
-            <li v-for="feature in plan.features" :key="feature" class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            <li
+              v-for="feature in plan.features"
+              :key="feature"
+              class="flex items-start gap-3"
+            >
+              <svg
+                class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <span class="text-gray-300 text-sm">{{ feature }}</span>
             </li>
@@ -97,7 +112,7 @@ const plans = [
     price: '2.490',
     popular: true,
     features: [
-      '10 активных броней',
+      '10 активных автоброней',
       '3 WB аккаунта',
       'AI чат: 150₽/мес',
       '1.000 ответов на отзывы/мес',
@@ -112,7 +127,7 @@ const plans = [
     price: '6.990',
     popular: false,
     features: [
-      '30 активных броней',
+      '30 активных автоброней',
       'Неограниченные аккаунты',
       'AI чат: 500₽/мес',
       'Неограниченные ответы',

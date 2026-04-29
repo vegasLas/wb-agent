@@ -91,18 +91,19 @@ export const MAX_ACCOUNTS: Record<SubscriptionTier, number> = {
 
 // ─── Feedback reply quotas per tier ───
 export const FEEDBACK_QUOTA: Record<SubscriptionTier, number> = {
-  FREE: 10,
-  LITE: 200,
+  FREE: 100,
+  LITE: 300,
   PRO: 2000,
   MAX: Infinity,
 };
 
 // ─── AI chat token budget per tier (in USD) ───
+// Base: FREE = $0.2, LITE = FREE × 5, PRO = LITE × 5, MAX = LITE × 25
 export const AI_CHAT_BUDGET_USD: Record<SubscriptionTier, number> = {
-  FREE: 0.197,
-  LITE: 1.18,
-  PRO: 3.52,
-  MAX: 11.76,
+  FREE: 0.2,
+  LITE: 1.0,
+  PRO: 5.0,
+  MAX: 25.0,
 };
 
 // ─── Trial duration ───
