@@ -8,24 +8,21 @@
   >
     <div class="space-y-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Активируйте 14-дневный пробный период для тарифа Lite. Пробный период можно активировать только один раз.
+        Активируйте 14-дневный пробный период для тарифа Lite. Пробный период
+        можно активировать только один раз.
       </p>
 
       <div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-3 text-sm">
         <p class="font-medium">Lite включает:</p>
         <ul class="mt-1 space-y-1 text-gray-600 dark:text-gray-400">
-          <li>• {{ slots }} активных броней</li>
+          <li>• {{ slots }} активных автоброней</li>
           <li>• {{ accounts }} WB аккаунт{{ accounts === 1 ? '' : 'а' }}</li>
           <li>• AI чат: {{ aiBudget }}₽/мес</li>
           <li>• Отзывы: {{ feedbackQuota }}</li>
         </ul>
       </div>
 
-      <Button
-        class="w-full"
-        :loading="loading"
-        @click="activate"
-      >
+      <Button class="w-full" :loading="loading" @click="activate">
         Активировать пробный период
       </Button>
     </div>
@@ -88,7 +85,9 @@ async function activate() {
     toast.add({
       severity: 'error',
       summary: 'Ошибка',
-      detail: error?.response?.data?.message || 'Не удалось активировать пробный период',
+      detail:
+        error?.response?.data?.message ||
+        'Не удалось активировать пробный период',
       life: 5000,
     });
   } finally {

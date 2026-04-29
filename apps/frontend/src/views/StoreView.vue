@@ -27,12 +27,20 @@
       <template #content>
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Текущий план</div>
-            <div class="text-xl font-bold">{{ userStore.subscriptionTier }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              Текущий план
+            </div>
+            <div class="text-xl font-bold">
+              {{ userStore.subscriptionTier }}
+            </div>
           </div>
           <div class="text-right">
-            <div class="text-sm text-gray-500 dark:text-gray-400">Действует до</div>
-            <div class="text-lg font-medium">{{ formatDate(userStore.user.subscriptionExpiresAt) }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              Действует до
+            </div>
+            <div class="text-lg font-medium">
+              {{ formatDate(userStore.user.subscriptionExpiresAt) }}
+            </div>
           </div>
         </div>
       </template>
@@ -43,16 +51,16 @@
       <template #content>
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Текущий план</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              Текущий план
+            </div>
             <div class="text-xl font-bold text-blue-600">FREE</div>
             <div class="text-xs text-gray-500 mt-1">
-              {{ AUTOBOOKING_SLOTS.FREE }} бронь, {{ MAX_ACCOUNTS.FREE }} аккаунт, {{ FEEDBACK_QUOTA.FREE }} отзывов
+              {{ AUTOBOOKING_SLOTS.FREE }} бронь,
+              {{ MAX_ACCOUNTS.FREE }} аккаунт, {{ FEEDBACK_QUOTA.FREE }} отзывов
             </div>
           </div>
-          <Button
-            severity="primary"
-            @click="scrollToTariffs"
-          >
+          <Button severity="primary" @click="scrollToTariffs">
             Оформить подписку
           </Button>
         </div>
@@ -73,7 +81,11 @@
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold">{{ tier.label }}</h3>
             <Tag v-if="tier.popular" severity="warn" value="★ Popular" />
-            <Tag v-if="currentTier === tier.key" severity="success" value="Активен" />
+            <Tag
+              v-if="currentTier === tier.key"
+              severity="success"
+              value="Активен"
+            />
           </div>
         </template>
 
@@ -87,11 +99,15 @@
             <ul class="space-y-2 text-sm">
               <li class="flex items-center gap-2">
                 <i class="pi pi-check text-green-500" />
-                <span>{{ tier.slots }} активных броней</span>
+                <span>{{ tier.slots }} активных автоброней</span>
               </li>
               <li class="flex items-center gap-2">
                 <i class="pi pi-check text-green-500" />
-                <span>{{ tier.accounts }} WB аккаунт{{ tier.accounts === 1 ? '' : tier.accounts === 3 ? 'а' : 'ов' }}</span>
+                <span
+                  >{{ tier.accounts }} WB аккаунт{{
+                    tier.accounts === 1 ? '' : tier.accounts === 3 ? 'а' : 'ов'
+                  }}</span
+                >
               </li>
               <li class="flex items-center gap-2">
                 <i class="pi pi-check text-green-500" />
@@ -117,10 +133,20 @@
                 v-for="tariff in tier.tariffs"
                 :key="tariff.id"
                 size="small"
-                :severity="selectedTariff?.id === tariff.id ? 'primary' : 'secondary'"
+                :severity="
+                  selectedTariff?.id === tariff.id ? 'primary' : 'secondary'
+                "
                 @click="selectedTariff = tariff"
               >
-                {{ tariff.days === 30 ? '1 мес' : tariff.days === 90 ? '3 мес' : tariff.days === 180 ? '6 мес' : '1 год' }}
+                {{
+                  tariff.days === 30
+                    ? '1 мес'
+                    : tariff.days === 90
+                      ? '3 мес'
+                      : tariff.days === 180
+                        ? '6 мес'
+                        : '1 год'
+                }}
               </Button>
             </div>
 
@@ -142,7 +168,11 @@
               </Button>
 
               <Button
-                v-if="tier.key === 'LITE' && userStore.isFree && !userStore.user.trialUsedAt"
+                v-if="
+                  tier.key === 'LITE' &&
+                  userStore.isFree &&
+                  !userStore.user.trialUsedAt
+                "
                 class="w-full"
                 severity="secondary"
                 variant="outlined"
@@ -216,7 +246,14 @@ const tiers = [
     accounts: MAX_ACCOUNTS.LITE,
     aiBudget: AI_CHAT_BUDGET_USD.LITE,
     feedbackQuota: FEEDBACK_QUOTA.LITE,
-    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама', 'MPStats Basic'],
+    features: [
+      'Триггеры',
+      'Тарифы',
+      'Отчеты',
+      'Акции',
+      'Реклама',
+      'MPStats Basic',
+    ],
     tariffs: LITE_TARIFFS,
   },
   {
@@ -227,7 +264,7 @@ const tiers = [
     accounts: MAX_ACCOUNTS.PRO,
     aiBudget: AI_CHAT_BUDGET_USD.PRO,
     feedbackQuota: FEEDBACK_QUOTA.PRO,
-    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама', 'MPStats Advanced'],
+    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама'],
     tariffs: PRO_TARIFFS,
     popular: true,
   },
@@ -239,7 +276,7 @@ const tiers = [
     accounts: '∞',
     aiBudget: AI_CHAT_BUDGET_USD.MAX,
     feedbackQuota: '∞',
-    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама', 'MPStats Advanced'],
+    features: ['Триггеры', 'Тарифы', 'Отчеты', 'Акции', 'Реклама'],
     tariffs: MAX_TARIFFS,
   },
 ];
@@ -288,7 +325,9 @@ async function activateTrial(tier: SubscriptionTier) {
     toast.add({
       severity: 'error',
       summary: 'Ошибка',
-      detail: error?.response?.data?.message || 'Не удалось активировать пробный период',
+      detail:
+        error?.response?.data?.message ||
+        'Не удалось активировать пробный период',
       life: 5000,
     });
   }
