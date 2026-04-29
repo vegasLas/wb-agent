@@ -18,7 +18,6 @@ import type { ViewType } from '@/types';
  * - router.push({ name: 'ReschedulesCreate' }) - for creating reschedule
  * - router.push({ name: 'ReschedulesUpdate', params: { id } }) - for updating reschedule
  * - router.push({ name: 'Store' }) - for store
- * - router.push({ name: 'StoreSubscription' }) - for subscription tab
  * - router.push({ name: 'StoreBookings' }) - for bookings tab
  * - router.push({ name: 'Account' }) - for account
  *
@@ -54,7 +53,7 @@ export const useViewStore = defineStore('view', () => {
     if (routeName === 'ReschedulesCreate') return 'reschedules-form';
     if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
     if (routeName === 'Store') return 'store';
-    if (routeName === 'StoreSubscription') return 'store-subscription';
+
     if (routeName === 'StoreBookings') return 'store-bookings';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
@@ -88,7 +87,7 @@ export const useViewStore = defineStore('view', () => {
       'reschedules-form': 'ReschedulesCreate',
       'reschedules-update': 'ReschedulesUpdate',
       store: 'Store',
-      'store-subscription': 'StoreSubscription',
+
       'store-bookings': 'StoreBookings',
       account: 'Account',
       report: 'Reports',

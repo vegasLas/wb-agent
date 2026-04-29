@@ -130,7 +130,6 @@ const routeSkeletonMap: Record<string, any> = {
   Promotions: SkeletonPromotions,
   Reports: SkeletonReport,
   Store: SkeletonStore,
-  StoreSubscription: SkeletonStore,
   StoreBookings: SkeletonStore,
   Payments: SkeletonPayments,
   Tasks: SkeletonTasks,

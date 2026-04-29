@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
 import { isTelegramWebApp, getInitData } from '../utils/telegram';
-import { usePermissions } from '@/composables/usePermissions';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
 import {
@@ -269,7 +268,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/content-cards/TariffsView.vue'),
         meta: {
           title: 'Тарифы',
-          skipSubscriptionCheck: true,
+          requiresAccount: true,
+          requiresSupplier: true,
         },
       },
       {
@@ -278,16 +278,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StoreView.vue'),
         meta: {
           title: 'Store',
-          skipSubscriptionCheck: true,
-        },
-      },
-      {
-        path: 'store/subscription',
-        name: 'StoreSubscription',
-        component: () => import('../views/StoreView.vue'),
-        meta: {
-          title: 'Store - Subscription',
-          initialTab: 'subscription',
           skipSubscriptionCheck: true,
         },
       },
@@ -428,14 +418,6 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
     
-    // Permission check
-    const { canAccessRoute } = usePermissions();
-    if (!canAccessRoute(to.name as string)) {
-      console.log('[Router] Permission denied for route:', to.name);
-      next({ name: 'Chat', replace: true });
-      return;
-    }
-    
     // Browser user is authenticated, proceed
     console.log('[Router] Browser auth validated, proceeding to:', to.name);
     next();
@@ -455,14 +437,6 @@ router.beforeEach(async (to, from, next) => {
       next({ name: errorToRouteName(initError), replace: true });
       return;
     }
-  }
-
-  // Permission check (applies to both Telegram and Browser modes)
-  const { canAccessRoute } = usePermissions();
-  if (!canAccessRoute(to.name as string)) {
-    console.log('[Router] Permission denied for route:', to.name);
-    next({ name: 'Chat', replace: true });
-    return;
   }
 
   // Note: Authentication is handled via Telegram initData sent with each API request.
@@ -514,7 +488,7 @@ function classifyError(
   }
 
   if (status === 403) {
-    return 'subscription_required';
+    return 'not_found';
   }
 
   return 'not_found';
