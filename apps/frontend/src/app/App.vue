@@ -47,7 +47,6 @@ import { useSkeleton } from '../composables/ui';
 import {
   SkeletonAccount,
   SkeletonAutobookings,
-
   SkeletonTriggers,
   SkeletonReport,
   SkeletonPayments,
@@ -193,10 +192,11 @@ onMounted(async () => {
 
   // Expand and ready the WebApp when running inside Telegram
   if (hasInitData.value) {
-    requestFullscreen();
+    if (isPhone.value) {
+      requestFullscreen();
+    }
     readyWebApp();
   }
-
   // Initialize toast for stores
   const { initToast } = await import('../utils/ui');
   initToast(toast);
