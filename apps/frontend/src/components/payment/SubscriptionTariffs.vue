@@ -74,9 +74,23 @@
                   ? '!bg-green-600 !border-green-600 hover:!bg-green-700'
                   : '!bg-gray-900 !border-gray-900 hover:!bg-gray-800',
               ]"
-              @click="onSelectTier(tier)"
+              @click="
+                tier.key === 'LITE' &&
+                userStore.isFree &&
+                !userStore.user.trialUsedAt
+                  ? activateTrial(tier.key)
+                  : onSelectTier(tier)
+              "
             >
-              {{ currentTier === tier.key ? 'Текущий план' : 'Выбрать' }}
+              {{
+                currentTier === tier.key
+                  ? 'Текущий план'
+                  : tier.key === 'LITE' &&
+                      userStore.isFree &&
+                      !userStore.user.trialUsedAt
+                    ? 'попробовать (14 дней)'
+                    : 'Выбрать'
+              }}
             </Button>
             <Button
               v-else
@@ -84,21 +98,6 @@
               disabled
             >
               Текущий план
-            </Button>
-
-            <!-- Trial button for Lite -->
-            <Button
-              v-if="
-                tier.key === 'LITE' &&
-                userStore.isFree &&
-                !userStore.user.trialUsedAt
-              "
-              class="w-full"
-              severity="secondary"
-              variant="outlined"
-              @click="activateTrial(tier.key)"
-            >
-              Пробный период 14 дней
             </Button>
 
             <Divider />
