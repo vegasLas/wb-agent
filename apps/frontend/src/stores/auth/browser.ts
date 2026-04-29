@@ -219,18 +219,11 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       console.error('[BrowserAuth] Failed to fetch user data:', error);
 
       const axiosError = error as { response?: { status?: number } } | undefined;
-      // On 401, try one refresh then retry
+      // On 401, the axios response interceptor has already attempted a silent refresh
+      // and retried the request. If we reach here, the refresh failed (e.g. expired
+      // or revoked refresh token). Do not attempt another refresh — just clear state.
       if (axiosError?.response?.status === 401) {
-        const refreshed = await doRefreshToken();
-        if (refreshed) {
-          try {
-            await userStore.fetchUser();
-            return true;
-          } catch {
-            // Second attempt failed
-          }
-        }
-
+        console.log('[BrowserAuth] Silent refresh already failed by interceptor, clearing auth');
         accessToken.value = null;
         refreshToken.value = null;
         tokenExpiresAt.value = null;
