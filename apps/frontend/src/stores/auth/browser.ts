@@ -2,9 +2,12 @@ import { defineStore } from 'pinia';
 import { ref, computed, readonly } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStorage } from '@vueuse/core';
-import apiClient, { setAuthToken } from '@/api/client';
+import { setAuthToken } from '@/api/client';
 import { useUserStore } from '@/stores/user';
 import { resetAppState } from '@/router';
+import { login, refresh as refreshEndpoint, logout as logoutEndpoint } from '@/api/auth/endpoints';
+import { AuthAPIError, normalizeAuthError } from '@/api/auth/errors';
+import { toastHelpers } from '@/utils/ui/toast';
 
 // Storage keys
 const ACCESS_TOKEN_KEY = 'auth_access_token';
@@ -24,9 +27,11 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   const tokenExpiresAt = useStorage<number | null>(TOKEN_EXPIRES_AT_KEY, null);
 
   const isLoading = ref(false);
-  const error = ref<string | null>(null);
+  const error = ref<AuthAPIError | null>(null);
 
   const isAuthenticated = computed(() => !!accessToken.value);
+  const errorMessage = computed(() => error.value?.message ?? null);
+  const errorCode = computed(() => error.value?.code ?? null);
 
   /**
    * Check if access token is expiring soon (default: within 60 seconds)
@@ -52,14 +57,17 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       isLoading.value = true;
       error.value = null;
 
-      const response = await apiClient.post('/auth/email-login', {
-        email,
-        password,
-      });
+      const data = await login(email, password);
+      const result = await handleAuthResponse(data);
 
-      return handleAuthResponse(response.data);
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Ошибка входа';
+      if (result) {
+        toastHelpers.success('Вход выполнен', `Добро пожаловать${data.user.name ? ', ' + data.user.name : ''}!`);
+      }
+
+      return result;
+    } catch (err: unknown) {
+      const normalized = normalizeAuthError(err);
+      error.value = normalized ?? new AuthAPIError(500, 'Ошибка входа', 'INTERNAL_ERROR');
       return false;
     } finally {
       isLoading.value = false;
@@ -69,14 +77,13 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   /**
    * Handle successful auth response (stores tokens & fetches user)
    */
-  async function handleAuthResponse(data: any): Promise<boolean> {
-    if (!data.success) return false;
-
-    const {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-      expiresIn,
-    } = data;
+  async function handleAuthResponse(data: {
+    success: true;
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  }): Promise<boolean> {
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken, expiresIn } = data;
 
     // Store tokens
     accessToken.value = newAccessToken;
@@ -91,8 +98,8 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       const userStore = useUserStore();
       await userStore.fetchUser();
       console.log('[BrowserAuth] UserStore populated after login');
-    } catch (error) {
-      console.error('[BrowserAuth] Failed to populate userStore after login:', error);
+    } catch (fetchError) {
+      console.error('[BrowserAuth] Failed to populate userStore after login:', fetchError);
     }
 
     return true;
@@ -105,11 +112,9 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
     try {
       // Notify backend about logout so refresh token can be revoked
       if (refreshToken.value) {
-        await apiClient
-          .post('/auth/logout', { refreshToken: refreshToken.value })
-          .catch(() => {
-            // Ignore errors during logout
-          });
+        await logoutEndpoint(refreshToken.value).catch(() => {
+          // Ignore errors during logout
+        });
       }
     } finally {
       // Clear all token storage
@@ -125,6 +130,7 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       // Reset router auth state to allow re-initialization on next login
       resetAppState();
 
+      toastHelpers.info('Выход выполнен', 'Вы успешно вышли из аккаунта.');
       await router.push('/login');
     }
   }
@@ -139,16 +145,10 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
     }
 
     try {
-      const response = await apiClient.post('/auth/refresh', {
-        refreshToken: refreshToken.value,
-      });
+      const data = await refreshEndpoint(refreshToken.value);
 
-      if (response.data.success) {
-        const {
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-          expiresIn,
-        } = response.data;
+      if (data.success) {
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken, expiresIn } = data;
 
         accessToken.value = newAccessToken;
         refreshToken.value = newRefreshToken;
@@ -160,11 +160,15 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       }
 
       return false;
-    } catch (err: any) {
-      console.error('[BrowserAuth] Token refresh failed:', err.response?.data?.message || err.message);
+    } catch (err: unknown) {
+      const normalized = normalizeAuthError(err);
+      console.error(
+        '[BrowserAuth] Token refresh failed:',
+        normalized?.message || (err as Error)?.message,
+      );
 
       // If refresh fails with 401, clear everything — token is revoked or expired
-      if (err.response?.status === 401) {
+      if (normalized?.status === 401) {
         accessToken.value = null;
         refreshToken.value = null;
         tokenExpiresAt.value = null;
@@ -211,11 +215,12 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       await userStore.fetchUser();
       console.log('[BrowserAuth] UserStore populated with full user data');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[BrowserAuth] Failed to fetch user data:', error);
 
+      const axiosError = error as { response?: { status?: number } } | undefined;
       // On 401, try one refresh then retry
-      if (error?.response?.status === 401) {
+      if (axiosError?.response?.status === 401) {
         const refreshed = await doRefreshToken();
         if (refreshed) {
           try {
@@ -255,6 +260,8 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
     isAuthenticated,
     isTokenExpiringSoon,
     isTokenExpired,
+    errorMessage,
+    errorCode,
 
     // Actions
     emailLogin,
