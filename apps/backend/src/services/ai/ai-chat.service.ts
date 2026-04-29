@@ -277,23 +277,48 @@ export class AIChatService {
         await saveToDb(text, toolCalls, toolResults);
 
         if (usage) {
-          let promptTokens = usage.promptTokens ?? 0;
-          let completionTokens = usage.completionTokens ?? 0;
+          // Read new AI SDK v6 fields (DeepSeek provider populates these correctly)
+          let inputTokens = usage.inputTokens ?? 0;
+          let outputTokens = usage.outputTokens ?? 0;
           const totalTokens = usage.totalTokens ?? 0;
+          const cacheReadTokens = usage.inputTokenDetails?.cacheReadTokens ?? 0;
+          let noCacheTokens = usage.inputTokenDetails?.noCacheTokens ?? 0;
 
-          // Fallback: some providers return totalTokens but omit the breakdown
-          if (promptTokens === 0 && completionTokens === 0 && totalTokens > 0) {
+          // Fallback: read from raw provider data if AI SDK fields are empty
+          if (inputTokens === 0 && outputTokens === 0 && totalTokens > 0 && usage.raw) {
+            const raw = usage.raw as Record<string, number>;
             logger.warn(
-              `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | Provider returned totalTokens=${totalTokens} but prompt/completion breakdown is missing. Raw usage: ${JSON.stringify(usage)}`,
+              `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | AI SDK fields empty, reading from raw usage: ${JSON.stringify(raw)}`,
             );
-            // Attribute all tokens to completion (output is more expensive — conservative estimate)
-            completionTokens = totalTokens;
+            inputTokens = raw.prompt_tokens ?? 0;
+            outputTokens = raw.completion_tokens ?? 0;
+            const rawCacheHit = raw.prompt_cache_hit_tokens ?? 0;
+            const rawCacheMiss = raw.prompt_cache_miss_tokens ?? 0;
+            if (rawCacheHit || rawCacheMiss) {
+              noCacheTokens = rawCacheMiss;
+            } else {
+              noCacheTokens = Math.max(0, inputTokens - cacheReadTokens);
+            }
           }
 
-          const cost = calculateCost('deepseek-v4-flash', promptTokens, completionTokens);
+          // Final fallback: if still 0, attribute all to output
+          if (inputTokens === 0 && outputTokens === 0 && totalTokens > 0) {
+            logger.warn(
+              `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | No token breakdown available, attributing all ${totalTokens} tokens to output.`,
+            );
+            outputTokens = totalTokens;
+          }
+
+          const cost = calculateCost(
+            'deepseek-v4-flash',
+            noCacheTokens,
+            cacheReadTokens,
+            outputTokens,
+          );
 
           logger.info(
-            `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | Tokens: ${totalTokens} (${promptTokens} prompt / ${completionTokens} completion) | Cost: $${cost}`,
+            `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | ` +
+            `Total: ${totalTokens} | Input: ${inputTokens} (cacheMiss=${noCacheTokens} cacheHit=${cacheReadTokens}) | Output: ${outputTokens} | Cost: $${cost}`,
           );
 
           aiUsageTrackingService.trackUsage({
@@ -301,15 +326,19 @@ export class AIChatService {
             feature: 'ai_chat',
             model: 'deepseek-v4-flash',
             usage: {
-              promptTokens,
-              completionTokens,
+              promptTokens: inputTokens,
+              completionTokens: outputTokens,
               totalTokens,
+              inputTokens,
+              outputTokens,
+              cacheReadTokens,
+              noCacheTokens,
             },
             conversationId: convId,
             messageId: assistantMessage.id,
             metadata: {
               toolCount: toolCalls?.length ?? 0,
-              usageBreakdownMissing: promptTokens === 0 && completionTokens === totalTokens && totalTokens > 0,
+              usageBreakdownMissing: inputTokens === 0 && outputTokens === totalTokens && totalTokens > 0,
             },
           });
         }
