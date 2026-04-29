@@ -55,7 +55,9 @@
             <!-- Price -->
             <div>
               <div class="flex items-baseline gap-1">
-                <p class="text-4xl font-bold">{{ formatPrice(tier.monthlyPrice) }} ₽</p>
+                <p class="text-4xl font-bold">
+                  {{ formatPrice(tier.monthlyPrice) }} ₽
+                </p>
                 <div
                   class="text-sm text-gray-500 dark:text-gray-400 leading-tight"
                 >
@@ -64,13 +66,24 @@
               </div>
 
               <!-- Savings info -->
-              <div v-if="selectedPeriodIndex > 0 && tier.key !== 'FREE'" class="mt-1 space-y-0.5">
+              <div
+                v-if="selectedPeriodIndex > 0 && tier.key !== 'FREE'"
+                class="mt-1 space-y-0.5"
+              >
                 <p class="text-sm text-gray-400 dark:text-gray-500">
-                  <span class="line-through">{{ formatPrice(tier.baseMonthly) }} ₽</span>
-                  <span class="text-green-500 ml-1.5 font-medium">−{{ formatPrice(tier.baseMonthly - tier.monthlyPrice) }} ₽/мес</span>
+                  <span class="line-through"
+                    >{{ formatPrice(tier.baseMonthly) }} ₽</span
+                  >
+                  <span class="text-green-500 ml-1.5 font-medium"
+                    >−{{
+                      formatPrice(tier.baseMonthly - tier.monthlyPrice)
+                    }}
+                    ₽/мес</span
+                  >
                 </p>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
-                  При оплате {{ periodTotalLabel }} — {{ formatPrice(tier.totalPrice) }} ₽
+                  При оплате {{ periodTotalLabel }} —
+                  {{ formatPrice(tier.totalPrice) }} ₽
                 </p>
               </div>
             </div>
@@ -204,9 +217,15 @@ const selectedPeriodIndex = ref(0);
 // Effective monthly prices (total / months)
 const monthsPerIndex = [1, 3, 6, 12];
 
-const liteMonthlyPrices = LITE_TARIFFS.map((t, i) => Math.round(t.price / monthsPerIndex[i]));
-const proMonthlyPrices = PRO_TARIFFS.map((t, i) => Math.round(t.price / monthsPerIndex[i]));
-const maxMonthlyPrices = MAX_TARIFFS.map((t, i) => Math.round(t.price / monthsPerIndex[i]));
+const liteMonthlyPrices = LITE_TARIFFS.map((t, i) =>
+  Math.round(t.price / monthsPerIndex[i]),
+);
+const proMonthlyPrices = PRO_TARIFFS.map((t, i) =>
+  Math.round(t.price / monthsPerIndex[i]),
+);
+const maxMonthlyPrices = MAX_TARIFFS.map((t, i) =>
+  Math.round(t.price / monthsPerIndex[i]),
+);
 
 // Animated monthly prices for display
 const animatedLiteMonthly = ref(liteMonthlyPrices[0]);
@@ -217,7 +236,7 @@ function animateValue(
   targetRef: ReturnType<typeof ref<number>>,
   from: number,
   to: number,
-  duration = 400
+  duration = 400,
 ) {
   const startTime = performance.now();
 
@@ -237,9 +256,21 @@ function animateValue(
 }
 
 watch(selectedPeriodIndex, (newIndex, oldIndex) => {
-  animateValue(animatedLiteMonthly, liteMonthlyPrices[oldIndex], liteMonthlyPrices[newIndex]);
-  animateValue(animatedProMonthly, proMonthlyPrices[oldIndex], proMonthlyPrices[newIndex]);
-  animateValue(animatedMaxMonthly, maxMonthlyPrices[oldIndex], maxMonthlyPrices[newIndex]);
+  animateValue(
+    animatedLiteMonthly,
+    liteMonthlyPrices[oldIndex],
+    liteMonthlyPrices[newIndex],
+  );
+  animateValue(
+    animatedProMonthly,
+    proMonthlyPrices[oldIndex],
+    proMonthlyPrices[newIndex],
+  );
+  animateValue(
+    animatedMaxMonthly,
+    maxMonthlyPrices[oldIndex],
+    maxMonthlyPrices[newIndex],
+  );
 });
 
 function formatPrice(price: number) {
@@ -289,7 +320,7 @@ const tiers = computed(() => {
         `${AUTOBOOKING_SLOTS.LITE} активных автоброней`,
         `${MAX_ACCOUNTS.LITE} WB аккаунт`,
         `${FEEDBACK_QUOTA.LITE} отзывов в месяц`,
-        'AI чат free x5 limit',
+        'AI чат x5 лимиты ',
       ],
     },
     {
@@ -305,7 +336,7 @@ const tiers = computed(() => {
         `${AUTOBOOKING_SLOTS.PRO} активных автоброней`,
         `${MAX_ACCOUNTS.PRO} WB аккаунта`,
         `${FEEDBACK_QUOTA.PRO} отзывов в месяц`,
-        'AI чат lite x5 limit',
+        'AI чат x5 лайт лимиты',
       ],
     },
     {

@@ -13,7 +13,9 @@
 
       <!-- Period Selector -->
       <div class="flex justify-center mb-12">
-        <div class="inline-flex bg-[var(--color-elevated)] rounded-lg p-1 gap-1">
+        <div
+          class="inline-flex bg-[var(--color-elevated)] rounded-lg p-1 gap-1"
+        >
           <button
             v-for="period in periodOptions"
             :key="period.index"
@@ -60,13 +62,34 @@
             <!-- Price -->
             <div>
               <div class="flex items-baseline gap-1">
-                <p class="text-4xl font-bold text-theme">{{ formatPrice(tier.totalPrice) }} ₽</p>
+                <p class="text-4xl font-bold text-theme">
+                  {{ formatPrice(tier.monthlyPrice) }} ₽
+                </p>
+                <div
+                  class="text-sm text-gray-500 dark:text-gray-400 leading-tight"
+                >
+                  <div>в месяц</div>
+                </div>
               </div>
 
-              <!-- Monthly equivalent -->
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {{ formatPrice(tier.monthlyPrice) }} ₽/мес
-              </p>
+              <!-- Savings info -->
+              <div v-if="selectedPeriodIndex > 0" class="mt-1 space-y-0.5">
+                <p class="text-sm text-gray-400 dark:text-gray-500">
+                  <span class="line-through"
+                    >{{ formatPrice(tier.baseMonthly) }} ₽</span
+                  >
+                  <span class="text-green-500 ml-1.5 font-medium"
+                    >−{{
+                      formatPrice(tier.baseMonthly - tier.monthlyPrice)
+                    }}
+                    ₽/мес</span
+                  >
+                </p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                  При оплате {{ periodTotalLabel }} —
+                  {{ formatPrice(tier.totalPrice) }} ₽
+                </p>
+              </div>
             </div>
 
             <p class="text-sm text-gray-600 dark:text-gray-300">
@@ -86,7 +109,9 @@
 
             <!-- Features -->
             <div>
-              <p class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide mb-3">
+              <p
+                class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide mb-3"
+              >
                 Возможности
               </p>
 
@@ -95,8 +120,18 @@
                   v-if="tier.prevTier"
                   class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                 >
-                  <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  <svg
+                    class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span>Всё из {{ tier.prevTier }}</span>
                 </li>
@@ -105,8 +140,18 @@
                   :key="feature"
                   class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                 >
-                  <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  <svg
+                    class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span>{{ feature }}</span>
                 </li>
@@ -137,28 +182,28 @@ const periodOptions = [
 
 const selectedPeriodIndex = ref(0);
 
-const monthsPerPeriod = [1, 3, 6, 12];
+const monthsPerIndex = [1, 3, 6, 12];
 
-// Total tariff prices per period index
-const liteTotals = [790, 1990, 3490, 6070];
-const proTotals = [2490, 5990, 10990, 18890];
-const maxTotals = [6990, 17990, 32990, 56200];
+// Total tariff prices per period index (matching frontend constants)
+const liteTotals = [790, 1990, 3490, 6120];
+const proTotals = [2490, 5990, 10990, 19900];
+const maxTotals = [6990, 17990, 32990, 59900];
 
-// Effective monthly prices (for secondary display)
-const liteMonthly = liteTotals.map((t, i) => Math.round(t / monthsPerPeriod[i]));
-const proMonthly = proTotals.map((t, i) => Math.round(t / monthsPerPeriod[i]));
-const maxMonthly = maxTotals.map((t, i) => Math.round(t / monthsPerPeriod[i]));
+// Effective monthly prices (total / months)
+const liteMonthly = liteTotals.map((t, i) => Math.round(t / monthsPerIndex[i]));
+const proMonthly = proTotals.map((t, i) => Math.round(t / monthsPerIndex[i]));
+const maxMonthly = maxTotals.map((t, i) => Math.round(t / monthsPerIndex[i]));
 
-// Animate total prices (main display)
-const animatedLiteTotal = ref(liteTotals[0]);
-const animatedProTotal = ref(proTotals[0]);
-const animatedMaxTotal = ref(maxTotals[0]);
+// Animate monthly prices (main display)
+const animatedLiteMonthly = ref(liteMonthly[0]);
+const animatedProMonthly = ref(proMonthly[0]);
+const animatedMaxMonthly = ref(maxMonthly[0]);
 
 function animateValue(
   targetRef: ReturnType<typeof ref<number>>,
   from: number,
   to: number,
-  duration = 400
+  duration = 400,
 ) {
   const startTime = performance.now();
 
@@ -178,14 +223,27 @@ function animateValue(
 }
 
 watch(selectedPeriodIndex, (newIndex, oldIndex) => {
-  animateValue(animatedLiteTotal, liteTotals[oldIndex], liteTotals[newIndex]);
-  animateValue(animatedProTotal, proTotals[oldIndex], proTotals[newIndex]);
-  animateValue(animatedMaxTotal, maxTotals[oldIndex], maxTotals[newIndex]);
+  animateValue(
+    animatedLiteMonthly,
+    liteMonthly[oldIndex],
+    liteMonthly[newIndex],
+  );
+  animateValue(animatedProMonthly, proMonthly[oldIndex], proMonthly[newIndex]);
+  animateValue(animatedMaxMonthly, maxMonthly[oldIndex], maxMonthly[newIndex]);
 });
 
 function formatPrice(price: number) {
   return price.toLocaleString('ru-RU');
 }
+
+const periodTotalLabel = computed(() => {
+  const map: Record<number, string> = {
+    0: 'за 1 мес',
+    2: 'за 6 мес',
+    3: 'за 1 год',
+  };
+  return map[selectedPeriodIndex.value] || '';
+});
 
 const tiers = computed(() => {
   const idx = selectedPeriodIndex.value;
@@ -193,22 +251,24 @@ const tiers = computed(() => {
     {
       key: 'LITE',
       label: 'Лайт',
-      totalPrice: animatedLiteTotal.value,
-      monthlyPrice: liteMonthly[idx],
+      monthlyPrice: animatedLiteMonthly.value,
+      baseMonthly: liteMonthly[0],
+      totalPrice: liteTotals[idx],
       description: 'Для начинающих продавцов на Wildberries.',
       prevTier: 'Бесплатного',
       features: [
         '6 активных автоброней',
         '1 WB аккаунт',
         '300 отзывов в месяц',
-        'AI чат free x5 limit',
+        'AI чат x5 лимит ',
       ],
     },
     {
       key: 'PRO',
       label: 'Про',
-      totalPrice: animatedProTotal.value,
-      monthlyPrice: proMonthly[idx],
+      monthlyPrice: animatedProMonthly.value,
+      baseMonthly: proMonthly[0],
+      totalPrice: proTotals[idx],
       description: 'Полный доступ для растущего бизнеса.',
       prevTier: 'Лайта',
       popular: true,
@@ -216,14 +276,15 @@ const tiers = computed(() => {
         '30 активных автоброней',
         '3 WB аккаунта',
         '2.000 отзывов в месяц',
-        'AI чат lite x5 limit',
+        'AI чат x5 лайт лимит',
       ],
     },
     {
       key: 'MAX',
       label: 'Максимум',
-      totalPrice: animatedMaxTotal.value,
-      monthlyPrice: maxMonthly[idx],
+      monthlyPrice: animatedMaxMonthly.value,
+      baseMonthly: maxMonthly[0],
+      totalPrice: maxTotals[idx],
       description: 'Для агентств и крупных продавцов.',
       prevTier: 'Про',
       features: [
