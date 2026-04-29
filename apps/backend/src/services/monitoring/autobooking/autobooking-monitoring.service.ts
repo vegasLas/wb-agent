@@ -47,13 +47,13 @@ export class AutobookingMonitoringService
     for (const user of monitoringUsers) {
       logger.debug(
         `[Input] User ${user.userId}: ${user.autobookings?.length || 0} autobookings, ` +
-          `accounts=${Object.keys(user.accounts).length}, proxy=${user.proxy ? 'yes' : 'no'}`
+          `accounts=${Object.keys(user.accounts).length}, proxy=${user.proxy ? 'yes' : 'no'}`,
       );
       for (const booking of user.autobookings || []) {
         logger.debug(
           `[Input]   Booking ${booking.id}: warehouseId=${booking.warehouseId}, ` +
             `supplyType=${booking.supplyType}, dateType=${booking.dateType}, ` +
-            `maxCoefficient=${booking.maxCoefficient}, status=${booking.status}`
+            `maxCoefficient=${booking.maxCoefficient}, status=${booking.status}`,
         );
       }
     }
@@ -63,7 +63,7 @@ export class AutobookingMonitoringService
     for (const av of availabilities) {
       logger.debug(
         `[Input] Availability: warehouseId=${av.warehouseId}, boxTypeID=${av.boxTypeID}, ` +
-          `dates=${av.availableDates.length}`
+          `dates=${av.availableDates.length}`,
       );
     }
 
@@ -78,11 +78,6 @@ export class AutobookingMonitoringService
       );
 
     if (warehouseDateBookingsMap.size === 0) {
-      logger.warn(
-        'No warehouse-date combinations to process after filtering. ' +
-          `Inputs: ${monitoringUsers.length} users, ${availabilities.length} availabilities. ` +
-          'Check [Input], [Organize], [ProcessUser], [Filter], and [EffectiveDates] logs above for details.'
-      );
       return;
     }
 
@@ -101,9 +96,7 @@ export class AutobookingMonitoringService
     // Step 3: Handle successful bookings (notifications, status updates)
     await this.handleSuccessfulBookings(successfulBookings);
 
-    logger.info(
-      `Done: ${successfulBookings.length} successful bookings`,
-    );
+    logger.info(`Done: ${successfulBookings.length} successful bookings`);
   }
 
   /**
@@ -123,9 +116,7 @@ export class AutobookingMonitoringService
     const sortedKeys = this.getSortedWarehouseDateKeys(
       warehouseDateBookingsMap,
     );
-    logger.debug(
-      `Processing ${sortedKeys.length} warehouse-date combinations`,
-    );
+    logger.debug(`Processing ${sortedKeys.length} warehouse-date combinations`);
 
     await Promise.all(
       sortedKeys.map(async (warehouseDateKey) => {
@@ -162,9 +153,7 @@ export class AutobookingMonitoringService
               bookingTasks,
               successfulBookings,
             );
-            logger.debug(
-              `Group ${groupIndex + 1} completed`,
-            );
+            logger.debug(`Group ${groupIndex + 1} completed`);
           } catch (error) {
             const errorMessage = (error as Error).message;
             if (errorMessage.startsWith('DATE_UNAVAILABLE:')) {
@@ -244,9 +233,7 @@ export class AutobookingMonitoringService
   private async handleSuccessfulBookings(
     successfulBookings: SuccessfulBooking[],
   ): Promise<void> {
-    logger.debug(
-      `Handling ${successfulBookings.length} successful bookings`,
-    );
+    logger.debug(`Handling ${successfulBookings.length} successful bookings`);
 
     for (const booking of successfulBookings) {
       try {
@@ -266,9 +253,7 @@ export class AutobookingMonitoringService
           booking.transitWarehouseName,
         );
 
-        logger.info(
-          `Booking completed: ${booking.booking.id}`,
-        );
+        logger.info(`Booking completed: ${booking.booking.id}`);
       } catch (error) {
         logger.error(
           `Failed to handle successful booking ${booking.booking.id}:`,
@@ -308,9 +293,7 @@ export class AutobookingMonitoringService
     }
 
     if (validTasks.length === 0) {
-      logger.debug(
-        `No valid tasks for ${warehouseDateKey}`,
-      );
+      logger.debug(`No valid tasks for ${warehouseDateKey}`);
       return;
     }
 
@@ -372,9 +355,7 @@ export class AutobookingMonitoringService
           ? 'user blacklisted'
           : 'user already running';
 
-      logger.debug(
-        `Skipping booking ${task.booking.id}: ${reason}`,
-      );
+      logger.debug(`Skipping booking ${task.booking.id}: ${reason}`);
     }
 
     return shouldSkip;
