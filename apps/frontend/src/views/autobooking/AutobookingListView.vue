@@ -48,9 +48,11 @@
           class="w-full"
         />
         <div class="flex justify-between items-center">
-          <AutobookingSlotCounter :used="activeCount" :max="maxSlots" />
+          <AutobookingSlotCounter :used="usedSlots" :max="maxSlots" />
           <Button
             severity="primary leading-none"
+            :disabled="isAtLimit"
+            :title="isAtLimit ? 'Достигнут лимит активных автоброней' : ''"
             @click="openCreateDialog"
           >
             добавить
@@ -113,8 +115,9 @@ const userStore = useUserStore();
 const listStore = useAutobookingListStore();
 const { viewReady } = useViewReady();
 
-const activeCount = computed(() => listStore.statusCounts[AUTOBOOKING_STATUSES.ACTIVE] || 0);
+const usedSlots = computed(() => listStore.usedSlots);
 const maxSlots = computed(() => AUTOBOOKING_SLOTS[userStore.subscriptionTier as 'FREE' | 'LITE' | 'PRO' | 'MAX'] || 1);
+const isAtLimit = computed(() => usedSlots.value >= maxSlots.value);
 
 // Dialog state
 const showCreateDialog = ref(false);

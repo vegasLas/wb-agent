@@ -67,6 +67,13 @@ export const useAutobookingStore = defineStore('autobooking', () => {
         (a) => a.id !== id,
       );
 
+      // Update all status caches
+      Object.keys(listStore.statusCache).forEach((status) => {
+        listStore.statusCache[status] = listStore.statusCache[status].filter(
+          (a) => a.id !== id,
+        );
+      });
+
       // Update status counts
       if (status && listStore.statusCounts[status] > 0) {
         listStore.statusCounts[status]--;
@@ -126,6 +133,19 @@ export const useAutobookingStore = defineStore('autobooking', () => {
         listStore.statusCounts['ARCHIVED'] =
           (listStore.statusCounts['ARCHIVED'] || 0) + 1;
       }
+
+      // Update all status caches
+      Object.keys(listStore.statusCache).forEach((status) => {
+        const cacheIndex = listStore.statusCache[status].findIndex(
+          (a) => a.id === id,
+        );
+        if (cacheIndex !== -1) {
+          listStore.statusCache[status][cacheIndex] = {
+            ...listStore.statusCache[status][cacheIndex],
+            ...updated,
+          };
+        }
+      });
 
       // Show success toast
       const warehouseName = warehouseStore.getWarehouseName(
