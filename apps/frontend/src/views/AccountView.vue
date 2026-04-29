@@ -102,21 +102,26 @@
           </div>
           <div class="flex items-center justify-between">
             <span class="text-sm">AI чат</span>
-            <div class="flex items-center gap-2">
-              <ProgressBar
-                :value="aiChatPercentage"
-                class="w-24 h-2"
-                :class="aiChatPercentage >= 90 ? 'p-progressbar-danger' : aiChatPercentage >= 70 ? 'p-progressbar-warn' : 'p-progressbar-success'"
-              />
-              <span class="text-sm font-medium">{{ aiChatPercentage }}%</span>
+            <div class="flex flex-col items-end gap-1">
+              <div class="flex items-center gap-2">
+                <ProgressBar
+                  :value="aiChatPercentage"
+                  class="w-24 h-2"
+                  :class="aiChatPercentage >= 90 ? 'p-progressbar-danger' : aiChatPercentage >= 70 ? 'p-progressbar-warn' : 'p-progressbar-success'"
+                />
+                <span class="text-sm font-medium">{{ aiChatPercentage }}%</span>
+              </div>
+              <span
+                v-if="aiChatResetDate"
+                class="text-xs text-gray-500 dark:text-gray-400"
+              >
+                Обновление: {{ aiChatResetDate }}
+              </span>
             </div>
           </div>
         </div>
       </template>
     </Card>
-
-    <!-- Supplier API Key -->
-    <SupplierApiKeyComponent />
 
     <!-- MPStats Token -->
     <MpstatsTokenComponent />
@@ -203,7 +208,6 @@ import Tag from 'primevue/tag';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ProgressBar from 'primevue/progressbar';
-import SupplierApiKeyComponent from '../components/store/SupplierApiKeyComponent.vue';
 import MpstatsTokenComponent from '../components/mpstats/MpstatsTokenComponent.vue';
 
 import { useUserStore } from '@/stores/user';
@@ -238,6 +242,12 @@ const aiChatPercentage = computed(() => {
   const max = limits.value?.aiChatBudget?.max ?? 0;
   if (max <= 0) return 0;
   return Math.min(100, Math.round((spent / max) * 100));
+});
+
+const aiChatResetDate = computed(() => {
+  const raw = limits.value?.aiChatBudget?.resetDate;
+  if (!raw) return null;
+  return formatDate(raw);
 });
 
 async function fetchLimits() {
