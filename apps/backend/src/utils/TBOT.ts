@@ -87,7 +87,6 @@ if (env.TELEGRAM_BOT_TOKEN) {
       console.log('[TBOT] No proxy configured');
     }
 
-    console.log('[TBOT] Bot options:', JSON.stringify(botOptions, null, 2));
     bot = new TelegramBot(env.TELEGRAM_BOT_TOKEN, botOptions);
 
     // Handle polling errors
