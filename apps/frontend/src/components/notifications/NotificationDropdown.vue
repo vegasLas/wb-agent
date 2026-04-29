@@ -1,7 +1,10 @@
 <template>
-  <div class="w-[360px] max-w-[90vw] flex flex-col">
+  <div class="w-full sm:w-[360px] sm:max-w-[90vw] flex flex-col">
     <!-- Header -->
-    <div class="flex items-center justify-between px-4 py-3">
+    <div
+      v-if="!isMobile"
+      class="flex items-center justify-between px-4 py-3"
+    >
       <h3 class="text-sm font-semibold text-theme">
         Уведомления
       </h3>
@@ -21,10 +24,29 @@
       </div>
     </div>
 
+    <!-- Mobile header is rendered by Drawer, show only actions here -->
+    <div
+      v-else
+      class="flex items-center justify-end px-4 py-2"
+    >
+      <Button
+        v-if="notificationsStore.hasUnread"
+        label="Прочитать все"
+        severity="primary"
+        text
+        size="small"
+        class="text-xs"
+        @click="handleMarkAllRead"
+      />
+      <span class="text-xs text-muted ml-2">
+        {{ notificationsStore.unreadCount }} новых
+      </span>
+    </div>
+
     <Divider class="!m-0" />
 
     <!-- Content -->
-    <div class="max-h-[400px] overflow-y-auto">
+    <div class="max-h-[60vh] sm:max-h-[400px] overflow-y-auto">
       <div
         v-if="notificationsStore.loading && !notificationsStore.isFetched"
         class="py-8 flex justify-center"
@@ -83,6 +105,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useMediaQuery } from '@vueuse/core';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 import Skeleton from 'primevue/skeleton';
@@ -92,6 +115,7 @@ import NotificationItem from './NotificationItem.vue';
 
 const notificationsStore = useNotificationsStore();
 const router = useRouter();
+const isMobile = useMediaQuery('(max-width: 1023px)');
 
 onMounted(() => {
   notificationsStore.fetchNotifications({ limit: 20 });
