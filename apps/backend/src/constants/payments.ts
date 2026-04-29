@@ -2,7 +2,8 @@
  * Payment constants - Tiered subscription model (Lite / Pro / Max)
  */
 
-export type SubscriptionTier = 'FREE' | 'LITE' | 'PRO' | 'MAX';
+export type SubscriptionTier = 'LITE' | 'PRO' | 'MAX';
+export type UserTier = 'FREE' | SubscriptionTier;
 
 export interface SubscriptionTariff {
   id: string;
@@ -45,14 +46,14 @@ export const ALL_SUBSCRIPTION_TARIFFS = [
 ];
 
 // ─── Slot limits per tier ───
-export const AUTOBOOKING_SLOTS: Record<SubscriptionTier, number> = {
+export const AUTOBOOKING_SLOTS: Record<UserTier, number> = {
   FREE: 1,
   LITE: 6,
   PRO: 30,
   MAX: 90,
 };
 
-export const RESCHEDULE_SLOTS: Record<SubscriptionTier, number> = {
+export const RESCHEDULE_SLOTS: Record<UserTier, number> = {
   FREE: 1,
   LITE: 6,
   PRO: 30,
@@ -60,7 +61,7 @@ export const RESCHEDULE_SLOTS: Record<SubscriptionTier, number> = {
 };
 
 // ─── Account limits per tier ───
-export const MAX_ACCOUNTS: Record<SubscriptionTier, number> = {
+export const MAX_ACCOUNTS: Record<UserTier, number> = {
   FREE: 1,
   LITE: 1,
   PRO: 3,
@@ -68,7 +69,7 @@ export const MAX_ACCOUNTS: Record<SubscriptionTier, number> = {
 };
 
 // ─── Feedback reply quotas per tier ───
-export const FEEDBACK_QUOTA: Record<SubscriptionTier, number> = {
+export const FEEDBACK_QUOTA: Record<UserTier, number> = {
   FREE: 10,
   LITE: 200,
   PRO: 2000,
@@ -76,7 +77,7 @@ export const FEEDBACK_QUOTA: Record<SubscriptionTier, number> = {
 };
 
 // ─── AI chat token budget per tier (in USD) ───
-export const AI_CHAT_BUDGET_USD: Record<SubscriptionTier, number> = {
+export const AI_CHAT_BUDGET_USD: Record<UserTier, number> = {
   FREE: 0.197,
   LITE: 1.18,
   PRO: 3.52,
