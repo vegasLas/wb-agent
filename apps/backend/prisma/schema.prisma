@@ -18,7 +18,6 @@ enum Permission {
 }
 
 enum SubscriptionTier {
-  FREE
   LITE
   PRO
   MAX
@@ -340,7 +339,7 @@ model Payment {
   status         String
   paymentId      String           @unique
   tariffId       String
-  tier           SubscriptionTier @default(FREE)
+  tier           SubscriptionTier?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   idempotencyKey String           @unique

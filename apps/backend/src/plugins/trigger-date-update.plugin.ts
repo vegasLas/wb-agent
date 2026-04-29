@@ -16,7 +16,6 @@ import { closeApiService } from '@/services/external/wb/close-api.service';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('TriggerDateUpdate');
-import { env } from '@/config/env';
 
 // Processing state flags to prevent concurrent executions
 let isCleaning = false;
@@ -49,27 +48,18 @@ function scheduleTriggerCleanupJob(): void {
   // Note: This complements the job in monitoring-cleanup.ts, but keeps the same time as deprecated project
   const job = scheduleJob('18 21 * * *', async () => {
     if (isCleaning) {
-      logger.warn(
-        'Cleanup already in progress, skipping...',
-      );
+      logger.warn('Cleanup already in progress, skipping...');
       return;
     }
 
     isCleaning = true;
-    logger.debug(
-      'Running midnight (Moscow time) trigger date update...',
-    );
+    logger.debug('Running midnight (Moscow time) trigger date update...');
 
     try {
       await triggerDateManagerService.cleanAllTriggers();
-      logger.debug(
-        'Trigger cleanup completed - processed all triggers',
-      );
+      logger.debug('Trigger cleanup completed - processed all triggers');
     } catch (error) {
-      logger.error(
-        'Error in midnight trigger update:',
-        error,
-      );
+      logger.error('Error in midnight trigger update:', error);
     } finally {
       isCleaning = false;
     }
@@ -89,9 +79,7 @@ function scheduleTriggerCleanupJob(): void {
  * This is the core monitoring flow from the deprecated project
  */
 function scheduleDynamicMonitoring(): void {
-  logger.debug(
-    'Starting dynamic interval monitoring...',
-  );
+  logger.debug('Starting dynamic interval monitoring...');
 
   const scheduleNextMonitoring = () => {
     // Clear any existing timeout
@@ -122,10 +110,7 @@ function scheduleDynamicMonitoring(): void {
         currentIntervalMs = freeWarehouseService.getOptimalInterval();
         // Routine monitoring cycle - debug only
       } catch (error) {
-        logger.error(
-          'Error in warehouse monitoring:',
-          error,
-        );
+        logger.error('Error in warehouse monitoring:', error);
         // On error, use a longer interval to prevent hammering
         currentIntervalMs = 5000;
       } finally {
@@ -150,9 +135,7 @@ function scheduleDynamicMonitoring(): void {
  * Called once during server startup from main.ts
  */
 export function setupTriggerDateUpdatePlugin(): void {
-  logger.debug(
-    'Setting up trigger date update plugin...',
-  );
+  logger.debug('Setting up trigger date update plugin...');
 
   // 1. Schedule the midnight cleanup job (from deprecated plugin)
   scheduleTriggerCleanupJob();

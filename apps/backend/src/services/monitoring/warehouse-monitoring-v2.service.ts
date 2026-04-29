@@ -437,7 +437,7 @@ export class WarehouseMonitoringV2Service {
       proxy: envInfo.proxy,
       userAgent: envInfo.userAgent,
       chatId: user.telegram?.chatId || undefined,
-      subscriptionTier: (user.subscriptions?.[0]?.tier ?? 'FREE') as SubscriptionTier,
+      subscriptionTier: (user.subscriptions?.[0]?.tier ?? 'FREE') as UserTier,
       autobookings,
       supplyTriggers,
       reschedules,

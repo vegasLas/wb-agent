@@ -12,7 +12,7 @@ import { prisma } from '@/config/database';
 import { buildContextMessage } from './context-builder.service';
 import { aiUsageTrackingService } from './ai-usage-tracking.service';
 import { filterToolsByPermissions } from './ai-tool-permissions';
-import { AI_CHAT_BUDGET_USD } from '@/constants/payments';
+import { AI_CHAT_BUDGET_USD, UserTier } from '@/constants/payments';
 import { ApiError } from '@/utils/errors';
 import { autobookingTools } from './tools/autobooking.tools';
 import { triggerTools } from './tools/trigger.tools';
@@ -51,7 +51,7 @@ function getMessageText(message: UIMessage): string {
 export class AIChatService {
   private async checkChatBudget(
     userId: number,
-    tier: 'FREE' | 'LITE' | 'PRO' | 'MAX',
+    tier: UserTier,
   ): Promise<{ allowed: boolean; spent: number; max: number }> {
     const max = AI_CHAT_BUDGET_USD[tier];
     const now = new Date();
@@ -83,7 +83,7 @@ export class AIChatService {
       where: { id: userId },
       include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
-    const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
+    const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as UserTier;
     const budget = await this.checkChatBudget(userId, tier);
 
     if (!budget.allowed) {

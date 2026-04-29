@@ -375,7 +375,7 @@ export class AutobookingService {
     this.validateBusinessRules(updateData, data);
 
     // Check slot limits on status activation or on expanding custom dates
-    await this.checkUpdateSlotLimits(userId, existing, updateData, data);
+    await this.checkUpdateSlotLimits(userId, existing, updateData);
 
     // Perform update
     return await prisma.autobooking.update({

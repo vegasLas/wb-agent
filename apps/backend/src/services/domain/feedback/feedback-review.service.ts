@@ -25,7 +25,7 @@ function sleep(ms: number): Promise<void> {
 import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
 import type { FeedbackRule } from '@prisma/client';
-import { FEEDBACK_QUOTA } from '@/constants/payments';
+import { FEEDBACK_QUOTA, UserTier } from '@/constants/payments';
 
 export interface ProcessResult {
   processed: number;
@@ -66,7 +66,7 @@ export class FeedbackReviewService {
    */
   private async checkFeedbackQuota(
     userId: number,
-    tier: 'FREE' | 'LITE' | 'PRO' | 'MAX',
+    tier: UserTier,
   ): Promise<{ allowed: boolean; used: number; max: number }> {
     const max = FEEDBACK_QUOTA[tier];
     if (max === Infinity) {
@@ -103,7 +103,7 @@ export class FeedbackReviewService {
       where: { id: userId },
       include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
-    const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
+    const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as UserTier;
 
     const quota = await this.checkFeedbackQuota(userId, tier);
     if (!quota.allowed) {
@@ -332,7 +332,7 @@ export class FeedbackReviewService {
       where: { id: userId },
       include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
-    const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as 'FREE' | 'LITE' | 'PRO' | 'MAX';
+    const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as UserTier;
 
     const quota = await this.checkFeedbackQuota(userId, tier);
     if (!quota.allowed) {

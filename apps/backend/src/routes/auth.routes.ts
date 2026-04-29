@@ -27,7 +27,6 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip || 'unknown',
 });
 
 const strictAuthLimiter = rateLimit({
@@ -40,7 +39,6 @@ const strictAuthLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip || 'unknown',
 });
 
 // POST /api/v1/auth/register - Register with email (public)

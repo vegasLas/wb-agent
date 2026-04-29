@@ -205,7 +205,6 @@ export async function downgradeExpiredUsers(): Promise<number> {
   // (maxAccounts > 1 indicates they still have paid limits)
   const expiredSubs = await prisma.userSubscription.findMany({
     where: {
-      tier: { not: 'FREE' },
       endedAt: { lt: now },
       user: {
         maxAccounts: { gt: 1 },

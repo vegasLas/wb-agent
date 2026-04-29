@@ -8,9 +8,10 @@
 
 import { prisma } from '@/config/database';
 import { SubscriptionTier } from '@prisma/client';
+import { UserTier } from '@/constants/payments';
 
 export interface SubscriptionInfo {
-  tier: SubscriptionTier;
+  tier: UserTier;
   endedAt: Date | null;
   isFree: boolean;
   isActive: boolean;
@@ -54,7 +55,7 @@ export async function getSubscriptionInfo(userId: number): Promise<SubscriptionI
  */
 export async function hasActivePaidSubscription(userId: number): Promise<boolean> {
   const sub = await getCurrentSubscription(userId);
-  if (!sub || sub.tier === 'FREE') return false;
+  if (!sub) return false;
   return !!sub.endedAt && sub.endedAt > new Date();
 }
 
@@ -62,7 +63,7 @@ export async function hasActivePaidSubscription(userId: number): Promise<boolean
  * Get the current tier for a user.
  * Returns 'FREE' if no active paid subscription exists.
  */
-export async function getCurrentTier(userId: number): Promise<SubscriptionTier> {
+export async function getCurrentTier(userId: number): Promise<UserTier> {
   const sub = await getCurrentSubscription(userId);
   if (!sub) return 'FREE';
   if (sub.endedAt && sub.endedAt <= new Date()) return 'FREE';

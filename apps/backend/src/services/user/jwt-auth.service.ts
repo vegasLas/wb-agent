@@ -7,8 +7,6 @@ import { identityService } from '@/services/auth/identity.service';
 import { ApiError } from '@/utils/errors';
 import { createLogger } from '@/utils/logger';
 
-import { AuthProvider } from '@prisma/client';
-
 const logger = createLogger('JWTAuth');
 
 export interface JWTPayload {
@@ -42,7 +40,9 @@ export class JWTAuthService {
     this.BCRYPT_ROUNDS = 10;
 
     if (!this.JWT_SECRET || this.JWT_SECRET.length < 32) {
-      logger.warn('JWT_SECRET is not set or is too short (< 32 chars). Browser auth will not work properly.');
+      logger.warn(
+        'JWT_SECRET is not set or is too short (< 32 chars). Browser auth will not work properly.',
+      );
     }
   }
 
@@ -70,7 +70,10 @@ export class JWTAuthService {
   /**
    * Email login with email + password
    */
-  async emailLogin(email: string, password: string): Promise<BrowserAuthResult> {
+  async emailLogin(
+    email: string,
+    password: string,
+  ): Promise<BrowserAuthResult> {
     if (!this.isConfigured()) {
       throw ApiError.internal('JWT authentication is not configured');
     }
@@ -89,7 +92,10 @@ export class JWTAuthService {
       );
     }
 
-    const isValid = await this.comparePassword(password, found.identity.passwordHash);
+    const isValid = await this.comparePassword(
+      password,
+      found.identity.passwordHash,
+    );
     if (!isValid) {
       throw ApiError.unauthorized('Неверные учетные данные');
     }
@@ -152,7 +158,10 @@ export class JWTAuthService {
    */
   async generateRefreshToken(userId: number): Promise<string> {
     const plainToken = crypto.randomBytes(64).toString('base64url');
-    const tokenHash = crypto.createHash('sha256').update(plainToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(plainToken)
+      .digest('hex');
 
     const expiresInMs = this.parseExpiresInMs(this.JWT_REFRESH_EXPIRES_IN);
 
@@ -170,8 +179,13 @@ export class JWTAuthService {
   /**
    * Verify a refresh token by checking its hash in the database
    */
-  async verifyRefreshToken(plainToken: string): Promise<{ userId: number; tokenId: string }> {
-    const tokenHash = crypto.createHash('sha256').update(plainToken).digest('hex');
+  async verifyRefreshToken(
+    plainToken: string,
+  ): Promise<{ userId: number; tokenId: string }> {
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(plainToken)
+      .digest('hex');
 
     const tokenRecord = await prisma.refreshToken.findUnique({
       where: { tokenHash },
@@ -182,7 +196,10 @@ export class JWTAuthService {
     }
 
     if (tokenRecord.revokedAt) {
-      throw ApiError.unauthorized('Refresh token has been revoked', 'TOKEN_REVOKED');
+      throw ApiError.unauthorized(
+        'Refresh token has been revoked',
+        'TOKEN_REVOKED',
+      );
     }
 
     if (new Date(tokenRecord.expiresAt) <= new Date()) {
@@ -195,11 +212,17 @@ export class JWTAuthService {
   /**
    * Rotate refresh token: revoke old one and generate a new one
    */
-  async rotateRefreshToken(oldPlainToken: string, userId: number): Promise<string> {
+  async rotateRefreshToken(
+    oldPlainToken: string,
+    userId: number,
+  ): Promise<string> {
     const { tokenId } = await this.verifyRefreshToken(oldPlainToken);
 
     const newPlainToken = crypto.randomBytes(64).toString('base64url');
-    const newTokenHash = crypto.createHash('sha256').update(newPlainToken).digest('hex');
+    const newTokenHash = crypto
+      .createHash('sha256')
+      .update(newPlainToken)
+      .digest('hex');
 
     const expiresInMs = this.parseExpiresInMs(this.JWT_REFRESH_EXPIRES_IN);
 
@@ -225,7 +248,10 @@ export class JWTAuthService {
    * Revoke a single refresh token
    */
   async revokeRefreshToken(plainToken: string): Promise<void> {
-    const tokenHash = crypto.createHash('sha256').update(plainToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(plainToken)
+      .digest('hex');
 
     await prisma.refreshToken.updateMany({
       where: { tokenHash },
