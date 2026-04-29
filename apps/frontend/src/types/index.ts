@@ -89,8 +89,11 @@ export interface SupplierInfo {
 }
 
 export interface ApiKeyStatus {
-  valid: boolean;
-  message?: string;
+  success: boolean;
+  hasApiKey: boolean;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // -----------------------------------------------------------------------------

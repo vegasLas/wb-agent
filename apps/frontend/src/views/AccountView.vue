@@ -123,6 +123,9 @@
       </template>
     </Card>
 
+    <!-- Supplier API Key -->
+    <SupplierApiKeyComponent />
+
     <!-- MPStats Token -->
     <MpstatsTokenComponent />
 
@@ -209,6 +212,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ProgressBar from 'primevue/progressbar';
 import MpstatsTokenComponent from '../components/mpstats/MpstatsTokenComponent.vue';
+import SupplierApiKeyComponent from '../components/suppliers/SupplierApiKeyComponent.vue';
 
 import { useUserStore } from '@/stores/user';
 import { useAccountSupplierModalStore } from '@/stores/ui';
