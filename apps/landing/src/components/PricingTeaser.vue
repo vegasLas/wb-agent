@@ -1,78 +1,121 @@
 <template>
   <section id="pricing" class="relative py-24 md:py-32 px-4">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto">
       <div ref="headerRef" class="text-center mb-16 md:mb-20">
         <h2 class="text-3xl md:text-5xl font-bold mb-4">
           Прозрачные <span class="text-gradient">тарифы</span>
         </h2>
-        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+        <p class="text-secondary text-lg max-w-2xl mx-auto">
           Выберите подходящий план и начните автоматизировать свой бизнес на
           Wildberries
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Period Selector -->
+      <div class="flex justify-center mb-12">
+        <div class="inline-flex bg-[var(--color-elevated)] rounded-lg p-1 gap-1">
+          <button
+            v-for="period in periodOptions"
+            :key="period.index"
+            :class="[
+              'px-4 py-2 text-sm font-medium rounded-md transition-all',
+              selectedPeriodIndex === period.index
+                ? 'bg-[var(--color-card)] text-[var(--color-text)] shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--color-text)]',
+            ]"
+            @click="selectedPeriodIndex = period.index"
+          >
+            {{ period.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Pricing Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
-          v-for="plan in plans"
-          :key="plan.name"
+          v-for="tier in tiers"
+          :key="tier.key"
           ref="planRefs"
-          class="relative p-6 md:p-8 rounded-3xl border transition-all duration-500"
+          class="rounded-2xl border transition-all duration-300 overflow-hidden hover:shadow-lg"
           :class="[
-            plan.popular
-              ? 'bg-gradient-to-b from-purple/20 to-deep-card border-purple/50 glow-purple'
-              : 'bg-deep-card border-deep-border hover:border-purple/30',
+            tier.popular
+              ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
+              : 'bg-[var(--color-card)] border-[var(--color-border)]',
           ]"
         >
-          <div
-            v-if="plan.popular"
-            class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-purple text-white text-sm font-medium"
-          >
-            Популярный
-          </div>
+          <div class="p-6 space-y-4">
+            <!-- Title -->
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-theme">{{ tier.label }}</h3>
+              <div class="flex gap-1">
+                <span
+                  v-if="tier.popular"
+                  class="px-2 py-0.5 rounded-md bg-[var(--color-elevated)] text-[var(--text-secondary)] text-xs font-medium border border-[var(--color-border)]"
+                >
+                  Popular
+                </span>
+              </div>
+            </div>
 
-          <h3 class="text-xl font-semibold text-white mb-2">{{ plan.name }}</h3>
-          <p class="text-gray-400 text-sm mb-6">{{ plan.description }}</p>
+            <!-- Price -->
+            <div class="flex items-baseline gap-1">
+              <p class="text-4xl font-bold text-theme">{{ formatPrice(tier.price) }} ₽</p>
+              <div class="text-sm text-gray-500 dark:text-gray-400 leading-tight">
+                <div>в месяц</div>
+              </div>
+            </div>
 
-          <div class="mb-6">
-            <span class="text-4xl font-bold text-white">{{ plan.price }}</span>
-            <span class="text-gray-400"> ₽</span>
-            <span class="text-gray-500 text-sm"> / мес</span>
-          </div>
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+              {{ tier.description }}
+            </p>
 
-          <ul class="space-y-3 mb-8">
-            <li
-              v-for="feature in plan.features"
-              :key="feature"
-              class="flex items-start gap-3"
+            <!-- CTA Button -->
+            <a
+              :href="`https://app.wboi.ru/store?plan=${tier.key}`"
+              class="block w-full text-center py-2.5 rounded-xl font-medium transition-all duration-200"
+              :class="[
+                tier.key === 'FREE'
+                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                  : 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-white',
+              ]"
+              :aria-disabled="tier.key === 'FREE'"
+              @click.prevent="tier.key === 'FREE' ? null : null"
             >
-              <svg
-                class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              <span class="text-gray-300 text-sm">{{ feature }}</span>
-            </li>
-          </ul>
+              {{ tier.key === 'FREE' ? 'Текущий план' : 'Выбрать' }}
+            </a>
 
-          <a
-            :href="`https://app.wboi.ru/store?plan=${plan.key}`"
-            class="block w-full text-center py-3 rounded-2xl font-semibold transition-all duration-300"
-            :class="[
-              plan.popular
-                ? 'bg-gradient-purple text-white hover:shadow-lg hover:shadow-purple/30'
-                : 'bg-deep-elevated text-white border border-deep-border hover:border-purple/40',
-            ]"
-          >
-            Выбрать
-          </a>
+            <!-- Divider -->
+            <div class="border-t border-[var(--color-border)]"></div>
+
+            <!-- Features -->
+            <div>
+              <p class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide mb-3">
+                Возможности
+              </p>
+
+              <ul class="space-y-2">
+                <li
+                  v-if="tier.prevTier"
+                  class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                >
+                  <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Всё из {{ tier.prevTier }}</span>
+                </li>
+                <li
+                  v-for="feature in tier.features"
+                  :key="feature"
+                  class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                >
+                  <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>{{ feature }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -80,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -89,53 +132,98 @@ gsap.registerPlugin(ScrollTrigger);
 const headerRef = ref<HTMLElement | null>(null);
 const planRefs = ref<HTMLElement[]>([]);
 
-const plans = [
+const periodOptions = [
+  { label: '1 мес', index: 0 },
+  { label: '6 мес', index: 2 },
+  { label: '1 год', index: 3 },
+];
+
+const selectedPeriodIndex = ref(0);
+
+// Tariff prices per period index
+const litePrices = [790, 1990, 3490, 6990];
+const proPrices = [2490, 5990, 10990, 19900];
+const maxPrices = [6990, 17990, 32990, 59900];
+
+const animatedLitePrice = ref(litePrices[0]);
+const animatedProPrice = ref(proPrices[0]);
+const animatedMaxPrice = ref(maxPrices[0]);
+
+function animateValue(
+  targetRef: ReturnType<typeof ref<number>>,
+  from: number,
+  to: number,
+  duration = 400
+) {
+  const startTime = performance.now();
+
+  function tick(now: number) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // easeOutQuart
+    const eased = 1 - Math.pow(1 - progress, 4);
+    targetRef.value = Math.round(from + (to - from) * eased);
+
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+watch(selectedPeriodIndex, (newIndex, oldIndex) => {
+  animateValue(animatedLitePrice, litePrices[oldIndex], litePrices[newIndex]);
+  animateValue(animatedProPrice, proPrices[oldIndex], proPrices[newIndex]);
+  animateValue(animatedMaxPrice, maxPrices[oldIndex], maxPrices[newIndex]);
+});
+
+function formatPrice(price: number) {
+  return price.toLocaleString('ru-RU');
+}
+
+const tiers = computed(() => [
   {
-    key: 'lite',
-    name: 'Lite',
-    description: 'Для начинающих продавцов',
-    price: '790',
-    popular: false,
+    key: 'LITE',
+    label: 'Лайт',
+    price: animatedLitePrice.value,
+    description: 'Для начинающих продавцов на Wildberries.',
+    prevTier: 'Бесплатного',
     features: [
-      '2 активные брони',
+      '6 активных автоброней',
       '1 WB аккаунт',
-      'AI чат: 50₽/мес',
-      '100 ответов на отзывы/мес',
-      'Триггеры, тарифы, отчеты',
-      'MPStats Basic',
+      '300 отзывов в месяц',
+      'AI чат free x5 limit',
     ],
   },
   {
-    key: 'pro',
-    name: 'Pro',
-    description: 'Оптимальный выбор',
-    price: '2.490',
+    key: 'PRO',
+    label: 'Про',
+    price: animatedProPrice.value,
+    description: 'Полный доступ для растущего бизнеса.',
+    prevTier: 'Лайта',
     popular: true,
     features: [
-      '10 активных автоброней',
+      '30 активных автоброней',
       '3 WB аккаунта',
-      'AI чат: 150₽/мес',
-      '1.000 ответов на отзывы/мес',
-      'Триггеры, тарифы, отчеты',
-      'MPStats Advanced',
+      '2.000 отзывов в месяц',
+      'AI чат lite x5 limit',
     ],
   },
   {
-    key: 'max',
-    name: 'Max',
-    description: 'Для крупного бизнеса',
-    price: '6.990',
-    popular: false,
+    key: 'MAX',
+    label: 'Максимум',
+    price: animatedMaxPrice.value,
+    description: 'Для агентств и крупных продавцов.',
+    prevTier: 'Про',
     features: [
-      '30 активных автоброней',
-      'Неограниченные аккаунты',
-      'AI чат: 500₽/мес',
-      'Неограниченные ответы',
-      'Триггеры, тарифы, отчеты',
-      'MPStats Advanced',
+      '90 активных автоброней',
+      '∞ WB аккаунтов',
+      '∞ отзывов',
+      'AI чат lite x25 limit',
     ],
   },
-];
+]);
 
 onMounted(() => {
   gsap.from(headerRef.value, {

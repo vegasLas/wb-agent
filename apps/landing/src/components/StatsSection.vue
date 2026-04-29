@@ -14,7 +14,7 @@
           <div class="text-3xl md:text-5xl font-bold text-gradient mb-2">
             <AnimatedCounter :target="stat.value" :suffix="stat.suffix" />
           </div>
-          <p class="text-gray-400 text-sm md:text-base">{{ stat.label }}</p>
+          <p class="text-secondary text-sm md:text-base">{{ stat.label }}</p>
         </div>
       </div>
     </div>

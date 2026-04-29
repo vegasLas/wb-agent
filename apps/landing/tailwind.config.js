@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
@@ -8,10 +9,10 @@ export default {
     extend: {
       colors: {
         deep: {
-          bg: '#0A0A0F',
-          card: '#15151C',
-          elevated: '#1E1E28',
-          border: '#2A2A35',
+          bg: 'var(--color-bg)',
+          card: 'var(--color-card)',
+          elevated: 'var(--color-elevated)',
+          border: 'var(--color-border)',
         },
         purple: {
           DEFAULT: '#6A39F4',

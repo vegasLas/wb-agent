@@ -5,7 +5,7 @@
         <h2 class="text-3xl md:text-5xl font-bold mb-4">
           Как это <span class="text-gradient">работает</span>
         </h2>
-        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+        <p class="text-secondary text-lg max-w-2xl mx-auto">
           Начните использовать WBOI за три простых шага
         </p>
       </div>
@@ -23,8 +23,8 @@
             {{ index + 1 }}
           </div>
 
-          <h3 class="text-xl font-semibold text-white mb-3">{{ step.title }}</h3>
-          <p class="text-gray-400 leading-relaxed">{{ step.description }}</p>
+          <h3 class="text-xl font-semibold text-theme mb-3">{{ step.title }}</h3>
+          <p class="text-secondary leading-relaxed">{{ step.description }}</p>
 
           <!-- Connector line (hidden on mobile) -->
           <div

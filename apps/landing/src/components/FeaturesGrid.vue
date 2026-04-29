@@ -5,7 +5,7 @@
         <h2 class="text-3xl md:text-5xl font-bold mb-4">
           Все инструменты для <span class="text-gradient">роста продаж</span>
         </h2>
-        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+        <p class="text-secondary text-lg max-w-2xl mx-auto">
           Полный набор функций, которые нужны каждому селлеру на Wildberries
         </p>
       </div>
@@ -24,8 +24,8 @@
             <component :is="feature.icon" class="w-6 h-6 text-white" />
           </div>
 
-          <h3 class="text-xl font-semibold text-white mb-3">{{ feature.title }}</h3>
-          <p class="text-gray-400 leading-relaxed">{{ feature.description }}</p>
+          <h3 class="text-xl font-semibold text-theme mb-3">{{ feature.title }}</h3>
+          <p class="text-secondary leading-relaxed">{{ feature.description }}</p>
 
           <div
             class="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -55,7 +55,7 @@ const IconCalendar = () => h('svg', { fill: 'none', stroke: 'currentColor', view
 ]);
 
 const IconArrows = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', class: 'w-6 h-6' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' })
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4 4' })
 ]);
 
 const IconClock = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', class: 'w-6 h-6' }, [
