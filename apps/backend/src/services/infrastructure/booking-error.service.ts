@@ -1,6 +1,7 @@
 import { prisma } from '@/config/database';
 import type { Autobooking, AutobookingReschedule } from '@prisma/client';
 import { notificationDispatcher } from '@/services/monitoring/shared/notification-dispatcher.service';
+import { TBOT } from '@/utils/TBOT';
 
 /**
  * Error configuration with status and message
