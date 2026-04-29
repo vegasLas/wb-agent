@@ -36,8 +36,8 @@ const hasSignaledReady = ref(false);
 
 // Function to check if current tab's data is ready
 function isCurrentTabDataReady(): boolean {
-  if (!userStore.selectedAccount || !userStore.hasValidSupplier || (!userStore.subscriptionActive && !userStore.isFree)) {
-    // If user doesn't have valid account/supplier/subscription, we're "ready" (to show empty state)
+  if (!userStore.selectedAccount || !userStore.hasValidSupplier) {
+    // If user doesn't have valid account/supplier, we're "ready" (to show empty state)
     return true;
   }
 

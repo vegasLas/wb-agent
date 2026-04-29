@@ -1,14 +1,6 @@
 <template>
   <div class="report-main">
-    <!-- Display content only if user has selected account, valid supplier and subscription is active -->
-    <template
-      v-if="
-        userStore.user.selectedAccountId &&
-        userStore.hasValidSupplier &&
-        (userStore.subscriptionActive || userStore.isFree)
-      "
-    >
-      <!-- Date Range Selection -->
+    <!-- Date Range Selection -->
       <Card class="mb-6">
         <template #title>
           <h3 class="text-lg font-semibold">Отчет продаж за период</h3>
@@ -142,8 +134,7 @@
       </Card>
 
       <!-- Report Main with Tabs -->
-      <ReportMain />
-    </template>
+    <ReportMain />
   </div>
 </template>
 
