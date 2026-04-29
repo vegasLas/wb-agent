@@ -58,11 +58,15 @@
             </div>
 
             <!-- Price -->
-            <div class="flex items-baseline gap-1">
-              <p class="text-4xl font-bold text-theme">{{ formatPrice(tier.price) }} ₽</p>
-              <div class="text-sm text-gray-500 dark:text-gray-400 leading-tight">
-                <div>в месяц</div>
+            <div>
+              <div class="flex items-baseline gap-1">
+                <p class="text-4xl font-bold text-theme">{{ formatPrice(tier.totalPrice) }} ₽</p>
               </div>
+
+              <!-- Monthly equivalent -->
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {{ formatPrice(tier.monthlyPrice) }} ₽/мес
+              </p>
             </div>
 
             <p class="text-sm text-gray-600 dark:text-gray-300">
@@ -72,16 +76,9 @@
             <!-- CTA Button -->
             <a
               :href="`https://app.wboi.ru/store?plan=${tier.key}`"
-              class="block w-full text-center py-2.5 rounded-xl font-medium transition-all duration-200"
-              :class="[
-                tier.key === 'FREE'
-                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-white',
-              ]"
-              :aria-disabled="tier.key === 'FREE'"
-              @click.prevent="tier.key === 'FREE' ? null : null"
+              class="block w-full text-center py-2.5 rounded-xl font-medium transition-all duration-200 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-white"
             >
-              {{ tier.key === 'FREE' ? 'Текущий план' : 'Выбрать' }}
+              Попробовать
             </a>
 
             <!-- Divider -->
@@ -140,14 +137,22 @@ const periodOptions = [
 
 const selectedPeriodIndex = ref(0);
 
-// Tariff prices per period index
-const litePrices = [790, 1990, 3490, 6990];
-const proPrices = [2490, 5990, 10990, 19900];
-const maxPrices = [6990, 17990, 32990, 59900];
+const monthsPerPeriod = [1, 3, 6, 12];
 
-const animatedLitePrice = ref(litePrices[0]);
-const animatedProPrice = ref(proPrices[0]);
-const animatedMaxPrice = ref(maxPrices[0]);
+// Total tariff prices per period index
+const liteTotals = [790, 1990, 3490, 6070];
+const proTotals = [2490, 5990, 10990, 18890];
+const maxTotals = [6990, 17990, 32990, 56200];
+
+// Effective monthly prices (for secondary display)
+const liteMonthly = liteTotals.map((t, i) => Math.round(t / monthsPerPeriod[i]));
+const proMonthly = proTotals.map((t, i) => Math.round(t / monthsPerPeriod[i]));
+const maxMonthly = maxTotals.map((t, i) => Math.round(t / monthsPerPeriod[i]));
+
+// Animate total prices (main display)
+const animatedLiteTotal = ref(liteTotals[0]);
+const animatedProTotal = ref(proTotals[0]);
+const animatedMaxTotal = ref(maxTotals[0]);
 
 function animateValue(
   targetRef: ReturnType<typeof ref<number>>,
@@ -173,57 +178,63 @@ function animateValue(
 }
 
 watch(selectedPeriodIndex, (newIndex, oldIndex) => {
-  animateValue(animatedLitePrice, litePrices[oldIndex], litePrices[newIndex]);
-  animateValue(animatedProPrice, proPrices[oldIndex], proPrices[newIndex]);
-  animateValue(animatedMaxPrice, maxPrices[oldIndex], maxPrices[newIndex]);
+  animateValue(animatedLiteTotal, liteTotals[oldIndex], liteTotals[newIndex]);
+  animateValue(animatedProTotal, proTotals[oldIndex], proTotals[newIndex]);
+  animateValue(animatedMaxTotal, maxTotals[oldIndex], maxTotals[newIndex]);
 });
 
 function formatPrice(price: number) {
   return price.toLocaleString('ru-RU');
 }
 
-const tiers = computed(() => [
-  {
-    key: 'LITE',
-    label: 'Лайт',
-    price: animatedLitePrice.value,
-    description: 'Для начинающих продавцов на Wildberries.',
-    prevTier: 'Бесплатного',
-    features: [
-      '6 активных автоброней',
-      '1 WB аккаунт',
-      '300 отзывов в месяц',
-      'AI чат free x5 limit',
-    ],
-  },
-  {
-    key: 'PRO',
-    label: 'Про',
-    price: animatedProPrice.value,
-    description: 'Полный доступ для растущего бизнеса.',
-    prevTier: 'Лайта',
-    popular: true,
-    features: [
-      '30 активных автоброней',
-      '3 WB аккаунта',
-      '2.000 отзывов в месяц',
-      'AI чат lite x5 limit',
-    ],
-  },
-  {
-    key: 'MAX',
-    label: 'Максимум',
-    price: animatedMaxPrice.value,
-    description: 'Для агентств и крупных продавцов.',
-    prevTier: 'Про',
-    features: [
-      '90 активных автоброней',
-      '∞ WB аккаунтов',
-      '∞ отзывов',
-      'AI чат lite x25 limit',
-    ],
-  },
-]);
+const tiers = computed(() => {
+  const idx = selectedPeriodIndex.value;
+  return [
+    {
+      key: 'LITE',
+      label: 'Лайт',
+      totalPrice: animatedLiteTotal.value,
+      monthlyPrice: liteMonthly[idx],
+      description: 'Для начинающих продавцов на Wildberries.',
+      prevTier: 'Бесплатного',
+      features: [
+        '6 активных автоброней',
+        '1 WB аккаунт',
+        '300 отзывов в месяц',
+        'AI чат free x5 limit',
+      ],
+    },
+    {
+      key: 'PRO',
+      label: 'Про',
+      totalPrice: animatedProTotal.value,
+      monthlyPrice: proMonthly[idx],
+      description: 'Полный доступ для растущего бизнеса.',
+      prevTier: 'Лайта',
+      popular: true,
+      features: [
+        '30 активных автоброней',
+        '3 WB аккаунта',
+        '2.000 отзывов в месяц',
+        'AI чат lite x5 limit',
+      ],
+    },
+    {
+      key: 'MAX',
+      label: 'Максимум',
+      totalPrice: animatedMaxTotal.value,
+      monthlyPrice: maxMonthly[idx],
+      description: 'Для агентств и крупных продавцов.',
+      prevTier: 'Про',
+      features: [
+        '90 активных автоброней',
+        '∞ WB аккаунтов',
+        '∞ отзывов',
+        'AI чат lite x25 limit',
+      ],
+    },
+  ];
+});
 
 onMounted(() => {
   gsap.from(headerRef.value, {
