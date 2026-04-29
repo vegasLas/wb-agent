@@ -43,7 +43,7 @@ export const LITE_TARIFFS: SubscriptionTariff[] = [
   { id: 'lite-30',  tier: 'LITE', name: 'Lite 1 мес',   price: 790,  days: 30,  description: 'Базовый доступ' },
   { id: 'lite-90',  tier: 'LITE', name: 'Lite 3 мес',   price: 1990, days: 90,  description: 'Экономия 16%', discount: 16 },
   { id: 'lite-180', tier: 'LITE', name: 'Lite 6 мес',   price: 3490, days: 180, description: 'Экономия 26%', discount: 26 },
-  { id: 'lite-365', tier: 'LITE', name: 'Lite 1 год',   price: 6070, days: 365, description: 'Экономия 36%', discount: 36 },
+  { id: 'lite-365', tier: 'LITE', name: 'Lite 1 год',   price: 6120, days: 365, description: 'Экономия 36%', discount: 36 },
 ];
 
 export const PRO_TARIFFS: SubscriptionTariff[] = [
