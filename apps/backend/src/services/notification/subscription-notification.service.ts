@@ -46,7 +46,6 @@ export class SubscriptionNotificationService {
       // Get active paid subscriptions expiring within 7 days
       const expiringSubs = await prisma.userSubscription.findMany({
         where: {
-          tier: { not: 'FREE' },
           endedAt: {
             gte: now,
             lte: sevenDaysFromNow,
