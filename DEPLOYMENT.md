@@ -106,7 +106,8 @@ The Dockerfile uses a multi-stage build approach:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | - | PostgreSQL connection string |
-| `COOKIE_ENCRYPTION_KEY` | Yes | - | Min 64 chars, encryption key |
+| `JWT_SECRET` | Yes | - | Min 32 chars. **Must persist across redeploys** |
+| `COOKIE_ENCRYPTION_KEY` | Yes | - | Min 64 chars, encryption key. **Must persist across redeploys** |
 | `NODE_ENV` | No | `production` | Runtime environment |
 | `PORT` | No | `3001` | Server port |
 | `FRONTEND_URL` | No | `http://localhost:3000` | CORS origin |
@@ -138,6 +139,36 @@ Expected response:
   }
 }
 ```
+
+## Critical: Secret Persistence Across Redeploys
+
+> **IMPORTANT**: If users are forced to log in again after every backend redeploy, your secrets or database are likely not persisting.
+
+### `JWT_SECRET`
+- **Must be identical** across all backend instances and redeploys
+- JWT access tokens are signed with this secret. If it changes, all existing tokens become invalid immediately
+- Store it in your deployment platform's secret manager or persistent `.env` file
+- **Do NOT** auto-generate a new `JWT_SECRET` on each deploy
+
+### `COOKIE_ENCRYPTION_KEY`
+- **Must be identical** across all redeploys
+- Used to encrypt WB supplier session cookies stored in the database
+- If it changes, all existing supplier sessions become unreadable
+- Must be a **64-character hex string** (32 bytes)
+
+### PostgreSQL Data
+- The `RefreshToken` table lives in PostgreSQL. If the database is ephemeral, refresh tokens are lost on redeploy
+- When using Docker Compose, ensure the `postgres_data` volume is **never** removed during redeploys
+- Avoid `docker-compose down -v` in production — it deletes the volume and all data
+
+### How to Verify
+After a redeploy, check the backend logs:
+```
+JWTAuth initialized. Secret fingerprint: a1b2c3d4...
+```
+If the fingerprint changes between deploys, `JWT_SECRET` is not persisting.
+
+---
 
 ## Troubleshooting
 
