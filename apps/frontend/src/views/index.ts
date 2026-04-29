@@ -2,7 +2,6 @@
 export { default as AccountView } from './AccountView.vue';
 export { default as PaymentsView } from './PaymentsView.vue';
 export { default as ReportsView } from './ReportsView.vue';
-export { default as StoreView } from './StoreView.vue';
 
 // Autobooking Views
 export {

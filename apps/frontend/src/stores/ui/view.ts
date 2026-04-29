@@ -17,8 +17,6 @@ import type { ViewType } from '@/types';
  * - router.push({ name: 'Reschedules' }) - for reschedules list
  * - router.push({ name: 'ReschedulesCreate' }) - for creating reschedule
  * - router.push({ name: 'ReschedulesUpdate', params: { id } }) - for updating reschedule
- * - router.push({ name: 'Store' }) - for store
- * - router.push({ name: 'StoreBookings' }) - for bookings tab
  * - router.push({ name: 'Account' }) - for account
  *
  * Going back:
@@ -52,9 +50,6 @@ export const useViewStore = defineStore('view', () => {
       return 'reschedules-main';
     if (routeName === 'ReschedulesCreate') return 'reschedules-form';
     if (routeName === 'ReschedulesUpdate') return 'reschedules-update';
-    if (routeName === 'Store') return 'store';
-
-    if (routeName === 'StoreBookings') return 'store-bookings';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
     if (routeName === 'Promotions') return 'promotions';
@@ -86,9 +81,6 @@ export const useViewStore = defineStore('view', () => {
       'reschedules-main': 'Reschedules',
       'reschedules-form': 'ReschedulesCreate',
       'reschedules-update': 'ReschedulesUpdate',
-      store: 'Store',
-
-      'store-bookings': 'StoreBookings',
       account: 'Account',
       report: 'Reports',
       promotions: 'Promotions',
@@ -139,7 +131,6 @@ export const useViewStore = defineStore('view', () => {
     if (routeName?.startsWith('Autobooking')) return 'autobookings';
     if (routeName?.startsWith('Trigger')) return 'triggers';
     if (routeName?.startsWith('Reschedule')) return 'reschedules';
-    if (routeName?.startsWith('Store')) return 'store';
     if (routeName === 'Account') return 'account';
     if (routeName === 'Reports') return 'report';
     if (routeName === 'Promotions') return 'promotions';

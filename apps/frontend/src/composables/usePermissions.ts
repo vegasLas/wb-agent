@@ -15,7 +15,6 @@ const PERMISSION_ROUTE_MAP: Record<string, Permission[]> = {
   Chat: [],
   MPStats: [],
   Payments: [],
-  Store: [],
   Account: [],
 };
 

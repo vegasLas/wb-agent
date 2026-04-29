@@ -47,7 +47,7 @@ import { useSkeleton } from '../composables/ui';
 import {
   SkeletonAccount,
   SkeletonAutobookings,
-  SkeletonStore,
+
   SkeletonTriggers,
   SkeletonReport,
   SkeletonPayments,
@@ -129,8 +129,6 @@ const routeSkeletonMap: Record<string, any> = {
   TriggersList: SkeletonTriggers,
   Promotions: SkeletonPromotions,
   Reports: SkeletonReport,
-  Store: SkeletonStore,
-  StoreBookings: SkeletonStore,
   Payments: SkeletonPayments,
   Tasks: SkeletonTasks,
   Home: SkeletonHome,

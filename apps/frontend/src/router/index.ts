@@ -274,22 +274,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'store',
-        name: 'Store',
-        component: () => import('../views/StoreView.vue'),
-        meta: {
-          title: 'Store',
-          skipSubscriptionCheck: true,
-        },
-      },
-      {
-        path: 'store/bookings',
-        name: 'StoreBookings',
-        component: () => import('../views/StoreView.vue'),
-        meta: {
-          title: 'Store - Bookings',
-          initialTab: 'bookings',
-          skipSubscriptionCheck: true,
-        },
+        redirect: { name: 'Payments' },
       },
       {
         path: 'payments',

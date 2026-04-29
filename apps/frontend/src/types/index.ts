@@ -19,10 +19,7 @@ export type ViewType =
   | 'reschedules-form'
   | 'reschedules-update'
   | 'promotions'
-  | 'store'
   | 'account'
-  | 'store-subscription'
-  | 'store-bookings'
   | 'report'
   | 'auth';
 
