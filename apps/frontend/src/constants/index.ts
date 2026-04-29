@@ -43,21 +43,21 @@ export const LITE_TARIFFS: SubscriptionTariff[] = [
   { id: 'lite-30',  tier: 'LITE', name: 'Lite 1 мес',   price: 790,  days: 30,  description: 'Базовый доступ' },
   { id: 'lite-90',  tier: 'LITE', name: 'Lite 3 мес',   price: 1990, days: 90,  description: 'Экономия 16%', discount: 16 },
   { id: 'lite-180', tier: 'LITE', name: 'Lite 6 мес',   price: 3490, days: 180, description: 'Экономия 26%', discount: 26 },
-  { id: 'lite-365', tier: 'LITE', name: 'Lite 1 год',   price: 6990, days: 365, description: 'Экономия 36%', discount: 36 },
+  { id: 'lite-365', tier: 'LITE', name: 'Lite 1 год',   price: 6070, days: 365, description: 'Экономия 36%', discount: 36 },
 ];
 
 export const PRO_TARIFFS: SubscriptionTariff[] = [
   { id: 'pro-30',   tier: 'PRO', name: 'Pro 1 мес',    price: 2490, days: 30,  description: 'Полный доступ' },
   { id: 'pro-90',   tier: 'PRO', name: 'Pro 3 мес',    price: 5990, days: 90,  description: 'Экономия 20%', discount: 20 },
   { id: 'pro-180',  tier: 'PRO', name: 'Pro 6 мес',    price: 10990, days: 180, description: 'Экономия 26%', discount: 26 },
-  { id: 'pro-365',  tier: 'PRO', name: 'Pro 1 год',    price: 19900, days: 365, description: 'Экономия 37%', discount: 37 },
+  { id: 'pro-365',  tier: 'PRO', name: 'Pro 1 год',    price: 18890, days: 365, description: 'Экономия 37%', discount: 37 },
 ];
 
 export const MAX_TARIFFS: SubscriptionTariff[] = [
   { id: 'max-30',   tier: 'MAX', name: 'Max 1 мес',    price: 6990, days: 30,  description: 'Агентский доступ' },
   { id: 'max-90',   tier: 'MAX', name: 'Max 3 мес',    price: 17990, days: 90,  description: 'Экономия 14%', discount: 14 },
   { id: 'max-180',  tier: 'MAX', name: 'Max 6 мес',    price: 32990, days: 180, description: 'Экономия 21%', discount: 21 },
-  { id: 'max-365',  tier: 'MAX', name: 'Max 1 год',    price: 59900, days: 365, description: 'Экономия 33%', discount: 33 },
+  { id: 'max-365',  tier: 'MAX', name: 'Max 1 год',    price: 56200, days: 365, description: 'Экономия 33%', discount: 33 },
 ];
 
 export const ALL_SUBSCRIPTION_TARIFFS = [
