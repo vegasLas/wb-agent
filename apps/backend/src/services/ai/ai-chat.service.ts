@@ -13,6 +13,7 @@ import { buildContextMessage } from './context-builder.service';
 import { aiUsageTrackingService } from './ai-usage-tracking.service';
 import { filterToolsByPermissions } from './ai-tool-permissions';
 import { AI_CHAT_BUDGET_USD, UserTier } from '@/constants/payments';
+import { getBillingPeriodStart } from '@/utils/subscription';
 import { ApiError } from '@/utils/errors';
 import { autobookingTools } from './tools/autobooking.tools';
 import { triggerTools } from './tools/trigger.tools';
@@ -54,15 +55,14 @@ export class AIChatService {
     tier: UserTier,
   ): Promise<{ allowed: boolean; spent: number; max: number }> {
     const max = AI_CHAT_BUDGET_USD[tier];
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const periodStart = await getBillingPeriodStart(userId);
 
     const result = await prisma.aiUsageLog.aggregate({
       _sum: { cost: true },
       where: {
         userId,
         feature: 'ai_chat',
-        createdAt: { gte: startOfMonth },
+        createdAt: { gte: periodStart },
       },
     });
 
