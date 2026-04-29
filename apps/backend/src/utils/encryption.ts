@@ -1,9 +1,21 @@
 import crypto from 'crypto';
 import { env } from '@/config/env';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('Encryption');
 
 const ENCRYPTION_KEY = env.COOKIE_ENCRYPTION_KEY
   ? Buffer.from(env.COOKIE_ENCRYPTION_KEY, 'hex')
   : crypto.randomBytes(32);
+
+if (!env.COOKIE_ENCRYPTION_KEY) {
+  logger.warn(
+    'COOKIE_ENCRYPTION_KEY is not set. Using a randomly generated key that will change on every restart. ' +
+      'This will invalidate all existing encrypted sessions (e.g. WB supplier cookies). ' +
+      'Set COOKIE_ENCRYPTION_KEY to a persistent 64-character hex string to avoid this.',
+  );
+}
+
 const IV_LENGTH = 16;
 const ALGORITHM = 'aes-256-cbc';
 
