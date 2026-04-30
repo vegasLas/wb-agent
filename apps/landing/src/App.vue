@@ -82,35 +82,42 @@
       </div>
     </nav>
 
+    <!-- Legal Pages -->
+    <PrivacyPolicyPage v-if="isPrivacyPage" />
+    <TermsOfServicePage v-else-if="isTermsPage" />
+    <CookiePolicyPage v-else-if="isCookiesPage" />
+
     <!-- Main Content -->
-    <main>
-      <HeroSection />
+    <template v-else>
+      <main>
+        <HeroSection />
 
-      <div class="relative">
-        <div
-          class="absolute inset-0 bg-gradient-to-b from-transparent via-purple/5 to-transparent pointer-events-none"
-        ></div>
-        <StatsSection />
-      </div>
+        <div class="relative">
+          <div
+            class="absolute inset-0 bg-gradient-to-b from-transparent via-purple/5 to-transparent pointer-events-none"
+          ></div>
+          <StatsSection />
+        </div>
 
-      <FeaturesGrid />
+        <FeaturesGrid />
 
-      <div class="relative">
-        <div
-          class="absolute inset-0 bg-gradient-to-b from-transparent via-purple/5 to-transparent pointer-events-none"
-        ></div>
-        <HowItWorks />
-      </div>
+        <div class="relative">
+          <div
+            class="absolute inset-0 bg-gradient-to-b from-transparent via-purple/5 to-transparent pointer-events-none"
+          ></div>
+          <HowItWorks />
+        </div>
 
-      <PricingTeaser />
-    </main>
+        <PricingTeaser />
+      </main>
 
-    <LandingFooter />
+      <LandingFooter />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useColorMode } from '@vueuse/core';
 import HeroSection from './components/HeroSection.vue';
 import StatsSection from './components/StatsSection.vue';
@@ -118,6 +125,9 @@ import FeaturesGrid from './components/FeaturesGrid.vue';
 import HowItWorks from './components/HowItWorks.vue';
 import PricingTeaser from './components/PricingTeaser.vue';
 import LandingFooter from './components/LandingFooter.vue';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage.vue';
+import TermsOfServicePage from './components/TermsOfServicePage.vue';
+import CookiePolicyPage from './components/CookiePolicyPage.vue';
 
 const colorMode = useColorMode({
   attribute: 'class',
@@ -129,4 +139,20 @@ const isDark = computed(() => colorMode.value === 'dark');
 function toggleTheme() {
   colorMode.value = isDark.value ? 'light' : 'dark';
 }
+
+// Hash-based page routing for legal pages
+const currentHashPage = ref('');
+
+function updateHashPage() {
+  currentHashPage.value = window.location.hash;
+}
+
+onMounted(() => {
+  updateHashPage();
+  window.addEventListener('hashchange', updateHashPage);
+});
+
+const isPrivacyPage = computed(() => currentHashPage.value === '#/privacy');
+const isTermsPage = computed(() => currentHashPage.value === '#/terms');
+const isCookiesPage = computed(() => currentHashPage.value === '#/cookies');
 </script>

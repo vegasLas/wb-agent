@@ -23,6 +23,33 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/privacy',
+    name: 'PrivacyPolicy',
+    component: () => import('../views/legal/PrivacyPolicyView.vue'),
+    meta: {
+      title: 'Политика конфиденциальности',
+      public: true,
+    },
+  },
+  {
+    path: '/terms',
+    name: 'TermsOfService',
+    component: () => import('../views/legal/TermsOfServiceView.vue'),
+    meta: {
+      title: 'Пользовательское соглашение',
+      public: true,
+    },
+  },
+  {
+    path: '/cookies',
+    name: 'CookiePolicy',
+    component: () => import('../views/legal/CookiePolicyView.vue'),
+    meta: {
+      title: 'Cookies',
+      public: true,
+    },
+  },
+  {
     path: '/register',
     name: 'Register',
     component: () => import('../views/RegisterView.vue'),
