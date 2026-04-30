@@ -195,9 +195,9 @@ function getFileIcon(file: File): string {
     <!-- Limit reached alert -->
     <div
       v-if="limitReached"
-      class="mb-3 flex items-center justify-between gap-4 bg-purple-900/20 border border-purple-500/30 rounded-xl px-4 py-3"
+      class="mb-3 flex items-center justify-between gap-4 bg-purple-100 border border-purple-300 rounded-xl px-4 py-3 dark:bg-purple-900/30 dark:border-purple-500/30"
     >
-      <span class="text-sm text-purple-200">
+      <span class="text-sm text-purple-900 dark:text-purple-200">
         Вы достигли лимита AI ассистента. Обновите подписку, чтобы продолжить.
       </span>
       <button

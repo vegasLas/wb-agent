@@ -48,7 +48,7 @@
             <h3 class="text-lg font-semibold">
               подписка:
             </h3>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <Tag
                 :value="subscriptionTier"
                 :severity="
@@ -58,7 +58,12 @@
                 "
               />
               <Tag
-                v-if="subscriptionTier === 'FREE'"
+                v-if="userStore.isOnTrial"
+                value="Пробный период"
+                severity="warn"
+              />
+              <Tag
+                v-else-if="subscriptionTier === 'FREE'"
                 value="Бесплатный план"
                 severity="info"
               />
@@ -72,6 +77,19 @@
                 :severity="subscriptionActive ? 'success' : 'danger'"
               />
             </div>
+          </div>
+
+          <div
+            v-if="userStore.isOnTrial"
+            class="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3"
+          >
+            <p class="text-sm text-amber-800 dark:text-amber-300">
+              <i class="pi pi-info-circle mr-1" />
+              Пробный период Lite — осталось
+              <strong>{{ userStore.trialRemainingDays }} дней</strong>.
+              После окончания пробного периода ваш аккаунт автоматически
+              перейдет на бесплатный тариф.
+            </p>
           </div>
         </div>
       </template>

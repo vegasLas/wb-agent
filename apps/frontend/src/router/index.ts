@@ -136,6 +136,16 @@ const routes: RouteRecordRaw[] = [
       public: true,
     },
   },
+  {
+    path: '/error/server-error',
+    name: 'ServerError',
+    component: () => import('../components/layout/ErrorLayout.vue'),
+    meta: {
+      title: 'Ошибка сервера',
+      errorType: 'server_error',
+      public: true,
+    },
+  },
 
   // Main Application Routes (wrapped in MainLayout)
   {
@@ -291,7 +301,7 @@ const router = createRouter({
 });
 
 // Global app state
-let initError: 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' | null = null;
+let initError: 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' | 'server_error' | null = null;
 let isBrowserAuthInitialized = false;
 
 // Navigation guard for app initialization
@@ -333,7 +343,7 @@ router.beforeEach(async (to, from, next) => {
       await browserAuth.initAuth();
     } catch (error: any) {
       const errorType = classifyError(error);
-      if (errorType === 'maintenance') {
+      if (errorType === 'maintenance' || errorType === 'server_error') {
         next({ name: errorToRouteName(errorType), replace: true });
         return;
       }
@@ -375,15 +385,19 @@ router.afterEach((to) => {
 // Classify error type
 function classifyError(
   error: any,
-): 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' {
+): 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' | 'server_error' {
   if (error?.data?.data?.expired === true) {
     return 'session_expired';
   }
 
   const status = error?.response?.status || error?.status || error?.statusCode;
 
-  if (status === 503 || status === 500) {
+  if (status === 503) {
     return 'maintenance';
+  }
+
+  if (status === 500 || status === 502 || status === 504) {
+    return 'server_error';
   }
 
   if (status === 403) {
@@ -400,6 +414,7 @@ function errorToRouteName(error: string): string {
     maintenance: 'Maintenance',
     subscription_required: 'SubscriptionRequired',
     not_found: 'UserNotFound',
+    server_error: 'ServerError',
   };
   return map[error] || 'UserNotFound';
 }

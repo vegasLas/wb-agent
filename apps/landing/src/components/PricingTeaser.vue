@@ -33,21 +33,21 @@
       </div>
 
       <!-- Pricing Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         <div
           v-for="tier in tiers"
           :key="tier.key"
           ref="planRefs"
-          class="rounded-2xl border transition-all duration-300 overflow-hidden hover:shadow-lg"
+          class="rounded-2xl border transition-all duration-300 overflow-hidden hover:shadow-lg flex flex-col h-full"
           :class="[
             tier.popular
               ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
               : 'bg-[var(--color-card)] border-[var(--color-border)]',
           ]"
         >
-          <div class="p-6 space-y-4">
+          <div class="p-6 flex flex-col h-full">
             <!-- Title -->
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between mb-4">
               <h3 class="text-lg font-semibold text-theme">{{ tier.label }}</h3>
               <div class="flex gap-1">
                 <span
@@ -60,7 +60,7 @@
             </div>
 
             <!-- Price -->
-            <div>
+            <div class="mb-4">
               <div class="flex items-baseline gap-1">
                 <p v-if="tier.monthlyPrice > 0" class="text-4xl font-bold text-theme">
                   {{ formatPrice(tier.monthlyPrice) }} ₽
@@ -96,23 +96,23 @@
               </div>
             </div>
 
-            <p class="text-sm text-gray-600 dark:text-gray-300">
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 min-h-[40px]">
               {{ tier.description }}
             </p>
 
             <!-- CTA Button -->
             <a
               :href="`https://app.wboi.ru/store?plan=${tier.key}`"
-              class="block w-full text-center py-2.5 rounded-xl font-medium transition-all duration-200 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-white"
+              class="block w-full text-center py-2.5 rounded-xl font-medium transition-all duration-200 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-white mb-4"
             >
               {{ tier.monthlyPrice === 0 ? 'Начать бесплатно' : 'Попробовать' }}
             </a>
 
             <!-- Divider -->
-            <div class="border-t border-[var(--color-border)]"></div>
+            <div class="border-t border-[var(--color-border)] mb-4"></div>
 
             <!-- Features -->
-            <div>
+            <div class="flex-1">
               <p
                 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide mb-3"
               >

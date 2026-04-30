@@ -53,6 +53,15 @@ export const useUserStore = defineStore('user', () => {
   const isFree = computed(() => subscriptionTier.value === 'FREE');
   const isPro = computed(() => subscriptionTier.value === 'PRO' || subscriptionTier.value === 'MAX');
   const isMax = computed(() => subscriptionTier.value === 'MAX');
+  const isOnTrial = computed(() => !!user.value.isTrial);
+  const trialRemainingDays = computed(() => {
+    if (!user.value.trialExpiresAt) return 0;
+    const expirationDate = new Date(user.value.trialExpiresAt);
+    const now = new Date();
+    const diffTime = expirationDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  });
   const maxAccounts = computed(() => user.value.maxAccounts ?? 1);
   const canAddAccount = computed(() => (user.value.accounts?.length ?? 0) < maxAccounts.value);
 
@@ -136,6 +145,12 @@ export const useUserStore = defineStore('user', () => {
     try {
       const data = await userAPI.fetchUser();
       user.value = data as User;
+      console.log('[USER STORE DEBUG] fetched user:', {
+        subscriptionTier: user.value.subscriptionTier,
+        trialUsedAt: user.value.trialUsedAt,
+        isTrial: user.value.isTrial,
+        isFree: isFree.value,
+      });
       return data as User;
     } catch (err) {
       error.value = 'Failed to fetch user data';
@@ -188,8 +203,11 @@ export const useUserStore = defineStore('user', () => {
     subscriptionActive,
     subscriptionRemainingDays,
     subscriptionTier,
+    isFree,
     isPro,
     isMax,
+    isOnTrial,
+    trialRemainingDays,
     maxAccounts,
     canAddAccount,
     selectedAccount,

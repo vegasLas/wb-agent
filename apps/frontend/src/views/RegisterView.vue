@@ -106,6 +106,10 @@
               :feedback="true"
               toggle-mask
               input-class="w-full"
+              prompt-label="Введите пароль"
+              weak-label="Слабый"
+              medium-label="Средний"
+              strong-label="Надежный"
               :class="{ 'p-invalid': touched.password && fieldErrors.password }"
               @blur="touched.password = true"
             />

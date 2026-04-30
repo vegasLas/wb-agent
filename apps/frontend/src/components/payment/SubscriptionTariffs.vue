@@ -35,12 +35,6 @@
             <h3 class="text-lg font-semibold">{{ tier.label }}</h3>
             <div class="flex gap-1">
               <Tag
-                v-if="tier.popular"
-                severity="secondary"
-                value="Popular"
-                class="text-xs"
-              />
-              <Tag
                 v-if="currentTier === tier.key"
                 severity="success"
                 value="Активен"
@@ -70,17 +64,6 @@
                 v-if="selectedPeriodIndex > 0 && tier.key !== 'FREE'"
                 class="mt-1 space-y-0.5"
               >
-                <p class="text-sm text-gray-400 dark:text-gray-500">
-                  <span class="line-through"
-                    >{{ formatPrice(tier.baseMonthly) }} ₽</span
-                  >
-                  <span class="text-green-500 ml-1.5 font-medium"
-                    >−{{
-                      formatPrice(tier.baseMonthly - tier.monthlyPrice)
-                    }}
-                    ₽/мес</span
-                  >
-                </p>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
                   При оплате {{ periodTotalLabel }} —
                   {{ formatPrice(tier.totalPrice) }} ₽
@@ -101,19 +84,17 @@
                   : '!bg-gray-900 !border-gray-900 hover:!bg-gray-800',
               ]"
               @click="
-                tier.key === 'LITE' &&
-                userStore.isFree &&
-                !userStore.user.trialUsedAt
-                  ? activateTrial(tier.key)
-                  : onSelectTier(tier)
+                currentTier === tier.key
+                  ? undefined
+                  : tier.key === 'LITE' && isTrialEligible
+                    ? activateTrial(tier.key)
+                    : onSelectTier(tier)
               "
             >
               {{
                 currentTier === tier.key
                   ? 'Текущий план'
-                  : tier.key === 'LITE' &&
-                      userStore.isFree &&
-                      !userStore.user.trialUsedAt
+                  : tier.key === 'LITE' && isTrialEligible
                     ? 'попробовать (14 дней)'
                     : 'Выбрать'
               }}
@@ -174,6 +155,8 @@
       @success="handleModalSuccess"
       @fail="handleModalFail"
     />
+
+
   </div>
 </template>
 
@@ -205,6 +188,15 @@ const showPaymentModal = ref(false);
 const selectedTariffForModal = ref<SubscriptionTariff | null>(null);
 
 const currentTier = computed(() => userStore.subscriptionTier);
+
+// Debug trial eligibility
+const isTrialEligible = computed(() => {
+  const eligible =
+    userStore.isFree &&
+    !userStore.user.trialUsedAt;
+  console.log('[TRIAL DEBUG] isFree:', userStore.isFree, '| trialUsedAt:', userStore.user.trialUsedAt, '| eligible:', eligible);
+  return eligible;
+});
 
 const periodOptions = [
   { label: '1 мес', index: 0 },
