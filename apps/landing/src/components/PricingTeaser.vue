@@ -33,7 +33,7 @@
       </div>
 
       <!-- Pricing Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
           v-for="tier in tiers"
           :key="tier.key"
@@ -62,10 +62,14 @@
             <!-- Price -->
             <div>
               <div class="flex items-baseline gap-1">
-                <p class="text-4xl font-bold text-theme">
+                <p v-if="tier.monthlyPrice > 0" class="text-4xl font-bold text-theme">
                   {{ formatPrice(tier.monthlyPrice) }} ₽
                 </p>
+                <p v-else class="text-4xl font-bold text-theme">
+                  Бесплатно
+                </p>
                 <div
+                  v-if="tier.monthlyPrice > 0"
                   class="text-sm text-gray-500 dark:text-gray-400 leading-tight"
                 >
                   <div>в месяц</div>
@@ -73,7 +77,7 @@
               </div>
 
               <!-- Savings info -->
-              <div v-if="selectedPeriodIndex > 0" class="mt-1 space-y-0.5">
+              <div v-if="selectedPeriodIndex > 0 && tier.monthlyPrice > 0" class="mt-1 space-y-0.5">
                 <p class="text-sm text-gray-400 dark:text-gray-500">
                   <span class="line-through"
                     >{{ formatPrice(tier.baseMonthly) }} ₽</span
@@ -101,7 +105,7 @@
               :href="`https://app.wboi.ru/store?plan=${tier.key}`"
               class="block w-full text-center py-2.5 rounded-xl font-medium transition-all duration-200 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-white"
             >
-              Попробовать
+              {{ tier.monthlyPrice === 0 ? 'Начать бесплатно' : 'Попробовать' }}
             </a>
 
             <!-- Divider -->
@@ -195,6 +199,7 @@ const proMonthly = proTotals.map((t, i) => Math.round(t / monthsPerIndex[i]));
 const maxMonthly = maxTotals.map((t, i) => Math.round(t / monthsPerIndex[i]));
 
 // Animate monthly prices (main display)
+const animatedFreeMonthly = ref(0);
 const animatedLiteMonthly = ref(liteMonthly[0]);
 const animatedProMonthly = ref(proMonthly[0]);
 const animatedMaxMonthly = ref(maxMonthly[0]);
@@ -230,6 +235,8 @@ watch(selectedPeriodIndex, (newIndex, oldIndex) => {
   );
   animateValue(animatedProMonthly, proMonthly[oldIndex], proMonthly[newIndex]);
   animateValue(animatedMaxMonthly, maxMonthly[oldIndex], maxMonthly[newIndex]);
+  // Free plan is always 0
+  animatedFreeMonthly.value = 0;
 });
 
 function formatPrice(price: number) {
@@ -249,6 +256,21 @@ const tiers = computed(() => {
   const idx = selectedPeriodIndex.value;
   return [
     {
+      key: 'FREE',
+      label: 'Бесплатный',
+      monthlyPrice: animatedFreeMonthly.value,
+      baseMonthly: 0,
+      totalPrice: 0,
+      description: 'Для знакомства с сервисом.',
+      prevTier: null,
+      features: [
+        '1 активная автобронь',
+        '1 WB аккаунт',
+        '50 отзывов в месяц',
+        'AI-ассистент — базовый',
+      ],
+    },
+    {
       key: 'LITE',
       label: 'Лайт',
       monthlyPrice: animatedLiteMonthly.value,
@@ -260,7 +282,7 @@ const tiers = computed(() => {
         '6 активных автоброней',
         '1 WB аккаунт',
         '300 отзывов в месяц',
-        'AI-ассистент — 10 запросов',
+        'AI-ассистент — увеличенный лимит',
       ],
     },
     {
@@ -276,7 +298,7 @@ const tiers = computed(() => {
         '30 активных автоброней',
         '3 WB аккаунта',
         '2.000 отзывов в месяц',
-        'AI-ассистент — 50 запросов',
+        'AI-ассистент — x5 лайт',
       ],
     },
     {
@@ -291,7 +313,7 @@ const tiers = computed(() => {
         '90 активных автоброней',
         '∞ WB аккаунтов',
         '∞ отзывов',
-        'AI-ассистент — безлимитно',
+        'AI-ассистент — x25 лайт',
       ],
     },
   ];
