@@ -2,18 +2,11 @@
   <div
     id="app"
     class="min-h-screen bg-deep-bg text-theme"
-    :class="{
-      'telegram-phone': isPhone && hasInitData,
-    }"
   >
     <!--
       Route-based Skeleton Loading
-      - Shown during: router guard initialization (Telegram + user data)
+      - Shown during: router guard initialization
       - Hidden when: view component signals ready via useViewReady()
-    -->
-    <!--
-      Full-screen skeleton only during initial app initialization.
-      After that, MainLayout handles content-area skeleton so the header remains visible.
     -->
     <LoadingLayout v-if="isRouterInitializing">
       <component :is="currentRouteSkeleton" />
@@ -61,45 +54,11 @@ import {
   SkeletonAdverts,
   SkeletonTariffs,
 } from '../components/skeleton';
-import {
-  getTelegramColorScheme,
-  isTelegramWebApp,
-  getInitData,
-} from '../utils/telegram';
-import { requestFullscreen, readyWebApp } from '../utils/telegram/webApp';
-import type { ColorScheme } from '../utils/telegram/theme';
-
 // Initialize color mode with proper configuration for class-based dark mode
 const colorMode = useColorMode({
   attribute: 'class',
   selector: 'html',
 });
-
-// Set up Telegram color scheme if available
-// This works even when telegram-web-app.js is not loaded (uses URL initData detection)
-const telegramColorScheme = ref<ColorScheme | undefined>(undefined);
-
-// Check for Telegram mode and set color scheme
-// Only apply Telegram theme on init if user hasn't manually set a preference
-if (isTelegramWebApp()) {
-  const manualPreference = localStorage.getItem('vueuse-color-scheme');
-  const hasManualPreference = manualPreference && manualPreference !== 'auto';
-  if (!hasManualPreference) {
-    // Get color scheme from Telegram theme params (URL hash or sessionStorage)
-    telegramColorScheme.value = getTelegramColorScheme();
-  }
-}
-
-// Watch Telegram's color scheme and apply it
-watch(
-  telegramColorScheme,
-  (newScheme) => {
-    if (newScheme) {
-      colorMode.value = newScheme;
-    }
-  },
-  { immediate: true },
-);
 
 const router = useRouter();
 const route = useRoute();
@@ -142,8 +101,6 @@ const routeSkeletonMap: Record<string, any> = {
 };
 
 // Get the appropriate skeleton for current route
-// During navigation, uses pendingRouteName (target route) to show correct skeleton immediately
-// Uses getEffectiveRouteName which falls back to path-based detection when route name is null/undefined
 const currentRouteSkeleton = computed(() => {
   const effectiveName =
     pendingRouteName.value || getEffectiveRouteName(route.name as string);
@@ -171,12 +128,6 @@ router.afterEach(() => {
   onNavigationEnd();
 });
 
-// Phone device detection
-const isPhone = ref(false);
-
-// Telegram initData detection (computed from utils)
-const hasInitData = computed(() => !!getInitData());
-
 // Initialize toast for global use
 const toast = useToast();
 
@@ -185,18 +136,6 @@ const confirm = useConfirm();
 
 // Wait for router to resolve initial navigation
 onMounted(async () => {
-  // Detect if device is a phone
-  isPhone.value = /iPhone|iPad|Android|webOS|BlackBerry/i.test(
-    navigator.userAgent,
-  );
-
-  // Expand and ready the WebApp when running inside Telegram
-  if (hasInitData.value) {
-    if (isPhone.value) {
-      requestFullscreen();
-    }
-    readyWebApp();
-  }
   // Initialize toast for stores
   const { initToast } = await import('../utils/ui');
   initToast(toast);
@@ -207,7 +146,6 @@ onMounted(async () => {
 
   await router.isReady();
   markRouterReady();
-  // View remains in loading state until component calls viewReady()
 });
 </script>
 
@@ -219,9 +157,5 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-}
-
-#app.telegram-phone {
-  padding-top: 100px;
 }
 </style>

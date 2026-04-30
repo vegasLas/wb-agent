@@ -19,7 +19,7 @@ export function getConfirm() {
 
 /**
  * Show confirmation dialog that returns a Promise
- * Works in both Telegram and Browser modes
+ * Shows a PrimeVue confirmation dialog or falls back to native confirm
  */
 export function confirmPromise(options: {
   header: string;

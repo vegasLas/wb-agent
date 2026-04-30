@@ -1,96 +1,33 @@
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useWarehousesStore } from '@/stores/warehouses';
-// import { useRescheduleStore } from '@/stores/reschedules';
 import { useNotificationsStore } from '@/stores/notifications';
 import { useAccountSupplierModalStore } from '@/stores/ui';
 import router from './index';
-import { isTelegramWebApp, getTelegramColorScheme, getInitData } from '../utils/telegram';
 
 // Reactive state for components that need it
 const isInitializing = ref(false);
-const telegramColorScheme = ref('light');
-
-/**
- * Detect if running in Telegram Mini App
- * Uses the flag set by early detection script in index.html
- * Falls back to utility function if needed
- */
-function detectTelegramMode(): boolean {
-  // Primary: Check global flag set in index.html early detection script
-  // This is the most reliable source as it runs before Vue Router
-  if (window.__IS_TELEGRAM_WEBAPP__ === true) {
-    return true;
-  }
-
-  // Fallback: Use utility function to check URL/hash
-  return isTelegramWebApp();
-}
+const appColorScheme = ref('light');
 
 export function useAppState() {
   const userStore = useUserStore();
   const warehouseStore = useWarehousesStore();
-  // const rescheduleStore = useRescheduleStore();
   const notificationsStore = useNotificationsStore();
   const accountModalStore = useAccountSupplierModalStore();
 
-  // Initialize Telegram mode (just check URL params, no WebApp object needed)
-  async function initTelegram(): Promise<{
-    isTgClient: boolean;
+  // Initialize app (browser mode only)
+  async function initApp(): Promise<{
     colorScheme: string;
   }> {
-    // Detect Telegram mode based on URL params
-    const isTg = detectTelegramMode();
-    const forceBrowser = window.__FORCE_BROWSER_MODE__ === true;
-
-    if (forceBrowser || !isTg) {
-      // Browser mode - use system color scheme
-      const prefersDark = window.matchMedia(
-        '(prefers-color-scheme: dark)',
-      ).matches;
-      const scheme = prefersDark ? 'dark' : 'light';
-      telegramColorScheme.value = scheme;
-
-      console.log('[AppState] Browser mode detected, colorScheme:', scheme);
-
-      return {
-        isTgClient: false,
-        colorScheme: scheme,
-      };
-    }
-
-    // Telegram mode - we have initData from URL or localStorage
-    const initData = getInitData();
-
-    if (initData) {
-      console.log('[AppState] Telegram mode with initData');
-      
-      // Use utility to get color scheme from Telegram theme params
-      const scheme = getTelegramColorScheme();
-      telegramColorScheme.value = scheme;
-
-      return {
-        isTgClient: true,
-        colorScheme: scheme,
-      };
-    }
-
-    // No initData available - fallback to browser mode
-    console.warn(
-      '[AppState] Telegram mode detected but no initData, falling back to browser',
-    );
     const prefersDark = window.matchMedia(
       '(prefers-color-scheme: dark)',
     ).matches;
     const scheme = prefersDark ? 'dark' : 'light';
-    telegramColorScheme.value = scheme;
+    appColorScheme.value = scheme;
 
-    // Update global flag since we're falling back
-    window.__AUTH_MODE__ = 'browser';
-    window.__IS_TELEGRAM_WEBAPP__ = false;
+    console.log('[AppState] Browser mode detected, colorScheme:', scheme);
 
     return {
-      isTgClient: false,
       colorScheme: scheme,
     };
   }
@@ -100,7 +37,6 @@ export function useAppState() {
     await userStore.fetchUser();
 
     // Fetch background data
-    // rescheduleStore.fetchReschedules();
     warehouseStore.fetchWarehouses();
     notificationsStore.fetchUnreadCount();
 
@@ -113,8 +49,8 @@ export function useAppState() {
 
   return {
     isInitializing,
-    telegramColorScheme,
-    initTelegram,
+    appColorScheme,
+    initApp,
     initUserData,
   };
 }

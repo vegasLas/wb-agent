@@ -4,18 +4,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { createPinia, setActivePinia } from 'pinia';
 import App from './App.vue';
 
-// Mock vue-tg
-vi.mock('vue-tg', () => ({
-  useWebApp: () => ({
-    initData: 'test-data',
-    ready: vi.fn(),
-    expand: vi.fn(),
-  }),
-  useWebAppTheme: () => ({
-    colorScheme: { value: 'light' },
-  }),
-}));
-
 // Mock @vueuse/core
 vi.mock('@vueuse/core', () => ({
   useColorMode: () => ({

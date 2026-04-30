@@ -549,7 +549,7 @@ router.post('/logout', authenticate, async (req, res, next) => {
       await jwtAuthService.revokeRefreshToken(refreshToken);
     }
 
-    if (req.user?.authType === 'telegram' && req.user?.chatId) {
+    if (req.user?.chatId) {
       await sendLogoutNotification(req.user.chatId);
     }
 

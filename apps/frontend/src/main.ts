@@ -13,8 +13,6 @@ import Tooltip from 'primevue/tooltip';
 import App from './app/App.vue';
 import router from './router';
 import { PrimevalPreset } from './theme/primeval-theme';
-import { readyWebApp } from './utils';
-
 const app = createApp(App);
 
 // Install plugins
