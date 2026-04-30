@@ -93,30 +93,6 @@
         </RouterLink>
       </nav>
 
-      <!-- Legal Links -->
-      <div class="px-3 py-2">
-        <div class="text-[10px] uppercase tracking-wider text-muted font-semibold mb-2 px-3">
-          Правовая информация
-        </div>
-        <nav class="space-y-1">
-          <RouterLink
-            v-for="item in legalNav"
-            :key="item.route"
-            :to="{ name: item.route }"
-            class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-secondary hover:text-theme hover:bg-elevated hover:translate-x-0.5 transition-all duration-200"
-            @click="closeDrawer"
-          >
-            <i
-              :class="[
-                item.icon,
-                'text-base transition-transform duration-200 group-hover:scale-110',
-              ]"
-            />
-            <span>{{ item.label }}</span>
-          </RouterLink>
-        </nav>
-      </div>
-
       <div class="border-t border-deep-border" />
 
       <!-- Profile Dropdown -->
@@ -145,6 +121,7 @@ import { useUserStore } from '@/stores/user';
 import { useBrowserAuthStore } from '@/stores/auth/browser';
 import { useNavigation } from '@/composables/useNavigation';
 import { usePermissions } from '@/composables/usePermissions';
+import { useSettingsStore } from '@/stores/ui';
 import { confirmPromise } from '@/utils/ui';
 import type { MenuItem } from 'primevue/menu';
 
@@ -162,12 +139,6 @@ const router = useRouter();
 const { primaryNav, secondaryNav, isActive } = useNavigation();
 const userStore = useUserStore();
 const { hasAnyPermission } = usePermissions();
-
-const legalNav = [
-  { route: 'PrivacyPolicy', label: 'Конфиденциальность', icon: 'pi pi-shield' },
-  { route: 'TermsOfService', label: 'Соглашение', icon: 'pi pi-file' },
-  { route: 'CookiePolicy', label: 'Cookies', icon: 'pi pi-globe' },
-];
 
 const isMobile = computed(() =>
   /iPhone|iPad|Android|webOS|BlackBerry/i.test(navigator.userAgent),
@@ -222,11 +193,11 @@ const profileMenuItems = computed<MenuItem[]>(() => [
   },
   { separator: true },
   {
-    label: 'Профиль',
-    icon: 'pi pi-user',
+    label: 'Настройки',
+    icon: 'pi pi-cog',
     command: () => {
       closeDrawer();
-      router.push({ name: 'Account' });
+      settingsStore.showSettingsDialog = true;
     },
   },
   {
@@ -250,6 +221,8 @@ const profileMenuItems = computed<MenuItem[]>(() => [
 const toggleProfileMenu = (event: MouseEvent) => {
   profileMenu.value?.toggle(event);
 };
+
+const settingsStore = useSettingsStore();
 
 const handleLogout = async () => {
   closeDrawer();

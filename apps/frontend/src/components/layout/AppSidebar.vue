@@ -72,29 +72,6 @@
         </RouterLink>
       </nav>
 
-      <!-- Legal Links -->
-      <div class="px-3 py-2">
-        <div class="text-[10px] uppercase tracking-wider text-muted font-semibold mb-2 px-3">
-          Правовая информация
-        </div>
-        <nav class="space-y-1">
-          <RouterLink
-            v-for="item in legalNav"
-            :key="item.route"
-            :to="{ name: item.route }"
-            class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-secondary hover:text-theme hover:bg-elevated hover:translate-x-0.5 transition-all duration-200"
-          >
-            <i
-              :class="[
-                item.icon,
-                'text-base transition-transform duration-200 group-hover:scale-110',
-              ]"
-            />
-            <span>{{ item.label }}</span>
-          </RouterLink>
-        </nav>
-      </div>
-
       <div class="border-t border-deep-border" />
 
       <!-- Profile Dropdown -->
@@ -127,10 +104,10 @@
           <div class="border-t border-deep-border my-1" />
           <button
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
-            @click="handleProfile"
+            @click="handleSettings"
           >
-            <i class="pi pi-user text-base" />
-            <span>Профиль</span>
+            <i class="pi pi-cog text-base" />
+            <span>Настройки</span>
           </button>
           <button
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-secondary hover:text-theme hover:bg-elevated transition-colors text-left w-full"
@@ -164,6 +141,7 @@ import { useUserStore } from '@/stores/user';
 import { useBrowserAuthStore } from '@/stores/auth/browser';
 import { useNavigation } from '@/composables/useNavigation';
 import { usePermissions } from '@/composables/usePermissions';
+import { useSettingsStore } from '@/stores/ui';
 import { confirmPromise } from '@/utils/ui';
 
 const emit = defineEmits<{
@@ -179,12 +157,6 @@ const pendingRouteName = inject<Ref<string | null>>(
 const { primaryNav, secondaryNav, isActive } = useNavigation(pendingRouteName);
 const userStore = useUserStore();
 const { hasAnyPermission } = usePermissions();
-
-const legalNav = [
-  { route: 'PrivacyPolicy', label: 'Конфиденциальность', icon: 'pi pi-shield' },
-  { route: 'TermsOfService', label: 'Соглашение', icon: 'pi pi-file' },
-  { route: 'CookiePolicy', label: 'Cookies', icon: 'pi pi-globe' },
-];
 
 const visiblePrimaryNav = computed(() => {
   if (!userStore.user.selectedAccountId) return primaryNav;
@@ -220,9 +192,11 @@ const handleTheme = () => {
   toggleTheme();
 };
 
-const handleProfile = () => {
+const settingsStore = useSettingsStore();
+
+const handleSettings = () => {
   profileMenu.value?.hide();
-  router.push({ name: 'Account' });
+  settingsStore.showSettingsDialog = true;
 };
 
 const handleAccounts = () => {

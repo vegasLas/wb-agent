@@ -146,14 +146,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         redirect: { name: 'Chat' },
       },
-      {
-        path: 'account',
-        name: 'Account',
-        component: () => import('../views/AccountView.vue'),
-        meta: {
-          title: 'Профиль',
-        },
-      },
+
       {
         path: 'tasks',
         name: 'Tasks',
