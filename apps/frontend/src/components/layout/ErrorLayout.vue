@@ -17,6 +17,18 @@
       <p class="text-gray-600 dark:text-gray-400 mb-8">
         {{ message }}
       </p>
+
+      <div
+        v-if="showActions"
+        class="flex justify-center"
+      >
+        <Button
+          severity="primary"
+          label="Обновить страницу"
+          icon="pi pi-refresh"
+          @click="reload"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -24,10 +36,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
+import Button from 'primevue/button';
 
 const route = useRoute();
 
-type ErrorType = 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found';
+type ErrorType = 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' | 'server_error';
 
 const errorType = computed(
   () => (route.meta.errorType as ErrorType) || 'not_found',
@@ -72,6 +85,13 @@ const errorConfig: Record<
     iconBg: 'bg-red-100 dark:bg-red-900/30',
     iconColor: 'text-red-600 dark:text-red-400',
   },
+  server_error: {
+    title: 'Технические работы на сервере',
+    message: 'Произошла внутренняя ошибка сервера. Мы уже работаем над исправлением. Попробуйте обновить страницу немного позже.',
+    icon: 'pi pi-server',
+    iconBg: 'bg-red-100 dark:bg-red-900/30',
+    iconColor: 'text-red-600 dark:text-red-400',
+  },
 };
 
 const config = computed(() => errorConfig[errorType.value]);
@@ -80,4 +100,12 @@ const message = computed(() => config.value.message);
 const iconClass = computed(() => config.value.icon);
 const iconBgClass = computed(() => config.value.iconBg);
 const iconColorClass = computed(() => config.value.iconColor);
+
+const showActions = computed(() =>
+  ['server_error', 'maintenance'].includes(errorType.value),
+);
+
+const reload = () => {
+  window.location.reload();
+};
 </script>
