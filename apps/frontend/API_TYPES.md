@@ -533,7 +533,7 @@ The following routes are referenced in the frontend but not implemented in the b
 
 ### Authentication
 
-All routes except `/api/v1/auth/*` and `/api/v1/webhooks/*` require authentication via the `x-init-data` header containing Telegram initData.
+All routes except `/api/v1/auth/*` and `/api/v1/webhooks/*` require authentication via the `Authorization: Bearer <token>` header.
 
 ### Date Handling
 
