@@ -27,6 +27,15 @@ router.get('/', authenticate, async (req, res, next) => {
     }
 
     const currentSub = user.subscriptions?.[0];
+    const now = new Date();
+    const isTrialActive = !!(
+      user.trialUsedAt &&
+      currentSub?.tier === 'LITE' &&
+      currentSub?.endedAt &&
+      currentSub.endedAt > now &&
+      currentSub.endedAt.getTime() <= user.trialUsedAt.getTime() + 15 * 24 * 60 * 60 * 1000
+    );
+
     res.json({
       id: user.id,
       name: user.profile?.name,
@@ -34,6 +43,8 @@ router.get('/', authenticate, async (req, res, next) => {
       subscriptionExpiresAt: currentSub?.endedAt ?? null,
       maxAccounts: user.maxAccounts,
       trialUsedAt: user.trialUsedAt ?? null,
+      isTrial: isTrialActive,
+      trialExpiresAt: isTrialActive ? currentSub!.endedAt.toISOString() : null,
       agreeTerms: user.agreeTerms,
       selectedAccountId: user.selectedAccountId || undefined,
       payments: (user.payments || [])
