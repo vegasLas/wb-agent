@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { authenticate, authenticateUser } from '@/middleware/auth.middleware';
+import { authenticate } from '@/middleware/auth.middleware';
 import { userService } from '@/services/user/';
 import { prisma } from '@/config/database';
 import {
@@ -18,7 +18,7 @@ const logger = createLogger('UserRoutes');
 const router = Router();
 
 // GET /api/v1/user
-router.get('/', authenticateUser, async (req, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
   try {
     const user = await userService.findById(req.user!.id);
 
@@ -135,7 +135,7 @@ router.post(
 );
 
 // GET /api/v1/user/limits - Return current tier limits
-router.get('/limits', authenticateUser, async (req, res, next) => {
+router.get('/limits', authenticate, async (req, res, next) => {
   try {
     const user = await userService.findById(req.user!.id);
 
