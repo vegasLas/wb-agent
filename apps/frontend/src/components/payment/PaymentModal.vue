@@ -99,7 +99,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import Tag from 'primevue/tag';
-import { closeWebApp } from '../../utils/telegram';
+
 
 const props = defineProps<{
   modelValue: boolean;
@@ -165,13 +165,7 @@ async function initializePayment() {
 }
 
 function goToChat() {
-  // Try to close Telegram WebApp if available, otherwise just close the modal
-  const closed = closeWebApp();
-  if (!closed) {
-    // Not in Telegram WebApp context - just close the modal
-    console.log('[PaymentModal] Not in Telegram WebApp, closing modal');
-    close();
-  }
+  close();
 }
 
 function close() {
