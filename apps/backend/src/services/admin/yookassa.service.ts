@@ -176,18 +176,6 @@ export class YookassaService {
       if (!TBOT) return;
       await TBOT.sendMessage(chatId, message, {
         parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🏠 Кабинет', web_app: { url: `${URL}?view=account` } }],
-            [
-              {
-                text: 'ℹ️ Поддержка',
-                url: 'https://t.me/wb_booking_support',
-              },
-            ],
-            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-          ],
-        },
       });
     } catch (error) {
       logger.error('Failed to send payment success notification:', error);

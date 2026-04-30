@@ -168,13 +168,7 @@ async function handleCriticalBookingError({
     });
     const adminChatId = adminUser?.telegram?.chatId;
     if (adminChatId && TBOT) {
-      await TBOT.sendMessage(adminChatId, notificationMessage, {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-          ],
-        },
-      });
+      await TBOT.sendMessage(adminChatId, notificationMessage);
     }
   } catch (dbError) {
     console.error(

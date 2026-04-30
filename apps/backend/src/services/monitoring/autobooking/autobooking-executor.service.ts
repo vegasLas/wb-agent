@@ -350,13 +350,7 @@ export class AutobookingExecutorService implements IAutobookingExecutorService {
       if (adminChatId) {
         const { TBOT } = await import('../../../utils/TBOT');
         if (TBOT) {
-          await TBOT.sendMessage(adminChatId, 'Слишком много запросов', {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-              ],
-            },
-          });
+          await TBOT.sendMessage(adminChatId, 'Слишком много запросов');
         }
       }
     } catch (notifyError) {

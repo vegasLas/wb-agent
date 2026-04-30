@@ -175,11 +175,7 @@ export async function sendLogoutNotification(chatId: string): Promise<void> {
   }
 
   try {
-    await TBOT.sendMessage(chatId, '✅ Вы вышли из аккаунта WB', {
-      reply_markup: {
-        inline_keyboard: [[{ text: '❌', callback_data: 'close_menu' }]],
-      },
-    });
+    await TBOT.sendMessage(chatId, '✅ Вы вышли из аккаунта WB');
   } catch (error) {
     logger.error('Error sending logout notification:', error);
   }

@@ -274,28 +274,6 @@ router.post(
           ].join('\n'),
           {
             parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: '💳 Оплатить',
-                    url: payment.confirmation.confirmation_url,
-                  },
-                ],
-                [
-                  {
-                    text: '🔍 Проверить оплату',
-                    url: returnUrl,
-                  },
-                ],
-                [
-                  {
-                    text: 'Закрыть ❌',
-                    callback_data: 'close_menu',
-                  },
-                ],
-              ],
-            },
           },
         );
       }

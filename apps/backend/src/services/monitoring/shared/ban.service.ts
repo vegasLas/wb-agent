@@ -391,13 +391,6 @@ export class SharedBanService implements ISharedBanService {
         await sharedTelegramNotificationService.sendErrorNotification(
           adminUser.chatId,
           message,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-              ],
-            },
-          },
         );
       }
     } catch (notificationError) {
