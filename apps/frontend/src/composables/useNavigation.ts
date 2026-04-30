@@ -11,7 +11,7 @@ export interface NavItem {
 }
 
 export const primaryNav: NavItem[] = [
-  { id: 'chat', label: 'AI Чат', icon: 'pi pi-comments', route: 'Chat' },
+  { id: 'chat', label: 'AI Ассистент', icon: 'pi pi-comments', route: 'Chat' },
   {
     id: 'autobooking',
     label: 'Автоброни',

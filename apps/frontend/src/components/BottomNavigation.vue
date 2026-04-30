@@ -40,7 +40,7 @@
             ? 'bg-violet-400 text-white shadow-purple-900/20'
             : 'bg-purple-700 hover:bg-violet-400 text-white shadow-purple-900/20',
         ]"
-        aria-label="AI Чат"
+        aria-label="AI Ассистент"
         @click="navigate('/chat')"
       >
         <i class="pi pi-comments text-2xl" />

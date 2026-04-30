@@ -161,7 +161,7 @@ const routes: RouteRecordRaw[] = [
         name: 'Chat',
         component: () => import('../views/ai/ChatView.vue'),
         meta: {
-          title: 'AI Чат',
+          title: 'AI Ассистент',
           requiresAccount: true,
           requiresSupplier: true,
         },
