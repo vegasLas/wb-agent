@@ -1,5 +1,6 @@
 <template>
   <OverlayBadge
+    v-if="notificationsStore.unreadCount > 0"
     :value="notificationsStore.unreadCount > 99 ? '99+' : notificationsStore.unreadCount"
     severity="danger"
     size="small"
@@ -14,6 +15,16 @@
       @click="toggleDropdown"
     />
   </OverlayBadge>
+  <Button
+    v-else
+    icon="pi pi-bell"
+    severity="secondary"
+    text
+    rounded
+    aria-label="Уведомления"
+    class="w-9 h-9"
+    @click="toggleDropdown"
+  />
 
   <!-- Desktop: Popover -->
   <Popover
