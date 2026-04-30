@@ -48,58 +48,61 @@
 
         <!-- Form -->
         <form v-else class="space-y-4" @submit.prevent="handleSubmit">
-          <div
-            v-if="displayError"
-            class="p-4 rounded-xl bg-red-500/10 border border-red-500/20"
+          <AuthAlert
+            :visible="!!displayError"
+            severity="error"
+            :message="displayError"
+          />
+
+          <AuthAlert
+            :visible="isRateLimited"
+            severity="warning"
+            message="Слишком много попыток. Пожалуйста, подождите немного перед следующей попыткой."
+          />
+
+          <FormField
+            label="Новый пароль"
+            required
+            :error="fieldErrors.password"
+            :show-error="touched.password"
+            hint="Минимум 8 символов"
           >
-            <p class="text-red-500 text-sm">{{ displayError }}</p>
-          </div>
-
-          <div v-if="isRateLimited" class="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-            <p class="text-yellow-500 text-sm">
-              Слишком много попыток. Пожалуйста, подождите немного перед следующей попыткой.
-            </p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-secondary mb-1.5">Новый пароль</label>
             <Password
               v-model="password"
-              required
               placeholder="Минимум 8 символов"
               class="w-full"
               :disabled="isLoading"
               :feedback="true"
               toggle-mask
               input-class="w-full"
-              :class="{ 'p-invalid': fieldErrors.password }"
+              :class="{ 'p-invalid': touched.password && fieldErrors.password }"
+              @blur="touched.password = true"
             />
-            <small v-if="fieldErrors.password" class="p-error text-xs mt-1 block">
-              {{ fieldErrors.password }}
-            </small>
-          </div>
+          </FormField>
 
-          <div>
-            <label class="block text-sm font-medium text-secondary mb-1.5">Повторите пароль</label>
+          <FormField
+            label="Повторите пароль"
+            required
+            :error="fieldErrors.confirmPassword"
+            :show-error="touched.confirmPassword"
+          >
             <Password
               v-model="confirmPassword"
-              required
               placeholder="Повторите пароль"
               class="w-full"
               :disabled="isLoading"
               :feedback="false"
               toggle-mask
               input-class="w-full"
+              :class="{ 'p-invalid': touched.confirmPassword && fieldErrors.confirmPassword }"
+              @blur="touched.confirmPassword = true"
             />
-            <small v-if="passwordMismatch" class="p-error text-xs mt-1 block">
-              Пароли не совпадают
-            </small>
-          </div>
+          </FormField>
 
           <Button
             type="submit"
             :loading="isLoading"
-            :disabled="isLoading || !isFormValid"
+            :disabled="isLoading"
             class="w-full"
             label="Изменить пароль"
             icon="pi pi-key"
@@ -111,78 +114,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRoute } from 'vue-router';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
-import { resetPassword } from '@/api/auth/endpoints';
-import { AuthAPIError } from '@/api/auth/errors';
-import { toastHelpers } from '@/utils/ui/toast';
+import FormField from '@/components/ui/FormField.vue';
+import AuthAlert from '@/components/ui/AuthAlert.vue';
+import { useResetPasswordForm } from '@/composables/auth/useResetPasswordForm';
 
-const route = useRoute();
-const token = ref((route.query.token as string) || '');
-const password = ref('');
-const confirmPassword = ref('');
-const isLoading = ref(false);
-const error = ref<AuthAPIError | null>(null);
-const success = ref(false);
-const passwordMismatch = ref(false);
-const tokenErrorType = ref<'expired' | 'used' | 'invalid' | 'wrong_type' | null>(null);
-
-const isFormValid = computed(() => {
-  return password.value.length >= 8 && password.value === confirmPassword.value;
-});
-
-const isRateLimited = computed(() => error.value?.code === 'RATE_LIMITED');
-
-const fieldErrors = computed<Record<string, string>>(() => {
-  if (error.value?.code === 'VALIDATION_ERROR') {
-    return error.value.fieldErrors;
-  }
-  return {};
-});
-
-const displayError = computed(() => {
-  if (!error.value || tokenErrorType.value) return null;
-  const code = error.value.code;
-  if (code === 'RATE_LIMITED') return null;
-  if (code === 'VALIDATION_ERROR') return 'Проверьте правильность заполнения полей.';
-  if (code === 'INTERNAL_ERROR') return 'Сервис временно недоступен. Попробуйте позже.';
-  return error.value.message || 'Ошибка сброса пароля';
-});
-
-async function handleSubmit() {
-  passwordMismatch.value = false;
-
-  if (password.value !== confirmPassword.value) {
-    passwordMismatch.value = true;
-    return;
-  }
-
-  if (!token.value) {
-    error.value = new AuthAPIError(400, 'Отсутствует токен сброса пароля', 'BAD_REQUEST');
-    return;
-  }
-
-  error.value = null;
-  tokenErrorType.value = null;
-  isLoading.value = true;
-
-  try {
-    await resetPassword(token.value, password.value);
-    success.value = true;
-    toastHelpers.success('Пароль изменен', 'Теперь вы можете войти с новым паролем.');
-  } catch (err: unknown) {
-    if (err instanceof AuthAPIError) {
-      error.value = err;
-      tokenErrorType.value = err.tokenErrorType;
-    } else {
-      error.value = new AuthAPIError(500, 'Ошибка сброса пароля', 'INTERNAL_ERROR');
-    }
-  } finally {
-    isLoading.value = false;
-  }
-}
+const {
+  password,
+  confirmPassword,
+  isLoading,
+  success,
+  tokenErrorType,
+  isRateLimited,
+  fieldErrors,
+  displayError,
+  touched,
+  handleSubmit,
+} = useResetPasswordForm();
 </script>
 
 <style scoped>

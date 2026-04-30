@@ -116,8 +116,7 @@
         <section>
           <h2 class="text-lg font-semibold text-theme mb-3">10. Контакты</h2>
           <p>
-            По всем вопросам, связанным с использованием Сервиса, обращайтесь через Telegram бота
-            <a href="https://t.me/wb_booking_bot" target="_blank" rel="noopener" class="text-purple hover:underline">@wb_booking_bot</a>.
+            По всем вопросам, связанным с использованием Сервиса, обращайтесь через форму обратной связи в приложении.
           </p>
         </section>
       </div>

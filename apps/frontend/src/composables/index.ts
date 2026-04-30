@@ -37,6 +37,14 @@ export {
 // Warehouse
 export { useWarehouseSuggestions } from './warehouse';
 
+// Auth
+export {
+  useLoginForm,
+  useRegisterForm,
+  useForgotPasswordForm,
+  useResetPasswordForm,
+} from './auth';
+
 // UI
 export {
   useSkeleton,

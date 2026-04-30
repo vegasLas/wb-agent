@@ -42,7 +42,7 @@
             <ul class="list-disc pl-6 space-y-1">
               <li>Имя, адрес электронной почты, номер телефона;</li>
               <li>Данные аккаунтов Wildberries (идентификаторы поставщиков, API-ключи);</li>
-              <li>Идентификатор Telegram (chat_id, username);</li>
+
               <li>Технические данные (IP-адрес, User-Agent, cookies);</li>
               <li>Информация о подписках и платежах;</li>
               <li>Данные об использовании сервиса (логи, настройки автоматизаций).</li>
@@ -106,7 +106,7 @@
             <h2 class="text-xl font-semibold text-theme mb-3">8. Контакты</h2>
             <p>
               По вопросам, связанным с обработкой персональных данных, вы можете связаться с нами
-              через Telegram бота <a href="https://t.me/wb_booking_bot" target="_blank" rel="noopener" class="text-purple hover:underline">@wb_booking_bot</a>.
+              через форму обратной связи в приложении.
             </p>
           </section>
         </div>
