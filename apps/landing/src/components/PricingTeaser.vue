@@ -260,7 +260,7 @@ const tiers = computed(() => {
         '6 активных автоброней',
         '1 WB аккаунт',
         '300 отзывов в месяц',
-        'AI чат x5 лимит ',
+        'AI чат x10 лимит ',
       ],
     },
     {
@@ -281,7 +281,7 @@ const tiers = computed(() => {
     },
     {
       key: 'MAX',
-      label: 'Максимум',
+      label: 'Премиум',
       monthlyPrice: animatedMaxMonthly.value,
       baseMonthly: maxMonthly[0],
       totalPrice: maxTotals[idx],

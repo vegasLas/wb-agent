@@ -170,9 +170,9 @@ export const FEEDBACK_QUOTA: Record<UserTier, number> = {
 };
 
 // ─── AI chat token budget per tier (in USD) ───
-// Base: FREE = $0.2, LITE = FREE × 5, PRO = LITE × 5, MAX = LITE × 25
+// Base: FREE = $0.1, LITE = FREE × 10, PRO = LITE × 5, MAX = LITE × 25
 export const AI_CHAT_BUDGET_USD: Record<UserTier, number> = {
-  FREE: 0.2,
+  FREE: 0.1,
   LITE: 1.0,
   PRO: 5.0,
   MAX: 25.0,
@@ -189,7 +189,7 @@ export const AI_CHAT_MODEL: Record<UserTier, 'base' | 'free' | 'lite'> = {
 // ─── AI chat limit multiplier per tier ───
 export const AI_CHAT_LIMIT_MULTIPLIER: Record<UserTier, number> = {
   FREE: 1,
-  LITE: 5,
+  LITE: 10,
   PRO: 5,
   MAX: 25,
 };

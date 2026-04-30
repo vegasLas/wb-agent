@@ -320,7 +320,7 @@ const tiers = computed(() => {
         `${AUTOBOOKING_SLOTS.LITE} активных автоброней`,
         `${MAX_ACCOUNTS.LITE} WB аккаунт`,
         `${FEEDBACK_QUOTA.LITE} отзывов в месяц`,
-        'AI чат x5 лимиты ',
+        'AI чат x10 лимиты ',
       ],
     },
     {
@@ -341,7 +341,7 @@ const tiers = computed(() => {
     },
     {
       key: 'MAX' as SubscriptionTier,
-      label: 'Максимум',
+      label: 'Премиум',
       monthlyPrice: animatedMaxMonthly.value,
       baseMonthly: maxMonthlyPrices[0],
       totalPrice: MAX_TARIFFS[idx].price,
