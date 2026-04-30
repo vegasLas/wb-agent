@@ -76,11 +76,6 @@ describe('SharedTelegramNotificationService', () => {
 
       expect(mockTBOT.sendMessage).toHaveBeenCalledWith(chatId, message, {
         parse_mode: 'HTML',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-          ],
-        },
       });
     });
 
@@ -109,7 +104,7 @@ describe('SharedTelegramNotificationService', () => {
       ).resolves.not.toThrow();
     });
 
-    test('should include keyboard markup', async () => {
+    test('should send with parse_mode HTML by default', async () => {
       // Arrange
       mockTBOT.sendMessage.mockResolvedValue({ message_id: 123 } as any);
 
@@ -121,7 +116,7 @@ describe('SharedTelegramNotificationService', () => {
         expect.any(String),
         expect.any(String),
         expect.objectContaining({
-          reply_markup: expect.any(Object),
+          parse_mode: 'HTML',
         }),
       );
     });
@@ -179,11 +174,6 @@ describe('SharedTelegramNotificationService', () => {
 
       expect(mockTBOT.sendMessage).toHaveBeenCalledWith(chatId, message, {
         parse_mode: 'HTML',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-          ],
-        },
       });
     });
 
