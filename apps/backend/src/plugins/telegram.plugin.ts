@@ -184,20 +184,27 @@ export function setupTelegramPlugin(): void {
 
     const isUserAdmin = await isAdmin(msg.from.id);
 
-    let helpText = `<b>Доступные команды:</b>
+    let helpText = `🤖 <b>Бот уведомлений wboi</b>
 
-/start - Начать работу с ботом
-/help - Показать это сообщение`.trim();
+<b>Доступные команды:</b>
+
+/start — Главное меню
+/link_email — Получить код для привязки email
+/help — Показать это сообщение
+
+Основное приложение переехало:
+• wboi.ru
+• app.wboi.ru`.trim();
 
     if (isUserAdmin) {
       helpText += `
 
 <b>Админ команды:</b>
 
-/enable - Включить автобронирование
-/disable - Отключить автобронирование
-/status - Показать статус системы
-/broadcast &lt;сообщение&gt; - Рассылка всем пользователям`;
+/enable — Включить автобронирование
+/disable — Отключить автобронирование
+/status — Показать статус системы
+/broadcast &lt;сообщение&gt; — Рассылка всем пользователям`;
     }
 
     await TBOT?.sendMessage(msg.chat.id, helpText, { parse_mode: 'HTML' });

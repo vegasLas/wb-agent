@@ -7,6 +7,7 @@ import { identityService } from '@/services/auth/identity.service';
 import { generateUserEnvInfo } from '@/utils/userEnvInfo';
 import { AuthProvider } from '@prisma/client';
 import { prisma } from '@/config/database';
+import { linkCodeService } from '@/services/auth/link-code.service';
 
 const URL = process.env.FRONTEND_URL || process.env.URL || '';
 
@@ -27,56 +28,33 @@ export class TelegramService {
       return;
     }
 
-    const mainMenuKeyboard = {
-      inline_keyboard: [
-        [
-          {
-            text: '🔍 Автобронирования',
-            web_app: { url: `${URL}?view=autobookings-main` },
-          },
-          {
-            text: '🔍 Таймслоты',
-            web_app: { url: `${URL}?view=triggers-main` },
-          },
-        ],
-        [
-          {
-            text: '📝 Подписка и оплата',
-            web_app: { url: `${URL}?view=store` },
-          },
-        ],
-        [{ text: '🏢 Авторизация WB', web_app: { url: `${URL}?view=auth` } }],
-        [
-          { text: 'ℹ️ Поддержка', url: 'https://t.me/wb_booking_support' },
-          { text: '💻 Инструкция', url: 'https://wbbook.ru' },
-        ],
-        [{ text: '⭐ Канал бота', url: 'https://t.me/wb_booking' }],
-        [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-      ],
+    const replyKeyboard = {
+      keyboard: [[{ text: '🔗 Привязать email' }]],
+      resize_keyboard: true,
+      one_time_keyboard: false,
     };
 
     const welcomeMessage =
-      `🤖 <b>Бот для автобронирования поставок</b>\n\n` +
+      `🤖 <b>Бот уведомлений wboi</b>\n\n` +
       `${isNewUser ? `🎉 Как новому пользователю, мы дарим вам 14 дней подписки бесплатно! 🎁 \n\n` : ''}` +
-      `Вы можете настроить автоматическое бронирование для любого склада Wildberries.\n\n` +
-      `Очень понятный и интуитивно-удобный интерфейс.\n\n` +
+      `Этот бот отправляет уведомления о бронированиях, слотах и статусе поставок.\n\n` +
+      `Основное приложение переехало:\n` +
+      `• 🌐 <b>wboi.ru</b> — сайт\n` +
+      `• 📱 <b>app.wboi.ru</b> — личный кабинет\n\n` +
+      `Все настройки автобронирования, подписки и авторизации WB теперь только в веб-приложении.\n\n` +
+      `Для входа через браузер привяжите email — нажмите кнопку ниже или отправьте /link_email.\n\n` +
       `При проблемах обращайтесь в <b><a href="https://t.me/wb_booking_support">поддержку</a></b>.\n` +
-      `На нашем <b><a href="https://t.me/wb_booking">канале</a></b> вся актуальная информация и акции.\n\n` +
-      `Выбери пункт меню для продолжения`;
+      `На нашем <b><a href="https://t.me/wb_booking">канале</a></b> вся актуальная информация и акции.`;
 
     if (sendGreeting) {
       await TBOT.sendMessage(chatId, `👋 Привет, ${firstName}!\n`, {
-        reply_markup: {
-          keyboard: [[{ text: '🏠 Главное меню' }]],
-          resize_keyboard: true,
-          one_time_keyboard: false,
-        },
+        reply_markup: replyKeyboard,
       });
     }
 
     await TBOT.sendMessage(chatId, welcomeMessage, {
       parse_mode: 'HTML',
-      reply_markup: mainMenuKeyboard,
+      reply_markup: replyKeyboard,
     });
   }
 
@@ -95,12 +73,18 @@ export class TelegramService {
       try {
         await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
       } catch (deleteError) {
-        const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
+        const errorMsg =
+          deleteError instanceof Error
+            ? deleteError.message
+            : String(deleteError);
         if (
           !errorMsg.includes("message can't be deleted for everyone") &&
           !errorMsg.includes('message to delete not found')
         ) {
-          logger.warn('Error deleting message in subscription check:', deleteError);
+          logger.warn(
+            'Error deleting message in subscription check:',
+            deleteError,
+          );
         }
       }
       await this.sendMainMenu({
@@ -120,13 +104,19 @@ export class TelegramService {
           show_alert: true,
         });
       } catch (answerError) {
-        const errorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+        const errorMsg =
+          answerError instanceof Error
+            ? answerError.message
+            : String(answerError);
         if (
           !errorMsg.includes('query is too old') &&
           !errorMsg.includes('response timeout expired') &&
           !errorMsg.includes('query ID is invalid')
         ) {
-          logger.warn('Error answering callback query in subscription check:', answerError);
+          logger.warn(
+            'Error answering callback query in subscription check:',
+            answerError,
+          );
         }
       }
     }
@@ -160,14 +150,25 @@ export class TelegramService {
         case 'main_menu':
           if (callbackQuery.message?.message_id) {
             try {
-              await TBOT.deleteMessage(chatId, callbackQuery.message.message_id);
+              await TBOT.deleteMessage(
+                chatId,
+                callbackQuery.message.message_id,
+              );
             } catch (deleteError) {
-              const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
+              const errorMsg =
+                deleteError instanceof Error
+                  ? deleteError.message
+                  : String(deleteError);
               if (
-                !errorMsg.includes("Bad Request: message can't be deleted for everyone") &&
+                !errorMsg.includes(
+                  "Bad Request: message can't be deleted for everyone",
+                ) &&
                 !errorMsg.includes('message to delete not found')
               ) {
-                logger.warn('Error deleting message in main_menu:', deleteError);
+                logger.warn(
+                  'Error deleting message in main_menu:',
+                  deleteError,
+                );
               }
             }
           }
@@ -192,13 +193,19 @@ export class TelegramService {
                   show_alert: true,
                 });
               } catch (answerError) {
-                const errorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+                const errorMsg =
+                  answerError instanceof Error
+                    ? answerError.message
+                    : String(answerError);
                 if (
                   !errorMsg.includes('query is too old') &&
                   !errorMsg.includes('response timeout expired') &&
                   !errorMsg.includes('query ID is invalid')
                 ) {
-                  logger.warn('Error answering callback query for old message:', answerError);
+                  logger.warn(
+                    'Error answering callback query for old message:',
+                    answerError,
+                  );
                 }
               }
             } else {
@@ -208,12 +215,20 @@ export class TelegramService {
                   callbackQuery.message.message_id,
                 );
               } catch (deleteError) {
-                const errorMsg = deleteError instanceof Error ? deleteError.message : String(deleteError);
+                const errorMsg =
+                  deleteError instanceof Error
+                    ? deleteError.message
+                    : String(deleteError);
                 if (
-                  !errorMsg.includes("Bad Request: message can't be deleted for everyone") &&
+                  !errorMsg.includes(
+                    "Bad Request: message can't be deleted for everyone",
+                  ) &&
                   !errorMsg.includes('message to delete not found')
                 ) {
-                  logger.warn('Error deleting message in close_menu:', deleteError);
+                  logger.warn(
+                    'Error deleting message in close_menu:',
+                    deleteError,
+                  );
                 }
               }
             }
@@ -231,11 +246,6 @@ export class TelegramService {
               chat_id: chatId,
               message_id: callbackQuery.message?.message_id,
               parse_mode: 'HTML',
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-                ],
-              },
             },
           );
           break;
@@ -248,7 +258,9 @@ export class TelegramService {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       if (
-        errorMessage.includes("Bad Request: message can't be deleted for everyone") ||
+        errorMessage.includes(
+          "Bad Request: message can't be deleted for everyone",
+        ) ||
         errorMessage.includes('message to delete not found')
       ) {
         try {
@@ -257,13 +269,19 @@ export class TelegramService {
             show_alert: true,
           });
         } catch (answerError) {
-          const answerErrorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+          const answerErrorMsg =
+            answerError instanceof Error
+              ? answerError.message
+              : String(answerError);
           if (
             !answerErrorMsg.includes('query is too old') &&
             !answerErrorMsg.includes('response timeout expired') &&
             !answerErrorMsg.includes('query ID is invalid')
           ) {
-            logger.warn('Error answering callback query for delete error:', answerError);
+            logger.warn(
+              'Error answering callback query for delete error:',
+              answerError,
+            );
           }
         }
       } else {
@@ -274,13 +292,19 @@ export class TelegramService {
             show_alert: true,
           });
         } catch (answerError) {
-          const answerErrorMsg = answerError instanceof Error ? answerError.message : String(answerError);
+          const answerErrorMsg =
+            answerError instanceof Error
+              ? answerError.message
+              : String(answerError);
           if (
             !answerErrorMsg.includes('query is too old') &&
             !answerErrorMsg.includes('response timeout expired') &&
             !answerErrorMsg.includes('query ID is invalid')
           ) {
-            logger.warn('Error answering callback query for generic error:', answerError);
+            logger.warn(
+              'Error answering callback query for generic error:',
+              answerError,
+            );
           }
         }
       }
@@ -377,13 +401,69 @@ export class TelegramService {
 
     if (!identity) return;
 
-    if (msg.text === '🏠 Главное меню') {
-      await this.sendMainMenu({
-        chatId,
-        firstName: msg.from.first_name,
-        sendGreeting: false,
-      });
+    if (msg.text === '🔗 Привязать email') {
+      await this.sendLinkEmailPrompt(chatId, msg.from.id);
     }
+  }
+
+  private async sendLinkEmailPrompt(
+    chatId: string,
+    userId: number,
+  ): Promise<void> {
+    if (!TBOT) return;
+
+    const identity = await prisma.userIdentity.findUnique({
+      where: {
+        provider_providerId: {
+          provider: AuthProvider.TELEGRAM,
+          providerId: String(userId),
+        },
+      },
+      include: { user: true },
+    });
+
+    if (!identity) {
+      await TBOT.sendMessage(
+        chatId,
+        '❌ Вы не зарегистрированы.\n\nОтправьте /start для создания аккаунта.',
+      );
+      return;
+    }
+
+    const emailIdentity = await prisma.userIdentity.findFirst({
+      where: { userId: identity.user.id, provider: AuthProvider.EMAIL },
+    });
+
+    if (emailIdentity) {
+      await TBOT.sendMessage(
+        chatId,
+        '✅ У вас уже привязан email: ' + (emailIdentity.email || 'неизвестно'),
+      );
+      return;
+    }
+
+    const code = await linkCodeService.generate(identity.user.id);
+
+    await TBOT.sendMessage(
+      chatId,
+      '🔗 <b>Привязка email</b>\n\n' +
+        `Ваш код: <code>${code}</code>\n\n` +
+        'Нажмите кнопку ниже, чтобы открыть форму регистрации с уже вставленным кодом.\n\n' +
+        `Или перейдите вручную: ${URL}/register?telegramCode=${code}`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '🔗 Открыть форму регистрацию',
+                url: `${URL}/register?telegramCode=${code}`,
+              },
+            ],
+          ],
+        },
+      },
+    );
   }
 
   async sendMessage(
