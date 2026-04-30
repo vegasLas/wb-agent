@@ -229,7 +229,14 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
         tokenExpiresAt.value = null;
         setAuthToken(null);
         resetAppState();
+        return false;
       }
+
+      // On 500, re-throw so the router guard can show the maintenance page
+      if (axiosError?.response?.status === 500) {
+        throw error;
+      }
+
       return false;
     }
   }

@@ -1,6 +1,7 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-theme p-4">
-    <div class="w-full max-w-md">
+  <div class="min-h-screen flex items-center justify-center bg-theme p-4 relative overflow-hidden">
+    <ParticleBackground class="absolute inset-0" />
+    <div class="w-full max-w-md relative z-10">
       <!-- Logo/Brand -->
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple mb-4 shadow-lg">
@@ -182,6 +183,7 @@ import Button from 'primevue/button';
 import { useBrowserAuthStore } from '@/stores/auth';
 import { resendVerification } from '@/api/auth/endpoints';
 import { AuthAPIError } from '@/api/auth/errors';
+import ParticleBackground from '@/components/ParticleBackground.vue';
 
 const router = useRouter();
 const route = useRoute();

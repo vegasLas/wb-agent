@@ -98,9 +98,9 @@ export const FEEDBACK_QUOTA: Record<SubscriptionTier, number> = {
 };
 
 // ─── AI chat token budget per tier (in USD) ───
-// Base: FREE = $0.2, LITE = FREE × 5, PRO = LITE × 5, MAX = LITE × 25
+// Base: FREE = $0.1, LITE = FREE × 10, PRO = LITE × 5, MAX = LITE × 25
 export const AI_CHAT_BUDGET_USD: Record<SubscriptionTier, number> = {
-  FREE: 0.2,
+  FREE: 0.1,
   LITE: 1.0,
   PRO: 5.0,
   MAX: 25.0,
