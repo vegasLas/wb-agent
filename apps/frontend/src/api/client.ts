@@ -4,7 +4,6 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-import { getInitData } from '../utils/telegram';
 import { normalizeAuthError } from './auth/errors';
 import { toastHelpers } from '../utils/ui/toast';
 
@@ -13,31 +12,10 @@ const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 const TOKEN_EXPIRES_AT_KEY = 'auth_token_expires_at';
 
 /**
- * Check if current mode is Telegram
- * Uses window.__AUTH_MODE__ or checks localStorage for cached initData
- */
-function isTelegramMode(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  // Check global flag first
-  if (window.__AUTH_MODE__ === 'telegram') return true;
-
-  // Fallback: check if we have cached initData in localStorage
-  // This handles sub-route reloads where URL hash is lost
-  return getInitData() !== null;
-}
-
-/**
- * Get authentication token based on current auth mode
+ * Get authentication token from localStorage
  */
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-
-  if (isTelegramMode()) {
-    // Use utility that checks window global and localStorage
-    return getInitData();
-  }
-
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
@@ -68,7 +46,7 @@ function isTokenExpiringSoon(thresholdMs = 60000): boolean {
 }
 
 /**
- * Set or remove the auth token (for browser mode)
+ * Set or remove the auth token
  */
 export function setAuthToken(token: string | null): void {
   if (typeof window === 'undefined') return;
@@ -162,11 +140,10 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
     const token = getAuthToken();
-    const mode = isTelegramMode() ? 'telegram' : 'browser';
 
-    // For browser mode, check if token is expiring soon and refresh proactively
+    // Check if token is expiring soon and refresh proactively
     // Skip refresh for the refresh endpoint itself to avoid loops
-    if (!isTelegramMode() && config.url !== '/auth/refresh' && isTokenExpiringSoon()) {
+    if (config.url !== '/auth/refresh' && isTokenExpiringSoon()) {
       const refreshed = await refreshAccessToken();
       if (!refreshed) {
         // Refresh failed — clear tokens and let the request proceed (it will 401)
@@ -181,17 +158,11 @@ apiClient.interceptors.request.use(
     }
 
     if (token && config.headers) {
-      if (isTelegramMode()) {
-        config.headers['x-init-data'] = token;
-      } else {
-        config.headers['Authorization'] = `Bearer ${token}`;
-      }
+      config.headers['Authorization'] = `Bearer ${token}`;
     } else {
       console.log(
         '[API Client] Request without auth:',
         config.url,
-        'mode:',
-        mode,
       );
     }
 
@@ -245,11 +216,6 @@ apiClient.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      // In Telegram mode, just propagate the error
-      if (isTelegramMode()) {
-        return Promise.reject(normalized || error);
-      }
-
       // If this was the refresh endpoint itself, refresh token is dead — redirect to login
       if (originalRequest?.url === '/auth/refresh') {
         console.log('[API Client] Refresh token invalid, redirecting to login');

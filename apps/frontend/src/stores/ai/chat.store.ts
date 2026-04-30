@@ -10,28 +10,17 @@ import {
   type AIConversation,
   type AttachmentMeta,
 } from '@/api/ai';
-import { getInitData } from '@/utils/telegram';
 import { createToolTrackingStream } from '@/utils/ai/stream';
 
 const AUTH_TOKEN_KEY = 'auth_access_token';
 
-function isTelegramMode(): boolean {
-  if (typeof window === 'undefined') return false;
-  if (window.__AUTH_MODE__ === 'telegram') return true;
-  return getInitData() !== null;
-}
-
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {};
 
-  const token = isTelegramMode()
-    ? getInitData()
-    : localStorage.getItem(AUTH_TOKEN_KEY);
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (!token) return {};
 
-  return isTelegramMode()
-    ? { 'x-init-data': token }
-    : { Authorization: `Bearer ${token}` };
+  return { Authorization: `Bearer ${token}` };
 }
 
 function getMessageContent(message: UIMessage): string {
@@ -120,8 +109,6 @@ function createChatSession(
       experimental_throttle: 50,
       onError: (err) => {
         console.error('[CHAT-STORE] AI SDK error:', err);
-        // The AI SDK surfaces stream errors here; the store's computed `error`
-        // property (activeSession?.chat.error) will reflect this automatically.
       },
     }),
   );
@@ -232,8 +219,6 @@ export const useAIChatStore = defineStore('aiChat', () => {
     }
     session.finishedToolCallIds.clear();
 
-    // Show pending item in sidebar immediately for new conversations
-    // OR bump existing conversation to top optimistically
     const currentId = conversationId.value;
     if (currentId && isPendingId(currentId)) {
       pendingConversations.value.set(currentId, {
@@ -243,7 +228,6 @@ export const useAIChatStore = defineStore('aiChat', () => {
         updatedAt: new Date().toISOString(),
       });
     } else if (currentId) {
-      // Optimistically bump existing conversation to top
       const idx = conversations.value.findIndex((c) => c.id === currentId);
       if (idx !== -1) {
         conversations.value[idx] = {
@@ -269,17 +253,14 @@ export const useAIChatStore = defineStore('aiChat', () => {
       throw err;
     }
 
-    // After streaming finishes, refresh conversation list and migrate sessions
     await loadConversations();
 
-    // Match newly created backend conversations to pending items
     const loaded = [...conversations.value].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     );
     const pendingIds = [...pendingConversations.value.keys()];
 
     for (const pendingId of pendingIds) {
-      // Find the most recent backend conversation that doesn't already have a session
       const unmatched = loaded.find(
         (c) => !sessions.value.has(c.id) && !isPendingId(c.id),
       );
@@ -290,17 +271,12 @@ export const useAIChatStore = defineStore('aiChat', () => {
           sessions.value.delete(pendingId);
         }
         pendingConversations.value.delete(pendingId);
-        // If this was the active conversation, switch to the real ID
         if (conversationId.value === pendingId) {
           conversationId.value = unmatched.id;
         }
       }
     }
 
-    // After migration, ensure all active sessions have the correct conversationId
-    // by recreating them with a mutable ref pointing to the real ID.
-    // This fixes the closure capture issue where the session's transport
-    // still sends id: undefined after migration.
     const activeId = conversationId.value;
     if (activeId && !isPendingId(activeId)) {
       const existingSession = sessions.value.get(activeId);
