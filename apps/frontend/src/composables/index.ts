@@ -41,7 +41,4 @@ export { useWarehouseSuggestions } from './warehouse';
 export {
   useSkeleton,
   useViewReady,
-  useTelegram,
-  useMainButton,
-  useBackButton,
 } from './ui';
