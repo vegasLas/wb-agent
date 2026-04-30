@@ -386,7 +386,16 @@ router.beforeEach(async (to, from, next) => {
     // This prevents repeated API calls when switching between screens
     if (!isBrowserAuthInitialized || !browserAuth.isAuthenticated) {
       console.log('[Router] Initializing browser auth...');
-      await browserAuth.initAuth();
+      try {
+        await browserAuth.initAuth();
+      } catch (error: any) {
+        const errorType = classifyError(error);
+        if (errorType === 'maintenance') {
+          next({ name: errorToRouteName(errorType), replace: true });
+          return;
+        }
+        // For non-maintenance errors, continue to auth check below
+      }
       isBrowserAuthInitialized = true;
     } else {
       console.log('[Router] Browser auth already initialized, skipping re-fetch');
@@ -468,7 +477,7 @@ function classifyError(
 
   const status = error?.response?.status || error?.status || error?.statusCode;
 
-  if (status === 503) {
+  if (status === 503 || status === 500) {
     return 'maintenance';
   }
 
