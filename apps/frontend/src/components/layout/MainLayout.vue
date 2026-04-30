@@ -93,6 +93,7 @@
     <!-- Global Modals -->
     <MainHelpModal v-model="showHelpModal" />
     <AccountManagementView v-model="accountModalStore.showModal" />
+    <SettingsDialog v-model="settingsStore.showSettingsDialog" />
 
     <!-- Create Dialogs -->
     <AutobookingCreateDialog
@@ -114,9 +115,11 @@ import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import { useAccountSupplierModalStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
+import { useSettingsStore } from '@/stores/ui';
 import { usePermissions } from '@/composables/usePermissions';
 import { MainHelpModal } from '../help';
 import { AccountManagementView } from '../account-management';
+import { SettingsDialog } from '../settings';
 import { useSkeleton } from '../../composables/ui';
 import AppSidebar from './AppSidebar.vue';
 import MobileNavDrawer from './MobileNavDrawer.vue';
@@ -129,6 +132,7 @@ import { useAutobookingListStore } from '@/stores/autobooking';
 import { useTriggerStore } from '@/stores/triggers';
 
 const accountModalStore = useAccountSupplierModalStore();
+const settingsStore = useSettingsStore();
 const userStore = useUserStore();
 const route = useRoute();
 const showHelpModal = ref(false);
