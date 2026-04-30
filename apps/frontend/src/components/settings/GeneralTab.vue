@@ -10,7 +10,7 @@
           class="flex flex-col items-center gap-2 rounded-xl border border-deep-border p-4 transition-all duration-200 hover:border-purple-500/50"
           :class="[
             colorMode === option.value
-              ? 'bg-purple-500/10 border-purple-500 text-white'
+              ? 'bg-purple-500/10 border-purple-500 text-purple-700 dark:text-white'
               : 'bg-elevated text-secondary hover:text-theme',
           ]"
           @click="setTheme(option.value)"

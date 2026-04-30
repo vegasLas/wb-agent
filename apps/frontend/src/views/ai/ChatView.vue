@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import { useViewReady } from '@/composables/ui';
 import Button from 'primevue/button';
@@ -7,14 +7,40 @@ import Drawer from 'primevue/drawer';
 import ConversationList from '@/components/ai/ConversationList.vue';
 import ChatMessageList from '@/components/ai/ChatMessageList.vue';
 import ChatInput from '@/components/ai/ChatInput.vue';
+import apiClient from '@/api/client';
 
 const store = useAIChatStore();
 const { viewReady } = useViewReady();
 const historyDrawerVisible = ref(false);
 const chatInputRef = ref<InstanceType<typeof ChatInput> | null>(null);
 
+interface AIChatBudget {
+  spent: number;
+  max: number;
+  resetDate?: string;
+}
+
+const aiChatBudget = ref<AIChatBudget | null>(null);
+
+const isLimitReached = computed(() => {
+  if (!aiChatBudget.value) return false;
+  const { spent, max } = aiChatBudget.value;
+  if (max <= 0) return false;
+  return spent >= max;
+});
+
+async function fetchLimits() {
+  try {
+    const response = await apiClient.get('/user/limits');
+    aiChatBudget.value = response.data.aiChatBudget || null;
+  } catch (error) {
+    console.error('Failed to fetch chat limits:', error);
+  }
+}
+
 onMounted(() => {
   store.loadConversations();
+  fetchLimits();
   viewReady();
 });
 
@@ -44,7 +70,7 @@ function handleFillInput(text: string) {
       >
         <div class="flex items-center gap-2 min-w-0">
           <i class="pi pi-sparkles text-purple-600" />
-          <h1 class="font-semibold">AI Assistant</h1>
+          <h1 class="font-semibold">AI ассистент</h1>
         </div>
 
         <!-- Mobile actions: new chat + history drawer -->
@@ -77,7 +103,7 @@ function handleFillInput(text: string) {
       </div>
 
       <ChatMessageList @send="handleFillInput" />
-      <ChatInput ref="chatInputRef" />
+      <ChatInput ref="chatInputRef" :limit-reached="isLimitReached" />
     </div>
 
     <!-- Desktop conversation list -->

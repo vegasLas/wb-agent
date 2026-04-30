@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAIChatStore } from '@/stores/ai/chat.store';
 import { useTypewriterPlaceholder } from '@/composables/ai/useTypewriterPlaceholder';
 import { ABILITY_PROMPTS } from '@/utils/ai-abilities';
 import CommandSelector from '@/components/ai/CommandSelector.vue';
+// Message removed — using custom themed alert
+import Button from 'primevue/button';
 import type { AICommand } from '@/utils/ai-commands';
 
+const props = defineProps<{
+  limitReached?: boolean;
+}>();
+
 const store = useAIChatStore();
+const router = useRouter();
 const inputText = ref('');
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -123,7 +131,8 @@ function removeFile(index: number) {
 async function handleSubmit() {
   if (
     (!inputText.value.trim() && attachedFiles.value.length === 0) ||
-    isLoading.value
+    isLoading.value ||
+    props.limitReached
   )
     return;
   const text = inputText.value.trim();
@@ -132,6 +141,10 @@ async function handleSubmit() {
   attachedFiles.value = [];
   adjustHeight();
   await store.sendMessage(text, files);
+}
+
+function goToPayments() {
+  router.push({ name: 'Payments' });
 }
 
 function handleKeydown(e: KeyboardEvent) {
@@ -179,9 +192,26 @@ function getFileIcon(file: File): string {
     @dragleave="handleDragLeave"
     @drop="handleDrop"
   >
+    <!-- Limit reached alert -->
+    <div
+      v-if="limitReached"
+      class="mb-3 flex items-center justify-between gap-4 bg-purple-900/20 border border-purple-500/30 rounded-xl px-4 py-3"
+    >
+      <span class="text-sm text-purple-200">
+        Вы достигли лимита AI ассистента. Обновите подписку, чтобы продолжить.
+      </span>
+      <button
+        type="button"
+        class="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-600 text-white transition-colors"
+        @click="goToPayments"
+      >
+        Обновить подписку
+      </button>
+    </div>
+
     <!-- Drag overlay -->
     <div
-      v-if="isDragOver"
+      v-if="isDragOver && !limitReached"
       class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center bg-card/95 z-10 pointer-events-none"
     >
       <i class="pi pi-upload text-2xl text-purple mb-2" />
@@ -194,12 +224,14 @@ function getFileIcon(file: File): string {
       ref="textareaRef"
       v-model="inputText"
       rows="1"
-      :disabled="isLoading"
+      :disabled="isLoading || limitReached"
       class="w-full min-h-[28px] md:min-h-[72px] max-h-[240px] bg-transparent text-theme text-base resize-none outline-none border-none placeholder:text-secondary disabled:opacity-60"
       :placeholder="
-        isFocused || hasMessages
-          ? 'Напишите задачу для ИИ...'
-          : dynamicPlaceholder
+        limitReached
+          ? 'Лимит исчерпан'
+          : isFocused || hasMessages
+            ? 'Напишите задачу для ИИ...'
+            : dynamicPlaceholder
       "
       @keydown="handleKeydown"
       @input="adjustHeight"
@@ -222,13 +254,13 @@ function getFileIcon(file: File): string {
         <button
           type="button"
           class="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-lg text-secondary hover:text-white transition-colors"
-          :disabled="isLoading || attachedFiles.length >= MAX_FILES"
+          :disabled="isLoading || attachedFiles.length >= MAX_FILES || limitReached"
           @click="fileInputRef?.click()"
         >
           <i class="pi pi-paperclip text-sm" />
         </button>
 
-        <CommandSelector :disabled="isLoading" @select="selectCommand" />
+        <CommandSelector :disabled="isLoading || limitReached" @select="selectCommand" />
 
         <!-- Attachment chips -->
         <div v-if="attachedFiles.length > 0" class="flex items-center gap-1.5">
@@ -263,7 +295,7 @@ function getFileIcon(file: File): string {
         v-else
         type="submit"
         class="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-purple text-white hover:bg-purple-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        :disabled="!hasInput"
+        :disabled="!hasInput || limitReached"
       >
         <i class="pi pi-send text-xs" />
       </button>

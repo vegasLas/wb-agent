@@ -163,7 +163,7 @@ export const MAX_ACCOUNTS: Record<UserTier, number> = {
 
 // ─── Feedback reply quotas per tier ───
 export const FEEDBACK_QUOTA: Record<UserTier, number> = {
-  FREE: 100,
+  FREE: 50,
   LITE: 300,
   PRO: 2000,
   MAX: Infinity,

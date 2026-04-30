@@ -220,6 +220,10 @@ pre {
     background-color: var(--color-elevated);
   }
   
+  .bg-border {
+    background-color: var(--color-border);
+  }
+  
   /* Text utilities */
   .text-theme {
     color: var(--color-text);
@@ -596,7 +600,7 @@ pre {
   border-radius: 6px !important;
 }
 
-.p-checkbox .p-checkbox-box.p-highlight {
+.p-checkbox-checked .p-checkbox-box {
   background: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
 }
@@ -605,7 +609,7 @@ pre {
   border-color: var(--color-primary) !important;
 }
 
-.p-checkbox .p-checkbox-box.p-highlight:hover {
+.p-checkbox-checked .p-checkbox-box:hover {
   background: var(--color-primary-hover) !important;
   border-color: var(--color-primary-hover) !important;
 }
@@ -672,7 +676,7 @@ pre {
   background: var(--color-bg) !important;
 }
 
-.p-multiselect-panel .p-checkbox-box.p-highlight {
+.p-multiselect-panel .p-checkbox-checked .p-checkbox-box {
   background: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
 }
@@ -762,7 +766,7 @@ pre {
   background: var(--color-bg) !important;
 }
 
-.p-multiselect-panel .p-checkbox-box.p-highlight {
+.p-multiselect-panel .p-checkbox-checked .p-checkbox-box {
   background: #6A39F4 !important;
   border-color: #6A39F4 !important;
 }
