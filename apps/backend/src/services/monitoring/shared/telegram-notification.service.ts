@@ -40,11 +40,6 @@ export class SharedTelegramNotificationService
 
     const defaultOptions: TelegramNotificationOptions = {
       parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-        ],
-      },
       ...options,
     };
 
@@ -77,11 +72,6 @@ export class SharedTelegramNotificationService
 
     const defaultOptions: TelegramNotificationOptions = {
       parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '❌ Закрыть', callback_data: 'close_menu' }],
-        ],
-      },
       ...options,
     };
 

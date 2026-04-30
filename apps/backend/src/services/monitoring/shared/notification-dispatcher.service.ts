@@ -293,9 +293,6 @@ export class NotificationDispatcherService {
       try {
         await TBOT.sendMessage(chatId, message, {
           parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [[{ text: '❌ Закрыть', callback_data: 'close_menu' }]],
-          },
         });
       } catch (error) {
         logger.error(`Telegram trigger notification failed for chat ${chatId}:`, error);

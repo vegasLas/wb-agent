@@ -51,25 +51,7 @@ export class ChannelSubscriptionService {
         chatId,
         '❗ Для использования бота необходимо подписаться на наш канал @wb_booking\n\n' +
           'В котором вы можете найти все актуальные акции и скидки.\n\n' +
-          'После подписки нажмите кнопку "Проверить подписку"',
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: '📢 Подписаться на канал',
-                  url: 'https://t.me/wb_booking',
-                },
-              ],
-              [
-                {
-                  text: '🔄 Проверить подписку',
-                  callback_data: `${isNotNewUser ? 'check_subscription' : 'check_subscription_new_user'}`,
-                },
-              ],
-            ],
-          },
-        },
+          'После подписки отправьте /start снова.',
       );
     } catch (error) {
       logger.error('Error sending subscription request:', error);

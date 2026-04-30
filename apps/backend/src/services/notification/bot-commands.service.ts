@@ -73,15 +73,19 @@ export class BotCommandsService {
         chatId,
         '🔗 <b>Привязка email</b>\n\n' +
           `Ваш код: <code>${code}</code>\n\n` +
-          `1. Откройте ${url}/register\n` +
-          '2. Заполните email, имя, пароль\n' +
-          `3. Введите код <code>${code}</code> в поле "Код из Telegram"\n\n` +
+          'Нажмите кнопку ниже, чтобы открыть форму регистрации с уже вставленным кодом.\n\n' +
+          `Или перейдите вручную: ${url}/register?telegramCode=${code}\n\n` +
           '⏳ Код действителен 1 час.',
         {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '📋 Копировать код', copy_text: { text: code } }],
+              [
+                {
+                  text: '🔗 Открыть форму регистрацию',
+                  url: `${url}/register?telegramCode=${code}`,
+                },
+              ],
             ],
           },
         },
@@ -102,11 +106,14 @@ export class BotCommandsService {
 
     await TBOT.sendMessage(
       msg.chat.id,
-      '🤖 <b>Доступные команды</b>\n\n' +
-        '/link_email - Получить код для привязки email\n' +
-        '/help - Показать это сообщение\n\n' +
-        '💡 <b>Совет:</b> Привяжите email для входа через браузер!\n' +
-        'Откройте веб-приложение через кнопку меню бота.',
+      '🤖 <b>Бот уведомлений wboi</b>\n\n' +
+        '/start — Главное меню\n' +
+        '/link_email — Получить код для привязки email\n' +
+        '/help — Показать это сообщение\n\n' +
+        'Основное приложение переехало:\n' +
+        '• wboi.ru\n' +
+        '• app.wboi.ru\n\n' +
+        '💡 Привяжите email для входа через браузер.',
       { parse_mode: 'HTML' },
     );
   }
