@@ -98,16 +98,6 @@
           window.__IS_TELEGRAM_WEBAPP__ = isTelegram;
           window.__FORCE_BROWSER_MODE__ = forceBrowserMode;
           window.__AUTH_MODE__ = isTelegram ? 'telegram' : 'browser';
-
-          console.log('[Auth Detection]', {
-            isTelegram,
-            authMode: window.__AUTH_MODE__,
-            hasInitData,
-            hasInitDataInSearch,
-            hasInitDataInHash,
-            hasInitDataFromObject,
-            hasTgObject: !!tg,
-          });
         } catch (error) {
           console.error('[Auth Detection] Error:', error);
           window.__IS_TELEGRAM_WEBAPP__ = false;
@@ -116,7 +106,6 @@
         }
       })();
     </script>
-
     <!-- Yandex.Metrika counter -->
     <script type="text/javascript">
       (function (m, e, t, r, i, k, a) {
