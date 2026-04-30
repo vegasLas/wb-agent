@@ -301,7 +301,7 @@ const tiers = computed(() => {
         `${AUTOBOOKING_SLOTS.FREE} активная автобронь`,
         `${MAX_ACCOUNTS.FREE} WB аккаунт`,
         `${FEEDBACK_QUOTA.FREE} отзывов в месяц`,
-        'AI чат',
+        'AI-ассистент — базовый',
         'Триггеры',
         'Тарифы и отчеты',
         'Акции и реклама',
@@ -320,7 +320,7 @@ const tiers = computed(() => {
         `${AUTOBOOKING_SLOTS.LITE} активных автоброней`,
         `${MAX_ACCOUNTS.LITE} WB аккаунт`,
         `${FEEDBACK_QUOTA.LITE} отзывов в месяц`,
-        'AI чат x10 лимиты ',
+        'AI-ассистент — увеличенный лимит',
       ],
     },
     {
@@ -336,7 +336,7 @@ const tiers = computed(() => {
         `${AUTOBOOKING_SLOTS.PRO} активных автоброней`,
         `${MAX_ACCOUNTS.PRO} WB аккаунта`,
         `${FEEDBACK_QUOTA.PRO} отзывов в месяц`,
-        'AI чат x5 лайт лимиты',
+        'AI-ассистент — x5 лайт',
       ],
     },
     {
@@ -351,7 +351,7 @@ const tiers = computed(() => {
         `${AUTOBOOKING_SLOTS.MAX} активных автоброней`,
         '∞ WB аккаунтов',
         '∞ отзывов',
-        'AI чат lite x25 limit',
+        'AI-ассистент — x25 лайт',
       ],
     },
   ];
