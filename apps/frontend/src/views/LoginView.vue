@@ -1,25 +1,23 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-theme p-4 relative overflow-hidden">
+  <div
+    class="min-h-screen flex items-center justify-center bg-theme p-4 relative overflow-hidden"
+  >
     <ParticleBackground class="absolute inset-0" />
     <div class="w-full max-w-md relative z-10">
       <!-- Logo/Brand -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple mb-4 shadow-lg">
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple mb-4 shadow-lg"
+        >
           <i class="pi pi-shopping-bag text-white text-2xl" />
         </div>
-        <h1 class="text-2xl font-bold text-theme mb-2">
-          wboi
-        </h1>
-        <p class="text-secondary">
-          Вход в систему
-        </p>
+        <h1 class="text-2xl font-bold text-theme mb-2">wboi</h1>
+        <p class="text-secondary">Вход в систему</p>
       </div>
 
       <!-- Login Card -->
       <div class="crypto-card">
-        <h2 class="text-lg font-semibold text-theme mb-6">
-          Вход
-        </h2>
+        <h2 class="text-lg font-semibold text-theme mb-6">Вход</h2>
 
         <!-- Error Message -->
         <AuthAlert
@@ -92,7 +90,9 @@
           </FormField>
 
           <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2 text-sm text-secondary cursor-pointer">
+            <label
+              class="flex items-center gap-2 text-sm text-secondary cursor-pointer"
+            >
               <input
                 v-model="rememberMe"
                 type="checkbox"
@@ -100,7 +100,10 @@
               />
               Запомнить меня
             </label>
-            <RouterLink to="/forgot-password" class="text-sm text-purple hover:underline">
+            <RouterLink
+              to="/forgot-password"
+              class="text-sm text-purple hover:underline"
+            >
               Забыли пароль?
             </RouterLink>
           </div>
@@ -119,14 +122,20 @@
         <div class="mt-4 text-center">
           <p class="text-muted text-xs leading-relaxed">
             Используя сервис, вы соглашаетесь с
-            <RouterLink to="/terms" class="text-purple hover:underline">Пользовательским соглашением</RouterLink>
+            <RouterLink to="/terms" class="text-purple hover:underline"
+              >Пользовательским соглашением</RouterLink
+            >
             и
-            <RouterLink to="/privacy" class="text-purple hover:underline">Политикой конфиденциальности</RouterLink>
+            <RouterLink to="/privacy" class="text-purple hover:underline"
+              >Политикой конфиденциальности</RouterLink
+            >
           </p>
         </div>
 
         <!-- Register Link -->
-        <div class="mt-6 pt-6 border-t border-[var(--color-border)] text-center">
+        <div
+          class="mt-6 pt-6 border-t border-[var(--color-border)] text-center"
+        >
           <p class="text-secondary text-sm">
             Нет аккаунта?
             <RouterLink to="/register" class="text-purple hover:underline ml-1">
@@ -134,17 +143,6 @@
             </RouterLink>
           </p>
         </div>
-      </div>
-
-      <!-- Support link -->
-      <div class="mt-6 text-center">
-        <RouterLink
-          to="/"
-          class="inline-flex items-center gap-2 text-secondary hover:text-purple transition-colors text-sm"
-        >
-          <i class="pi pi-arrow-left" />
-          <span>На главную</span>
-        </RouterLink>
       </div>
     </div>
   </div>
