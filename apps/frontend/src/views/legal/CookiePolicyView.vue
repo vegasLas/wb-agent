@@ -93,8 +93,7 @@
         <section>
           <h2 class="text-lg font-semibold text-theme mb-3">6. Контакты</h2>
           <p>
-            По вопросам, связанным с использованием cookies, обращайтесь через Telegram бота
-            <a href="https://t.me/wb_booking_bot" target="_blank" rel="noopener" class="text-purple hover:underline">@wb_booking_bot</a>.
+            По вопросам, связанным с использованием cookies, обращайтесь через форму обратной связи в приложении.
           </p>
         </section>
       </div>
