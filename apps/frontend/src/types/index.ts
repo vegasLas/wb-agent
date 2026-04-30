@@ -34,6 +34,8 @@ export interface User {
   subscriptionExpiresAt: string | null;
   maxAccounts?: number;
   trialUsedAt?: string | null;
+  isTrial?: boolean;
+  trialExpiresAt?: string | null;
   agreeTerms: boolean;
   selectedAccountId?: string;
   payments: Payment[];
