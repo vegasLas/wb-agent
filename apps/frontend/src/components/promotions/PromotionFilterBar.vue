@@ -14,8 +14,8 @@
         class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full"
         :class="
           currentFilter === tab.value
-            ? 'bg-theme/20 text-theme'
-            : 'bg-elevated text-muted'
+            ? 'bg-white/20 text-white'
+            : 'bg-black/10 dark:bg-white/10 text-theme'
         "
       >
         {{ counts[tab.value] }}
