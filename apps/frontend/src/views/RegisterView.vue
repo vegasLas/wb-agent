@@ -175,6 +175,14 @@
             label="Зарегистрироваться"
             icon="pi pi-user-plus"
           />
+
+          <!-- Legal Agreement -->
+          <p class="text-muted text-xs text-center leading-relaxed mt-3">
+            Регистрируясь, вы соглашаетесь с
+            <RouterLink to="/terms" class="text-purple hover:underline">Пользовательским соглашением</RouterLink>
+            и
+            <RouterLink to="/privacy" class="text-purple hover:underline">Политикой конфиденциальности</RouterLink>
+          </p>
         </form>
 
         <!-- VK Login (temporarily hidden) -->

@@ -148,6 +148,16 @@
           </a>
         </div>
 
+        <!-- Legal Links -->
+        <div class="mt-4 text-center">
+          <p class="text-muted text-xs leading-relaxed">
+            Используя сервис, вы соглашаетесь с
+            <RouterLink to="/terms" class="text-purple hover:underline">Пользовательским соглашением</RouterLink>
+            и
+            <RouterLink to="/privacy" class="text-purple hover:underline">Политикой конфиденциальности</RouterLink>
+          </p>
+        </div>
+
         <!-- Register Link -->
         <div class="mt-6 pt-6 border-t border-[var(--color-border)] text-center">
           <p class="text-secondary text-sm">

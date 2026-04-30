@@ -28,6 +28,21 @@
         </div>
 
         <div>
+          <h4 class="text-theme font-semibold mb-4">Правовая информация</h4>
+          <ul class="space-y-3">
+            <li>
+              <a href="#/privacy" class="text-secondary hover:text-purple transition-colors">Политика конфиденциальности</a>
+            </li>
+            <li>
+              <a href="#/terms" class="text-secondary hover:text-purple transition-colors">Пользовательское соглашение</a>
+            </li>
+            <li>
+              <a href="#/cookies" class="text-secondary hover:text-purple transition-colors">Cookies</a>
+            </li>
+          </ul>
+        </div>
+
+        <div>
           <h4 class="text-theme font-semibold mb-4">Контакты</h4>
           <ul class="space-y-3">
             <li>
