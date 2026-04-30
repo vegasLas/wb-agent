@@ -187,7 +187,7 @@ export class WBPermissionService {
     try {
       await wbAccountRequest({
         url:
-          'https://seller-supply.wildberries.ru/ns/sm-draft/supply-manager/api/v1/draft/listDrafts',
+          'https://seller-supply.wildberries.ru/ns/sm-supply/supply-manager/api/v1/supply/acceptanceCoefficientsReport',
         accountId,
         userAgent,
         proxy,
@@ -195,13 +195,8 @@ export class WBPermissionService {
         isJsonRpc: true,
         body: {
           params: {
-            filter: {
-              orderBy: {
-                createdAt: -1,
-              },
-            },
-            limit: 1,
-            offset: 0,
+            dateFrom: new Date().toISOString(),
+            dateTo: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           },
         },
         parseResponse: false,
