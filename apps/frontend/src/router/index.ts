@@ -1,13 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAppState } from './app-state';
-import { isTelegramWebApp, getInitData } from '../utils/telegram';
 import MainLayout from '../components/layout/MainLayout.vue';
 import { AutobookingListView } from '../views/autobooking';
-// import {
-//   ReschedulesListView,
-//   ReschedulesCreateView,
-//   ReschedulesUpdateView,
-// } from '../views/reschedules';
 import { TriggersListView } from '../views/triggers';
 import { PromotionsView } from '../views/promotions';
 import { FeedbacksView } from '../views/feedbacks';
@@ -182,7 +176,6 @@ const routes: RouteRecordRaw[] = [
           title: 'MPStats',
         },
       },
-      // Autobooking Routes (flat structure - each view is standalone)
       {
         path: 'autobooking',
         name: 'AutobookingList',
@@ -193,38 +186,6 @@ const routes: RouteRecordRaw[] = [
           requiresSupplier: true,
         },
       },
-      // Reschedules Routes (flat structure - each view is standalone)
-      // {
-      //   path: 'reschedules',
-      //   name: 'ReschedulesList',
-      //   component: ReschedulesListView,
-      //   meta: {
-      //     title: 'Перепланирования',
-      //     requiresAccount: true,
-      //     requiresSupplier: true,
-      //   },
-      // },
-      // {
-      //   path: 'reschedules/create',
-      //   name: 'ReschedulesCreate',
-      //   component: ReschedulesCreateView,
-      //   meta: {
-      //     title: 'Создание перепланирования',
-      //     requiresAccount: true,
-      //     requiresSupplier: true,
-      //   },
-      // },
-      // {
-      //   path: 'reschedules/update/:id',
-      //   name: 'ReschedulesUpdate',
-      //   component: ReschedulesUpdateView,
-      //   meta: {
-      //     title: 'Редактирование перепланирования',
-      //     requiresAccount: true,
-      //     requiresSupplier: true,
-      //   },
-      // },
-      // Triggers Routes (flat structure - each view is standalone)
       {
         path: 'triggers',
         name: 'TriggersList',
@@ -310,43 +271,8 @@ const router = createRouter({
 });
 
 // Global app state
-let isAppInitialized = false;
 let initError: 'session_expired' | 'maintenance' | 'subscription_required' | 'not_found' | null = null;
 let isBrowserAuthInitialized = false;
-
-/**
- * Check if current auth mode is browser
- * Re-verifies using utility function to handle cases where
- * early detection script might have missed Telegram params on sub-route reload
- */
-function isBrowserMode(): boolean {
-  if (typeof window === 'undefined') return false;
-  
-  // If flag says Telegram, trust it
-  if (window.__AUTH_MODE__ === 'telegram' || window.__IS_TELEGRAM_WEBAPP__ === true) {
-    return false;
-  }
-  
-  // If flag says browser, double-check with utility (handles sub-route reload edge case)
-  if (isTelegramWebApp()) {
-    // We ARE in Telegram mode but flag wasn't set correctly
-    // Update flags for consistency
-    window.__AUTH_MODE__ = 'telegram';
-    window.__IS_TELEGRAM_WEBAPP__ = true;
-    console.log('[Router] Corrected auth mode to Telegram after re-check');
-    return false;
-  }
-  
-  // Also check if we have initData in localStorage (for sub-route reloads)
-  if (getInitData()) {
-    window.__AUTH_MODE__ = 'telegram';
-    window.__IS_TELEGRAM_WEBAPP__ = true;
-    console.log('[Router] Corrected auth mode to Telegram from localStorage initData');
-    return false;
-  }
-  
-  return true;
-}
 
 // Navigation guard for app initialization
 router.beforeEach(async (to, from, next) => {
@@ -354,7 +280,6 @@ router.beforeEach(async (to, from, next) => {
     from: from.name,
     to: to.name,
     path: to.path,
-    authMode: typeof window !== 'undefined' ? window.__AUTH_MODE__ : 'unknown',
   });
 
   // Update page title
@@ -378,65 +303,40 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Browser mode authentication check
-  if (isBrowserMode()) {
-    const { useBrowserAuthStore } = await import('@/stores/auth');
-    const browserAuth = useBrowserAuthStore();
-    
-    // Only init auth once per session - skip if already initialized and we have a valid auth
-    // This prevents repeated API calls when switching between screens
-    if (!isBrowserAuthInitialized || !browserAuth.isAuthenticated) {
-      console.log('[Router] Initializing browser auth...');
-      try {
-        await browserAuth.initAuth();
-      } catch (error: any) {
-        const errorType = classifyError(error);
-        if (errorType === 'maintenance') {
-          next({ name: errorToRouteName(errorType), replace: true });
-          return;
-        }
-        // For non-maintenance errors, continue to auth check below
+  const { useBrowserAuthStore } = await import('@/stores/auth');
+  const browserAuth = useBrowserAuthStore();
+
+  // Only init auth once per session
+  if (!isBrowserAuthInitialized || !browserAuth.isAuthenticated) {
+    console.log('[Router] Initializing browser auth...');
+    try {
+      await browserAuth.initAuth();
+    } catch (error: any) {
+      const errorType = classifyError(error);
+      if (errorType === 'maintenance') {
+        next({ name: errorToRouteName(errorType), replace: true });
+        return;
       }
-      isBrowserAuthInitialized = true;
-    } else {
-      console.log('[Router] Browser auth already initialized, skipping re-fetch');
+      // For non-maintenance errors, continue to auth check below
     }
-    
-    // After initAuth, check if authenticated
-    if (!browserAuth.isAuthenticated) {
-      console.log('[Router] Browser auth required, redirecting to login');
-      next({ 
-        name: 'Login', 
-        query: { redirect: to.fullPath },
-        replace: true 
-      });
-      return;
-    }
-    
-    // Browser user is authenticated, proceed
-    console.log('[Router] Browser auth validated, proceeding to:', to.name);
-    next();
+    isBrowserAuthInitialized = true;
+  } else {
+    console.log('[Router] Browser auth already initialized, skipping re-fetch');
+  }
+
+  // After initAuth, check if authenticated
+  if (!browserAuth.isAuthenticated) {
+    console.log('[Router] Browser auth required, redirecting to login');
+    next({
+      name: 'Login',
+      query: { redirect: to.fullPath },
+      replace: true
+    });
     return;
   }
 
-  // Telegram mode - original initialization logic
-  if (!isAppInitialized) {
-    console.log('[Router] App not initialized, starting initialization...');
-    try {
-      await initializeApp();
-      isAppInitialized = true;
-      console.log('[Router] App initialized, proceeding to:', to.name);
-    } catch (error: any) {
-      console.error('[Router] Initialization failed:', error);
-      initError = classifyError(error);
-      next({ name: errorToRouteName(initError), replace: true });
-      return;
-    }
-  }
-
-  // Note: Authentication is handled via Telegram initData sent with each API request.
-  // The backend validates initData and returns appropriate errors (401/403).
-  // We don't use localStorage tokens in Telegram Mini Apps.
-  console.log('[Router] Navigation allowed to:', to.name);
+  // Browser user is authenticated, proceed
+  console.log('[Router] Browser auth validated, proceeding to:', to.name);
   next();
 });
 
@@ -451,21 +351,6 @@ router.afterEach((to) => {
     });
   }
 });
-
-// Initialize app (Telegram + user data)
-async function initializeApp(): Promise<void> {
-  const { initTelegram, initUserData } = useAppState();
-
-  // Initialize Telegram first
-  const { isTgClient } = await initTelegram();
-
-  if (!isTgClient) {
-    throw new Error('NOT_TG_CLIENT');
-  }
-
-  // Initialize user data
-  await initUserData();
-}
 
 // Classify error type
 function classifyError(
@@ -501,14 +386,13 @@ function errorToRouteName(error: string): string {
 
 // Reset initialization (for testing/logout)
 export function resetAppState() {
-  isAppInitialized = false;
   initError = null;
   isBrowserAuthInitialized = false;
 }
 
 // Check if app is initialized
 export function getAppState() {
-  return { isAppInitialized, initError };
+  return { initError };
 }
 
 export default router;
