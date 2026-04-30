@@ -454,6 +454,38 @@ export const PrimevalPreset = definePreset(Aura, {
         y: '0.875rem',
       },
     },
+    // Password styling
+    password: {
+      meter: {
+        background: '{color.border}',
+        borderRadius: '4px',
+      },
+      icon: {
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+      },
+      overlay: {
+        background: '{color.card}',
+        borderColor: '{color.border}',
+        borderRadius: '14px',
+        shadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+        padding: '1rem',
+      },
+      colorScheme: {
+        light: {
+          overlay: {
+            background: '{color.card}',
+            borderColor: '{color.border}',
+          },
+        },
+        dark: {
+          overlay: {
+            background: '{color.card}',
+            borderColor: '{color.border}',
+          },
+        },
+      },
+    },
     // Select styling - uses CSS variables for theme support
     select: {
       background: '{color.card}',
@@ -733,17 +765,34 @@ export const PrimevalPreset = definePreset(Aura, {
         },
       },
     },
-    // Checkbox styling
+    // Checkbox styling - fixed light/dark visibility
     checkbox: {
       borderRadius: '6px',
       width: '20px',
       height: '20px',
-      borderColor: '#D1D5DB',
-      checked: {
-        background: '#6A39F4',
-        borderColor: '#6A39F4',
-        hoverBackground: '#8B69F6',
-        hoverBorderColor: '#8B69F6',
+      colorScheme: {
+        light: {
+          background: '#FFFFFF',
+          borderColor: '#9CA3AF',
+          hoverBorderColor: '#6B7280',
+          checked: {
+            background: '#6A39F4',
+            borderColor: '#6A39F4',
+            hoverBackground: '#8B69F6',
+            hoverBorderColor: '#8B69F6',
+          },
+        },
+        dark: {
+          background: '#15151C',
+          borderColor: '#3D3D4D',
+          hoverBorderColor: '#6B7280',
+          checked: {
+            background: '#6A39F4',
+            borderColor: '#6A39F4',
+            hoverBackground: '#8B69F6',
+            hoverBorderColor: '#8B69F6',
+          },
+        },
       },
     },
     // MultiSelect styling - using semantic tokens for light/dark mode support
@@ -786,6 +835,249 @@ export const PrimevalPreset = definePreset(Aura, {
           background: '#6A39F4',
           borderColor: '#6A39F4',
         },
+      },
+    },
+    // DatePicker styling
+    datepicker: {
+      background: '{color.card}',
+      borderColor: '{color.border}',
+      color: '{color.text}',
+      borderRadius: '14px',
+      panel: {
+        background: '{color.card}',
+        borderColor: '{color.border}',
+        borderRadius: '14px',
+        shadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+      },
+      header: {
+        background: '{color.elevated}',
+        color: '{color.text}',
+        borderColor: '{color.border}',
+        padding: '0.75rem 1rem',
+      },
+      day: {
+        color: '{color.text}',
+        hoverBackground: '{color.elevated}',
+        hoverColor: '{color.text}',
+        selectedBackground: '#6A39F4',
+        selectedColor: '#FFFFFF',
+        todayBackground: 'rgba(106, 57, 244, 0.15)',
+        todayColor: '#6A39F4',
+        width: '2.5rem',
+        height: '2.5rem',
+        borderRadius: '10px',
+      },
+      month: {
+        color: '{color.text}',
+        hoverBackground: '{color.elevated}',
+        hoverColor: '{color.text}',
+        selectedBackground: '#6A39F4',
+        selectedColor: '#FFFFFF',
+        borderRadius: '10px',
+      },
+      year: {
+        color: '{color.text}',
+        hoverBackground: '{color.elevated}',
+        hoverColor: '{color.text}',
+        selectedBackground: '#6A39F4',
+        selectedColor: '#FFFFFF',
+        borderRadius: '10px',
+      },
+    },
+    // Tabs styling
+    tabs: {
+      tablist: {
+        borderColor: '{color.border}',
+      },
+      tab: {
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+        activeColor: '#6A39F4',
+        activeBackground: 'transparent',
+        activeBorderColor: '#6A39F4',
+        padding: '0.75rem 1rem',
+        fontWeight: 500,
+      },
+      tabpanel: {
+        background: 'transparent',
+        color: '{color.text}',
+        padding: '1rem 0',
+      },
+      navButton: {
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+      },
+    },
+    // TabView (legacy) styling
+    tabview: {
+      tabList: {
+        background: 'transparent',
+        borderColor: '{color.border}',
+      },
+      tab: {
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+        activeColor: '#6A39F4',
+        activeBackground: 'transparent',
+        activeBorderColor: '#6A39F4',
+        padding: '0.75rem 1rem',
+        fontWeight: 500,
+      },
+      tabPanel: {
+        background: 'transparent',
+        color: '{color.text}',
+        padding: '1rem 0',
+      },
+      navButton: {
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+      },
+    },
+    // Paginator styling
+    paginator: {
+      background: 'transparent',
+      color: '{color.text}',
+      borderColor: '{color.border}',
+      borderWidth: '1px 0 0 0',
+      padding: '0.75rem 1rem',
+      gap: '0.25rem',
+      navButton: {
+        background: 'transparent',
+        hoverBackground: '{color.elevated}',
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+        width: '2rem',
+        height: '2rem',
+        borderRadius: '8px',
+      },
+      pageButton: {
+        background: 'transparent',
+        hoverBackground: '{color.elevated}',
+        color: '{color.secondary}',
+        hoverColor: '{color.text}',
+        activeBackground: '#6A39F4',
+        activeColor: '#FFFFFF',
+        width: '2rem',
+        height: '2rem',
+        borderRadius: '8px',
+      },
+    },
+    // ProgressBar styling
+    progressbar: {
+      background: '{color.border}',
+      borderRadius: '999px',
+      value: {
+        background: '#6A39F4',
+        borderRadius: '999px',
+      },
+    },
+    // ProgressSpinner styling
+    progressspinner: {
+      color: {
+        one: '#6A39F4',
+        two: '#8B69F6',
+        three: '#6A39F4',
+        four: '#8B69F6',
+      },
+    },
+    // Message styling
+    message: {
+      borderRadius: '14px',
+      padding: '0.875rem 1rem',
+      colorScheme: {
+        light: {
+          info: {
+            background: '#EFF6FF',
+            borderColor: '#BFDBFE',
+            color: '#1E40AF',
+            shadow: 'none',
+          },
+          success: {
+            background: '#F0FDF4',
+            borderColor: '#BBF7D0',
+            color: '#166534',
+            shadow: 'none',
+          },
+          warn: {
+            background: '#FFFBEB',
+            borderColor: '#FDE68A',
+            color: '#92400E',
+            shadow: 'none',
+          },
+          error: {
+            background: '#FEF2F2',
+            borderColor: '#FECACA',
+            color: '#991B1B',
+            shadow: 'none',
+          },
+          secondary: {
+            background: '#F3F4F6',
+            borderColor: '#E5E7EB',
+            color: '#374151',
+            shadow: 'none',
+          },
+          contrast: {
+            background: '#111827',
+            borderColor: '#1F2937',
+            color: '#FFFFFF',
+            shadow: 'none',
+          },
+        },
+        dark: {
+          info: {
+            background: 'rgba(59, 130, 246, 0.15)',
+            borderColor: 'rgba(59, 130, 246, 0.3)',
+            color: '#60A5FA',
+            shadow: 'none',
+          },
+          success: {
+            background: 'rgba(34, 197, 94, 0.15)',
+            borderColor: 'rgba(34, 197, 94, 0.3)',
+            color: '#22C55E',
+            shadow: 'none',
+          },
+          warn: {
+            background: 'rgba(251, 191, 36, 0.15)',
+            borderColor: 'rgba(251, 191, 36, 0.3)',
+            color: '#FBBF24',
+            shadow: 'none',
+          },
+          error: {
+            background: 'rgba(239, 68, 68, 0.15)',
+            borderColor: 'rgba(239, 68, 68, 0.3)',
+            color: '#F87171',
+            shadow: 'none',
+          },
+          secondary: {
+            background: '#1E1E28',
+            borderColor: '#2A2A35',
+            color: '#FFFFFF',
+            shadow: 'none',
+          },
+          contrast: {
+            background: '#FFFFFF',
+            borderColor: '#E5E7EB',
+            color: '#111827',
+            shadow: 'none',
+          },
+        },
+      },
+    },
+    // Slider styling
+    slider: {
+      background: '{color.border}',
+      borderRadius: '999px',
+      handle: {
+        background: '#6A39F4',
+        hoverBackground: '#8B69F6',
+        borderColor: '#6A39F4',
+        hoverBorderColor: '#8B69F6',
+        width: '1.25rem',
+        height: '1.25rem',
+        borderRadius: '50%',
+      },
+      range: {
+        background: '#6A39F4',
       },
     },
   },
