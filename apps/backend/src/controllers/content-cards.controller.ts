@@ -28,8 +28,6 @@ export const fetchContentCardsTableList = async (
 
     const { n, cursor } = req.query as { n?: string; cursor?: string };
 
-    logger.info(`Fetching content cards table list for user ${userId}`);
-
     let parsedCursor: { n: number; nmID: number } | undefined;
     if (cursor) {
       try {
@@ -212,7 +210,9 @@ export const fetchContentCardCategories = async (
       return;
     }
 
-    logger.info(`Fetching categories for user ${userId}, searchText: ${searchText}`);
+    logger.info(
+      `Fetching categories for user ${userId}, searchText: ${searchText}`,
+    );
 
     const data = await wbContentService.getContentCardCategories({
       userId,

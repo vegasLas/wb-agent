@@ -63,6 +63,8 @@ export class FeedbackPromptService {
     );
     const templatesContext = this.buildTemplatesContext(templates);
     const mediaContext = this.buildMediaContext(feedbackInfo);
+    const photoCount = feedbackInfo.photos?.length || 0;
+    const videoCount = feedbackInfo.video ? 1 : 0;
     const valuationLabel = VALUATION_LABELS[feedback.valuation] || 'не указана';
     const rejectedContext = this.buildRejectedContext(rejectedAnswers);
     const userFeedbackContext = this.buildUserFeedbackContext(rejectedAnswers);
@@ -75,6 +77,8 @@ export class FeedbackPromptService {
       valuation: feedback.valuation,
       valuationLabel,
       mediaContext,
+      photoCount,
+      videoCount,
       templatesContext,
       recentAnswersContext,
       rejectedContext,
@@ -221,6 +225,8 @@ export class FeedbackPromptService {
     valuation: number;
     valuationLabel: string;
     mediaContext: string;
+    photoCount: number;
+    videoCount: number;
     templatesContext: string;
     recentAnswersContext: string;
     rejectedContext: string;
@@ -232,6 +238,20 @@ export class FeedbackPromptService {
     const groupNote = params.hasGroupExamples
       ? '*(examples include answers from related products in the same group)*\n'
       : '';
+
+    const mediaRules: string[] = [];
+    if (params.photoCount > 0) {
+      mediaRules.push(
+        `- Thank the customer for leaving ${params.photoCount} photo${params.photoCount > 1 ? 's' : ''}.`,
+      );
+    }
+    if (params.videoCount > 0) {
+      mediaRules.push('- Thank the customer for leaving a video.');
+    }
+    const mediaRulesText =
+      mediaRules.length > 0
+        ? `MEDIA RULES:\n${mediaRules.join('\n')}\n\n`
+        : '';
 
     return `You are a professional review manager for the Wildberries marketplace.
 Your task is to write a personalized, warm, and professional response to a customer review.
@@ -255,7 +275,7 @@ CUSTOMER REVIEW:
 ${params.instructionContext}${params.userFeedbackContext}
 EXAMPLE ANSWERS FOR ${params.valuation}/5 RATED REVIEWS (use as tone and style reference):
 ${groupNote}${params.recentAnswersContext}${params.rejectedContext}${params.ruleContext}
-RULES:
+${mediaRulesText}RULES:
 1. Address the customer by name (${params.feedbackInfo.userName}).
 2. Thank them for the purchase and the review.
 3. If there are pros — thank them for mentioning them.

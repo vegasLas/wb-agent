@@ -174,22 +174,64 @@ export class AIChatService {
       activeAccount?.suppliers.find(
         (s) => s.supplierId === activeAccount.selectedSupplierId,
       ) || activeAccount?.suppliers[0];
-    const permissions = (activeSupplier?.permissions as import('@prisma/client').Permission[]) || [];
+    const permissions =
+      (activeSupplier?.permissions as import('@prisma/client').Permission[]) ||
+      [];
 
     const tools: Record<string, Tool> | undefined = wantsReasoning
       ? undefined
       : Object.assign(
           {} as Record<string, Tool>,
-          filterToolsByPermissions(autobookingTools(userId, convId), 'autobookingTools', permissions),
-          filterToolsByPermissions(triggerTools(userId), 'triggerTools', permissions),
-          filterToolsByPermissions(externalTools(userId), 'externalTools', permissions),
-          filterToolsByPermissions(supplierTools(userId), 'supplierTools', permissions),
-          filterToolsByPermissions(mpstatsTools(userId), 'mpstatsTools', permissions),
-          filterToolsByPermissions(advertsTools(userId), 'advertsTools', permissions),
-          filterToolsByPermissions(reportsTools(userId), 'reportsTools', permissions),
-          filterToolsByPermissions(contentCardsTools(userId), 'contentCardsTools', permissions),
-          filterToolsByPermissions(userContextTools(userId), 'userContextTools', permissions),
-          filterToolsByPermissions(promotionsTools(userId), 'promotionsTools', permissions),
+          filterToolsByPermissions(
+            autobookingTools(userId, convId),
+            'autobookingTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            triggerTools(userId),
+            'triggerTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            externalTools(userId),
+            'externalTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            supplierTools(userId),
+            'supplierTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            mpstatsTools(userId),
+            'mpstatsTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            advertsTools(userId),
+            'advertsTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            reportsTools(userId),
+            'reportsTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            contentCardsTools(userId),
+            'contentCardsTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            userContextTools(userId),
+            'userContextTools',
+            permissions,
+          ),
+          filterToolsByPermissions(
+            promotionsTools(userId),
+            'promotionsTools',
+            permissions,
+          ),
         );
 
     // 7. Set up accumulation and debounced persistence
@@ -285,7 +327,12 @@ export class AIChatService {
           let noCacheTokens = usage.inputTokenDetails?.noCacheTokens ?? 0;
 
           // Fallback: read from raw provider data if AI SDK fields are empty
-          if (inputTokens === 0 && outputTokens === 0 && totalTokens > 0 && usage.raw) {
+          if (
+            inputTokens === 0 &&
+            outputTokens === 0 &&
+            totalTokens > 0 &&
+            usage.raw
+          ) {
             const raw = usage.raw as Record<string, number>;
             logger.warn(
               `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | AI SDK fields empty, reading from raw usage: ${JSON.stringify(raw)}`,
@@ -316,11 +363,6 @@ export class AIChatService {
             outputTokens,
           );
 
-          logger.info(
-            `[AI-CHAT] User ${userId} | Message ${assistantMessage.id} | ` +
-            `Total: ${totalTokens} | Input: ${inputTokens} (cacheMiss=${noCacheTokens} cacheHit=${cacheReadTokens}) | Output: ${outputTokens} | Cost: $${cost}`,
-          );
-
           aiUsageTrackingService.trackUsage({
             userId,
             feature: 'ai_chat',
@@ -338,7 +380,10 @@ export class AIChatService {
             messageId: assistantMessage.id,
             metadata: {
               toolCount: toolCalls?.length ?? 0,
-              usageBreakdownMissing: inputTokens === 0 && outputTokens === totalTokens && totalTokens > 0,
+              usageBreakdownMissing:
+                inputTokens === 0 &&
+                outputTokens === totalTokens &&
+                totalTokens > 0,
             },
           });
         }

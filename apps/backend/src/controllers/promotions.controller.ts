@@ -40,8 +40,6 @@ export const fetchPromotionsTimeline = async (
       filter?: string;
     };
 
-    logger.info(`Fetching promotions timeline for user ${user.id}`);
-
     const data = await getPromotionsTimeline({
       userId: user.id,
       startDate,
@@ -67,10 +65,6 @@ export const fetchPromotionDetail = async (
   try {
     const user = assertUser(req);
     const { promoID } = req.query as { promoID?: string };
-
-    logger.info(
-      `Fetching promotion detail for user ${user.id}, promoID: ${promoID}`,
-    );
 
     const data = await getPromotionDetail({
       userId: user.id,
@@ -102,10 +96,6 @@ export const fetchPromotionExcel = async (
 
     const recoveryFlag = isRecovery !== false;
 
-    logger.info(
-      `Fetching promotion Excel for user ${user.id}, periodID: ${periodID}, isRecovery: ${recoveryFlag}, hasStarted: ${hasStarted}`,
-    );
-
     const result = await getPromotionExcel({
       userId: user.id,
       periodID,
@@ -128,11 +118,7 @@ export const fetchPromotionExcel = async (
         return;
       }
 
-      errorResponse(
-        res,
-        ApiError.badRequest(result.error, 'EXCEL_ERROR'),
-        400,
-      );
+      errorResponse(res, ApiError.badRequest(result.error, 'EXCEL_ERROR'), 400);
       return;
     }
 
@@ -164,10 +150,6 @@ export const promotionRecovery = async (
       isRecovery?: boolean;
     };
 
-    logger.info(
-      `Applying promotion recovery for user ${user.id}, periodID: ${periodID}, items: ${selectedItems?.length}, isRecovery: ${isRecovery}`,
-    );
-
     const result = await applyPromotionRecovery({
       userId: user.id,
       periodID,
@@ -178,7 +160,10 @@ export const promotionRecovery = async (
     if (!result.success) {
       errorResponse(
         res,
-        ApiError.badRequest(result.error || 'Recovery failed', 'RECOVERY_ERROR'),
+        ApiError.badRequest(
+          result.error || 'Recovery failed',
+          'RECOVERY_ERROR',
+        ),
         400,
       );
       return;

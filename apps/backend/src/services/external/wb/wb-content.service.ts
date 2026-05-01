@@ -110,8 +110,6 @@ export class WBContentService {
     const url =
       'https://seller-content.wildberries.ru/ns/viewer/content-card/viewer/tableListv6';
 
-    logger.info(`Fetching content cards table list for user ${userId}`);
-
     const response = await wbAccountRequest<ContentCardTableListResponse>({
       url,
       accountId,
@@ -204,8 +202,6 @@ export class WBContentService {
 
     const url =
       'https://seller-content.wildberries.ru/ns/viewer/content-card/viewer/getImt';
-
-    logger.info(`Fetching content card IMT for user ${userId}, nmID: ${nmID}`);
 
     const response = await wbAccountRequest<ContentCardImtResponse>({
       url,
@@ -307,8 +303,6 @@ export class WBContentService {
     const url =
       'https://seller-weekly-report.wildberries.ru/ns/categories-info/suppliers-portal-analytics/api/v1/tariffs';
 
-    logger.info(`Fetching tariffs for user ${userId}, subjectId: ${subjectId}`);
-
     const response = await wbAccountRequest<ContentCardTariffsResponse>({
       url,
       accountId,
@@ -377,9 +371,6 @@ export class WBContentService {
     const url =
       'https://seller-weekly-report.wildberries.ru/ns/categories-info/suppliers-portal-analytics/api/v1/categories';
 
-    logger.info(
-      `Fetching categories for user ${userId}, searchText: ${searchText}`,
-    );
     console.log('body', {
       take,
       skip,
@@ -443,17 +434,9 @@ export class WBContentService {
     length: number;
     countryCode: string;
   }> {
-    logger.info(
-      `[getContentCardCommissions] START userId=${userId}, nmID=${nmID}`,
-    );
-
     const imtData = await this.getContentCardImt({ userId, nmID });
     const subject = imtData.subjectInfo.subject;
     const parent = imtData.subjectInfo.parent;
-
-    logger.info(
-      `[getContentCardCommissions] Resolved from getImt: subject="${subject}", parent="${parent}"`,
-    );
 
     if (!subject || !parent) {
       logger.error(
@@ -470,9 +453,6 @@ export class WBContentService {
       category: [parent],
     });
 
-    logger.info(
-      `[getContentCardCommissions] END userId=${userId}, nmID=${nmID}, categoriesCount=${result.categories.length}`,
-    );
     return result;
   }
 
@@ -504,9 +484,6 @@ export class WBContentService {
     }>;
   }> {
     const DEFAULT_SUBJECT_ID = 336;
-    logger.info(
-      `[getContentCardTariffsByNmID] START userId=${userId}, nmID=${nmID}`,
-    );
 
     const imtData = await this.getContentCardImt({ userId, nmID });
     const firstVariant = imtData.variants[0];
@@ -522,10 +499,6 @@ export class WBContentService {
     const subject = imtData.subjectInfo.subject;
     const parent = imtData.subjectInfo.parent;
 
-    logger.info(
-      `[getContentCardTariffsByNmID] Resolved from getImt: subject="${subject}", parent="${parent}", dimensions=${width}x${height}x${length}, weight=${weightBrutto}`,
-    );
-
     if (!subject || !parent) {
       logger.error(
         `[getContentCardTariffsByNmID] Missing subject or parent for nmID=${nmID}`,
@@ -536,13 +509,6 @@ export class WBContentService {
     }
 
     const subjectId = DEFAULT_SUBJECT_ID;
-    logger.info(
-      `[getContentCardTariffsByNmID] Using default subjectId=${subjectId} for subject="${subject}"`,
-    );
-
-    logger.info(
-      `[getContentCardTariffsByNmID] Calling tariffs with subjectId=${subjectId}, dimensions=${width}x${height}x${length}, weight=${weightBrutto}`,
-    );
 
     const result = await this.getContentCardTariffs({
       userId,
@@ -553,9 +519,6 @@ export class WBContentService {
       subjectId,
     });
 
-    logger.info(
-      `[getContentCardTariffsByNmID] END userId=${userId}, nmID=${nmID}, warehousesCount=${result.warehouselist.length}`,
-    );
     return result;
   }
 }

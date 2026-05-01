@@ -33,7 +33,8 @@ router.get('/', authenticate, async (req, res, next) => {
       currentSub?.tier === 'LITE' &&
       currentSub?.endedAt &&
       currentSub.endedAt > now &&
-      currentSub.endedAt.getTime() <= user.trialUsedAt.getTime() + 15 * 24 * 60 * 60 * 1000
+      currentSub.endedAt.getTime() <=
+        user.trialUsedAt.getTime() + 15 * 24 * 60 * 60 * 1000
     );
 
     res.json({
@@ -202,10 +203,6 @@ router.get('/limits', authenticate, async (req, res, next) => {
       },
     });
     const aiChatSpentUsd = aiChatSpentResult._sum.cost ?? 0;
-
-    logger.info(
-      `[USER-LIMITS] User ${user.id} | Tier: ${tier} | AI Chat Spent: $${Math.round(aiChatSpentUsd * 1000) / 1000} / $${AI_CHAT_BUDGET_USD[tier]} | Reset: ${aiChatResetDate.toISOString()}`,
-    );
 
     res.json({
       tier,

@@ -17,6 +17,7 @@ import type {
   MeasurementPenaltyData,
   AdvertsResponse,
   AdvertPresetInfoResponse,
+  AdvertFullStatResponse,
   RegionSaleResponse,
   RegionSaleData,
 } from '@/types/wb';
@@ -308,6 +309,63 @@ export class WBExtendedService {
     );
 
     return wbAccountRequest<AdvertPresetInfoResponse>({
+      url,
+      accountId,
+      userAgent,
+      proxy,
+      supplierId,
+      method: 'GET',
+    });
+  }
+
+  /**
+   * Get advert full stat from cmp.wildberries.ru
+   * @param userId - User ID
+   * @param advertId - Advert ID
+   * @param from - Start date (default: 7 days ago)
+   * @param to - End date (default: today)
+   * @param appType - App type filter (default: 0)
+   * @param placementType - Placement type filter (default: 0)
+   */
+  async getAdvertFullStat({
+    userId,
+    advertId,
+    from,
+    to,
+    appType = 0,
+    placementType = 0,
+  }: {
+    userId: number;
+    advertId: number;
+    from?: string;
+    to?: string;
+    appType?: number;
+    placementType?: number;
+  }): Promise<AdvertFullStatResponse> {
+    const { accountId, supplierId, userAgent, proxy } =
+      await resolveAccountContext(userId);
+
+    // Set default date range if not provided (last 7 days)
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const formatDate = (d: Date) => d.toISOString();
+
+    const finalFrom = from || formatDate(sevenDaysAgo);
+    const finalTo = to || formatDate(now);
+
+    const url =
+      `https://cmp.wildberries.ru/api/v5/fullstat` +
+      `?advertID=${advertId}` +
+      `&to=${encodeURIComponent(finalTo)}` +
+      `&from=${encodeURIComponent(finalFrom)}` +
+      `&appType=${appType}` +
+      `&placementType=${placementType}`;
+
+    logger.info(
+      `Fetching advert full stat for user ${userId}, advertId: ${advertId}`,
+    );
+
+    return wbAccountRequest<AdvertFullStatResponse>({
       url,
       accountId,
       userAgent,

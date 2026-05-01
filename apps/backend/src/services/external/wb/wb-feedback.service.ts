@@ -6,7 +6,10 @@
  * - Post feedback answer
  */
 
-import { wbAccountRequest, wbAccountRequestSlowRetry } from '@/utils/wb-request';
+import {
+  wbAccountRequest,
+  wbAccountRequestSlowRetry,
+} from '@/utils/wb-request';
 import { resolveAccountContext } from '@/utils/supplier-resolver';
 import { createLogger } from '@/utils/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -66,8 +69,6 @@ export class WBFeedbackService {
       }
     }
 
-    logger.info(`Fetching feedbacks for user ${userId}, isAnswered=${isAnswered}`);
-
     const response = await wbAccountRequest<FeedbackResponse>({
       url,
       accountId,
@@ -120,7 +121,9 @@ export class WBFeedbackService {
 
       // Safety break
       if (allFeedbacks.length >= MAX_FEEDBACKS_FETCH) {
-        logger.warn(`Reached safety limit of ${MAX_FEEDBACKS_FETCH} feedbacks for user ${userId}`);
+        logger.warn(
+          `Reached safety limit of ${MAX_FEEDBACKS_FETCH} feedbacks for user ${userId}`,
+        );
         break;
       }
     }
@@ -140,8 +143,7 @@ export class WBFeedbackService {
     const { accountId, supplierId, userAgent, proxy } =
       await resolveAccountContext(userId);
 
-    const url =
-      `https://seller-reviews.wildberries.ru/ns/fa-seller-api/reviews-ext-seller-portal/api/v1/templates/feedbacks`;
+    const url = `https://seller-reviews.wildberries.ru/ns/fa-seller-api/reviews-ext-seller-portal/api/v1/templates/feedbacks`;
 
     logger.info(`Fetching feedback templates for user ${userId}`);
 
@@ -178,8 +180,7 @@ export class WBFeedbackService {
     const { accountId, supplierId, userAgent, proxy } =
       await resolveAccountContext(userId);
 
-    const url =
-      `https://seller-reviews.wildberries.ru/ns/fa-seller-api/reviews-ext-seller-portal/api/v2/feedbacks/answer`;
+    const url = `https://seller-reviews.wildberries.ru/ns/fa-seller-api/reviews-ext-seller-portal/api/v2/feedbacks/answer`;
 
     const body = {
       requestId: uuidv4(),
@@ -188,7 +189,9 @@ export class WBFeedbackService {
       nmId,
     };
 
-    logger.info(`Posting feedback answer for user ${userId}, feedbackId=${feedbackId}`);
+    logger.info(
+      `Posting feedback answer for user ${userId}, feedbackId=${feedbackId}`,
+    );
 
     return wbAccountRequestSlowRetry<FeedbackAnswerResponse>({
       url,
