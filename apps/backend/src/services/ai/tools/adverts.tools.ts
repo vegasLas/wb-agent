@@ -102,5 +102,36 @@ Key fields explained:
         });
       }),
     }),
+
+    getAdvertFullStat: tool({
+      description: `Get full campaign statistics ("полная статистика" / fullstat) for a specific WB advert.
+Call this when the user asks about full advert stats, detailed campaign metrics, daily breakdown, or nm-level statistics for an advert.
+Required: advertId.
+Optional: from, to (default last 7 days in ISO format), appType (default 0), placementType (default 0).
+Key fields explained:
+- content.advertId = ID кампании.
+- content.views = Показы, clicks = Клики, orders = Заказы, shks = Штуки.
+- content.spend = Расход, currency = Валюта.
+- content.ctr = CTR, cpc = CPC, cr = CR, cpm = CPM, cpo = CPO.
+- content.sum_price = Сумма заказов, sum = Сумма (other metric).
+- content.cost_share = Доля расходов, position = Позиция.
+- content.days[] = Daily breakdown with date, views, clicks, orders, spend, ctr, cpc, etc.
+- content.nmStats[] = Per-NM statistics (nm_id, name, views, clicks, orders, spend, etc.) including imt_nm_stats for IMT-level breakdown.
+- content.previous = Previous period data with days[] and diff object for comparison.`,
+      inputSchema: z.object({
+        advertId: z.number().int(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        appType: z.number().int().default(0),
+        placementType: z.number().int().default(0),
+      }),
+      execute: safeTool('getAdvertFullStat', async (data) => {
+        return loggedTool('getAdvertFullStat', userId, async () => {
+          return cachedExecute(`advert-fullstat-${data.advertId}-${data.from}-${data.to}`, 30000, async () => {
+            return wbExtendedService.getAdvertFullStat({ userId, ...data });
+          });
+        });
+      }),
+    }),
   };
 }
