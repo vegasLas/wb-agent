@@ -23,13 +23,20 @@ export class WBPermissionService {
     });
 
     if (!account || account.suppliers.length === 0) {
-      logger.warn(`No suppliers found for account ${accountId}, skipping permission probe`);
+      logger.warn(
+        `No suppliers found for account ${accountId}, skipping permission probe`,
+      );
       return;
     }
 
     // Probe once using the first supplier (all suppliers share the same cookies)
     const supplierId = account.suppliers[0].supplierId;
-    const permissions = await this.probePermissions(accountId, userAgent, proxy, supplierId);
+    const permissions = await this.probePermissions(
+      accountId,
+      userAgent,
+      proxy,
+      supplierId,
+    );
 
     // Assign the same permissions to every supplier in the account
     for (const supplier of account.suppliers) {
@@ -38,10 +45,6 @@ export class WBPermissionService {
         data: { permissions },
       });
     }
-
-    logger.info(
-      `Permissions for account ${accountId} suppliers: ${permissions.join(', ') || 'none'}`,
-    );
   }
 
   private async probePermissions(
@@ -186,8 +189,7 @@ export class WBPermissionService {
   ): Promise<boolean> {
     try {
       await wbAccountRequest({
-        url:
-          'https://seller-supply.wildberries.ru/ns/sm-supply/supply-manager/api/v1/supply/acceptanceCoefficientsReport',
+        url: 'https://seller-supply.wildberries.ru/ns/sm-supply/supply-manager/api/v1/supply/acceptanceCoefficientsReport',
         accountId,
         userAgent,
         proxy,
@@ -196,7 +198,9 @@ export class WBPermissionService {
         body: {
           params: {
             dateFrom: new Date().toISOString(),
-            dateTo: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            dateTo: new Date(
+              Date.now() + 14 * 24 * 60 * 60 * 1000,
+            ).toISOString(),
           },
         },
         parseResponse: false,

@@ -56,8 +56,15 @@ function mapDbRowToFeedbackItemDTO(row: {
       feedbackText: row.feedbackText,
       feedbackTextPros: row.feedbackTextPros ?? '',
       feedbackTextCons: row.feedbackTextCons ?? '',
-      photos: (row.photos as { fullSizeUrl: string; thumbUrl: string }[] | null) ?? null,
-      video: (row.video as { durationSec: number; link: string; previewImage: string } | null) ?? null,
+      photos:
+        (row.photos as { fullSizeUrl: string; thumbUrl: string }[] | null) ??
+        null,
+      video:
+        (row.video as {
+          durationSec: number;
+          link: string;
+          previewImage: string;
+        } | null) ?? null,
       userName: row.userName ?? '',
       purchaseDate: row.purchaseDate ? Number(row.purchaseDate) : 0,
       isHidden: false,
@@ -79,7 +86,10 @@ function mapDbRowToFeedbackItemDTO(row: {
 /**
  * GET /api/v1/feedbacks
  */
-export const fetchFeedbacks = async (req: Request, res: Response): Promise<void> => {
+export const fetchFeedbacks = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { tab, page, pageSize, searchText, nmId } = req.query as {
@@ -96,8 +106,6 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
   const size = pageSize ? Math.max(1, Math.min(100, Number(pageSize))) : 10;
   const skip = (currentPage - 1) * size;
 
-  logger.info(`Fetching feedbacks for user ${userId}, tab=${tab}, page=${currentPage}, pageSize=${size}`);
-
   if (tab === 'ai-posted' || tab === 'ai-pending') {
     const status = tab === 'ai-posted' ? 'POSTED' : 'PENDING';
 
@@ -108,7 +116,8 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
         status,
         ...(nmIdFilter ? { nmId: nmIdFilter } : {}),
       },
-      orderBy: status === 'POSTED' ? { postedAt: 'desc' } : { feedbackDate: 'desc' },
+      orderBy:
+        status === 'POSTED' ? { postedAt: 'desc' } : { feedbackDate: 'desc' },
       take: size,
       skip,
     });
@@ -211,7 +220,10 @@ export const fetchFeedbacks = async (req: Request, res: Response): Promise<void>
  * Collect all feedbacks (answered + unanswered), filter by no answer,
  * group by nmId, and enrich with DB stats (rejected / responses counts).
  */
-export const fetchUnansweredSummary = async (req: Request, res: Response): Promise<void> => {
+export const fetchUnansweredSummary = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
 
   logger.info(`Fetching unanswered summary for user ${userId}`);
@@ -226,7 +238,9 @@ export const fetchUnansweredSummary = async (req: Request, res: Response): Promi
   for (const f of unansweredRaw) merged.set(f.id, f);
   for (const f of answeredRaw) merged.set(f.id, f);
 
-  const unansweredFeedbacks = Array.from(merged.values()).filter((f) => !f.answer);
+  const unansweredFeedbacks = Array.from(merged.values()).filter(
+    (f) => !f.answer,
+  );
 
   // Group by nmId
   const groupMap = new Map<
@@ -297,17 +311,27 @@ export const fetchUnansweredSummary = async (req: Request, res: Response): Promi
  * POST /api/v1/feedbacks/answer-all
  * Fire-and-forget: starts processing in background and returns immediately.
  */
-export const answerAllFeedbacks = async (req: Request, res: Response): Promise<void> => {
+export const answerAllFeedbacks = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { nmIds } = req.body as { nmIds: number[] };
 
-  logger.info(`Starting async answer-all for user ${userId}, supplier ${supplierId}, nmIds=[${nmIds.join(', ')}]`);
+  logger.info(
+    `Starting async answer-all for user ${userId}, supplier ${supplierId}, nmIds=[${nmIds.join(', ')}]`,
+  );
 
   // Fire and forget — do not await, respond immediately
-  feedbackReviewService.processUnansweredFeedbacksManual(userId, supplierId, nmIds)
-    .then((result) => logger.info(`answer-all completed for user ${userId}:`, result))
-    .catch((error) => logger.error(`answer-all failed for user ${userId}:`, error));
+  feedbackReviewService
+    .processUnansweredFeedbacksManual(userId, supplierId, nmIds)
+    .then((result) =>
+      logger.info(`answer-all completed for user ${userId}:`, result),
+    )
+    .catch((error) =>
+      logger.error(`answer-all failed for user ${userId}:`, error),
+    );
 
   successResponse(res, { started: true, nmIdsCount: nmIds.length });
 };
@@ -316,7 +340,10 @@ export const answerAllFeedbacks = async (req: Request, res: Response): Promise<v
  * POST /api/v1/feedbacks/post-pending
  * Fire-and-forget: posts all pending AI answers to WB API one by one.
  */
-export const postPendingAnswers = async (req: Request, res: Response): Promise<void> => {
+export const postPendingAnswers = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
@@ -324,12 +351,19 @@ export const postPendingAnswers = async (req: Request, res: Response): Promise<v
     where: { userId, supplierId, status: 'PENDING' },
   });
 
-  logger.info(`Starting async post-pending for user ${userId}, supplier ${supplierId}, pendingCount=${pendingCount}`);
+  logger.info(
+    `Starting async post-pending for user ${userId}, supplier ${supplierId}, pendingCount=${pendingCount}`,
+  );
 
   // Fire and forget
-  feedbackReviewService.postPendingAnswers(userId, supplierId)
-    .then((result) => logger.info(`post-pending completed for user ${userId}:`, result))
-    .catch((error) => logger.error(`post-pending failed for user ${userId}:`, error));
+  feedbackReviewService
+    .postPendingAnswers(userId, supplierId)
+    .then((result) =>
+      logger.info(`post-pending completed for user ${userId}:`, result),
+    )
+    .catch((error) =>
+      logger.error(`post-pending failed for user ${userId}:`, error),
+    );
 
   successResponse(res, { started: true, pendingCount });
 };
@@ -337,10 +371,16 @@ export const postPendingAnswers = async (req: Request, res: Response): Promise<v
 /**
  * POST /api/v1/feedbacks/generate
  */
-export const generateFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+export const generateFeedbackAnswer = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { feedbackId, feedback } = req.body as { feedbackId: string; feedback: unknown };
+  const { feedbackId, feedback } = req.body as {
+    feedbackId: string;
+    feedback: unknown;
+  };
 
   if (!feedbackId) {
     throw ApiError.badRequest('feedbackId is required');
@@ -349,16 +389,26 @@ export const generateFeedbackAnswer = async (req: Request, res: Response): Promi
     throw ApiError.badRequest('feedback data is required');
   }
 
-  logger.info(`Generating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+  logger.info(
+    `Generating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`,
+  );
 
-  const answerText = await feedbackReviewService.generateAnswerForFeedback(userId, supplierId, feedbackId, feedback as FeedbackItem);
+  const answerText = await feedbackReviewService.generateAnswerForFeedback(
+    userId,
+    supplierId,
+    feedbackId,
+    feedback as FeedbackItem,
+  );
   successResponse(res, { answerText, feedbackId });
 };
 
 /**
  * POST /api/v1/feedbacks/accept
  */
-export const acceptFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+export const acceptFeedbackAnswer = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { feedbackId } = req.body as { feedbackId: string };
@@ -367,7 +417,9 @@ export const acceptFeedbackAnswer = async (req: Request, res: Response): Promise
     throw ApiError.badRequest('feedbackId is required');
   }
 
-  logger.info(`Accepting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+  logger.info(
+    `Accepting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`,
+  );
 
   await feedbackReviewService.acceptAnswer(userId, supplierId, feedbackId);
   successResponse(res, { posted: true });
@@ -376,28 +428,48 @@ export const acceptFeedbackAnswer = async (req: Request, res: Response): Promise
 /**
  * POST /api/v1/feedbacks/reject
  */
-export const rejectFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+export const rejectFeedbackAnswer = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { feedbackId, userFeedback } = req.body as { feedbackId: string; userFeedback?: string };
+  const { feedbackId, userFeedback } = req.body as {
+    feedbackId: string;
+    userFeedback?: string;
+  };
 
   if (!feedbackId) {
     throw ApiError.badRequest('feedbackId is required');
   }
 
-  logger.info(`Rejecting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+  logger.info(
+    `Rejecting answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`,
+  );
 
-  await feedbackReviewService.rejectAnswer(userId, supplierId, feedbackId, userFeedback);
+  await feedbackReviewService.rejectAnswer(
+    userId,
+    supplierId,
+    feedbackId,
+    userFeedback,
+  );
   successResponse(res, { rejected: true });
 };
 
 /**
  * POST /api/v1/feedbacks/regenerate
  */
-export const regenerateFeedbackAnswer = async (req: Request, res: Response): Promise<void> => {
+export const regenerateFeedbackAnswer = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { feedbackId, feedback, userFeedback } = req.body as { feedbackId: string; feedback: unknown; userFeedback?: string };
+  const { feedbackId, feedback, userFeedback } = req.body as {
+    feedbackId: string;
+    feedback: unknown;
+    userFeedback?: string;
+  };
 
   if (!feedbackId) {
     throw ApiError.badRequest('feedbackId is required');
@@ -406,7 +478,9 @@ export const regenerateFeedbackAnswer = async (req: Request, res: Response): Pro
     throw ApiError.badRequest('feedback data is required');
   }
 
-  logger.info(`Regenerating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`);
+  logger.info(
+    `Regenerating answer for feedback ${feedbackId}, user ${userId}, supplier ${supplierId}`,
+  );
 
   const answerText = await feedbackReviewService.regenerateAnswer(
     userId,
@@ -421,22 +495,29 @@ export const regenerateFeedbackAnswer = async (req: Request, res: Response): Pro
 /**
  * GET /api/v1/feedbacks/rejected
  */
-export const fetchRejectedAnswers = async (req: Request, res: Response): Promise<void> => {
+export const fetchRejectedAnswers = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
-  const rejectedAnswers = await feedbackRejectedService.getRecentRejectedAnswers(
-    userId,
-    supplierId,
-    100,
-  );
+  const rejectedAnswers =
+    await feedbackRejectedService.getRecentRejectedAnswers(
+      userId,
+      supplierId,
+      100,
+    );
   successResponse(res, { rejectedAnswers });
 };
 
 /**
  * PUT /api/v1/feedbacks/rejected/:id
  */
-export const updateRejectedAnswer = async (req: Request, res: Response): Promise<void> => {
+export const updateRejectedAnswer = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const { id } = req.params;
   const { userFeedback } = req.body as { userFeedback?: string };
@@ -454,7 +535,10 @@ export const updateRejectedAnswer = async (req: Request, res: Response): Promise
 /**
  * DELETE /api/v1/feedbacks/rejected/:id
  */
-export const deleteRejectedAnswer = async (req: Request, res: Response): Promise<void> => {
+export const deleteRejectedAnswer = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const { id } = req.params;
 
@@ -469,7 +553,10 @@ export const deleteRejectedAnswer = async (req: Request, res: Response): Promise
 /**
  * GET /api/v1/feedbacks/statistics
  */
-export const fetchFeedbackStatistics = async (req: Request, res: Response): Promise<void> => {
+export const fetchFeedbackStatistics = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
@@ -480,12 +567,21 @@ export const fetchFeedbackStatistics = async (req: Request, res: Response): Prom
 /**
  * GET /api/v1/feedbacks/settings
  */
-export const fetchFeedbackSettings = async (req: Request, res: Response): Promise<void> => {
+export const fetchFeedbackSettings = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
-  const settings = await feedbackSettingsService.getSettings(userId, supplierId);
-  const productSettings = await feedbackSettingsService.getProductSettings(userId, supplierId);
+  const settings = await feedbackSettingsService.getSettings(
+    userId,
+    supplierId,
+  );
+  const productSettings = await feedbackSettingsService.getProductSettings(
+    userId,
+    supplierId,
+  );
 
   successResponse(res, { settings, productSettings });
 };
@@ -493,7 +589,10 @@ export const fetchFeedbackSettings = async (req: Request, res: Response): Promis
 /**
  * PUT /api/v1/feedbacks/settings
  */
-export const updateFeedbackSettings = async (req: Request, res: Response): Promise<void> => {
+export const updateFeedbackSettings = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { autoAnswerEnabled } = req.body as { autoAnswerEnabled: boolean };
@@ -502,30 +601,48 @@ export const updateFeedbackSettings = async (req: Request, res: Response): Promi
     throw ApiError.badRequest('autoAnswerEnabled boolean is required');
   }
 
-  const settings = await feedbackSettingsService.updateSettings(userId, supplierId, autoAnswerEnabled);
+  const settings = await feedbackSettingsService.updateSettings(
+    userId,
+    supplierId,
+    autoAnswerEnabled,
+  );
   successResponse(res, settings);
 };
 
 /**
  * PUT /api/v1/feedbacks/settings/product
  */
-export const updateProductFeedbackSetting = async (req: Request, res: Response): Promise<void> => {
+export const updateProductFeedbackSetting = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
-  const { nmId, autoAnswerEnabled } = req.body as { nmId: number; autoAnswerEnabled: boolean };
+  const { nmId, autoAnswerEnabled } = req.body as {
+    nmId: number;
+    autoAnswerEnabled: boolean;
+  };
 
   if (typeof nmId !== 'number' || typeof autoAnswerEnabled !== 'boolean') {
     throw ApiError.badRequest('nmId and autoAnswerEnabled are required');
   }
 
-  const setting = await feedbackSettingsService.updateProductSetting(userId, supplierId, nmId, autoAnswerEnabled);
+  const setting = await feedbackSettingsService.updateProductSetting(
+    userId,
+    supplierId,
+    nmId,
+    autoAnswerEnabled,
+  );
   successResponse(res, setting);
 };
 
 /**
  * GET /api/v1/feedbacks/templates
  */
-export const fetchFeedbackTemplates = async (req: Request, res: Response): Promise<void> => {
+export const fetchFeedbackTemplates = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const data = await wbFeedbackService.getFeedbackTemplates({ userId });
   successResponse(res, data);
@@ -534,55 +651,83 @@ export const fetchFeedbackTemplates = async (req: Request, res: Response): Promi
 /**
  * GET /api/v1/feedbacks/goods
  */
-export const fetchGoodsByCategory = async (req: Request, res: Response): Promise<void> => {
+export const fetchGoodsByCategory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
-  logger.info(`Fetching goods by category for user ${userId}, supplier ${supplierId}`);
+  logger.info(
+    `Fetching goods by category for user ${userId}, supplier ${supplierId}`,
+  );
 
-  const goodsByCategory = await feedbackSettingsService.getGoodsByCategory(userId, supplierId);
+  const goodsByCategory = await feedbackSettingsService.getGoodsByCategory(
+    userId,
+    supplierId,
+  );
   successResponse(res, { goodsByCategory });
 };
 
 /**
  * GET /api/v1/feedbacks/rules
  */
-export const fetchFeedbackRules = async (req: Request, res: Response): Promise<void> => {
+export const fetchFeedbackRules = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
-  logger.info(`Fetching feedback rules for user ${userId}, supplier ${supplierId}`);
+  logger.info(
+    `Fetching feedback rules for user ${userId}, supplier ${supplierId}`,
+  );
 
-  const rules = await feedbackSettingsService.getFeedbackRules(userId, supplierId);
+  const rules = await feedbackSettingsService.getFeedbackRules(
+    userId,
+    supplierId,
+  );
   successResponse(res, { rules });
 };
 
 /**
  * POST /api/v1/feedbacks/rules
  */
-export const createFeedbackRule = async (req: Request, res: Response): Promise<void> => {
+export const createFeedbackRule = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const body = req.body as FeedbackRuleInput & { nmIds: number[] };
 
-  logger.info(`Creating feedback rule for user ${userId}, supplier ${supplierId}`);
+  logger.info(
+    `Creating feedback rule for user ${userId}, supplier ${supplierId}`,
+  );
 
-  const rule = await feedbackSettingsService.createFeedbackRule(userId, supplierId, {
-    nmIds: body.nmIds,
-    minRating: body.minRating,
-    maxRating: body.maxRating,
-    keywords: body.keywords,
-    instruction: body.instruction,
-    mode: body.mode,
-    enabled: body.enabled,
-  });
+  const rule = await feedbackSettingsService.createFeedbackRule(
+    userId,
+    supplierId,
+    {
+      nmIds: body.nmIds,
+      minRating: body.minRating,
+      maxRating: body.maxRating,
+      keywords: body.keywords,
+      instruction: body.instruction,
+      mode: body.mode,
+      enabled: body.enabled,
+    },
+  );
   successResponse(res, { rule });
 };
 
 /**
  * PUT /api/v1/feedbacks/rules/:id
  */
-export const updateFeedbackRule = async (req: Request, res: Response): Promise<void> => {
+export const updateFeedbackRule = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const { id } = req.params;
   const body = req.body as FeedbackRuleInput;
@@ -608,7 +753,10 @@ export const updateFeedbackRule = async (req: Request, res: Response): Promise<v
 /**
  * DELETE /api/v1/feedbacks/rules/:id
  */
-export const deleteFeedbackRule = async (req: Request, res: Response): Promise<void> => {
+export const deleteFeedbackRule = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const { id } = req.params;
 
@@ -625,7 +773,10 @@ export const deleteFeedbackRule = async (req: Request, res: Response): Promise<v
 /**
  * GET /api/v1/feedbacks/goods-groups
  */
-export const fetchGoodsGroups = async (req: Request, res: Response): Promise<void> => {
+export const fetchGoodsGroups = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
 
@@ -636,19 +787,29 @@ export const fetchGoodsGroups = async (req: Request, res: Response): Promise<voi
 /**
  * POST /api/v1/feedbacks/goods-groups
  */
-export const createGoodsGroup = async (req: Request, res: Response): Promise<void> => {
+export const createGoodsGroup = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { nmIds } = req.body as { nmIds: number[] };
 
-  const group = await feedbackGoodsGroupService.createGroup(userId, supplierId, nmIds);
+  const group = await feedbackGoodsGroupService.createGroup(
+    userId,
+    supplierId,
+    nmIds,
+  );
   successResponse(res, { group });
 };
 
 /**
  * PUT /api/v1/feedbacks/goods-groups/:id
  */
-export const updateGoodsGroup = async (req: Request, res: Response): Promise<void> => {
+export const updateGoodsGroup = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const { id } = req.params;
   const { nmIds } = req.body as { nmIds: number[] };
@@ -660,7 +821,10 @@ export const updateGoodsGroup = async (req: Request, res: Response): Promise<voi
 /**
  * DELETE /api/v1/feedbacks/goods-groups/:id
  */
-export const deleteGoodsGroup = async (req: Request, res: Response): Promise<void> => {
+export const deleteGoodsGroup = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { id } = req.params;
@@ -672,7 +836,10 @@ export const deleteGoodsGroup = async (req: Request, res: Response): Promise<voi
 /**
  * POST /api/v1/feedbacks/goods-groups/merge
  */
-export const mergeGoods = async (req: Request, res: Response): Promise<void> => {
+export const mergeGoods = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { sourceNmId, targetNmId } = req.body as {
@@ -707,7 +874,10 @@ export const mergeGoods = async (req: Request, res: Response): Promise<void> => 
 /**
  * POST /api/v1/feedbacks/goods-groups/:id/remove
  */
-export const removeNmIdFromGroup = async (req: Request, res: Response): Promise<void> => {
+export const removeNmIdFromGroup = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const supplierId = getSupplierId(req);
   const { id } = req.params;
