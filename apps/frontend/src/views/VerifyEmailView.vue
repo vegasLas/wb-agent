@@ -53,7 +53,7 @@
             />
           </div>
           <p v-if="resendSuccess" class="text-green-500 text-sm mt-3">
-            Письмо отправлено. Проверьте вашу почту.
+            Письмо отправлено. Проверьте вашу почту, включая папку «Спам».
           </p>
           <p v-if="resendError" class="text-red-500 text-sm mt-3">
             {{ resendError }}

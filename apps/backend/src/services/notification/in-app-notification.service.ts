@@ -1,6 +1,7 @@
 import { prisma } from '@/config/database';
 import { createLogger } from '@/utils/logger';
-import type { InAppNotification, InAppNotificationType, Prisma } from '@prisma/client';
+import type { InAppNotification, InAppNotificationType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 const logger = createLogger('InAppNotificationService');
 

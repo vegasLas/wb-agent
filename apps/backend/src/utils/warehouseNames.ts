@@ -16,10 +16,12 @@ const warehouseNames: string[] = [
   'Воронеж СГТ',
   'Голицыно СГТ',
   'Екатеринбург - Испытателей 14г',
+  'Екатеринбург - Перспективная 14',
   'Екатеринбург - Перспективный 12/2',
   'Казань',
   'Коледино',
   'Котовск',
+  'Краснодар',
   'Краснодар (Тихорецкая)',
   'Кузнецк СГТ',
   'Невинномысск',
@@ -33,6 +35,7 @@ const warehouseNames: string[] = [
   'Подольск 4',
   'Радумля СГТ',
   'Рязань (Тюшевское)',
+  'СПБ Шушары',
   'СЦ Абакан',
   'СЦ Абакан 2',
   'СЦ Актобе',
@@ -110,6 +113,7 @@ const warehouseNames: string[] = [
   'СЦ Шымкент',
   'СЦ Ярославль',
   'СЦ Ярославль Громова',
+  'Самара (Новосемейкино)',
   'Санкт-Петербург (Уткина Заводь)',
   'Санкт-Петербург СГТ',
   'Сарапул',
@@ -141,6 +145,7 @@ const warehouseNameMap: Record<string, string> = {
   'Voronezh SGT': 'Воронеж СГТ',
   'Golitsyno SGT': 'Голицыно СГТ',
   'Ekaterinburg - Ispytateley 14g': 'Екатеринбург - Испытателей 14г',
+  'Ekaterinburg - Perspektivnaya 14': 'Екатеринбург - Перспективная 14',
   'Ekaterinburg 2 - Perspektivnaya 14': 'Екатеринбург - Перспективный 12/2',
   Kazan: 'Казань',
   Koledino: 'Коледино',
@@ -238,9 +243,10 @@ const warehouseNameMap: Record<string, string> = {
   'Saint Petersburg Utkina Zavod': 'Санкт-Петербург (Уткина Заводь)',
   'Saint Petersburg SGT': 'Санкт-Петербург СГТ',
   Sarapul: 'Сарапул',
-  'SPB Shushary': 'Склад Шушары',
+  'SPB Shushary': 'СПБ Шушары',
   'Sofrino SGT': 'Софрино СГТ',
   'Sofyino SGT': 'Софьино СГТ',
+  'Samara Novosemeykino': 'Самара (Новосемейкино)',
   'Bryansk 2': 'Сц Брянск 2',
   Tula: 'Тула',
   Chashnikovo: 'Чашниково',
@@ -260,6 +266,12 @@ const warehouseNameMap: Record<string, string> = {
   Other: 'Другой',
 };
 
+// Build a set of all known Russian names for fast lookup
+const allRussianNames = new Set([
+  ...warehouseNames,
+  ...Object.values(warehouseNameMap),
+]);
+
 /**
  * Converts English warehouse name to Russian equivalent
  * @param englishName - The English warehouse name
@@ -270,6 +282,12 @@ export function convertWarehouseName(englishName: string): string {
 
   // Trim whitespace and check direct mapping
   const trimmedName = englishName.trim();
+
+  // If already a known Russian name, return as-is
+  if (allRussianNames.has(trimmedName)) {
+    return trimmedName;
+  }
+
   const russianName = warehouseNameMap[trimmedName];
 
   if (russianName) {
