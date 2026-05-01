@@ -17,6 +17,7 @@ import {
   getFavorites,
   addFavorite,
   removeFavorite,
+  updateFavoriteTitle,
   getHistory,
   getSkuSummary,
 } from '@/controllers/mpstats.controller';
@@ -116,6 +117,22 @@ router.delete(
   param('nmId').isInt().withMessage('nmId must be a number'),
   validationMiddleware,
   asyncHandler(removeFavorite),
+);
+
+/**
+ * @route   PATCH /api/v1/mpstats/favorites/:nmId/title
+ * @desc    Update the custom title of a favorited SKU card
+ * @param   nmId - Wildberries NM ID
+ * @body    customTitle - Custom title string or null to clear
+ * @access  Private
+ */
+router.patch(
+  '/favorites/:nmId/title',
+  authenticate,
+  param('nmId').isInt().withMessage('nmId must be a number'),
+  body('customTitle').optional({ nullable: true }).isString().withMessage('customTitle must be a string'),
+  validationMiddleware,
+  asyncHandler(updateFavoriteTitle),
 );
 
 /**
