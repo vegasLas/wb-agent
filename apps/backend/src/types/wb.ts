@@ -776,6 +776,159 @@ export interface AdvertPresetTotal {
   currency: string;
 }
 
+// ============ Advert Full Stat Types ============
+
+export interface AdvertFullStatResponse {
+  httpStatus: number;
+  error: string;
+  code: number;
+  totalCount: number;
+  pageCount: number;
+  content: AdvertFullStatContent;
+}
+
+export interface AdvertFullStatContent {
+  advertId: number;
+  begin: string;
+  end: string;
+  days: AdvertFullStatDay[];
+  previous: AdvertFullStatPrevious;
+  views: number;
+  clicks: number;
+  orders: number;
+  shks: number;
+  sum_price: number;
+  atbs: number;
+  spend: number;
+  ctr: number;
+  cpc: number;
+  cr: number;
+  cpm: number;
+  cpo: number;
+  sum: number;
+  cost_share: number;
+  currency: string;
+  position: number;
+  nmStats: AdvertFullStatNmStat[];
+  sideNmStats: null;
+}
+
+export interface AdvertFullStatNmStat {
+  nm_id: number;
+  name: string;
+  begin: string;
+  end: string;
+  avg_position: number;
+  imt_nm_stats: AdvertFullStatImtNmStat[];
+  views: number;
+  clicks: number;
+  orders: number;
+  shks: number;
+  sum_price: number;
+  atbs: number;
+  spend: number;
+  ctr: number;
+  cpc: number;
+  cr: number;
+  cpm: number;
+  cpo: number;
+  sum: number;
+  annual: number;
+  cost_share: number;
+  currency: string;
+  attribution_stage: string;
+}
+
+export interface AdvertFullStatImtNmStat {
+  nm_id: number;
+  name: string;
+  begin: string;
+  end: string;
+  avg_position?: number;
+  views: number;
+  clicks: number;
+  orders: number;
+  shks: number;
+  sum_price: number;
+  atbs: number;
+  spend: number;
+  ctr: number;
+  cpc: number;
+  cr: number;
+  cpm: number;
+  cpo?: number;
+  sum: number;
+  annual: number;
+  cost_share: number;
+  currency: string;
+  attribution_stage: string;
+}
+
+export interface AdvertFullStatPrevious {
+  days: AdvertFullStatDayPrevious[];
+  diff: AdvertFullStatDiff;
+}
+
+export interface AdvertFullStatDiff {
+  sum: number;
+  clicks: number;
+  spend: number;
+  views: number;
+  orders: number;
+  sum_price: number;
+  ctr: number;
+  cpc: number;
+  cr: number;
+  cpm: number;
+  cost_share: number;
+  position: number;
+}
+
+export interface AdvertFullStatDayPrevious {
+  date: string;
+  apps: null;
+  views: number;
+  clicks: number;
+  orders: number;
+  shks: number;
+  sum_price: number;
+  atbs: number;
+  spend: number;
+  ctr: number;
+  cpc: number;
+  cr: number;
+  cpm: number;
+  sum: number;
+  attribution_stage: string;
+  drr: number;
+  annual: number;
+  cost_share: number;
+  currency: string;
+  cpo?: number;
+}
+
+export interface AdvertFullStatDay {
+  date: string;
+  apps: null;
+  views: number;
+  clicks: number;
+  orders: number;
+  shks: number;
+  sum_price: number;
+  atbs: number;
+  spend: number;
+  ctr: number;
+  cpc: number;
+  cr: number;
+  cpm: number;
+  cpo?: number;
+  sum: number;
+  attribution_stage: string;
+  annual: number;
+  cost_share: number;
+  currency: string;
+}
+
 // ============ Region Sales Types ============
 
 export interface RegionSaleResponse {
