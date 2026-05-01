@@ -6,6 +6,7 @@
 
 import { prisma } from '@/config/database';
 import { createLogger } from '@/utils/logger';
+import { ApiError } from '@/utils/errors';
 import axios, { AxiosError } from 'axios';
 
 const logger = createLogger('MPStats');
@@ -38,6 +39,21 @@ async function axiosGet<T>(
       const errorData = axiosErr.response?.data as
         | { message?: string }
         | undefined;
+
+      if (axiosErr.response?.status === 401) {
+        throw ApiError.badRequest(
+          'Invalid or expired MPStats token. Please check your token in settings.',
+          'MPSTATS_TOKEN_INVALID',
+        );
+      }
+
+      if (axiosErr.response?.status === 403) {
+        throw ApiError.forbidden(
+          'MPStats API access denied. Your subscription may not include this endpoint.',
+          'MPSTATS_FORBIDDEN',
+        );
+      }
+
       throw new Error(
         `MPStats API error: ${errorData?.message || axiosErr.message}`,
       );
@@ -80,7 +96,6 @@ export class MPStatsService {
     };
 
     logger.info(`Fetching MPStats sales for nmId: ${nmId}`);
-
     return axiosGet<MpstatsSalesItem[]>(url, headers);
   }
 
@@ -116,7 +131,6 @@ export class MPStatsService {
     };
 
     logger.info(`Fetching MPStats sales by region for nmId: ${nmId}`);
-
     return axiosGet<MpstatsSalesByRegionItem[]>(url, headers);
   }
 
@@ -189,7 +203,6 @@ export class MPStatsService {
     };
 
     logger.info(`Fetching MPStats balance by region for nmId: ${nmId}`);
-
     return axiosGet<MpstatsBalanceByRegionItem[]>(url, headers);
   }
 
@@ -290,7 +303,6 @@ export class MPStatsService {
     };
 
     logger.info(`Fetching MPStats item full for nmId: ${nmId}`);
-
     return axiosGet<MpstatsItemFull>(url, headers);
   }
 

@@ -29,9 +29,11 @@ export const checkMpstatsToken = async (req: Request, res: Response): Promise<vo
   logger.info(`Checking MPStats token status for user ${userId}`);
 
   const user = await userService.findById(userId);
+  const hasToken = !!user?.mpstatsToken;
 
-  successResponse(res, {
-    hasToken: !!user?.mpstatsToken,
+  res.json({
+    success: true,
+    hasToken,
   });
 };
 
@@ -43,9 +45,33 @@ export const saveMpstatsToken = async (req: Request, res: Response): Promise<voi
   const userId = getUserId(req);
   const { token } = req.body as { token: string };
 
-  logger.info(`Saving MPStats token for user ${userId}`);
+  const trimmedToken = token?.trim() || '';
 
-  await userService.updateMpstatsToken(userId, token);
+  if (!trimmedToken) {
+    throw ApiError.badRequest('Token is required');
+  }
+
+  // Validate token by making a test API call before saving
+  try {
+    const { d1, d2 } = getDefaultDateRange();
+    await mpstatsService.getItemFull({
+      nmId: 1,
+      d1,
+      d2,
+      mpstatsToken: trimmedToken,
+    });
+  } catch (err: any) {
+    if (err.code === 'MPSTATS_TOKEN_INVALID' || err.code === 'MPSTATS_FORBIDDEN') {
+      throw ApiError.badRequest(
+        'Invalid MPStats token. Please check your token and try again.',
+        'MPSTATS_TOKEN_INVALID',
+      );
+    }
+    // Other errors (like 404 for nmId=1) mean token is valid
+  }
+
+  logger.info(`Saving MPStats token for user ${userId}`);
+  await userService.updateMpstatsToken(userId, trimmedToken);
 
   res.json({
     success: true,
@@ -202,6 +228,7 @@ export const getFavorites = async (req: Request, res: Response): Promise<void> =
   const mapped = favorites.map((f) => ({
     nmID: f.nmID,
     name: f.title || '',
+    customTitle: f.customTitle || '',
     brand: f.brand || '',
     subjectName: f.subjectName || '',
     image: f.image || '',
@@ -209,6 +236,52 @@ export const getFavorites = async (req: Request, res: Response): Promise<void> =
   }));
 
   successResponse(res, mapped);
+};
+
+/**
+ * PATCH /api/v1/mpstats/favorites/:nmId/title
+ * Update the custom title of a favorited SKU card
+ */
+export const updateFavoriteTitle = async (req: Request, res: Response): Promise<void> => {
+  const userId = getUserId(req);
+  const nmId = Number(req.params.nmId);
+  const { customTitle } = req.body as { customTitle?: string | null };
+
+  logger.info(`Updating favorite title for user ${userId}, nmId: ${nmId}`);
+
+  const updated = await prisma.wbSkuCard.updateMany({
+    where: {
+      userId,
+      nmID: nmId,
+      favourite: true,
+    },
+    data: {
+      customTitle: customTitle || null,
+    },
+  });
+
+  if (updated.count === 0) {
+    throw ApiError.notFound('Favorite SKU card not found');
+  }
+
+  const card = await prisma.wbSkuCard.findUnique({
+    where: {
+      nmID_userId: {
+        nmID: nmId,
+        userId,
+      },
+    },
+  });
+
+  successResponse(res, {
+    nmID: card?.nmID,
+    name: card?.title || '',
+    customTitle: card?.customTitle || '',
+    brand: card?.brand || '',
+    subjectName: card?.subjectName || '',
+    image: card?.image || '',
+    favourite: card?.favourite ?? false,
+  });
 };
 
 /**
@@ -288,6 +361,7 @@ export const getHistory = async (req: Request, res: Response): Promise<void> => 
   const mapped = history.map((h) => ({
     nmID: h.nmID,
     name: h.title || '',
+    customTitle: h.customTitle || '',
     brand: h.brand || '',
     subjectName: h.subjectName || '',
     image: h.image || '',
@@ -329,6 +403,7 @@ export default {
   getFavorites,
   addFavorite,
   removeFavorite,
+  updateFavoriteTitle,
   getHistory,
   getSkuSummary,
 };
