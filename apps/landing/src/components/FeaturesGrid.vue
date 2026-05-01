@@ -10,6 +10,71 @@
         </p>
       </div>
 
+      <!-- AI Assistant -->
+      <div
+        ref="aiBlockRef"
+        class="group relative mb-6 p-8 md:p-12 rounded-3xl bg-deep-card border border-purple/30 transition-all duration-500 hover:border-purple/60 hover:glow-purple-hover"
+      >
+        <div class="flex flex-col lg:flex-row lg:items-start gap-8">
+          <div class="lg:w-1/3">
+            <div
+              class="w-14 h-14 rounded-2xl bg-gradient-purple flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110"
+            >
+              <IconBrain class="w-7 h-7 text-white" />
+            </div>
+            <h3 class="text-2xl md:text-3xl font-bold text-theme mb-4">
+              AI <span class="text-gradient">Ассистент</span>
+            </h3>
+            <p class="text-secondary text-lg leading-relaxed">
+              Умный AI-ассистент анализирует ваши продажи, подсказывает оптимальные решения, отвечает на сложные вопросы и работает с данными вашего бизнеса в реальном времени
+            </p>
+          </div>
+
+          <div class="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+            <div class="flex gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple shrink-0"></span>
+              <p class="text-secondary leading-relaxed">
+                <span class="text-theme font-medium">Естественное общение</span> — управляйте бизнесом на Wildberries простыми сообщениями, как в разговоре с коллегой. Не нужно разбираться в сложных интерфейсах — просто напишите, что вам нужно.
+              </p>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple shrink-0"></span>
+              <p class="text-secondary leading-relaxed">
+                <span class="text-theme font-medium">Экономия времени</span> — получайте отчёты, аналитику и управляйте процессами за секунды вместо долгого кликания по кабинетам. AI делает рутину за вас.
+              </p>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple shrink-0"></span>
+              <p class="text-secondary leading-relaxed">
+                <span class="text-theme font-medium">Мгновенная аналитика</span> — спросите «Какие у меня акции?», «Сколько остатков на складах?» или «Покажи продажи по регионам» — и получите ответ сразу, без переходов между сервисами.
+              </p>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple shrink-0"></span>
+              <p class="text-secondary leading-relaxed">
+                <span class="text-theme font-medium">Работа с промо</span> — просматривайте акции, включайте и исключайте товары, анализируйте конкурентов без ручного скачивания Excel-файлов.
+              </p>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple shrink-0"></span>
+              <p class="text-secondary leading-relaxed">
+                <span class="text-theme font-medium">Контроль рекламы</span> — запрашивайте полную статистику кампаний, ключевые слова, CTR, расходы и конверсии в пару сообщений.
+              </p>
+            </div>
+            <div class="flex gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple shrink-0"></span>
+              <p class="text-secondary leading-relaxed">
+                <span class="text-theme font-medium">Сравнение артикулов</span> — добавляйте свои и чужие товары, сравнивайте выручку, остатки, рейтинги и находите точки роста.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        ></div>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="(feature, index) in features"
@@ -45,6 +110,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const headerRef = ref<HTMLElement | null>(null);
 const cardRefs = ref<HTMLElement[]>([]);
+const aiBlockRef = ref<HTMLElement | null>(null);
 
 const IconBrain = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', class: 'w-6 h-6' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' })
@@ -88,9 +154,7 @@ const IconMap = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: 
 ]);
 
 const features = [
-  { title: 'AI Ассистент', description: 'Умный AI-ассистент анализирует ваши продажи, подсказывает оптимальные решения, отвечает на сложные вопросы и работает с данными вашего бизнеса в реальном времени', icon: IconBrain },
   { title: 'Автобронирование', description: 'Автоматическое бронирование слотов поставок по заданным параметрам: черновик, склад, дата и коэффициент', icon: IconCalendar },
-  { title: 'Перепланирования', description: 'Быстрое перенос существующих поставок на другие даты и склады без ручного отслеживания', icon: IconArrows },
   { title: 'Таймслоты', description: 'Автоматические триггеры для поиска слотов с заданными интервалами и порогами коэффициентов', icon: IconClock },
   { title: 'Акции', description: 'Календарь акций Wildberries, управление участием, таймлайн мероприятий и экспорт в Excel', icon: IconTag },
   { title: 'Отзывы', description: 'Управление отзывами, автоответы, AI-генерация ответов, группировка по товарам и правила', icon: IconMessage },
@@ -127,5 +191,19 @@ onMounted(() => {
       ease: 'power3.out',
     });
   });
+
+  if (aiBlockRef.value) {
+    gsap.from(aiBlockRef.value, {
+      scrollTrigger: {
+        trigger: aiBlockRef.value,
+        start: 'top 90%',
+        toggleActions: 'play none none none',
+      },
+      y: 60,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out',
+    });
+  }
 });
 </script>
