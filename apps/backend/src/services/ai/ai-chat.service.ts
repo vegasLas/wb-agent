@@ -88,6 +88,7 @@ export class AIChatService {
       include: { subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 } },
     });
     const tier = (user?.subscriptions?.[0]?.tier ?? 'FREE') as UserTier;
+    const hasMpstatsToken = !!user?.mpstatsToken;
     const budget = await this.checkChatBudget(userId, tier);
 
     if (!budget.allowed) {
@@ -140,9 +141,14 @@ export class AIChatService {
     });
 
     // 4. Build system context
+    const systemContext = await buildContextMessage(userId);
+    const mpstatsNote = hasMpstatsToken
+      ? ''
+      : '\n\nNOTE: The user has NOT configured an MPStats API token. If they ask about MPStats analytics, competitor analysis, SKU data, or any MPStats-related features, tell them they need to add their MPStats API token in the account settings first. Do NOT attempt to call any MPStats tools.';
+
     const systemMessage: CoreMessage = {
       role: 'system',
-      content: await buildContextMessage(userId),
+      content: systemContext + mpstatsNote,
     };
 
     // 5. Convert client UIMessages to CoreMessages
@@ -202,11 +208,13 @@ export class AIChatService {
             'supplierTools',
             permissions,
           ),
-          filterToolsByPermissions(
-            mpstatsTools(userId),
-            'mpstatsTools',
-            permissions,
-          ),
+          hasMpstatsToken
+            ? filterToolsByPermissions(
+                mpstatsTools(userId),
+                'mpstatsTools',
+                permissions,
+              )
+            : {},
           filterToolsByPermissions(
             advertsTools(userId),
             'advertsTools',

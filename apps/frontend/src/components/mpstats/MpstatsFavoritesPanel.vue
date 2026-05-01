@@ -31,8 +31,10 @@
         :show-favorite="true"
         :is-favorite="true"
         :favorite-loading="removingFavorite === card.nmID"
+        :allow-edit-title="true"
         @toggle-favorite="$emit('toggle-favorite', $event)"
         @open-detail="$emit('open-detail', $event)"
+        @update-title="$emit('update-title', $event)"
       />
     </div>
 
@@ -72,5 +74,6 @@ defineProps<Props>();
 defineEmits<{
   'toggle-favorite': [card: MpstatsCard];
   'open-detail': [card: MpstatsCard];
+  'update-title': [payload: { nmID: number; customTitle: string | null }];
 }>();
 </script>

@@ -115,6 +115,7 @@ export interface MpstatsItemFull {
 export interface MpstatsCard {
   nmID: number;
   name: string;
+  customTitle?: string;
   brand: string;
   subjectName: string;
   image: string;

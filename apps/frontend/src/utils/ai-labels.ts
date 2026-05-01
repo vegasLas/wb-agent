@@ -96,6 +96,18 @@ export const TOOL_LABELS: Record<string, { label: string; icon: string }> = {
     label: 'Сравниваем артикулы',
     icon: 'pi pi-chart-bar',
   },
+  listFavoriteSkus: {
+    label: 'Получаем избранные артикулы',
+    icon: 'pi pi-heart',
+  },
+  getFavoriteSkusAnalytics: {
+    label: 'Аналитика избранных артикулов',
+    icon: 'pi pi-chart-bar',
+  },
+  getSkuByUrl: {
+    label: 'Аналитика по ссылке WB',
+    icon: 'pi pi-link',
+  },
 
   // User Context
   getUserContext: {

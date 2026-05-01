@@ -60,7 +60,7 @@ Key response fields explained:
       description: `List the user's saved MPStats SKU cards (added / viewed / favorited SKUs).
 Call this when the user asks about their saved SKUs, added артикулы, MPStats favorites, or "what SKUs do I have".
 Required: none.
-Returns: nmID, name, brand, subjectName, image, favourite status.`,
+Returns: nmID, name, customTitle, brand, subjectName, image, favourite status.`,
       inputSchema: z.object({}),
       execute: safeTool('listSavedSkus', async () => {
         return loggedTool('listSavedSkus', userId, async () => {
@@ -75,11 +75,153 @@ Returns: nmID, name, brand, subjectName, image, favourite status.`,
             cards: cards.map((c) => ({
               nmID: c.nmID,
               name: c.title || '',
+              customTitle: c.customTitle || '',
               brand: c.brand || '',
               subjectName: c.subjectName || '',
               image: c.image || '',
               favourite: c.favourite,
             })),
+          };
+        });
+      }),
+    }),
+
+    listFavoriteSkus: tool({
+      description: `List the user's favorited MPStats SKU cards.
+Call this when the user asks about their favorite SKUs, избранные артикулы, or wants to select a favorite SKU to compare with their own goods.
+This tool returns ONLY favorited SKUs with their custom titles (if the user has set any).
+Required: none.
+Returns: nmID, name, customTitle, brand, subjectName, image.`,
+      inputSchema: z.object({}),
+      execute: safeTool('listFavoriteSkus', async () => {
+        return loggedTool('listFavoriteSkus', userId, async () => {
+          const cards = await prisma.wbSkuCard.findMany({
+            where: { userId, favourite: true },
+            orderBy: { updatedAt: 'desc' },
+            take: 50,
+          });
+
+          return {
+            count: cards.length,
+            cards: cards.map((c) => ({
+              nmID: c.nmID,
+              name: c.title || '',
+              customTitle: c.customTitle || '',
+              brand: c.brand || '',
+              subjectName: c.subjectName || '',
+              image: c.image || '',
+            })),
+          };
+        });
+      }),
+    }),
+
+    getFavoriteSkusAnalytics: tool({
+      description: `Get balances, sales, and revenue analytics for the user's favorited MPStats SKUs.
+Call this when the user asks about sales, balances, остатки, продажи, выручка, or analytics of their favorite / избранные SKUs.
+If the user asks about specific favorites, pass their nmIds. If they ask about "all favorites" or "my favorites", omit nmIds to fetch analytics for all favorited SKUs.
+Required: none.
+Optional: nmIds (array of specific favorite NM IDs), d1/d2 (YYYY-MM-DD, default last 30 days), fbs (default 1).
+Returns for each SKU: nmId, name, customTitle, revenue, sales, balance, stockFbs, stockFbo, price, rating, comments, salesByRegion (top 5), balanceByRegion (top 5).`,
+      inputSchema: z.object({
+        nmIds: z.array(z.number().int()).optional(),
+        d1: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        d2: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        fbs: z.number().int().default(1),
+      }),
+      execute: safeTool('getFavoriteSkusAnalytics', async (data) => {
+        return loggedTool('getFavoriteSkusAnalytics', userId, async () => {
+          const now = new Date();
+          const formatDate = (date: Date) => date.toISOString().split('T')[0];
+          const finalD1 = data.d1 || formatDate(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000));
+          const finalD2 = data.d2 || formatDate(new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000));
+
+          let targetNmIds: number[];
+
+          if (data.nmIds && data.nmIds.length > 0) {
+            targetNmIds = data.nmIds;
+          } else {
+            const favorites = await prisma.wbSkuCard.findMany({
+              where: { userId, favourite: true },
+              select: { nmID: true },
+              orderBy: { updatedAt: 'desc' },
+              take: 20,
+            });
+            targetNmIds = favorites.map((f) => f.nmID);
+          }
+
+          if (targetNmIds.length === 0) {
+            return {
+              success: true,
+              message: 'No favorite SKUs found',
+              skus: [],
+            };
+          }
+
+          const results = await Promise.all(
+            targetNmIds.map(async (nmId) => {
+              try {
+                const summary = await mpstatsService.getSkuSummary({
+                  userId,
+                  nmId,
+                  d1: finalD1,
+                  d2: finalD2,
+                  fbs: data.fbs,
+                });
+
+                const stats = summary.itemFull.period_stats;
+                const item = summary.itemFull;
+                const card = await prisma.wbSkuCard.findUnique({
+                  where: { nmID_userId: { nmID: nmId, userId } },
+                });
+
+                return {
+                  nmId,
+                  success: true,
+                  name: item.name || '',
+                  customTitle: card?.customTitle || '',
+                  revenue: stats?.revenue ?? 0,
+                  sales: stats?.sales ?? 0,
+                  revenueAvg: stats?.revenue_avg ?? 0,
+                  salesAvg: stats?.sales_avg ?? 0,
+                  revenueEstimated: stats?.revenue_estimated ?? 0,
+                  salesEstimated: stats?.sales_estimated ?? 0,
+                  revenuePotential: stats?.revenue_potential ?? 0,
+                  lostProfit: stats?.lost_profit ?? 0,
+                  lostProfitPercent: stats?.lost_profit_percent ?? 0,
+                  rating: item.rating ?? 0,
+                  price: item.price?.final_price ?? 0,
+                  balance: item.balance ?? 0,
+                  stockFbs: item.stock?.fbs ?? 0,
+                  stockFbo: item.stock?.fbo ?? 0,
+                  comments: item.comments ?? 0,
+                  discount: item.discount ?? 0,
+                  salesByRegion: (summary.salesByRegion || [])
+                    .sort((a, b) => b.sales - a.sales)
+                    .slice(0, 5),
+                  balanceByRegion: (summary.balanceByRegion || [])
+                    .sort((a, b) => b.balance - a.balance)
+                    .slice(0, 5),
+                };
+              } catch (err: any) {
+                return {
+                  nmId,
+                  success: false,
+                  error: err?.message || 'Failed to fetch SKU summary',
+                };
+              }
+            }),
+          );
+
+          const successful = results.filter((r) => r.success);
+          const failed = results.filter((r) => !r.success);
+
+          return {
+            period: { d1: finalD1, d2: finalD2 },
+            analyzedCount: successful.length,
+            failedCount: failed.length,
+            skus: successful,
+            errors: failed.map((f) => ({ nmId: f.nmId, error: (f as any).error })),
           };
         });
       }),
@@ -149,7 +291,8 @@ Required: nmId (Wildberries NM ID).`,
 
     compareSkus: tool({
       description: `Compare MPStats analytics summaries across multiple SKUs (Wildberries NM IDs).
-Call this when the user wants to compare their own goods with competitors/strangers (e.g. "Сравни артикул 111 и 222", "Compare my SKU with competitor").
+Call this when the user wants to compare their own goods with competitors, strangers, or their favorited SKUs (e.g. "Сравни артикул 111 и 222", "Compare my SKU with competitor", "Сравни мой товар с избранными").
+If the user wants to compare with favorites, first call listFavoriteSkus to get available favorites with their custom titles, then use those nmIds here.
 Accepts 2–5 NM IDs. Fetches aggregated analytics for each and returns key metrics side-by-side.
 Required: nmIds (array of 2–5 Wildberries NM IDs).`,
       inputSchema: z.object({
@@ -251,6 +394,104 @@ Required: nmIds (array of 2–5 Wildberries NM IDs).`,
               : null,
             comparison: successful,
             errors: failed.map((f) => ({ nmId: f.nmId, error: (f as any).error })),
+          };
+        });
+      }),
+    }),
+
+    getSkuByUrl: tool({
+      description: `Get full MPStats analytics for a Wildberries product by URL or article ID.
+Call this when the user provides a WB product link (e.g. "https://www.wildberries.ru/catalog/212597137/detail.aspx") or an article ID.
+The tool extracts the NM ID from the URL, fetches full analytics (sales, balances, revenue, pricing), and saves the SKU to the user's local cache.
+Required: urlOrId (WB product URL or article ID number).
+Optional: d1, d2 (YYYY-MM-DD, default last 30 days), fbs (default 1).`,
+      inputSchema: z.object({
+        urlOrId: z.string(),
+        d1: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        d2: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        fbs: z.number().int().default(1),
+      }),
+      execute: safeTool('getSkuByUrl', async (data) => {
+        return loggedTool('getSkuByUrl', userId, async () => {
+          const trimmed = data.urlOrId.trim();
+          let nmId: number | null = null;
+
+          const direct = parseInt(trimmed, 10);
+          if (!Number.isNaN(direct) && String(direct) === trimmed) {
+            nmId = direct;
+          } else {
+            const match = trimmed.match(/\/catalog\/(\d+)\//);
+            if (match) {
+              const fromUrl = parseInt(match[1], 10);
+              if (!Number.isNaN(fromUrl)) {
+                nmId = fromUrl;
+              }
+            }
+          }
+
+          if (!nmId) {
+            return {
+              success: false,
+              error: 'Could not extract article ID from the provided URL or ID. Please provide a valid Wildberries product link or article number.',
+            };
+          }
+
+          const now = new Date();
+          const formatDate = (date: Date) => date.toISOString().split('T')[0];
+          const finalD1 = data.d1 || formatDate(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000));
+          const finalD2 = data.d2 || formatDate(new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000));
+
+          const summary = await mpstatsService.getSkuSummary({
+            userId,
+            nmId,
+            d1: finalD1,
+            d2: finalD2,
+            fbs: data.fbs,
+          });
+
+          const itemFull = summary.itemFull;
+          const image = itemFull.photo?.list?.[0]?.t || itemFull.photo?.list?.[0]?.f || '';
+
+          await prisma.wbSkuCard.upsert({
+            where: { nmID_userId: { nmID: nmId, userId } },
+            update: {
+              brand: itemFull.brand || null,
+              title: itemFull.name || null,
+              subjectName: itemFull.subject?.name || null,
+              image,
+            },
+            create: {
+              nmID: nmId,
+              userId,
+              brand: itemFull.brand || null,
+              title: itemFull.name || null,
+              subjectName: itemFull.subject?.name || null,
+              image,
+              favourite: false,
+            },
+          });
+
+          return {
+            success: true,
+            nmId,
+            name: itemFull.name || '',
+            brand: itemFull.brand || '',
+            subjectName: itemFull.subject?.name || '',
+            image,
+            link: itemFull.link || '',
+            revenue: itemFull.period_stats?.revenue ?? 0,
+            sales: itemFull.period_stats?.sales ?? 0,
+            revenueAvg: itemFull.period_stats?.revenue_avg ?? 0,
+            salesAvg: itemFull.period_stats?.sales_avg ?? 0,
+            balance: itemFull.balance ?? 0,
+            stockFbs: itemFull.stock?.fbs ?? 0,
+            stockFbo: itemFull.stock?.fbo ?? 0,
+            price: itemFull.price?.final_price ?? 0,
+            rating: itemFull.rating ?? 0,
+            comments: itemFull.comments ?? 0,
+            discount: itemFull.discount ?? 0,
+            salesByRegion: (summary.salesByRegion || []).slice(0, 5),
+            balanceByRegion: (summary.balanceByRegion || []).slice(0, 5),
           };
         });
       }),

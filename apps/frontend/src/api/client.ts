@@ -214,14 +214,6 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Handle 500+ server errors
-    if (error.response && error.response.status >= 500) {
-      if (typeof window !== 'undefined' && window.location.pathname !== '/error/server-error') {
-        window.location.href = '/error/server-error';
-      }
-      return Promise.reject(normalized || error);
-    }
-
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       // If this was the refresh endpoint itself, refresh token is dead — redirect to login
