@@ -215,6 +215,30 @@ export const AI_COMMANDS: AICommand[] = [
     icon: 'pi pi-chart-bar',
     prompt: 'Сравни артикулы в MPStats: [nmId1], [nmId2]',
   },
+  {
+    id: 'mpstats-favorites-list',
+    label: 'Мои избранные артикулы',
+    icon: 'pi pi-heart',
+    prompt: 'Покажи мои избранные артикулы MPStats',
+  },
+  {
+    id: 'mpstats-favorites-analytics',
+    label: 'Аналитика избранного',
+    icon: 'pi pi-chart-bar',
+    prompt: 'Покажи балансы и продажи моих избранных артикулов MPStats',
+  },
+  {
+    id: 'mpstats-compare-with-favorites',
+    label: 'Сравнить с избранным',
+    icon: 'pi pi-chart-bar',
+    prompt: 'Сравни мой товар с избранными артикулами MPStats',
+  },
+  {
+    id: 'mpstats-by-url',
+    label: 'Аналитика по ссылке WB',
+    icon: 'pi pi-link',
+    prompt: 'Покажи MPStats аналитику по ссылке [URL WB]',
+  },
 
   // PROMOTIONS
   {
