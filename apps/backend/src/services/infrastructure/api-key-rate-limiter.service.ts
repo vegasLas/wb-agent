@@ -184,34 +184,26 @@ export class ApiKeyRateLimiterService {
   }
 
   /**
-   * Deactivate an API key
+   * Deactivate an API key by removing it from DB and cache
    */
   async deactivateApiKey(userId: number): Promise<void> {
     try {
-      try {
-        await prisma.supplierApiKey.update({
-          where: { userId },
-          data: { isActive: false },
-        });
-      } catch (error) {
-        // Fallback to delete if isActive doesn't exist or row is already gone
-        try {
-          await prisma.supplierApiKey.delete({
-            where: { userId },
-          });
-        } catch (deleteError) {
-          // Row might already be deleted — safe to ignore
-        }
-      }
-
-      this.apiKeyUsage.delete(userId);
-      logger.info(`Deactivated API key for user ${userId}`);
+      await prisma.supplierApiKey.delete({
+        where: { userId },
+      });
     } catch (error) {
-      logger.error(
-        `Failed to deactivate/delete API key for user ${userId}:`,
-        error,
-      );
+      // Row might already be deleted — safe to ignore
     }
+
+    this.apiKeyUsage.delete(userId);
+    logger.info(`Deactivated API key for user ${userId}`);
+  }
+
+  /**
+   * Remove key from cache only (without DB operations)
+   */
+  removeKeyFromCache(userId: number): void {
+    this.apiKeyUsage.delete(userId);
   }
 
   /**

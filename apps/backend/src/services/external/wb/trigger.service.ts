@@ -78,8 +78,8 @@ export class TriggerService {
       // Row might already be gone — safe to ignore
     }
 
-    // Remove from rate-limiter cache
-    await this.deactivateApiKey(userId);
+    // Remove from rate-limiter cache only (DB row already deleted)
+    apiKeyRateLimiterService.removeKeyFromCache(userId);
 
     // Get user with telegram info
     const user = await prisma.user.findUnique({

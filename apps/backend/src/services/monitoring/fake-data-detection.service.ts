@@ -164,7 +164,7 @@ export class FakeDataDetectionService {
     );
 
     // If warehouse 206236 has BOX count >= 8, skip processing
-    if (highBoxCountWarehouses.some((wc) => wc.warehouseId === 206236)) {
+    if (highBoxCountWarehouses.some((wc) => wc.warehouseId === 117986)) {
       return {
         shouldSkip: true,
         reason: `Found ${highBoxCountWarehouses.length} warehouses with BOX count >= ${BOX_COUNT_THRESHOLD}`,

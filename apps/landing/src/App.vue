@@ -92,13 +92,6 @@
       <main>
         <HeroSection />
 
-        <div class="relative">
-          <div
-            class="absolute inset-0 bg-gradient-to-b from-transparent via-purple/5 to-transparent pointer-events-none"
-          ></div>
-          <StatsSection />
-        </div>
-
         <FeaturesGrid />
 
         <div class="relative">
