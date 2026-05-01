@@ -12,6 +12,10 @@ export const TOOL_LABELS: Record<string, { label: string; icon: string }> = {
     label: 'Получаем ключевые слова рекламы',
     icon: 'pi pi-info-circle',
   },
+  getAdvertFullStat: {
+    label: 'Получаем полную статистику рекламы',
+    icon: 'pi pi-chart-bar',
+  },
 
   // Autobooking
   listAutobookings: {

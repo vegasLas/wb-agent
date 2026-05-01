@@ -182,6 +182,13 @@ export const AI_COMMANDS: AICommand[] = [
     prompt: 'Какая реклама приносит больше всего продаж?',
     permissions: ['ADVERTS'],
   },
+  {
+    id: 'advert-fullstat',
+    label: 'Полная статистика рекламы',
+    icon: 'pi pi-chart-bar',
+    prompt: 'Покажи полную статистику по рекламной кампании',
+    permissions: ['ADVERTS'],
+  },
 
   // MPStats (no permission required, gated by token)
   {
