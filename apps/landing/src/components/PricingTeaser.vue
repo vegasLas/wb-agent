@@ -33,7 +33,9 @@
       </div>
 
       <!-- Pricing Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch"
+      >
         <div
           v-for="tier in tiers"
           :key="tier.key"
@@ -62,12 +64,13 @@
             <!-- Price -->
             <div class="mb-4">
               <div class="flex items-baseline gap-1">
-                <p v-if="tier.monthlyPrice > 0" class="text-4xl font-bold text-theme">
+                <p
+                  v-if="tier.monthlyPrice > 0"
+                  class="text-4xl font-bold text-theme"
+                >
                   {{ formatPrice(tier.monthlyPrice) }} ₽
                 </p>
-                <p v-else class="text-4xl font-bold text-theme">
-                  Бесплатно
-                </p>
+                <p v-else class="text-4xl font-bold text-theme">Бесплатно</p>
                 <div
                   v-if="tier.monthlyPrice > 0"
                   class="text-sm text-gray-500 dark:text-gray-400 leading-tight"
@@ -77,7 +80,10 @@
               </div>
 
               <!-- Savings info -->
-              <div v-if="selectedPeriodIndex > 0 && tier.monthlyPrice > 0" class="mt-1 space-y-0.5">
+              <div
+                v-if="selectedPeriodIndex > 0 && tier.monthlyPrice > 0"
+                class="mt-1 space-y-0.5"
+              >
                 <p class="text-sm text-gray-400 dark:text-gray-500">
                   <span class="line-through"
                     >{{ formatPrice(tier.baseMonthly) }} ₽</span
@@ -96,7 +102,9 @@
               </div>
             </div>
 
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 min-h-[40px]">
+            <p
+              class="text-sm text-gray-600 dark:text-gray-300 mb-4 min-h-[40px]"
+            >
               {{ tier.description }}
             </p>
 
@@ -280,7 +288,6 @@ const tiers = computed(() => {
       prevTier: 'Бесплатного',
       features: [
         '6 активных автоброней',
-        '1 WB аккаунт',
         '300 отзывов в месяц',
         'AI-ассистент — увеличенный лимит',
       ],

@@ -155,8 +155,6 @@
       @success="handleModalSuccess"
       @fail="handleModalFail"
     />
-
-
   </div>
 </template>
 
@@ -191,10 +189,15 @@ const currentTier = computed(() => userStore.subscriptionTier);
 
 // Debug trial eligibility
 const isTrialEligible = computed(() => {
-  const eligible =
-    userStore.isFree &&
-    !userStore.user.trialUsedAt;
-  console.log('[TRIAL DEBUG] isFree:', userStore.isFree, '| trialUsedAt:', userStore.user.trialUsedAt, '| eligible:', eligible);
+  const eligible = userStore.isFree && !userStore.user.trialUsedAt;
+  console.log(
+    '[TRIAL DEBUG] isFree:',
+    userStore.isFree,
+    '| trialUsedAt:',
+    userStore.user.trialUsedAt,
+    '| eligible:',
+    eligible,
+  );
   return eligible;
 });
 
@@ -310,7 +313,6 @@ const tiers = computed(() => {
       prevTier: 'Бесплатного',
       features: [
         `${AUTOBOOKING_SLOTS.LITE} активных автоброней`,
-        `${MAX_ACCOUNTS.LITE} WB аккаунт`,
         `${FEEDBACK_QUOTA.LITE} отзывов в месяц`,
         'AI-ассистент — увеличенный лимит',
       ],
