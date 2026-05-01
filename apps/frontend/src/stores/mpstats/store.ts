@@ -6,6 +6,7 @@ import type {
   MpstatsCard,
   MpstatsSkuSummary,
 } from '@/api/mpstats/types';
+import { mpstatsAPI } from '@/api';
 
 export const useMpstatsStore = defineStore('mpstats', () => {
   const toast = useAppToast();
@@ -145,6 +146,31 @@ export const useMpstatsStore = defineStore('mpstats', () => {
     }
   }
 
+  async function updateFavoriteTitle(nmID: number, customTitle: string | null) {
+    try {
+      await mpstatsAPI.updateFavoriteTitle(nmID, customTitle);
+      const favorite = favorites.value.find((f) => f.nmID === nmID);
+      if (favorite) {
+        favorite.customTitle = customTitle || '';
+      }
+      toast.add({
+        severity: 'success',
+        summary: 'Успешно',
+        detail: 'Название обновлено',
+        life: 2000,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update title';
+      toast.add({
+        severity: 'error',
+        summary: 'Ошибка',
+        detail: msg,
+        life: 3000,
+      });
+      throw err;
+    }
+  }
+
   async function fetchSkuSummary(nmId: number) {
     loadingSummary.value = true;
     summaryError.value = null;
@@ -186,6 +212,7 @@ export const useMpstatsStore = defineStore('mpstats', () => {
     addFavorite,
     removeFavorite,
     toggleFavorite,
+    updateFavoriteTitle,
     fetchSkuSummary,
   };
 });

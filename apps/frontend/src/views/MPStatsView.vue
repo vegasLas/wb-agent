@@ -5,59 +5,23 @@
       v-if="!tokensReady"
       class="space-y-4"
     >
-      <Card class="text-center py-8">
-        <template #content>
-          <div class="flex flex-col items-center">
-            <div
-              class="w-16 h-16 rounded-lg bg-blue-600 flex items-center justify-center mb-4"
-            >
-              <i class="pi pi-chart-bar text-white text-2xl" />
-            </div>
-            <p class="text-lg font-medium mb-2">
-              MPStats
-            </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-6">
-              Для работы с MPStats необходимо настроить токен MPStats
-            </p>
+      <div class="text-center py-8">
+        <div
+          class="w-16 h-16 rounded-lg bg-blue-600 flex items-center justify-center mb-4 mx-auto"
+        >
+          <i class="pi pi-chart-bar text-white text-2xl" />
+        </div>
+        <p class="text-lg font-medium mb-2">
+          MPStats
+        </p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-6 mx-auto">
+          Для работы с MPStats необходимо настроить токен MPStats
+        </p>
 
-            <div class="flex flex-col gap-3 w-full max-w-md text-left">
-              <!-- MPStats Token Status -->
-              <div
-                class="flex items-center gap-3 p-4 rounded-lg border"
-                :class="
-                  hasMpstatsToken
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                    : 'border-gray-300 dark:border-gray-600'
-                "
-              >
-                <i
-                  class="text-xl"
-                  :class="
-                    hasMpstatsToken
-                      ? 'pi pi-check-circle text-green-500'
-                      : 'pi pi-lock text-gray-400'
-                  "
-                />
-                <div class="flex-1">
-                  <p class="font-medium">
-                    Токен MPStats
-                  </p>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ hasMpstatsToken ? 'Настроен' : 'Не настроен' }}
-                  </p>
-                </div>
-                <Button
-                  v-if="!hasMpstatsToken"
-                  size="small"
-                  @click="goToAccount"
-                >
-                  Настроить
-                </Button>
-              </div>
-            </div>
-          </div>
-        </template>
-      </Card>
+        <div class="max-w-md mx-auto text-left">
+          <MpstatsTokenComponent />
+        </div>
+      </div>
     </div>
 
     <!-- Main MPStats View -->
@@ -130,6 +94,7 @@
               :removing-favorite="mpstatsStore.removingFavorite"
               @toggle-favorite="mpstatsStore.toggleFavorite"
               @open-detail="openDetail"
+              @update-title="handleUpdateTitle"
             />
           </TabPanel>
         </TabPanels>
@@ -151,7 +116,6 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue';
 import type { MpstatsCard } from '@/api/mpstats/types';
-import { useRouter } from 'vue-router';
 import { useViewReady } from '../composables/ui';
 import { useUserStore } from '@/stores/user';
 import { useMpstatsStore } from '@/stores/mpstats';
@@ -159,16 +123,14 @@ import MpstatsSearchPanel from '../components/mpstats/MpstatsSearchPanel.vue';
 import MpstatsFavoritesPanel from '../components/mpstats/MpstatsFavoritesPanel.vue';
 import MpstatsHistoryPanel from '../components/mpstats/MpstatsHistoryPanel.vue';
 import MpstatsSkuDetail from '../components/mpstats/MpstatsSkuDetail.vue';
+import MpstatsTokenComponent from '../components/mpstats/MpstatsTokenComponent.vue';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-import Button from 'primevue/button';
-import Card from 'primevue/card';
 
 const { viewReady } = useViewReady();
-const router = useRouter();
 const userStore = useUserStore();
 const mpstatsStore = useMpstatsStore();
 
@@ -176,12 +138,7 @@ const detailVisible = ref(false);
 const selectedNmId = ref(0);
 const selectedCard = ref<MpstatsCard | null>(null);
 
-const hasMpstatsToken = computed(() => !!userStore.user?.hasMpstatsToken);
-const tokensReady = computed(() => hasMpstatsToken.value);
-
-function goToAccount() {
-  router.push('/account');
-}
+const tokensReady = computed(() => !!userStore.user?.hasMpstatsToken);
 
 function extractNmId(input: string): number | null {
   const trimmed = input.trim();
@@ -218,6 +175,10 @@ async function openDetail(card: MpstatsCard) {
   selectedCard.value = card;
   detailVisible.value = true;
   await mpstatsStore.fetchSkuSummary(card.nmID);
+}
+
+async function handleUpdateTitle(payload: { nmID: number; customTitle: string | null }) {
+  await mpstatsStore.updateFavoriteTitle(payload.nmID, payload.customTitle);
 }
 
 onMounted(() => {

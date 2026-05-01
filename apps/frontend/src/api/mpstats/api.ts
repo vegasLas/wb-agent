@@ -117,4 +117,16 @@ export const mpstatsAPI = {
     );
     return response.data;
   },
+
+  /**
+   * PATCH /api/v1/mpstats/favorites/:nmId/title
+   * Update the custom title of a favorited SKU card
+   */
+  async updateFavoriteTitle(nmId: number, customTitle: string | null): Promise<{ success: boolean; data: MpstatsCard }> {
+    const response = await apiClient.patch<{ success: boolean; data: MpstatsCard }>(
+      `/mpstats/favorites/${nmId}/title`,
+      { customTitle },
+    );
+    return response.data;
+  },
 };
