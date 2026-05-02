@@ -44,7 +44,7 @@ export class JWTAuthService {
   constructor() {
     this.JWT_SECRET = env.JWT_SECRET || '';
     this.JWT_ACCESS_EXPIRES_IN = env.JWT_ACCESS_EXPIRES_IN || '15m';
-    this.JWT_REFRESH_EXPIRES_IN = env.JWT_REFRESH_EXPIRES_IN || '7d';
+    this.JWT_REFRESH_EXPIRES_IN = env.JWT_REFRESH_EXPIRES_IN || '30d';
     this.BCRYPT_ROUNDS = 10;
 
     if (!this.JWT_SECRET || this.JWT_SECRET.length < 32) {
@@ -208,10 +208,16 @@ export class JWTAuthService {
     }
 
     if (tokenRecord.revokedAt) {
-      throw ApiError.unauthorized(
-        'Refresh token has been revoked',
-        'TOKEN_REVOKED',
-      );
+      // Grace period: allow recently-revoked tokens to handle race conditions
+      // where multiple requests/tabs use the same token simultaneously.
+      const REVOKE_GRACE_PERIOD_MS = 10000; // 10 seconds
+      const revokedAt = new Date(tokenRecord.revokedAt).getTime();
+      if (Date.now() - revokedAt > REVOKE_GRACE_PERIOD_MS) {
+        throw ApiError.unauthorized(
+          'Refresh token has been revoked',
+          'TOKEN_REVOKED',
+        );
+      }
     }
 
     if (new Date(tokenRecord.expiresAt) <= new Date()) {
