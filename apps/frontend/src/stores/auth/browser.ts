@@ -2,10 +2,10 @@ import { defineStore } from 'pinia';
 import { ref, computed, readonly } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStorage } from '@vueuse/core';
-import { setAuthToken } from '@/api/client';
+import { setAuthToken, refreshAccessToken } from '@/api/client';
 import { useUserStore } from '@/stores/user';
 import { resetAppState } from '@/router';
-import { login, refresh as refreshEndpoint, logout as logoutEndpoint } from '@/api/auth/endpoints';
+import { login, logout as logoutEndpoint } from '@/api/auth/endpoints';
 import { AuthAPIError, normalizeAuthError } from '@/api/auth/errors';
 import { toastHelpers } from '@/utils/ui/toast';
 
@@ -136,7 +136,8 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
   }
 
   /**
-   * Refresh access token using refresh token
+   * Refresh access token using refresh token.
+   * Uses the shared api/client refresh to avoid race conditions with interceptors.
    */
   async function doRefreshToken(): Promise<boolean> {
     if (!refreshToken.value) {
@@ -144,39 +145,36 @@ export const useBrowserAuthStore = defineStore('browserAuth', () => {
       return false;
     }
 
-    try {
-      const data = await refreshEndpoint(refreshToken.value);
+    const result = await refreshAccessToken();
 
-      if (data.success) {
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken, expiresIn } = data;
+    if (result.success) {
+      // Sync reactive refs with whatever is now in localStorage
+      // (another tab or the api/client may have written new tokens)
+      const newAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+      const newRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      const newExpiresAtRaw = localStorage.getItem(TOKEN_EXPIRES_AT_KEY);
 
-        accessToken.value = newAccessToken;
-        refreshToken.value = newRefreshToken;
-        tokenExpiresAt.value = Date.now() + expiresIn * 1000;
-        setAuthToken(newAccessToken);
+      if (newAccessToken) accessToken.value = newAccessToken;
+      if (newRefreshToken) refreshToken.value = newRefreshToken;
+      if (newExpiresAtRaw) tokenExpiresAt.value = parseInt(newExpiresAtRaw, 10);
 
-        console.log('[BrowserAuth] Tokens refreshed successfully');
-        return true;
-      }
-
-      return false;
-    } catch (err: unknown) {
-      const normalized = normalizeAuthError(err);
-      console.error(
-        '[BrowserAuth] Token refresh failed:',
-        normalized?.message || (err as Error)?.message,
-      );
-
-      // If refresh fails with 401, clear everything — token is revoked or expired
-      if (normalized?.status === 401) {
-        accessToken.value = null;
-        refreshToken.value = null;
-        tokenExpiresAt.value = null;
-        setAuthToken(null);
-      }
-
-      return false;
+      console.log('[BrowserAuth] Tokens refreshed successfully');
+      return true;
     }
+
+    // Only clear state if the server explicitly rejected the session.
+    // Transient failures (network, 5xx) should not log the user out.
+    if (result.isAuthError) {
+      console.log('[BrowserAuth] Refresh token invalid, clearing auth');
+      accessToken.value = null;
+      refreshToken.value = null;
+      tokenExpiresAt.value = null;
+      setAuthToken(null);
+    } else {
+      console.log('[BrowserAuth] Refresh failed due to network/server error, keeping tokens');
+    }
+
+    return false;
   }
 
   /**
