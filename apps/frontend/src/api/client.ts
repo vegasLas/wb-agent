@@ -69,18 +69,23 @@ function clearAllTokens(): void {
 }
 
 // Refresh promise lock to prevent concurrent refresh requests
-let refreshPromise: Promise<boolean> | null = null;
+let refreshPromise: Promise<RefreshResult> | null = null;
 let lastRefreshTime = 0;
 const REFRESH_GRACE_PERIOD_MS = 5000; // 5 seconds
+
+export interface RefreshResult {
+  success: boolean;
+  isAuthError: boolean;
+}
 
 /**
  * Perform token refresh using the refresh token
  */
-async function performRefresh(): Promise<boolean> {
+async function performRefresh(): Promise<RefreshResult> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) {
     console.log('[API Client] No refresh token available');
-    return false;
+    return { success: false, isAuthError: true };
   }
 
   try {
@@ -100,20 +105,42 @@ async function performRefresh(): Promise<boolean> {
 
       lastRefreshTime = Date.now();
       console.log('[API Client] Tokens refreshed successfully');
-      return true;
+      return { success: true, isAuthError: false };
     }
 
-    return false;
+    return { success: false, isAuthError: false };
   } catch (err: any) {
-    console.error('[API Client] Token refresh failed:', err.response?.data?.message || err.message);
-    return false;
+    const status = err.response?.status as number | undefined;
+    const errorMessage = err.response?.data?.message || err.message;
+    const errorCode = err.response?.data?.code as string | undefined;
+    console.error('[API Client] Token refresh failed:', errorMessage, errorCode);
+
+    // Race-condition recovery: if the token was revoked or expired, another tab
+    // or request may have already rotated it and stored a new one. If the
+    // refresh token in storage is now different, trust it and treat as success.
+    if (errorCode === 'TOKEN_REVOKED' || errorCode === 'TOKEN_EXPIRED') {
+      const currentRefreshToken = getRefreshToken();
+      if (currentRefreshToken && currentRefreshToken !== refreshToken) {
+        console.log(
+          '[API Client] Refresh token changed in storage, assuming another tab/request already refreshed'
+        );
+        lastRefreshTime = Date.now();
+        return { success: true, isAuthError: false };
+      }
+    }
+
+    // 401 from the server means the session is genuinely dead.
+    // Anything else (network error, 500, timeout) is transient — keep tokens
+    // so the user isn't logged out because of a flaky connection.
+    const isAuthError = status === 401;
+    return { success: false, isAuthError };
   }
 }
 
 /**
  * Refresh access token with deduplication (promise lock)
  */
-async function refreshAccessToken(): Promise<boolean> {
+export async function refreshAccessToken(): Promise<RefreshResult> {
   // If a refresh is already in progress, wait for it
   if (refreshPromise) {
     return refreshPromise;
@@ -144,12 +171,13 @@ apiClient.interceptors.request.use(
     // Check if token is expiring soon and refresh proactively
     // Skip refresh for the refresh endpoint itself to avoid loops
     if (config.url !== '/auth/refresh' && isTokenExpiringSoon()) {
-      const refreshed = await refreshAccessToken();
-      if (!refreshed) {
-        // Refresh failed — clear tokens and let the request proceed (it will 401)
+      const result = await refreshAccessToken();
+      // Only clear tokens if the server explicitly rejected the session.
+      // Network errors or 5xx should not log the user out.
+      if (result.isAuthError) {
         clearAllTokens();
       }
-      // Use the newly refreshed token (or old one if refresh failed)
+      // Use the newly refreshed token (or existing one if refresh failed)
       const newToken = getAuthToken();
       if (newToken && config.headers) {
         config.headers['Authorization'] = `Bearer ${newToken}`;
@@ -242,8 +270,8 @@ apiClient.interceptors.response.use(
           }
         }
 
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
+        const result = await refreshAccessToken();
+        if (result.success) {
           // Retry the original request with the new token
           const newToken = getAuthToken();
           if (newToken && originalRequest.headers) {
@@ -252,11 +280,15 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
 
-        // Refresh failed — clear everything and redirect
-        console.log('[API Client] Silent refresh failed, redirecting to login');
-        clearAllTokens();
-        if (window.location.pathname !== '/login') {
-          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        // If the server rejected the session, clear everything and redirect.
+        // For transient failures (network, 5xx) keep tokens and reject so the
+        // caller can decide whether to retry.
+        if (result.isAuthError) {
+          console.log('[API Client] Silent refresh failed, redirecting to login');
+          clearAllTokens();
+          if (window.location.pathname !== '/login') {
+            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+          }
         }
       }
     }
