@@ -24,7 +24,10 @@ function getUserId(req: Request): number {
  * GET /api/v1/mpstats/token
  * Check whether the authenticated user has an MPStats token stored
  */
-export const checkMpstatsToken = async (req: Request, res: Response): Promise<void> => {
+export const checkMpstatsToken = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   logger.info(`Checking MPStats token status for user ${userId}`);
 
@@ -41,7 +44,10 @@ export const checkMpstatsToken = async (req: Request, res: Response): Promise<vo
  * POST /api/v1/mpstats/token
  * Save or update the user's MPStats API token
  */
-export const saveMpstatsToken = async (req: Request, res: Response): Promise<void> => {
+export const saveMpstatsToken = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const { token } = req.body as { token: string };
 
@@ -61,7 +67,10 @@ export const saveMpstatsToken = async (req: Request, res: Response): Promise<voi
       mpstatsToken: trimmedToken,
     });
   } catch (err: any) {
-    if (err.code === 'MPSTATS_TOKEN_INVALID' || err.code === 'MPSTATS_FORBIDDEN') {
+    if (
+      err.code === 'MPSTATS_TOKEN_INVALID' ||
+      err.code === 'MPSTATS_FORBIDDEN'
+    ) {
       throw ApiError.badRequest(
         'Invalid MPStats token. Please check your token and try again.',
         'MPSTATS_TOKEN_INVALID',
@@ -83,7 +92,10 @@ export const saveMpstatsToken = async (req: Request, res: Response): Promise<voi
  * DELETE /api/v1/mpstats/token
  * Remove the user's MPStats API token
  */
-export const removeMpstatsToken = async (req: Request, res: Response): Promise<void> => {
+export const removeMpstatsToken = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
 
   logger.info(`Removing MPStats token for user ${userId}`);
@@ -100,7 +112,10 @@ export const removeMpstatsToken = async (req: Request, res: Response): Promise<v
  * GET /api/v1/mpstats/items/:nmId/full
  * Fetch full MPStats item info and sync it to the local SKU card cache
  */
-export const getItemFull = async (req: Request, res: Response): Promise<void> => {
+export const getItemFull = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const nmId = Number(req.params.nmId);
 
@@ -116,7 +131,8 @@ export const getItemFull = async (req: Request, res: Response): Promise<void> =>
     d2,
   });
 
-  const image = itemFull.photo?.list?.[0]?.t || itemFull.photo?.list?.[0]?.f || '';
+  const image =
+    itemFull.photo?.list?.[0]?.t || itemFull.photo?.list?.[0]?.f || '';
 
   const existingCard = await prisma.wbSkuCard.findUnique({
     where: {
@@ -166,7 +182,10 @@ export const getItemFull = async (req: Request, res: Response): Promise<void> =>
  * POST /api/v1/mpstats/cards/save
  * Manually save or update a SKU card in the local cache
  */
-export const saveSkuCard = async (req: Request, res: Response): Promise<void> => {
+export const saveSkuCard = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const card = req.body as {
     nmID: number;
@@ -215,7 +234,10 @@ export const saveSkuCard = async (req: Request, res: Response): Promise<void> =>
  * GET /api/v1/mpstats/favorites
  * Get the user's favourited SKU cards
  */
-export const getFavorites = async (req: Request, res: Response): Promise<void> => {
+export const getFavorites = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
 
   logger.info(`Fetching favorite SKU cards for user ${userId}`);
@@ -242,7 +264,10 @@ export const getFavorites = async (req: Request, res: Response): Promise<void> =
  * PATCH /api/v1/mpstats/favorites/:nmId/title
  * Update the custom title of a favorited SKU card
  */
-export const updateFavoriteTitle = async (req: Request, res: Response): Promise<void> => {
+export const updateFavoriteTitle = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const nmId = Number(req.params.nmId);
   const { customTitle } = req.body as { customTitle?: string | null };
@@ -288,11 +313,16 @@ export const updateFavoriteTitle = async (req: Request, res: Response): Promise<
  * POST /api/v1/mpstats/favorites
  * Mark a SKU card as favourite
  */
-export const addFavorite = async (req: Request, res: Response): Promise<void> => {
+export const addFavorite = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const card = req.body as { nmID: number };
 
-  logger.info(`Adding SKU card to favorites for user ${userId}, nmID: ${card.nmID}`);
+  logger.info(
+    `Adding SKU card to favorites for user ${userId}, nmID: ${card.nmID}`,
+  );
 
   await prisma.wbSkuCard.upsert({
     where: {
@@ -321,11 +351,16 @@ export const addFavorite = async (req: Request, res: Response): Promise<void> =>
  * DELETE /api/v1/mpstats/favorites/:nmId
  * Remove a SKU card from favourites
  */
-export const removeFavorite = async (req: Request, res: Response): Promise<void> => {
+export const removeFavorite = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const nmId = Number(req.params.nmId);
 
-  logger.info(`Removing SKU card from favorites for user ${userId}, nmId: ${nmId}`);
+  logger.info(
+    `Removing SKU card from favorites for user ${userId}, nmId: ${nmId}`,
+  );
 
   await prisma.wbSkuCard.updateMany({
     where: {
@@ -347,7 +382,10 @@ export const removeFavorite = async (req: Request, res: Response): Promise<void>
  * GET /api/v1/mpstats/history
  * Get the user's recently viewed SKU cards (up to 50)
  */
-export const getHistory = async (req: Request, res: Response): Promise<void> => {
+export const getHistory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
 
   logger.info(`Fetching SKU card history for user ${userId}`);
@@ -375,7 +413,10 @@ export const getHistory = async (req: Request, res: Response): Promise<void> => 
  * GET /api/v1/mpstats/sku/:nmId/summary
  * Get combined MPStats data (sales, regions, balance, item full)
  */
-export const getSkuSummary = async (req: Request, res: Response): Promise<void> => {
+export const getSkuSummary = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const userId = getUserId(req);
   const nmId = Number(req.params.nmId);
 

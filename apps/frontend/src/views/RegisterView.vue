@@ -187,7 +187,8 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useBrowserAuthStore } from '@/stores/auth';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
@@ -196,6 +197,8 @@ import AuthAlert from '@/components/ui/AuthAlert.vue';
 import { useRegisterForm } from '@/composables/auth/useRegisterForm';
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useBrowserAuthStore();
 
 const {
   form,
@@ -210,6 +213,12 @@ const {
 } = useRegisterForm();
 
 onMounted(() => {
+  if (authStore.isAuthenticated) {
+    const redirect = route.query.redirect as string;
+    router.push(redirect || '/');
+    return;
+  }
+
   const codeFromUrl = route.query.telegramCode;
   if (typeof codeFromUrl === 'string' && codeFromUrl) {
     form.value.telegramCode = codeFromUrl.slice(0, 6);
