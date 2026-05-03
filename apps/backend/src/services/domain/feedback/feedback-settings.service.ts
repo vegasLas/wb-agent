@@ -5,7 +5,8 @@
  */
 
 import { prisma } from '@/config/database';
-import { wbContentService } from '@/services/external/wb/wb-content.service';
+import { wbContentOfficialService } from '@/services/external/wb/official';
+import { resolveOfficialSupplierId } from '@/services/external/wb/official';
 import { cacheService } from '@/services/infrastructure/cache.service';
 import { feedbackGoodsGroupService } from '@/services/domain/feedback/feedback-goods-group.service';
 import { createLogger } from '@/utils/logger';
@@ -28,7 +29,6 @@ export interface FeedbackStatistics {
 export interface GoodsItem {
   title: string;
   nmID: number;
-  currentPrice: number | null;
   stocks: number;
   subject: string;
   feedbackRating: number;
@@ -266,22 +266,42 @@ export class FeedbackSettingsService {
     }
 
     const allCards: GoodsItem[] = [];
-    let nextCursor: { n: number; nmID: number } | undefined;
+    let nextCursor:
+      | { n?: number; nmID?: number; updatedAt?: string }
+      | undefined;
     let hasMore = true;
     let page = 0;
     const MAX_PAGES = 100;
 
     try {
+      const officialSupplierId = await resolveOfficialSupplierId(userId, 'CONTENT');
+      if (!officialSupplierId) {
+        throw new Error('No suitable official API key found for Content. Please add a Content API key in your profile.');
+      }
+
       do {
-        const response = await wbContentService.getContentCardsTableList({
-          userId,
-          n: 100,
-          cursor: nextCursor,
+        const response = await wbContentOfficialService.getContentCardsTableList({
+          supplierId: officialSupplierId,
+          limit: 100,
+          cursor: nextCursor?.updatedAt
+            ? { updatedAt: nextCursor.updatedAt, nmID: nextCursor.nmID ?? 0 }
+            : undefined,
         });
-        allCards.push(...response.cards);
-        hasMore = response.cursor.next;
+        allCards.push(...response.cards.map((card) => ({
+          title: card.title,
+          nmID: card.nmID,
+          stocks: card.stocks,
+          subject: card.subjectName,
+          feedbackRating: card.feedbackRating,
+          vendorCode: card.vendorCode,
+          thumbnail: card.mediaFiles?.[0]?.miniUrl || card.mediaFiles?.[0]?.url || null,
+        })));
+        hasMore = response.cards.length === 100 && response.cursor != null;
         if (hasMore) {
-          nextCursor = { n: response.cursor.n, nmID: response.cursor.nmID };
+          nextCursor = {
+            nmID: response.cursor.nmID,
+            updatedAt: response.cursor.updatedAt,
+          };
         }
         page++;
       } while (hasMore && page < MAX_PAGES);
