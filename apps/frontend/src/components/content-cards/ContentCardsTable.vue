@@ -33,14 +33,6 @@
       </template>
     </Column>
 
-    <Column field="currentPrice" header="Цена" style="width: 6rem">
-      <template #body="{ data }">
-        <span class="text-sm font-medium">
-          {{ formatCurrency(data.currentPrice) }}
-        </span>
-      </template>
-    </Column>
-
     <Column field="stocks" header="Остатки" style="width: 5rem">
       <template #body="{ data }">
         <span class="text-sm">{{ data.stocks }}</span>
@@ -99,13 +91,5 @@ const emit = defineEmits<{
   'show-tariffs': [card: ContentCardTableItem];
 }>();
 
-function formatCurrency(value: number | null): string {
-  if (value === undefined || value === null) return '-';
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+
 </script>
