@@ -1,13 +1,18 @@
 import { tool, Tool } from 'ai';
 import { z } from 'zod';
 import { wbExtendedService } from '@/services/external/wb/wb-extended.service';
+import {
+  wbStatisticsOfficialService,
+  mapRegionSalesToLegacyFormat,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import { safeTool, loggedTool, cachedExecute } from './safe-tool.utils';
 import { normalizeWbDate } from './date-normalizer';
 
 export function advertsTools(userId: number): Record<string, Tool> {
   return {
     getRegionSales: tool({
-      description: `Get region sales data (region-sale-fedokr / продажи по регионам) for the user's selected account.
+      description: `Get region sales data (продажи по регионам) for the user's selected account.
 Call this when the user asks about sales by region, federal districts, географическая структура продаж, or geographical breakdown.
 Required: dateFrom, dateTo (DD.MM.YY or YYYY-MM-DD).
 Optional: limit (default 10), offset (default 0).
@@ -23,14 +28,22 @@ Response structure:
       }),
       execute: safeTool('getRegionSales', async (data) => {
         return loggedTool('getRegionSales', userId, async () => {
+          const officialSupplierId = await resolveOfficialSupplierId(
+            userId,
+            'ANALYTICS',
+          );
+          if (!officialSupplierId) {
+            return 'Analytics API key not found. Please add an Analytics-category API key in your account settings.';
+          }
           return cachedExecute(`region-sales-${data.dateFrom}-${data.dateTo}`, 30000, async () => {
-            return wbExtendedService.getRegionSales({
-              userId,
+            const raw = await wbStatisticsOfficialService.getRegionSales({
+              supplierId: officialSupplierId,
               dateFrom: normalizeWbDate(data.dateFrom),
               dateTo: normalizeWbDate(data.dateTo),
               limit: data.limit,
               offset: data.offset,
             });
+            return mapRegionSalesToLegacyFormat(raw);
           });
         });
       }),

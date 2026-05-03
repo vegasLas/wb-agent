@@ -5,7 +5,11 @@
 
 import { Request, Response } from 'express';
 import { getSalesReport } from '@/services/domain/report/report.service';
-import { wbExtendedService } from '@/services/external/wb';
+import {
+  wbStatisticsOfficialService,
+  mapRegionSalesToLegacyFormat,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import { logger } from '@/utils/logger';
 
 /**
@@ -131,13 +135,28 @@ export const fetchRegionSales = async (
       `Fetching region sales report for user ${userId}, date range: ${dateFrom} - ${dateTo}`,
     );
 
-    const data = await wbExtendedService.getRegionSales({
+    const officialSupplierId = await resolveOfficialSupplierId(
       userId,
+      'ANALYTICS',
+    );
+
+    if (!officialSupplierId) {
+      res.status(400).json({
+        success: false,
+        error: 'No official Analytics API key configured for this account',
+      });
+      return;
+    }
+
+    const raw = await wbStatisticsOfficialService.getRegionSales({
+      supplierId: officialSupplierId,
       dateFrom,
       dateTo,
       limit: limit ?? 10,
       offset: offset ?? 0,
     });
+
+    const data = mapRegionSalesToLegacyFormat(raw);
 
     res.status(200).json({
       success: true,

@@ -1,6 +1,10 @@
 import { tool, Tool } from 'ai';
 import { z } from 'zod';
 import { wbSupplierService } from '@/services/external/wb/wb-supplier.service';
+import {
+  wbStatisticsOfficialService,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import { safeTool, loggedTool, cachedExecute } from './safe-tool.utils';
 import { resolveAccountContext } from './account-context.utils';
 
@@ -165,18 +169,21 @@ Optional: pageNumber (default 1), pageSize (default 10), search, preorderID.`,
     getBalances: tool({
       description: `Get warehouse balances for the user's selected account.
 Call this when the user asks about stock levels, remaining inventory, or balances.
+Returns an array of items with fields: nmID, brandName, subjectName, supplierArticle, warehouseName, quantity, inWayToClient, inWayFromClient.
 Required: none.`,
       inputSchema: z.object({}),
       execute: safeTool('getBalances', async () => {
         return loggedTool('getBalances', userId, async () => {
-          const ctx = await resolveAccountContext(userId);
-          return cachedExecute(`balances-${ctx.accountId}`, 30000, async () => {
-            return wbSupplierService.getBalancesByAccount({
-              accountId: ctx.accountId,
-              supplierId: ctx.supplierId,
-              params: { limit: 100, offset: 0 },
-              userAgent: ctx.userAgent,
-              proxy: ctx.proxy,
+          const officialSupplierId = await resolveOfficialSupplierId(
+            userId,
+            'ANALYTICS',
+          );
+          if (!officialSupplierId) {
+            return 'Analytics API key not found. Please add an Analytics-category API key in your account settings.';
+          }
+          return cachedExecute(`balances-${officialSupplierId}`, 30000, async () => {
+            return wbStatisticsOfficialService.getBalances({
+              supplierId: officialSupplierId,
             });
           });
         });
