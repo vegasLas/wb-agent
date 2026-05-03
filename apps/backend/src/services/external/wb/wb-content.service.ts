@@ -77,6 +77,7 @@ export class WBContentService {
   /**
    * Get content cards table list from seller-content.wildberries.ru
    * Returns simplified data: title, nmID, currentPrice, stocks, subject, feedbackRating, vendorCode
+   * @deprecated Use wbContentOfficialService.getContentCardsTableList() from the official WB Content API.
    */
   async getContentCardsTableList({
     userId,
