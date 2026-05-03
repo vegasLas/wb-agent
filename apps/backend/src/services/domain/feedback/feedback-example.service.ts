@@ -7,7 +7,10 @@
  */
 
 import { prisma } from '@/config/database';
-import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
+import {
+  wbFeedbackOfficialService,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import { feedbackGoodsGroupService } from './feedback-goods-group.service';
 import { createLogger } from '@/utils/logger';
 
@@ -280,8 +283,16 @@ export class FeedbackExampleService {
     targetCount: number,
     targetValuation?: number,
   ): Promise<FeedbackExampleWithId[]> {
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'QUESTIONS_AND_REVIEWS',
+    );
+    if (!officialSupplierId) {
+      return [];
+    }
+
     const wbAnswers: FeedbackExampleWithId[] = [];
-    let cursor = '';
+    let offset = 0;
     let hasMore = true;
     let pagesFetched = 0;
     const maxPages = 3;
@@ -291,39 +302,40 @@ export class FeedbackExampleService {
       wbAnswers.length < targetCount &&
       pagesFetched < maxPages
     ) {
-      const data = await wbFeedbackService.getFeedbacks({
-        userId,
+      const res = await wbFeedbackOfficialService.getFeedbacks({
+        supplierId: officialSupplierId,
         isAnswered: true,
-        searchText: nmId.toString(),
         limit: 100,
-        cursor,
-        valuations:
-          targetValuation !== undefined ? [targetValuation] : undefined,
+        offset,
       });
 
       pagesFetched++;
 
-      if (data.feedbacks && data.feedbacks.length > 0) {
-        for (const f of data.feedbacks) {
-          if (f.answer) {
-            wbAnswers.push({
-              feedbackId: f.id,
-              feedbackText: f.feedbackInfo?.feedbackText || '',
-              answerText: f.answer?.answerText || '',
-              valuation: f.valuation,
-              feedbackTextPros: f.feedbackInfo?.feedbackTextPros || null,
-              feedbackTextCons: f.feedbackInfo?.feedbackTextCons || null,
-            });
-            if (wbAnswers.length >= targetCount) break;
+      const feedbacks = res.data.feedbacks || [];
+      if (feedbacks.length > 0) {
+        for (const f of feedbacks) {
+          if (!f.answer) continue;
+          if (f.productInfo?.wbArticle !== nmId) continue;
+          if (
+            targetValuation !== undefined &&
+            f.valuation !== targetValuation
+          ) {
+            continue;
           }
+          wbAnswers.push({
+            feedbackId: f.id,
+            feedbackText: f.feedbackInfo?.feedbackText || '',
+            answerText: f.answer?.answerText || '',
+            valuation: f.valuation,
+            feedbackTextPros: f.feedbackInfo?.feedbackTextPros || null,
+            feedbackTextCons: f.feedbackInfo?.feedbackTextCons || null,
+          });
+          if (wbAnswers.length >= targetCount) break;
         }
       }
 
-      if (data.pages?.next) {
-        cursor = data.pages.next;
-      } else {
-        hasMore = false;
-      }
+      hasMore = feedbacks.length === 100 && res.data.pages?.next !== '';
+      offset += 100;
     }
 
     logger.info(
@@ -338,20 +350,28 @@ export class FeedbackExampleService {
    */
   private async fillFromWbApi(
     userId: number,
-    supplierId: string,
+    _supplierId: string,
     valuation: number,
     examples: FeedbackExample[],
     dbFeedbackIds: string[],
     limit: number,
     fallbackThreshold: number,
   ): Promise<void> {
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'QUESTIONS_AND_REVIEWS',
+    );
+    if (!officialSupplierId) {
+      return;
+    }
+
     logger.info(
       `DB examples insufficient for valuation ${valuation} (${examples.length} < ${fallbackThreshold}), fetching from WB API`,
     );
 
     try {
       const wbAnswers: FeedbackExampleWithId[] = [];
-      let cursor = '';
+      let offset = 0;
       let hasMore = true;
       let pagesFetched = 0;
       const maxPages = 3;
@@ -361,37 +381,34 @@ export class FeedbackExampleService {
         wbAnswers.length < fallbackThreshold &&
         pagesFetched < maxPages
       ) {
-        const data = await wbFeedbackService.getFeedbacks({
-          userId,
+        const res = await wbFeedbackOfficialService.getFeedbacks({
+          supplierId: officialSupplierId,
           isAnswered: true,
           limit: 100,
-          cursor,
-          valuations: [valuation],
+          offset,
         });
 
         pagesFetched++;
 
-        if (data.feedbacks && data.feedbacks.length > 0) {
-          for (const f of data.feedbacks) {
-            if (f.answer) {
-              wbAnswers.push({
-                feedbackId: f.id,
-                feedbackText: f.feedbackInfo?.feedbackText || '',
-                answerText: f.answer?.answerText || '',
-                valuation: f.valuation,
-                feedbackTextPros: f.feedbackInfo?.feedbackTextPros || null,
-                feedbackTextCons: f.feedbackInfo?.feedbackTextCons || null,
-              });
-              if (wbAnswers.length >= fallbackThreshold) break;
-            }
+        const feedbacks = res.data.feedbacks || [];
+        if (feedbacks.length > 0) {
+          for (const f of feedbacks) {
+            if (!f.answer) continue;
+            if (f.valuation !== valuation) continue;
+            wbAnswers.push({
+              feedbackId: f.id,
+              feedbackText: f.feedbackInfo?.feedbackText || '',
+              answerText: f.answer?.answerText || '',
+              valuation: f.valuation,
+              feedbackTextPros: f.feedbackInfo?.feedbackTextPros || null,
+              feedbackTextCons: f.feedbackInfo?.feedbackTextCons || null,
+            });
+            if (wbAnswers.length >= fallbackThreshold) break;
           }
         }
 
-        if (data.pages?.next) {
-          cursor = data.pages.next;
-        } else {
-          hasMore = false;
-        }
+        hasMore = feedbacks.length === 100 && res.data.pages?.next !== '';
+        offset += 100;
       }
 
       logger.info(
