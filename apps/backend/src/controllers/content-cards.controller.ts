@@ -4,9 +4,11 @@
  */
 
 import { Request, Response } from 'express';
-import { wbContentService } from '@/services/external/wb';
-import { wbContentOfficialService } from '@/services/external/wb/official';
-import { resolveOfficialSupplierId } from '@/services/external/wb/official';
+import {
+  wbContentOfficialService,
+  wbTariffsOfficialService,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import {
   toContentCardListResponseDTO,
   toContentCardDetailDTO,
@@ -36,7 +38,8 @@ export const fetchContentCardsTableList = async (
     if (!supplierId) {
       res.status(403).json({
         success: false,
-        error: 'No suitable official API key found for Content. Please add a Content API key in your profile.',
+        error:
+          'No suitable official API key found for Content. Please add a Content API key in your profile.',
       });
       return;
     }
@@ -102,7 +105,8 @@ export const fetchContentCardImt = async (
     if (!supplierId) {
       res.status(403).json({
         success: false,
-        error: 'No suitable official API key found for Content. Please add a Content API key in your profile.',
+        error:
+          'No suitable official API key found for Content. Please add a Content API key in your profile.',
       });
       return;
     }
@@ -164,37 +168,44 @@ export const fetchContentCardTariffs = async (
       return;
     }
 
-    const { height, length, weight, width, subjectId } = req.body as {
+    const supplierId = await resolveOfficialSupplierId(userId, 'CONTENT');
+    if (!supplierId) {
+      res.status(403).json({
+        success: false,
+        error:
+          'No suitable official API key found for Content. Please add a Content API key in your profile.',
+      });
+      return;
+    }
+
+    const { height, length, weight, width } = req.body as {
       height?: number;
       length?: number;
       weight?: number;
       width?: number;
-      subjectId?: number;
     };
 
     if (
       height === undefined ||
       length === undefined ||
       weight === undefined ||
-      width === undefined ||
-      subjectId === undefined
+      width === undefined
     ) {
       res.status(400).json({
         success: false,
-        error: 'height, length, weight, width, and subjectId are required',
+        error: 'height, length, weight, and width are required',
       });
       return;
     }
 
-    logger.info(`Fetching tariffs for user ${userId}, subjectId: ${subjectId}`);
+    logger.info(`Fetching tariffs for user ${userId}`);
 
-    const data = await wbContentService.getContentCardTariffs({
-      userId,
+    const data = await wbTariffsOfficialService.getAggregatedTariffs({
+      supplierId,
       height: Number(height),
       length: Number(length),
       weight: Number(weight),
       width: Number(width),
-      subjectId: Number(subjectId),
     });
 
     res.status(200).json({
@@ -213,69 +224,22 @@ export const fetchContentCardTariffs = async (
 /**
  * POST /api/v1/content-cards/categories
  * Get categories/commissions by search text and category
+ * @deprecated Use /api/v1/content-cards/:nmID/commissions instead.
  */
 export const fetchContentCardCategories = async (
-  req: Request,
+  _req: Request,
   res: Response,
 ): Promise<void> => {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-      });
-      return;
-    }
-
-    const { searchText, category, take, skip, sort, order } = req.body as {
-      searchText?: string;
-      category?: string[];
-      take?: number;
-      skip?: number;
-      sort?: string;
-      order?: string;
-    };
-
-    if (!searchText || !category) {
-      res.status(400).json({
-        success: false,
-        error: 'searchText and category are required',
-      });
-      return;
-    }
-
-    logger.info(
-      `Fetching categories for user ${userId}, searchText: ${searchText}`,
-    );
-
-    const data = await wbContentService.getContentCardCategories({
-      userId,
-      searchText,
-      category,
-      take: take !== undefined ? Number(take) : 100,
-      skip: skip !== undefined ? Number(skip) : 0,
-      sort: sort || 'name',
-      order: order || 'asc',
-    });
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (error) {
-    logger.error('Error in fetchContentCardCategories controller:', error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message || 'Internal server error',
-    });
-  }
+  res.status(410).json({
+    success: false,
+    error:
+      'This endpoint is deprecated. Use POST /api/v1/content-cards/:nmID/commissions instead.',
+  });
 };
 
 /**
  * POST /api/v1/content-cards/:nmID/commissions
- * Get commissions for a specific content card (auto-resolves subject/parent via getImt)
+ * Get commissions for a specific content card
  */
 export const fetchContentCardCommissions = async (
   req: Request,
@@ -292,6 +256,16 @@ export const fetchContentCardCommissions = async (
       return;
     }
 
+    const supplierId = await resolveOfficialSupplierId(userId, 'CONTENT');
+    if (!supplierId) {
+      res.status(403).json({
+        success: false,
+        error:
+          'No suitable official API key found for Content. Please add a Content API key in your profile.',
+      });
+      return;
+    }
+
     const { nmID } = req.params;
 
     if (!nmID) {
@@ -304,14 +278,61 @@ export const fetchContentCardCommissions = async (
 
     logger.info(`Fetching commissions for user ${userId}, nmID: ${nmID}`);
 
-    const data = await wbContentService.getContentCardCommissions({
-      userId,
+    const card = await wbContentOfficialService.getContentCardByNmID({
+      supplierId,
       nmID: Number(nmID),
     });
 
+    if (!card) {
+      res.status(404).json({
+        success: false,
+        error: 'Content card not found',
+      });
+      return;
+    }
+
+    const subjectID = card.subjectID;
+    const subjectName = card.subjectName;
+
+    if (!subjectID) {
+      res.status(404).json({
+        success: false,
+        error: 'Unable to determine subject ID for this card',
+      });
+      return;
+    }
+
+    const commission = await wbTariffsOfficialService.getCommissionBySubject({
+      supplierId,
+      subjectID,
+    });
+
+    if (!commission) {
+      res.status(404).json({
+        success: false,
+        error: 'Commission data not found for this subject',
+      });
+      return;
+    }
+
+    const mappedCategory = {
+      id: commission.subjectID,
+      name: commission.subjectName,
+      subject: commission.subjectName,
+      percent: commission.kgvpMarketplace,
+      percentFBS: commission.kgvpMarketplace,
+      kgvpSupplier: commission.kgvpSupplier,
+      kgvpSupplierExpress: commission.kgvpSupplierExpress,
+      kgvpPickup: commission.kgvpPickup,
+    };
+
     res.status(200).json({
       success: true,
-      data,
+      data: {
+        categories: [mappedCategory],
+        length: 1,
+        countryCode: '',
+      },
     });
   } catch (error) {
     logger.error('Error in fetchContentCardCommissions controller:', error);
@@ -324,7 +345,7 @@ export const fetchContentCardCommissions = async (
 
 /**
  * POST /api/v1/content-cards/:nmID/tariffs
- * Get tariffs for a specific content card (auto-resolves dimensions and subjectId via getImt)
+ * Get tariffs for a specific content card
  */
 export const fetchContentCardTariffsByNmID = async (
   req: Request,
@@ -341,6 +362,16 @@ export const fetchContentCardTariffsByNmID = async (
       return;
     }
 
+    const supplierId = await resolveOfficialSupplierId(userId, 'CONTENT');
+    if (!supplierId) {
+      res.status(403).json({
+        success: false,
+        error:
+          'No suitable official API key found for Content. Please add a Content API key in your profile.',
+      });
+      return;
+    }
+
     const { nmID } = req.params;
 
     if (!nmID) {
@@ -353,9 +384,34 @@ export const fetchContentCardTariffsByNmID = async (
 
     logger.info(`Fetching tariffs by nmID for user ${userId}, nmID: ${nmID}`);
 
-    const data = await wbContentService.getContentCardTariffsByNmID({
-      userId,
+    const card = await wbContentOfficialService.getContentCardByNmID({
+      supplierId,
       nmID: Number(nmID),
+    });
+
+    if (!card) {
+      res.status(404).json({
+        success: false,
+        error: 'Content card not found',
+      });
+      return;
+    }
+
+    const dims = card.dimensions;
+    if (!dims) {
+      res.status(404).json({
+        success: false,
+        error: 'No dimensions found for this card',
+      });
+      return;
+    }
+
+    const data = await wbTariffsOfficialService.getAggregatedTariffs({
+      supplierId,
+      width: dims.width,
+      height: dims.height,
+      length: dims.length,
+      weight: dims.weightBrutto,
     });
 
     res.status(200).json({
