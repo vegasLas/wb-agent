@@ -267,6 +267,7 @@ export class WBContentService {
 
   /**
    * Get tariffs by dimensions and subject from seller-weekly-report.wildberries.ru
+   * @deprecated Use wbTariffsOfficialService.getAggregatedTariffs() instead.
    */
   async getContentCardTariffs({
     userId,
@@ -335,6 +336,7 @@ export class WBContentService {
   /**
    * Get categories/commissions from seller-weekly-report.wildberries.ru
    * searchText should be the subject, category should be the parent category array
+   * @deprecated Use wbTariffsOfficialService.getCommissionBySubject() instead.
    */
   async getContentCardCategories({
     userId,
@@ -414,6 +416,7 @@ export class WBContentService {
   /**
    * Get commissions for a content card by nmID.
    * Internally calls getImt to get parent/subject, then calls categories.
+   * @deprecated Use wbContentOfficialService.getContentCardByNmID() + wbTariffsOfficialService.getCommissionBySubject() instead.
    */
   async getContentCardCommissions({
     userId,
@@ -461,6 +464,7 @@ export class WBContentService {
    * Get tariffs for a content card by nmID.
    * Internally calls getImt to get dimensions, then resolves subjectId via categories lookup
    * with fallback to default subjectId=336, then calls tariffs.
+   * @deprecated Use wbContentOfficialService.getContentCardByNmID() + wbTariffsOfficialService.getAggregatedTariffs() instead.
    */
   async getContentCardTariffsByNmID({
     userId,
