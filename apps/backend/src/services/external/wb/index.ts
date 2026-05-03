@@ -7,4 +7,3 @@ export { freeWarehouseService, FreeWarehouseService } from './free-warehouse.ser
 export { wbExtendedService, WBExtendedService } from './wb-extended.service';
 export { wbContentService, WBContentService } from './wb-content.service';
 export { wbFeedbackService, WBFeedbackService } from './wb-feedback.service';
-

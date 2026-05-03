@@ -5,12 +5,6 @@
 
 import { Request, Response } from 'express';
 import { wbContentService } from '@/services/external/wb';
-import { wbContentOfficialService } from '@/services/external/wb/official';
-import { resolveOfficialSupplierId } from '@/services/external/wb/official';
-import {
-  toContentCardListResponseDTO,
-  toContentCardDetailDTO,
-} from '@/services/external/wb/official/wb-content-official.mapper';
 import { logger } from '@/utils/logger';
 
 /**
@@ -32,24 +26,12 @@ export const fetchContentCardsTableList = async (
       return;
     }
 
-    const supplierId = await resolveOfficialSupplierId(userId, 'CONTENT');
-    if (!supplierId) {
-      res.status(403).json({
-        success: false,
-        error: 'No suitable official API key found for Content. Please add a Content API key in your profile.',
-      });
-      return;
-    }
-
     const { n, cursor } = req.query as { n?: string; cursor?: string };
 
-    let parsedCursor: { updatedAt?: string; nmID?: number } | undefined;
+    let parsedCursor: { n: number; nmID: number } | undefined;
     if (cursor) {
       try {
-        parsedCursor = JSON.parse(cursor) as {
-          updatedAt?: string;
-          nmID?: number;
-        };
+        parsedCursor = JSON.parse(cursor) as { n: number; nmID: number };
       } catch {
         res.status(400).json({
           success: false,
@@ -59,16 +41,15 @@ export const fetchContentCardsTableList = async (
       }
     }
 
-    const limit = n ? Number(n) : 20;
-    const data = await wbContentOfficialService.getContentCardsTableList({
-      supplierId,
-      limit,
-      cursor: parsedCursor,
+    const data = await wbContentService.getContentCardsTableList({
+      userId,
+      n: n ? Number(n) : 20,
+      cursor: parsedCursor ?? null,
     });
 
     res.status(200).json({
       success: true,
-      data: toContentCardListResponseDTO(data, limit),
+      data,
     });
   } catch (error) {
     logger.error('Error in fetchContentCardsTableList controller:', error);
@@ -98,15 +79,6 @@ export const fetchContentCardImt = async (
       return;
     }
 
-    const supplierId = await resolveOfficialSupplierId(userId, 'CONTENT');
-    if (!supplierId) {
-      res.status(403).json({
-        success: false,
-        error: 'No suitable official API key found for Content. Please add a Content API key in your profile.',
-      });
-      return;
-    }
-
     const { nmID } = req.body as { nmID?: number };
 
     if (!nmID) {
@@ -119,22 +91,14 @@ export const fetchContentCardImt = async (
 
     logger.info(`Fetching content card IMT for user ${userId}, nmID: ${nmID}`);
 
-    const card = await wbContentOfficialService.getContentCardByNmID({
-      supplierId,
+    const data = await wbContentService.getContentCardImt({
+      userId,
       nmID: Number(nmID),
     });
 
-    if (!card) {
-      res.status(404).json({
-        success: false,
-        error: 'Content card not found',
-      });
-      return;
-    }
-
     res.status(200).json({
       success: true,
-      data: toContentCardDetailDTO(card),
+      data,
     });
   } catch (error) {
     logger.error('Error in fetchContentCardImt controller:', error);

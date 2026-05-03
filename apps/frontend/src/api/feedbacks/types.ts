@@ -174,6 +174,7 @@ export interface FetchFeedbacksParams {
 export interface GoodsItem {
   title: string;
   nmID: number;
+  currentPrice: number | null;
   stocks: number;
   subject: string;
   feedbackRating: number;

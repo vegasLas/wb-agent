@@ -30,22 +30,6 @@ enum AuthProvider {
   LEGACY
 }
 
-enum WbApiCategory {
-  CONTENT
-  MARKETPLACE
-  STATISTICS
-  FINANCE
-  ANALYTICS
-  PROMOTION
-  QUESTIONS_AND_REVIEWS
-  PRICES_AND_DISCOUNTS
-  CHAT_WITH_BUYER
-  SUPPLIES
-  RETURNS
-  DOCUMENTS
-  USERS
-}
-
 enum InAppNotificationType {
   SYSTEM
   SUBSCRIPTION
@@ -86,10 +70,6 @@ model User {
   identities             UserIdentity[]
   linkCodes              LinkCode[]
   inAppNotifications     InAppNotification[]
-
-  // Official API flow
-  selectedApiProfileId   String?
-  apiProfiles            WbApiProfile[]
 
   profile  Profile?
   telegram Telegram?
@@ -382,52 +362,6 @@ model SupplierApiKey {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
-}
-
-// ============== OFFICIAL WB API ==============
-
-model WbApiProfile {
-  id                 String   @id @default(uuid())
-  userId             Int
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name               String?  // e.g. "Основной профиль", "Тестовый профиль"
-  description        String?
-  selectedSupplierId String?  // which WbApiProfileSupplier.supplierId is active
-  suppliers          WbApiProfileSupplier[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model WbApiProfileSupplier {
-  id           String   @id @default(uuid())
-  supplierId   String   // WB supplier ID (e.g. "12345")
-  supplierName String
-  profileId    String
-  profile      WbApiProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  apiKeys      WbApiKey[]
-  createdAt    DateTime @default(now())
-
-  @@unique([supplierId, profileId])
-  @@index([profileId])
-  @@index([supplierId])
-}
-
-model WbApiKey {
-  id         String          @id @default(uuid())
-  supplierId String
-  supplier   WbApiProfileSupplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  apiKey     String          // encrypted with existing encrypt() utility
-  name       String?         // user-friendly label, e.g. "Производственный ключ"
-  categories WbApiCategory[] @default([])
-  isActive   Boolean         @default(true)
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-
-  @@index([supplierId])
-  @@index([isActive])
-  @@index([supplierId, isActive])
 }
 
 // ============== WAREHOUSE DATA ==============

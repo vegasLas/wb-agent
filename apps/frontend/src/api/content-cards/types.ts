@@ -1,6 +1,7 @@
 export interface ContentCardTableItem {
   title: string;
   nmID: number;
+  currentPrice: number | null;
   stocks: number;
   subject: string;
   feedbackRating: number;
