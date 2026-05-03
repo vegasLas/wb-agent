@@ -1410,16 +1410,16 @@ export interface FeedbackPages {
 
 export interface FeedbackItem {
   answer: FeedbackAnswer | null;
-  brandAnswer: null;
+  brandAnswer?: null;
   createdDate: number;
   feedbackInfo: FeedbackInfo;
   id: string;
   productInfo: FeedbackProductInfo;
-  returnProductOption: ReturnProductOption;
-  supplierComplaints: SupplierComplaints;
+  returnProductOption?: ReturnProductOption;
+  supplierComplaints?: SupplierComplaints;
   trustFactor: string;
   valuation: number;
-  wasViewed: boolean;
+  wasViewed?: boolean;
   parentFeedbackId?: string;
   childFeedbackId?: string;
 }
@@ -1443,7 +1443,7 @@ export interface ReturnProductOption {
 
 export interface FeedbackProductInfo {
   brand: string;
-  brandId: number;
+  brandId?: number;
   category: string;
   name: string;
   supplierArticle: string;
@@ -1451,22 +1451,22 @@ export interface FeedbackProductInfo {
 }
 
 export interface FeedbackInfo {
-  bableReasons: string[] | null;
-  badReasons: string[];
-  barcode: string;
-  buyerID: number;
-  color: string;
-  excludeFromRating: string;
-  excludedFromRating: string[] | null;
+  bableReasons?: string[] | null;
+  badReasons?: string[];
+  barcode?: string;
+  buyerID?: number;
+  color?: string;
+  excludeFromRating?: string;
+  excludedFromRating?: string[] | null;
   feedbackText: string;
   feedbackTextCons: string;
   feedbackTextPros: string;
-  goodReasons: string[];
-  isHidden: boolean;
+  goodReasons?: string[];
+  isHidden?: boolean;
   photos: FeedbackPhoto[] | null;
   purchaseDate: number;
-  rid: string;
-  size: null;
+  rid?: string;
+  size?: string | null;
   userName: string;
   video: FeedbackVideo | null;
 }
@@ -1485,12 +1485,12 @@ export interface FeedbackPhoto {
 export interface FeedbackAnswer {
   answerText: string;
   createdDate: number;
-  generation: null;
+  generation?: null;
   isEditable: boolean;
-  metadata: null;
-  rejectReason: number;
+  metadata?: null;
+  rejectReason?: number;
   status: string;
-  updatedDate: number;
+  updatedDate?: number;
 }
 
 export interface FeedbackTemplateResponse {
