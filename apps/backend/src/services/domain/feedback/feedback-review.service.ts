@@ -5,7 +5,10 @@
  */
 
 import { prisma } from '@/config/database';
-import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
+import {
+  wbFeedbackOfficialService,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import { feedbackPromptService } from './feedback-prompt.service';
 import { feedbackExampleService } from './feedback-example.service';
 import { feedbackGoodsGroupService } from './feedback-goods-group.service';
@@ -22,7 +25,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-import type { FeedbackItem, FeedbackTemplate } from '@/types/wb';
+import type { FeedbackItem } from '@/types/wb';
 import type { FeedbackExample } from './feedback-example.service';
 import type { FeedbackRule } from '@prisma/client';
 import { FEEDBACK_QUOTA, UserTier } from '@/constants/payments';
@@ -128,16 +131,22 @@ export class FeedbackReviewService {
       return result;
     }
 
-    try {
-      const [answeredRaw, unansweredRaw] = await Promise.all([
-        wbFeedbackService.getFeedbacks({ userId, isAnswered: true, limit: 100 }),
-        wbFeedbackService.getFeedbacks({ userId, isAnswered: false, limit: 100 }),
-      ]);
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'QUESTIONS_AND_REVIEWS',
+    );
+    if (!officialSupplierId) {
+      logger.warn(
+        `No official API key for feedbacks for user ${userId}, skipping auto-answer`,
+      );
+      return result;
+    }
 
-      let unansweredFeedbacks = [
-        ...(answeredRaw.feedbacks || []),
-        ...(unansweredRaw.feedbacks || []),
-      ].filter((f) => !f.answer);
+    try {
+      let unansweredFeedbacks =
+        await wbFeedbackOfficialService.getAllUnansweredFeedbacks({
+          supplierId: officialSupplierId,
+        });
 
       if (nmIds && nmIds.length > 0) {
         const nmIdSet = new Set(nmIds);
@@ -157,16 +166,6 @@ export class FeedbackReviewService {
       logger.info(
         `Processing ${unansweredFeedbacks.length} unanswered feedbacks for user ${userId}, supplier ${supplierId}`,
       );
-
-      let templates: FeedbackTemplate[] = [];
-      try {
-        const templateData = await wbFeedbackService.getFeedbackTemplates({
-          userId,
-        });
-        templates = templateData.templates || [];
-      } catch (err) {
-        logger.warn(`Failed to fetch templates for user ${userId}:`, err);
-      }
 
       const allProductSettings = await prisma.feedbackProductSetting.findMany({
         where: { userId, supplierId },
@@ -271,8 +270,8 @@ export class FeedbackReviewService {
           const processResult = await this.processSingleFeedback(
             userId,
             supplierId,
+            officialSupplierId,
             feedback,
-            templates,
             globalSettings,
             productSettingsMap,
             feedbackRulesMap,
@@ -342,16 +341,22 @@ export class FeedbackReviewService {
       return result;
     }
 
-    try {
-      const [answeredFeedbacks, unansweredFeedbacksArr] = await Promise.all([
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
-        wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
-      ]);
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'QUESTIONS_AND_REVIEWS',
+    );
+    if (!officialSupplierId) {
+      logger.warn(
+        `No official API key for feedbacks for user ${userId}, skipping manual answer-all`,
+      );
+      return result;
+    }
 
-      let unansweredFeedbacks = [
-        ...answeredFeedbacks,
-        ...unansweredFeedbacksArr,
-      ].filter((f) => !f.answer);
+    try {
+      let unansweredFeedbacks =
+        await wbFeedbackOfficialService.getAllUnansweredFeedbacks({
+          supplierId: officialSupplierId,
+        });
 
       if (nmIds && nmIds.length > 0) {
         const nmIdSet = new Set(nmIds);
@@ -371,16 +376,6 @@ export class FeedbackReviewService {
       logger.info(
         `Manual processing ${unansweredFeedbacks.length} unanswered feedbacks for user ${userId}, supplier ${supplierId}`,
       );
-
-      let templates: FeedbackTemplate[] = [];
-      try {
-        const templateData = await wbFeedbackService.getFeedbackTemplates({
-          userId,
-        });
-        templates = templateData.templates || [];
-      } catch (err) {
-        logger.warn(`Failed to fetch templates for user ${userId}:`, err);
-      }
 
       const allFeedbackRules = await prisma.feedbackRule.findMany({
         where: { userId, supplierId },
@@ -528,7 +523,7 @@ export class FeedbackReviewService {
             userId,
             feedback,
             recentAnswers,
-            templates,
+            [],
             rejectedAnswers,
             matchingInstructionRules,
             groupExamples,
@@ -623,10 +618,9 @@ export class FeedbackReviewService {
       for (let i = 0; i < generatedItems.length; i++) {
         const item = generatedItems[i];
         try {
-          await wbFeedbackService.answerFeedback({
-            userId,
+          await wbFeedbackOfficialService.answerFeedback({
+            supplierId: officialSupplierId,
             feedbackId: item.feedback.id,
-            nmId: item.nmId,
             answerText: item.answerText,
           });
 
@@ -682,6 +676,16 @@ export class FeedbackReviewService {
     userId: number,
     supplierId: string,
   ): Promise<{ posted: number; failed: number }> {
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'QUESTIONS_AND_REVIEWS',
+    );
+    if (!officialSupplierId) {
+      throw new Error(
+        'No official API key for feedbacks. Please add a Feedbacks and Questions API key in your profile.',
+      );
+    }
+
     const pending = await prisma.feedbackAutoAnswer.findMany({
       where: { userId, supplierId, status: 'PENDING' },
       orderBy: { createdAt: 'asc' },
@@ -697,10 +701,9 @@ export class FeedbackReviewService {
     for (let i = 0; i < pending.length; i++) {
       const item = pending[i];
       try {
-        await wbFeedbackService.answerFeedback({
-          userId,
+        await wbFeedbackOfficialService.answerFeedback({
+          supplierId: officialSupplierId,
           feedbackId: item.feedbackId,
-          nmId: item.nmId,
           answerText: item.answerText,
         });
 
@@ -741,8 +744,8 @@ export class FeedbackReviewService {
   private async processSingleFeedback(
     userId: number,
     supplierId: string,
+    officialSupplierId: string,
     feedback: FeedbackItem,
-    templates: FeedbackTemplate[],
     settings: { autoAnswerEnabled: boolean },
     productSettingsMap: Map<number, boolean>,
     feedbackRulesMap: Map<number, FeedbackRule[]>,
@@ -822,7 +825,7 @@ export class FeedbackReviewService {
       userId,
       feedback,
       recentAnswers,
-      templates,
+      [],
       rejectedAnswers,
       matchingInstructionRules,
       groupExamples,
@@ -885,10 +888,9 @@ export class FeedbackReviewService {
     const autoPostEnabled = productSettingsMap.get(nmId) ?? true;
     if (forcePost || (settings.autoAnswerEnabled && autoPostEnabled)) {
       try {
-        await wbFeedbackService.answerFeedback({
-          userId,
+        await wbFeedbackOfficialService.answerFeedback({
+          supplierId: officialSupplierId,
           feedbackId: feedback.id,
-          nmId,
           answerText,
         });
 
@@ -929,16 +931,6 @@ export class FeedbackReviewService {
     const nmId = feedback.productInfo?.wbArticle;
     if (!nmId) {
       throw new Error('Feedback has no nmId');
-    }
-
-    let templates: FeedbackTemplate[] = [];
-    try {
-      const templateData = await wbFeedbackService.getFeedbackTemplates({
-        userId,
-      });
-      templates = templateData.templates || [];
-    } catch (err) {
-      logger.warn(`Failed to fetch templates for user ${userId}:`, err);
     }
 
     const feedbackText = feedback.feedbackInfo?.feedbackText || '';
@@ -1014,7 +1006,7 @@ export class FeedbackReviewService {
       userId,
       feedback,
       recentAnswers,
-      templates,
+      [],
       rejectedAnswers,
       matchingInstructionRules,
       groupExamples,
@@ -1139,31 +1131,34 @@ export class FeedbackReviewService {
     userId: number,
     feedbackId: string,
   ): Promise<FeedbackItem | undefined> {
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'QUESTIONS_AND_REVIEWS',
+    );
+    if (!officialSupplierId) return undefined;
+
     const maxPages = 3;
 
     for (const isAnswered of [false, true]) {
-      let cursor = '';
+      let offset = 0;
       let hasMore = true;
       let pagesFetched = 0;
 
       while (hasMore && pagesFetched < maxPages) {
-        const data = await wbFeedbackService.getFeedbacks({
-          userId,
+        const res = await wbFeedbackOfficialService.getFeedbacks({
+          supplierId: officialSupplierId,
           isAnswered,
           limit: 100,
-          cursor,
+          offset,
         });
 
         pagesFetched++;
 
-        const found = data.feedbacks?.find((f) => f.id === feedbackId);
+        const found = res.data.feedbacks?.find((f) => f.id === feedbackId);
         if (found) return found;
 
-        if (data.pages?.next) {
-          cursor = data.pages.next;
-        } else {
-          hasMore = false;
-        }
+        hasMore = res.data.pages?.next !== '';
+        offset += 100;
       }
     }
 
@@ -1178,6 +1173,16 @@ export class FeedbackReviewService {
     supplierId: string,
     feedbackId: string,
   ): Promise<void> {
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'QUESTIONS_AND_REVIEWS',
+    );
+    if (!officialSupplierId) {
+      throw new Error(
+        'No official API key for feedbacks. Please add a Feedbacks and Questions API key in your profile.',
+      );
+    }
+
     const autoAnswer = await prisma.feedbackAutoAnswer.findUnique({
       where: {
         userId_supplierId_feedbackId: {
@@ -1196,10 +1201,9 @@ export class FeedbackReviewService {
       return;
     }
 
-    await wbFeedbackService.answerFeedback({
-      userId,
+    await wbFeedbackOfficialService.answerFeedback({
+      supplierId: officialSupplierId,
       feedbackId,
-      nmId: autoAnswer.nmId,
       answerText: autoAnswer.answerText,
     });
 
