@@ -27,12 +27,19 @@ export interface OfficialContentCard {
   title: string;
   mediaFiles: OfficialContentCardMediaFile[];
   subjectName: string;
+  subjectID: number;
   colors: string[];
   sizes: OfficialContentCardSize[];
   tags: unknown[];
   stocks: number;
   feedbackRating: number;
   feedbacksCount: number;
+  dimensions?: {
+    width: number;
+    height: number;
+    length: number;
+    weightBrutto: number;
+  };
 }
 
 export interface OfficialContentCardsCursor {
