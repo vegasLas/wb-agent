@@ -297,6 +297,7 @@ export class WBSupplierService {
 
   /**
    * Get balances from WB API
+   * @deprecated Use wbStatisticsOfficialService.getBalances() instead.
    */
   async getBalancesByAccount({
     accountId,
