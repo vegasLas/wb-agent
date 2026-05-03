@@ -1,8 +1,10 @@
 import { tool, Tool } from 'ai';
 import { z } from 'zod';
-import { wbContentService } from '@/services/external/wb/wb-content.service';
-import { wbContentOfficialService } from '@/services/external/wb/official';
-import { resolveOfficialSupplierId } from '@/services/external/wb/official';
+import {
+  wbContentOfficialService,
+  wbTariffsOfficialService,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import {
   toContentCardListResponseDTO,
   toContentCardDetailDTO,
@@ -106,31 +108,38 @@ Key fields explained:
     }),
 
     getContentCardTariffs: tool({
-      description: `Get WB warehouse tariffs (тарифы складов / стоимость логистики и хранения) by product dimensions and subject ID.
+      description: `Get WB warehouse tariffs (тарифы складов / стоимость логистики и хранения) by product dimensions.
 Call this when the user asks about logistics costs, storage costs, acceptance costs, tariffs, delivery prices, warehouse fees, or стоимость доставки.
 IMPORTANT: If the user mentions a specific warehouse name (e.g. "Коледино", "Электросталь"), ask them to confirm the exact warehouse name before calling this tool, because the results contain many warehouses and filtering by name helps provide a focused answer.
 CRITICAL: When presenting results to the user, never mention nmID, subjectId, or any internal ID values. Use only the product title/vendorCode and warehouse names.
-Required: height, length, weight, width (product dimensions in cm/kg), subjectId (WB subject/category ID).`,
+Required: height, length, weight, width (product dimensions in cm/kg).`,
       inputSchema: z.object({
         height: z.number(),
         length: z.number(),
         weight: z.number(),
         width: z.number(),
-        subjectId: z.number().int(),
       }),
       execute: safeTool('getContentCardTariffs', async (data) => {
         return loggedTool('getContentCardTariffs', userId, async () => {
           return cachedExecute(
-            `tariffs-${data.subjectId}-${data.height}-${data.length}-${data.weight}-${data.width}`,
+            `tariffs-${data.height}-${data.length}-${data.weight}-${data.width}`,
             60000,
             async () => {
-              return wbContentService.getContentCardTariffs({
+              const supplierId = await resolveOfficialSupplierId(
                 userId,
+                'CONTENT',
+              );
+              if (!supplierId) {
+                throw new Error(
+                  'No suitable official API key found for Content. Please add a Content API key in your profile.',
+                );
+              }
+              return wbTariffsOfficialService.getAggregatedTariffs({
+                supplierId,
                 height: data.height,
                 length: data.length,
                 weight: data.weight,
                 width: data.width,
-                subjectId: data.subjectId,
               });
             },
           );
@@ -138,34 +147,63 @@ Required: height, length, weight, width (product dimensions in cm/kg), subjectId
       }),
     }),
 
-    getContentCardCategories: tool({
-      description: `Get WB categories and commission rates (категории и комиссии).
-Call this when the user asks about commissions, category fees, FBO/FBS commission rates, or subject percentages.
-Required: searchText (subject name to search), category (array of parent category names, e.g. ["Игрушки"]).
-Optional: take (default 100), skip (default 0), sort (default 'name'), order (default 'asc').`,
+    getContentCardCommissions: tool({
+      description: `Get WB commission rates (комиссии) for a specific content card by nmID.
+Call this when the user asks about commissions, category fees, FBO/FBS commission rates, or subject percentages for a specific product.
+Required: nmID (WB article ID).`,
       inputSchema: z.object({
-        searchText: z.string(),
-        category: z.array(z.string()),
-        take: z.number().int().min(1).default(100),
-        skip: z.number().int().min(0).default(0),
-        sort: z.string().default('name'),
-        order: z.enum(['asc', 'desc']).default('asc'),
+        nmID: z.number().int(),
       }),
-      execute: safeTool('getContentCardCategories', async (data) => {
-        return loggedTool('getContentCardCategories', userId, async () => {
+      execute: safeTool('getContentCardCommissions', async (data) => {
+        return loggedTool('getContentCardCommissions', userId, async () => {
           return cachedExecute(
-            `categories-${data.searchText}-${data.category.join(',')}`,
+            `commissions-${data.nmID}`,
             60000,
             async () => {
-              return wbContentService.getContentCardCategories({
+              const supplierId = await resolveOfficialSupplierId(
                 userId,
-                searchText: data.searchText,
-                category: data.category,
-                take: data.take,
-                skip: data.skip,
-                sort: data.sort,
-                order: data.order,
+                'CONTENT',
+              );
+              if (!supplierId) {
+                throw new Error(
+                  'No suitable official API key found for Content. Please add a Content API key in your profile.',
+                );
+              }
+
+              const card = await wbContentOfficialService.getContentCardByNmID({
+                supplierId,
+                nmID: data.nmID,
               });
+
+              if (!card || !card.subjectID) {
+                throw new Error('Content card or subject ID not found');
+              }
+
+              const commission = await wbTariffsOfficialService.getCommissionBySubject({
+                supplierId,
+                subjectID: card.subjectID,
+              });
+
+              if (!commission) {
+                throw new Error('Commission data not found for this subject');
+              }
+
+              return {
+                categories: [
+                  {
+                    id: commission.subjectID,
+                    name: commission.subjectName,
+                    subject: commission.subjectName,
+                    percent: commission.kgvpMarketplace,
+                    percentFBS: commission.kgvpMarketplace,
+                    kgvpSupplier: commission.kgvpSupplier,
+                    kgvpSupplierExpress: commission.kgvpSupplierExpress,
+                    kgvpPickup: commission.kgvpPickup,
+                  },
+                ],
+                length: 1,
+                countryCode: '',
+              };
             },
           );
         });
