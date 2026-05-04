@@ -679,38 +679,17 @@ export interface PromotionDetailResponse {
 export interface PromotionDetail {
   promoID: number;
   periodID: number;
-  groupID: number;
   name: string;
   description: string;
-  formattedDescription: string;
   advantages: readonly string[];
   startDt: string;
   endDt: string;
-  status: number;
-  participationStatus: string;
-  isAutoAction: boolean;
-  isImportant: boolean;
-  isAnnouncement: boolean;
-  inPromoActionLeftovers: number;
+  type: string;
   inPromoActionTotal: number;
-  isHasNotParticipationNm: boolean;
-  isHasRecovery: boolean;
-  isParticipateInAutoPromo: boolean;
-  isHasAnalyticalCalculations: boolean;
-  notInPromoActionLeftovers: number;
   notInPromoActionTotal: number;
   participationPercentage: number;
-  participationPercentageForSpp: number;
-  calculateProductsCount: number;
-  actionInStock: number;
-  autoPromo?: unknown;
+  isParticipateInAutoPromo: boolean;
   ranging: PromotionRanging;
-  sppProperties?: unknown;
-  isMultiLevels: boolean;
-  selectedDiscountLevelName?: unknown;
-  discountOptions?: unknown;
-  isParticipateForAnalytics: boolean;
-  participation?: PromotionParticipation;
 }
 
 export interface PromotionRanging {
@@ -727,48 +706,40 @@ export interface PromotionLevel {
   coefficient: number;
 }
 
-export interface PromotionExcelItem {
-  inPromo: string;
+export interface PromotionGoodsItem {
+  nmId: number;
+  vendorCode: string;
+  name: string;
   brand: string;
   subject: string;
-  name: string;
-  vendorCode: string;
-  wbCode: string;
-  daysOnSite: number;
-  turnover: number;
-  wbStock: number;
-  sellerStock: number;
+  inPromo: string;
   promoPrice: number;
   currentPrice: number;
-  currency: string;
   currentDiscount: number;
   uploadedDiscount: number;
+  wbStock: number;
 }
 
 /** Maps camelCase field names to Russian display headers */
-export const PROMOTION_EXCEL_DISPLAY_NAMES: Record<
-  keyof PromotionExcelItem,
+export const PROMOTION_GOODS_DISPLAY_NAMES: Record<
+  keyof PromotionGoodsItem,
   string
 > = {
-  inPromo: 'Товар уже участвует в акции',
+  nmId: 'Артикул WB',
+  vendorCode: 'Артикул поставщика',
   brand: 'Бренд',
   subject: 'Предмет',
   name: 'Наименование',
-  vendorCode: 'Артикул поставщика',
-  wbCode: 'Артикул WB',
-  daysOnSite: 'Количество дней на сайте',
-  turnover: 'Оборачиваемость',
-  wbStock: 'Остаток товара на складах Wb (шт.)',
-  sellerStock: 'Остаток товара на складе продавца Wb (шт.)',
+  inPromo: 'В акции',
   promoPrice: 'Плановая цена для акции',
   currentPrice: 'Текущая розничная цена',
-  currency: 'Валюта',
   currentDiscount: 'Текущая скидка на сайте, %',
   uploadedDiscount: 'Загружаемая скидка для участия в акции',
+  wbStock: 'Остаток товара на складах WB (шт.)',
 };
 
 export interface PromotionParsedData {
-  items: PromotionExcelItem[];
+  items: PromotionGoodsItem[];
   meta: {
     totalItems: number;
     sheetName: string;
@@ -778,17 +749,20 @@ export interface PromotionParsedData {
 }
 
 export interface PromotionApiPayload {
-  items: PromotionExcelItem[] | null;
+  items: PromotionGoodsItem[] | null;
   error: string | null;
   reportPending?: boolean;
   estimatedWaitTime?: number | null;
 }
 
-export interface PromotionRecoveryParams {
+export interface PromotionManageParams {
+  promoID: number;
   periodID: number;
-  selectedItems: string[]; // supplier article IDs like "BOX20CARD"
-  isRecovery: boolean; // true = recover only selected items, false = exclude selected items
+  selectedItems: string[];
+  isRecovery: boolean;
 }
+
+
 
 // -----------------------------------------------------------------------------
 // Adverts Types

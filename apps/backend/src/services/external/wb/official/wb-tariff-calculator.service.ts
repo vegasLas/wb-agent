@@ -3,6 +3,7 @@ import type {
   PalletTariffWarehouse,
   AcceptanceCoefficientItem,
 } from './wb-tariffs-official.service';
+import { parseWbNumber } from './wb-official-helpers';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,24 +41,6 @@ export interface CalculatedCost {
   deliveryCost: number;
   /** Final storage cost per day in rubles */
   storageCostDaily: number;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Parse a WB numeric string into a number.
- * WB returns values like "48", "11,2", "0,14", "35.65".
- * We normalize commas to dots before parsing.
- */
-function parseWbNumber(value: string | null | undefined): number | null {
-  if (value === null || value === undefined || value.trim() === '') {
-    return null;
-  }
-  const normalized = value.trim().replace(/\s/g, '').replace(',', '.');
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
 }
 
 /**

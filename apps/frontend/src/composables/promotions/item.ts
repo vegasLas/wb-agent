@@ -112,18 +112,11 @@ export interface UsePromotionDetailReturn {
   // Basic info
   promoId: ComputedRef<number>;
   periodId: ComputedRef<number>;
-  groupId: ComputedRef<number>;
   name: ComputedRef<string>;
   description: ComputedRef<string>;
-  formattedDescription: ComputedRef<string>;
   parsedDescription: ComputedRef<string>;
 
   // Flags
-  isAutoAction: ComputedRef<boolean>;
-  isImportant: ComputedRef<boolean>;
-  isAnnouncement: ComputedRef<boolean>;
-  isHasRecovery: ComputedRef<boolean>;
-  isMultiLevels: ComputedRef<boolean>;
 
   // Status
   statusLabel: ComputedRef<string>;
@@ -500,22 +493,11 @@ export function usePromotionDetail(
   // Basic info
   const promoId = computed(() => item()?.promoID ?? 0);
   const periodId = computed(() => item()?.periodID ?? 0);
-  const groupId = computed(() => item()?.groupID ?? 0);
   const name = computed(() => item()?.name ?? '');
   const description = computed(() => item()?.description ?? '');
-  const formattedDescription = computed(
-    () => item()?.formattedDescription ?? '',
-  );
   const parsedDescription = computed(() =>
     parseLexicalDescription(item()?.formattedDescription || ''),
   );
-
-  // Flags
-  const isAutoAction = computed(() => item()?.isAutoAction ?? false);
-  const isImportant = computed(() => item()?.isImportant ?? false);
-  const isAnnouncement = computed(() => item()?.isAnnouncement ?? false);
-  const isHasRecovery = computed(() => item()?.isHasRecovery ?? false);
-  const isMultiLevels = computed(() => item()?.isMultiLevels ?? false);
 
   // Status
   const statusLabel = computed(() => {
@@ -675,18 +657,9 @@ export function usePromotionDetail(
     // Basic
     promoId,
     periodId,
-    groupId,
     name,
     description,
-    formattedDescription,
     parsedDescription,
-
-    // Flags
-    isAutoAction,
-    isImportant,
-    isAnnouncement,
-    isHasRecovery,
-    isMultiLevels,
 
     // Status
     statusLabel,

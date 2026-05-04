@@ -3,10 +3,10 @@ import type {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
   PromotionApiPayload,
-  PromotionRecoveryParams,
+  PromotionManageParams,
   TimelineParams,
   DetailParams,
-  ExcelParams,
+  GoodsParams,
 } from './types';
 
 /**
@@ -14,8 +14,8 @@ import type {
  * Endpoints for WB promotions calendar
  */
 
-const MAX_EXCEL_RETRIES = 1;
-const EXCEL_RETRY_DELAY_MS = 5000;
+const MAX_GOODS_RETRIES = 1;
+const GOODS_RETRY_DELAY_MS = 5000;
 
 export const promotionsAPI = {
   /**
@@ -49,37 +49,33 @@ export const promotionsAPI = {
   },
 
   /**
-   * POST /api/v1/promotions/excel
-   * Create and fetch promotion Excel report.
-   * Automatically retries once if the report is still pending.
+   * POST /api/v1/promotions/goods
+   * Fetch promotion goods list
    */
-  async fetchExcel(
-    params: ExcelParams,
-    retryCount = MAX_EXCEL_RETRIES,
+  async fetchGoods(
+    params: GoodsParams,
+    retryCount = MAX_GOODS_RETRIES,
   ): Promise<PromotionApiPayload> {
     const response = await apiClient.post<{ data: PromotionApiPayload }>(
-      '/promotions/excel',
+      '/promotions/goods',
       params,
     );
     const payload = response.data.data;
 
-    if (
-      payload.reportPending &&
-      retryCount > 0
-    ) {
+    if (payload.reportPending && retryCount > 0) {
       const waitMs = (payload.estimatedWaitTime || 5) * 1000;
       await new Promise((resolve) => setTimeout(resolve, waitMs));
-      return this.fetchExcel(params, retryCount - 1);
+      return this.fetchGoods(params, retryCount - 1);
     }
 
     return payload;
   },
 
   /**
-   * POST /api/v1/promotions/recovery
-   * Apply promotion recovery with selected items
+   * POST /api/v1/promotions/manage
+   * Include or exclude goods from a promotion
    */
-  async applyRecovery(params: PromotionRecoveryParams): Promise<void> {
-    await apiClient.post('/promotions/recovery', params);
+  async applyManagement(params: PromotionManageParams): Promise<void> {
+    await apiClient.post('/promotions/manage', params);
   },
 };

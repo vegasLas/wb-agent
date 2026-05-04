@@ -1,6 +1,14 @@
 import { wbOfficialRequest } from '@/utils/wb-official-request';
 import { createLogger } from '@/utils/logger';
 import { calculateTariffCost } from './wb-tariff-calculator.service';
+import {
+  validateSupplierId,
+  validateDate,
+  validatePositiveInteger,
+  validatePositiveNumber,
+  validateNonNegativeNumber,
+} from './wb-official-validation';
+import { parseWbNumber, formatWbCost } from './wb-official-helpers';
 
 const logger = createLogger('WBTariffsOfficial');
 
@@ -174,29 +182,6 @@ export interface AggregatedTariffsResponse {
   warehouselist: AggregatedTariffWarehouse[];
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function parseWbNumber(value: string | null | undefined): number | null {
-  if (value === null || value === undefined || value.trim() === '') {
-    return null;
-  }
-  const normalized = value.trim().replace(/\s/g, '').replace(',', '.');
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function formatWbCost(value: number): string {
-  if (!Number.isFinite(value)) return '—';
-  const rounded = Math.round(value * 100) / 100;
-  const formatted = rounded.toLocaleString('ru-RU', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-  return `${formatted} ₽`;
-}
-
 function computeAcceptanceCost(
   volume: number,
   base: number | null,
@@ -230,14 +215,8 @@ export class WBTariffsOfficialService {
     supplierId,
     date,
   }: GetBoxTariffsParams): Promise<BoxTariffsData> {
-    if (!supplierId || supplierId.trim().length === 0) {
-      throw new Error('supplierId is required');
-    }
-
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!date || !dateRegex.test(date)) {
-      throw new Error('date must be in YYYY-MM-DD format');
-    }
+    validateSupplierId(supplierId);
+    validateDate(date, 'date');
 
     const raw = await wbOfficialRequest<BoxTariffsApiResponse>({
       baseUrl: BASE_URL,
@@ -270,14 +249,8 @@ export class WBTariffsOfficialService {
     supplierId,
     date,
   }: GetPalletTariffsParams): Promise<PalletTariffsData> {
-    if (!supplierId || supplierId.trim().length === 0) {
-      throw new Error('supplierId is required');
-    }
-
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!date || !dateRegex.test(date)) {
-      throw new Error('date must be in YYYY-MM-DD format');
-    }
+    validateSupplierId(supplierId);
+    validateDate(date, 'date');
 
     const raw = await wbOfficialRequest<PalletTariffsApiResponse>({
       baseUrl: BASE_URL,
@@ -310,14 +283,8 @@ export class WBTariffsOfficialService {
     supplierId,
     date,
   }: GetReturnTariffsParams): Promise<ReturnTariffsData> {
-    if (!supplierId || supplierId.trim().length === 0) {
-      throw new Error('supplierId is required');
-    }
-
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!date || !dateRegex.test(date)) {
-      throw new Error('date must be in YYYY-MM-DD format');
-    }
+    validateSupplierId(supplierId);
+    validateDate(date, 'date');
 
     const raw = await wbOfficialRequest<ReturnTariffsApiResponse>({
       baseUrl: BASE_URL,
@@ -386,13 +353,8 @@ export class WBTariffsOfficialService {
     supplierId,
     subjectID,
   }: GetCommissionParams): Promise<CommissionRate | null> {
-    if (!supplierId || supplierId.trim().length === 0) {
-      throw new Error('supplierId is required');
-    }
-
-    if (!Number.isFinite(subjectID) || subjectID <= 0) {
-      throw new Error('subjectID must be a positive number');
-    }
+    validateSupplierId(supplierId);
+    validatePositiveInteger(subjectID, 'subjectID');
 
     const raw = await wbOfficialRequest<CommissionApiResponse>({
       baseUrl: BASE_URL,
@@ -427,22 +389,11 @@ export class WBTariffsOfficialService {
     weight,
     date,
   }: GetCalculatedTariffsParams & { date?: string }): Promise<AggregatedTariffsResponse> {
-    if (!supplierId || supplierId.trim().length === 0) {
-      throw new Error('supplierId is required');
-    }
-
-    if (!Number.isFinite(width) || width <= 0) {
-      throw new Error('width must be a positive number');
-    }
-    if (!Number.isFinite(height) || height <= 0) {
-      throw new Error('height must be a positive number');
-    }
-    if (!Number.isFinite(length) || length <= 0) {
-      throw new Error('length must be a positive number');
-    }
-    if (!Number.isFinite(weight) || weight < 0) {
-      throw new Error('weight must be a non-negative number');
-    }
+    validateSupplierId(supplierId);
+    validatePositiveNumber(width, 'width');
+    validatePositiveNumber(height, 'height');
+    validatePositiveNumber(length, 'length');
+    validateNonNegativeNumber(weight, 'weight');
 
     const targetDate = date || new Date().toISOString().split('T')[0];
 
@@ -583,10 +534,7 @@ export class WBTariffsOfficialService {
   async getCalculatedTariffs({
     supplierId,
   }: GetCalculatedTariffsParams): Promise<BoxTariffsData> {
-    if (!supplierId || supplierId.trim().length === 0) {
-      throw new Error('supplierId is required');
-    }
-
+    validateSupplierId(supplierId);
     const today = new Date().toISOString().split('T')[0];
     return this.getBoxTariffs({ supplierId, date: today });
   }

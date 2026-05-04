@@ -64,13 +64,13 @@
             <span class="text-[10px] text-green-400">
               Участвуют:
               <strong>{{
-                promotion.participation.counts.participating
+                promotion.participation?.counts?.participating ?? 0
               }}</strong>
             </span>
             <span class="text-[10px] text-[var(--text-muted)]">
               Не участвуют:
               <strong>{{
-                promotion.participation.counts.available
+                promotion.participation?.counts?.available ?? 0
               }}</strong>
             </span>
           </div>
@@ -144,7 +144,7 @@
             v-if="!display.isExpired.value"
             size="small"
             severity="primary"
-            :loading="excelLoading"
+            :loading="goodsLoading"
             @click.stop="emit('show-participants')"
           >
             <i class="pi pi-box mr-1" />
@@ -179,7 +179,7 @@ interface Props {
   isExpanded: boolean;
   style: PromotionPosition;
   detailLoading?: boolean;
-  excelLoading?: boolean;
+  goodsLoading?: boolean;
 }
 
 const props = defineProps<Props>();

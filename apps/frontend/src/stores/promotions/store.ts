@@ -5,7 +5,7 @@ import { useUserStore } from '@/stores/user';
 import type {
   PromotionItem,
   PromotionDetail,
-  PromotionExcelItem,
+  PromotionGoodsItem,
   ParticipationCounts,
 } from './types';
 
@@ -16,20 +16,20 @@ export const usePromotionsStore = defineStore('promotions', () => {
   const promotions = ref<PromotionItem[]>([]);
   const selectedPromotion = ref<PromotionItem | null>(null);
   const promotionDetail = ref<PromotionDetail | null>(null);
-  const _excelItems = ref<PromotionExcelItem[]>([]);
+  const _goodsItems = ref<PromotionGoodsItem[]>([]);
   const loading = ref(false);
   const detailLoading = ref(false);
-  const excelLoading = ref(false);
+  const goodsLoading = ref(false);
   const error = ref<string | null>(null);
   const detailError = ref<string | null>(null);
-  const excelError = ref<string | null>(null);
+  const goodsError = ref<string | null>(null);
   const reportPending = ref(false);
   const estimatedWaitTime = ref<number | null>(null);
   const participationCounts = ref<ParticipationCounts | null>(null);
 
   // Getters
   const hasPromotions = computed(() => promotions.value.length > 0);
-  const excelItems = computed(() => _excelItems.value);
+  const goodsItems = computed(() => _goodsItems.value);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -107,95 +107,95 @@ export const usePromotionsStore = defineStore('promotions', () => {
     }
   }
 
-  async function fetchExcel(
+  async function fetchGoods(
+    promoID: number,
     periodID: number,
-    isRecovery = true,
-    hasStarted?: boolean,
+    mode: 'participating' | 'excluded',
   ) {
     const prerequisiteError = checkPrerequisites();
     if (prerequisiteError) {
-      excelError.value = prerequisiteError;
+      goodsError.value = prerequisiteError;
       return;
     }
 
-    excelLoading.value = true;
-    excelError.value = null;
+    goodsLoading.value = true;
+    goodsError.value = null;
     reportPending.value = false;
     estimatedWaitTime.value = null;
-    _excelItems.value = [];
+    _goodsItems.value = [];
 
     try {
-      const response = await promotionsAPI.fetchExcel({
+      const response = await promotionsAPI.fetchGoods({
+        promoID,
         periodID,
-        isRecovery,
-        hasStarted,
+        mode,
       });
 
       if (response.error) {
-        excelError.value = response.error;
+        goodsError.value = response.error;
         reportPending.value = response.reportPending || false;
         estimatedWaitTime.value = response.estimatedWaitTime || null;
         return;
       }
 
-      _excelItems.value = response.items || [];
+      _goodsItems.value = response.items || [];
       reportPending.value = false;
       estimatedWaitTime.value = null;
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : 'Failed to fetch promotion Excel';
-      excelError.value = errorMsg;
-      _excelItems.value = [];
+        err instanceof Error ? err.message : 'Failed to fetch promotion goods';
+      goodsError.value = errorMsg;
+      _goodsItems.value = [];
       reportPending.value = false;
       estimatedWaitTime.value = null;
     } finally {
-      excelLoading.value = false;
+      goodsLoading.value = false;
     }
   }
 
   /**
-   * Convenience action: fetch detail then auto-fetch Excel if periodID exists
+   * Convenience action: fetch detail then auto-fetch goods if periodID exists
    */
-  async function selectPromotionAndLoadExcel(
+  async function selectPromotionAndLoadGoods(
     promoID: number,
     isRecovery = true,
-    hasStarted?: boolean,
   ) {
     await fetchDetail(promoID);
     if (promotionDetail.value?.periodID) {
-      await fetchExcel(
+      const mode = isRecovery ? 'excluded' : 'participating';
+      await fetchGoods(
+        promoID,
         promotionDetail.value.periodID,
-        isRecovery,
-        hasStarted,
+        mode,
       );
     }
   }
 
   /**
-   * Apply promotion recovery with selected items
+   * Apply promotion management with selected items
    */
-  async function applyRecovery(
+  async function applyManagement(
     selectedItems: string[],
     isRecovery: boolean,
   ): Promise<boolean> {
     const prerequisiteError = checkPrerequisites();
     if (prerequisiteError) {
-      excelError.value = prerequisiteError;
+      goodsError.value = prerequisiteError;
       return false;
     }
 
-    const periodID = promotionDetail.value?.periodID;
-    if (!periodID) {
-      excelError.value = 'ID периода не найден';
+    const promoID = promotionDetail.value?.promoID;
+    if (!promoID) {
+      goodsError.value = 'ID акции не найден';
       return false;
     }
 
-    excelLoading.value = true;
-    excelError.value = null;
+    goodsLoading.value = true;
+    goodsError.value = null;
 
     try {
-      await promotionsAPI.applyRecovery({
-        periodID,
+      await promotionsAPI.applyManagement({
+        promoID,
         selectedItems,
         isRecovery,
       });
@@ -204,11 +204,11 @@ export const usePromotionsStore = defineStore('promotions', () => {
       const errorMsg =
         err instanceof Error
           ? err.message
-          : 'Failed to apply promotion recovery';
-      excelError.value = errorMsg;
+          : 'Failed to apply promotion management';
+      goodsError.value = errorMsg;
       return false;
     } finally {
-      excelLoading.value = false;
+      goodsLoading.value = false;
     }
   }
 
@@ -221,21 +221,21 @@ export const usePromotionsStore = defineStore('promotions', () => {
     promotions.value = [];
     selectedPromotion.value = null;
     promotionDetail.value = null;
-    _excelItems.value = [];
+    _goodsItems.value = [];
     error.value = null;
     detailError.value = null;
-    excelError.value = null;
+    goodsError.value = null;
     reportPending.value = false;
     estimatedWaitTime.value = null;
     participationCounts.value = null;
   }
 
-  function clearExcelData() {
-    _excelItems.value = [];
-    excelError.value = null;
+  function clearGoodsData() {
+    _goodsItems.value = [];
+    goodsError.value = null;
     reportPending.value = false;
     estimatedWaitTime.value = null;
-    excelLoading.value = false;
+    goodsLoading.value = false;
   }
 
   return {
@@ -245,26 +245,26 @@ export const usePromotionsStore = defineStore('promotions', () => {
     promotionDetail: readonly(promotionDetail),
     loading: readonly(loading),
     detailLoading: readonly(detailLoading),
-    excelLoading: readonly(excelLoading),
+    goodsLoading: readonly(goodsLoading),
     error: readonly(error),
     detailError: readonly(detailError),
-    excelError: readonly(excelError),
+    goodsError: readonly(goodsError),
     reportPending: readonly(reportPending),
     estimatedWaitTime: readonly(estimatedWaitTime),
     participationCounts: readonly(participationCounts),
 
     // Getters
     hasPromotions,
-    excelItems,
+    goodsItems,
 
     // Actions
     fetchTimeline,
     fetchDetail,
-    fetchExcel,
-    selectPromotionAndLoadExcel,
+    fetchGoods,
+    selectPromotionAndLoadGoods,
     selectPromotion,
     clearPromotions,
-    clearExcelData,
-    applyRecovery,
+    clearGoodsData,
+    applyManagement,
   };
 });

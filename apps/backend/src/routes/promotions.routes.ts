@@ -9,8 +9,8 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import {
   fetchPromotionsTimeline,
   fetchPromotionDetail,
-  fetchPromotionExcel,
-  promotionRecovery,
+  fetchPromotionGoods,
+  managePromotionGoods,
 } from '@/controllers/promotions.controller';
 import { validationMiddleware } from '@/middleware/error.middleware';
 
@@ -68,38 +68,52 @@ router.get(
 );
 
 /**
- * @route   POST /api/v1/promotions/excel
- * @desc    Create and fetch promotion Excel report
+ * @route   POST /api/v1/promotions/goods
+ * @desc    Fetch promotion goods list
+ * @body    promoID - Promotion ID
  * @body    periodID - Period ID
- * @body    isRecovery - true = recovery mode, false = exclusion mode (default: true)
- * @body    hasStarted - true = promotion already started, false = not started yet
+ * @body    mode - 'participating' or 'excluded'
  * @access  Private
  */
 router.post(
-  '/excel',
+  '/goods',
   wbOperationLimiter,
+  body('promoID')
+    .notEmpty()
+    .withMessage('promoID is required')
+    .isInt({ min: 1 })
+    .withMessage('promoID must be a positive integer'),
   body('periodID')
     .notEmpty()
     .withMessage('periodID is required')
     .isInt({ min: 1 })
     .withMessage('periodID must be a positive integer'),
-  body('isRecovery').optional().isBoolean(),
-  body('hasStarted').optional().isBoolean(),
+  body('mode')
+    .notEmpty()
+    .withMessage('mode is required')
+    .isIn(['participating', 'excluded'])
+    .withMessage('mode must be participating or excluded'),
   validationMiddleware,
-  fetchPromotionExcel,
+  fetchPromotionGoods,
 );
 
 /**
- * @route   POST /api/v1/promotions/recovery
- * @desc    Apply promotion recovery with selected items
+ * @route   POST /api/v1/promotions/manage
+ * @desc    Include or exclude goods from a promotion
+ * @body    promoID - Promotion ID
  * @body    periodID - Period ID
- * @body    selectedItems - Array of supplier article IDs
- * @body    isRecovery - true = recover selected items, false = exclude selected items
+ * @body    selectedItems - Array of supplier article IDs (vendorCodes)
+ * @body    isRecovery - true = include items, false = exclude items
  * @access  Private
  */
 router.post(
-  '/recovery',
+  '/manage',
   wbOperationLimiter,
+  body('promoID')
+    .notEmpty()
+    .withMessage('promoID is required')
+    .isInt({ min: 1 })
+    .withMessage('promoID must be a positive integer'),
   body('periodID')
     .notEmpty()
     .withMessage('periodID is required')
@@ -111,7 +125,7 @@ router.post(
   body('selectedItems.*').isString().withMessage('Each item must be a string'),
   body('isRecovery').isBoolean().withMessage('isRecovery must be a boolean'),
   validationMiddleware,
-  promotionRecovery,
+  managePromotionGoods,
 );
 
 export default router;
