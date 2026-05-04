@@ -3,9 +3,11 @@ import type {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
   PromotionApiPayload,
+  PromotionManageParams,
   PromotionRecoveryParams,
   TimelineParams,
   DetailParams,
+  GoodsParams,
   ExcelParams,
 } from './types';
 
@@ -15,7 +17,6 @@ import type {
  */
 
 const MAX_EXCEL_RETRIES = 1;
-const EXCEL_RETRY_DELAY_MS = 5000;
 
 export const promotionsAPI = {
   /**
@@ -48,25 +49,30 @@ export const promotionsAPI = {
     return response.data.data;
   },
 
+  async fetchGoods(params: GoodsParams): Promise<PromotionApiPayload> {
+    const response = await apiClient.post<{ data: PromotionApiPayload }>(
+      '/promotions/goods',
+      params,
+    );
+    return response.data.data;
+  },
+
   /**
    * POST /api/v1/promotions/excel
-   * Create and fetch promotion Excel report.
-   * Automatically retries once if the report is still pending.
+   * @deprecated Use fetchGoods instead. Kept for backward compatibility.
    */
   async fetchExcel(
     params: ExcelParams,
     retryCount = MAX_EXCEL_RETRIES,
   ): Promise<PromotionApiPayload> {
-    const response = await apiClient.post<{ data: PromotionApiPayload }>(
-      '/promotions/excel',
-      params,
-    );
-    const payload = response.data.data;
+    const goodsParams: GoodsParams = {
+      promoID: params.periodID,
+      periodID: params.periodID,
+      mode: params.isRecovery === false ? 'excluded' : 'participating',
+    };
+    const payload = await this.fetchGoods(goodsParams);
 
-    if (
-      payload.reportPending &&
-      retryCount > 0
-    ) {
+    if (payload.reportPending && retryCount > 0) {
       const waitMs = (payload.estimatedWaitTime || 5) * 1000;
       await new Promise((resolve) => setTimeout(resolve, waitMs));
       return this.fetchExcel(params, retryCount - 1);
@@ -75,11 +81,20 @@ export const promotionsAPI = {
     return payload;
   },
 
+  async applyManagement(params: PromotionManageParams): Promise<void> {
+    await apiClient.post('/promotions/manage', params);
+  },
+
   /**
    * POST /api/v1/promotions/recovery
-   * Apply promotion recovery with selected items
+   * @deprecated Use applyManagement instead. Kept for backward compatibility.
    */
   async applyRecovery(params: PromotionRecoveryParams): Promise<void> {
-    await apiClient.post('/promotions/recovery', params);
+    await this.applyManagement({
+      promoID: params.periodID,
+      periodID: params.periodID,
+      selectedItems: params.selectedItems,
+      isRecovery: params.isRecovery,
+    });
   },
 };
