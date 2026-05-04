@@ -111,7 +111,7 @@
         :expanded-ids="expandedIdsSet"
         :selected-promotion-id="p.selectedPromotionId.value"
         :detail-loading="p.detailLoading.value"
-        :excel-loading="p.excelLoading.value"
+        :goods-loading="p.goodsLoading.value"
         :empty-icon="p.emptyState.value.icon"
         :empty-message="p.emptyState.value.message"
         :is-today="p.isToday"
@@ -136,16 +136,16 @@
     <PromotionParticipantsDialog
       v-model:show="p.showParticipantsDialog.value"
       :promotion-name="p.selectedPromotion.value?.name"
-      :excel-items="p.excelItems.value as PromotionExcelItem[]"
-      :excel-loading="p.excelLoading.value"
-      :excel-error="p.excelError.value"
+      :goods-items="p.goodsItems.value as PromotionGoodsItem[]"
+      :goods-loading="p.goodsLoading.value"
+      :goods-error="p.goodsError.value"
       :report-pending="p.reportPending.value"
       :is-recovery="participantsIsRecovery"
       :can-edit="canEditPromotion"
       :timeline-participating-count="timelineParticipatingCount"
       :timeline-not-participating-count="timelineNotParticipatingCount"
       @retry="handleParticipantsRetry"
-      @apply-recovery="handleApplyRecovery"
+      @apply-management="handleApplyManagement"
       @switch-mode="handleSwitchMode"
     />
   </div>
@@ -157,7 +157,6 @@ import Button from 'primevue/button';
 import {
   usePromotionsUnified,
   useViewReady,
-  isPromotionStarted,
   isPromotionEditable,
 } from '../../composables';
 import { usePromotionsStore } from '@/stores/promotions';
@@ -165,7 +164,7 @@ import PromotionFilterBar from '@/components/promotions/PromotionFilterBar.vue';
 import PromotionTimelineGrid from '@/components/promotions/PromotionTimelineGrid.vue';
 import PromotionDetailDialog from './PromotionDetailDialog.vue';
 import PromotionParticipantsDialog from './PromotionParticipantsDialog.vue';
-import type { PromotionItem, PromotionExcelItem } from '../../types';
+import type { PromotionItem, PromotionGoodsItem } from '../../types';
 
 const { viewReady } = useViewReady();
 
@@ -198,11 +197,11 @@ function toggleExpand(promoID: number) {
 
 // Timeline counts for the selected promotion
 const timelineParticipatingCount = computed(() => {
-  return p.selectedPromotion.value?.participation.counts.participating ?? 0;
+  return p.selectedPromotion.value?.participation?.counts?.participating ?? 0;
 });
 
 const timelineNotParticipatingCount = computed(() => {
-  const counts = p.selectedPromotion.value?.participation.counts;
+  const counts = p.selectedPromotion.value?.participation?.counts;
   if (!counts) return 0;
   return counts.available;
 });
@@ -212,44 +211,35 @@ function handleShowParticipants(promoID: number) {
   const promotion = p.promotions.value.find((p) => p.promoID === promoID);
   // Default to 'Участвуют' if it has items, otherwise fall back to 'Не участвуют'
   const isRecovery = promotion
-    ? promotion.participation.counts.participating > 0
+    ? (promotion.participation?.counts?.participating ?? 0) > 0
     : true;
   participantsIsRecovery.value = isRecovery;
-  const hasStarted = promotion ? isPromotionStarted(promotion) : undefined;
-  p.handleShowParticipants(promoID, isRecovery, hasStarted);
+  p.handleShowParticipants(promoID);
 }
 
 // Handle switch mode from dialog buttons
 function handleSwitchMode(isRecovery: boolean) {
   participantsIsRecovery.value = isRecovery;
   const promoID = p.selectedPromotionId.value;
-  const promotion = p.selectedPromotion.value;
-  const hasStarted = promotion ? isPromotionStarted(promotion) : undefined;
   if (promoID) {
-    p.handleShowParticipants(promoID, isRecovery, hasStarted);
+    p.handleShowParticipants(promoID);
   }
 }
 
 // Handle retry with current isRecovery mode
 async function handleParticipantsRetry() {
-  const detail = p.promotionDetail.value;
-  if (detail?.periodID) {
-    const promotion = p.selectedPromotion.value;
-    const hasStarted = promotion ? isPromotionStarted(promotion) : undefined;
-    await promotionsStore.fetchExcel(
-      detail.periodID,
-      participantsIsRecovery.value,
-      hasStarted,
-    );
+  const promoID = p.selectedPromotionId.value;
+  if (promoID) {
+    await promotionsStore.fetchGoods(promoID);
   }
 }
 
 // Handle apply recovery
-async function handleApplyRecovery(
+async function handleApplyManagement(
   selectedItems: string[],
   isRecovery: boolean,
 ) {
-  const success = await p.applyRecovery(selectedItems, isRecovery);
+  const success = await p.applyManagement(selectedItems, isRecovery);
   if (success) {
     p.showParticipantsDialog.value = false;
     await p.refreshData();

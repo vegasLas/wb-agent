@@ -116,8 +116,8 @@
                 :detail-loading="
                   detailLoading && selectedPromotionId === promotion.promoID
                 "
-                :excel-loading="
-                  excelLoading && selectedPromotionId === promotion.promoID
+                :goods-loading="
+                  goodsLoading && selectedPromotionId === promotion.promoID
                 "
                 @toggle-expand="$emit('toggle-expand', promotion.promoID)"
                 @show-details="$emit('show-details', promotion.promoID)"
@@ -165,7 +165,7 @@ interface Props {
   expandedIds: Set<number>;
   selectedPromotionId: number | null;
   detailLoading: boolean;
-  excelLoading: boolean;
+  goodsLoading: boolean;
   emptyIcon: string;
   emptyMessage: string;
   isToday: (monthDate: Date, day: number) => boolean;
