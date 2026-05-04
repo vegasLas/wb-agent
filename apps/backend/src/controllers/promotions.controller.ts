@@ -7,8 +7,8 @@ import { Request, Response } from 'express';
 import {
   getPromotionsTimeline,
   getPromotionDetail,
-  getPromotionExcel,
-  applyPromotionRecovery,
+  getPromotionGoods,
+  managePromotionGoods as managePromotionGoodsService,
 } from '@/services/domain/promotion/promotions.service';
 import { successResponse, errorResponse } from '@/utils/response';
 import { ApiError } from '@/utils/errors';
@@ -80,44 +80,40 @@ export const fetchPromotionDetail = async (
 
 /**
  * POST /api/v1/promotions/excel
- * Create and fetch promotion Excel report for the authenticated user
+ * Fetch promotion goods for the authenticated user
  */
-export const fetchPromotionExcel = async (
+export const fetchPromotionGoods = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const user = assertUser(req);
-    const { periodID, isRecovery, hasStarted } = req.body as {
+    const { promoID, periodID, mode } = req.body as {
+      promoID?: number;
       periodID?: number;
-      isRecovery?: boolean;
-      hasStarted?: boolean;
+      mode?: 'participating' | 'excluded';
     };
 
-    const recoveryFlag = isRecovery !== false;
+    if (!promoID || !periodID || !mode) {
+      errorResponse(
+        res,
+        ApiError.badRequest(
+          'promoID, periodID, and mode are required',
+          'VALIDATION_ERROR',
+        ),
+        400,
+      );
+      return;
+    }
 
-    const result = await getPromotionExcel({
+    const result = await getPromotionGoods({
       userId: user.id,
+      promoID,
       periodID,
-      isRecovery: recoveryFlag,
-      hasStarted,
+      mode,
     });
 
     if (result.error && !result.items) {
-      if (result.reportPending) {
-        successResponse(
-          res,
-          {
-            items: null,
-            error: result.error,
-            reportPending: true,
-            estimatedWaitTime: result.estimatedWaitTime || 30,
-          },
-          202,
-        );
-        return;
-      }
-
       errorResponse(res, ApiError.badRequest(result.error, 'EXCEL_ERROR'), 400);
       return;
     }
@@ -129,7 +125,7 @@ export const fetchPromotionExcel = async (
       estimatedWaitTime: null,
     });
   } catch (error) {
-    logger.error('Error in fetchPromotionExcel:', error);
+    logger.error('Error in fetchPromotionGoods:', error);
     errorResponse(res, error as Error);
   }
 };
@@ -138,23 +134,37 @@ export const fetchPromotionExcel = async (
  * POST /api/v1/promotions/recovery
  * Apply promotion recovery with selected items
  */
-export const promotionRecovery = async (
+export const managePromotionGoods = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const user = assertUser(req);
-    const { periodID, selectedItems, isRecovery } = req.body as {
+    const { promoID, periodID, selectedItems, isRecovery } = req.body as {
+      promoID?: number;
       periodID?: number;
       selectedItems?: string[];
       isRecovery?: boolean;
     };
 
-    const result = await applyPromotionRecovery({
+    if (!promoID || !periodID || !selectedItems || selectedItems.length === 0) {
+      errorResponse(
+        res,
+        ApiError.badRequest(
+          'promoID, periodID, and selectedItems are required',
+          'VALIDATION_ERROR',
+        ),
+        400,
+      );
+      return;
+    }
+
+    const result = await managePromotionGoodsService({
       userId: user.id,
+      promoID,
       periodID,
       selectedItems,
-      isRecovery,
+      isRecovery: isRecovery ?? false,
     });
 
     if (!result.success) {
@@ -171,7 +181,7 @@ export const promotionRecovery = async (
 
     successResponse(res, {});
   } catch (error) {
-    logger.error('Error in promotionRecovery:', error);
+    logger.error('Error in managePromotionGoods:', error);
     errorResponse(res, error as Error);
   }
 };
@@ -179,6 +189,6 @@ export const promotionRecovery = async (
 export default {
   fetchPromotionsTimeline,
   fetchPromotionDetail,
-  fetchPromotionExcel,
-  promotionRecovery,
+  fetchPromotionGoods,
+  managePromotionGoods,
 };
