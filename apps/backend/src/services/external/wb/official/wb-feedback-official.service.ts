@@ -9,6 +9,12 @@ import {
   mapOfficialResponseToFeedbackResponse,
   type OfficialFeedbacksApiResponse,
 } from './wb-feedback-official.mapper';
+import {
+  validateSupplierId,
+  validatePagination,
+  validateDateRange,
+  validateRequiredString,
+} from './wb-official-validation';
 
 const logger = createLogger('WBFeedbackOfficial');
 
@@ -34,32 +40,6 @@ export interface AnswerFeedbackParams {
   supplierId: string;
   feedbackId: string;
   answerText: string;
-}
-
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-function validateSupplierId(supplierId: string): void {
-  if (!supplierId || supplierId.trim().length === 0) {
-    throw new Error('supplierId is required');
-  }
-}
-
-function validatePagination(limit: number, offset: number): void {
-  if (!Number.isFinite(limit) || limit < 1 || limit > 100) {
-    throw new Error('limit must be between 1 and 100');
-  }
-  if (!Number.isFinite(offset) || offset < 0) {
-    throw new Error('offset must be a non-negative number');
-  }
-}
-
-function validateDateRange(dateFrom?: string, dateTo?: string): void {
-  if (dateFrom && !ISO_DATE_REGEX.test(dateFrom)) {
-    throw new Error('dateFrom must be in YYYY-MM-DD format');
-  }
-  if (dateTo && !ISO_DATE_REGEX.test(dateTo)) {
-    throw new Error('dateTo must be in YYYY-MM-DD format');
-  }
 }
 
 export class WBFeedbackOfficialService {
@@ -125,12 +105,8 @@ export class WBFeedbackOfficialService {
     answerText,
   }: AnswerFeedbackParams): Promise<FeedbackAnswerResponse> {
     validateSupplierId(supplierId);
-    if (!feedbackId || feedbackId.trim().length === 0) {
-      throw new Error('feedbackId is required');
-    }
-    if (!answerText || answerText.trim().length === 0) {
-      throw new Error('answerText is required');
-    }
+    validateRequiredString(feedbackId, 'feedbackId');
+    validateRequiredString(answerText, 'answerText');
 
     return wbOfficialRequest<FeedbackAnswerResponse>({
       baseUrl: BASE_URL,

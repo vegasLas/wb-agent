@@ -1,5 +1,6 @@
 import { wbOfficialRequest } from '@/utils/wb-official-request';
 import { createLogger } from '@/utils/logger';
+import { validateSupplierId } from './wb-official-validation';
 
 const logger = createLogger('WBContentOfficial');
 
@@ -69,11 +70,9 @@ export class WBContentOfficialService {
     cursor,
     limit = 20,
   }: GetContentCardsParams): Promise<OfficialContentCardsResponse> {
-    if (!supplierId || supplierId.trim().length === 0) {
-      throw new Error('supplierId is required');
-    }
+    validateSupplierId(supplierId);
 
-    if (limit < 1 || limit > 100) {
+    if (!Number.isFinite(limit) || limit < 1 || limit > 100) {
       throw new Error('limit must be between 1 and 100');
     }
 
@@ -88,8 +87,11 @@ export class WBContentOfficialService {
       method: 'POST',
       body: {
         settings: {
-          cursor,
-          limit,
+          cursor: {
+            limit,
+            ...(cursor?.updatedAt !== undefined ? { updatedAt: cursor.updatedAt } : {}),
+            ...(cursor?.nmID !== undefined ? { nmID: cursor.nmID } : {}),
+          },
           filter: { withPhoto: -1 },
         },
       },

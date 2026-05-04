@@ -1,12 +1,15 @@
 import { wbOfficialRequest } from '@/utils/wb-official-request';
 import { createLogger } from '@/utils/logger';
+import {
+  validateSupplierId,
+  validateDate,
+  validatePagination,
+} from './wb-official-validation';
 
 const logger = createLogger('WBStatisticsOfficial');
 
 const BASE_URL = 'https://seller-analytics-api.wildberries.ru';
 const CATEGORY = 'ANALYTICS';
-
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 // ---------------------------------------------------------------------------
 // Upstream types — match the official WB Seller Analytics API response exactly
@@ -77,31 +80,6 @@ export interface GetRegionSalesParams {
   dateTo: string;   // YYYY-MM-DD
   limit?: number;
   offset?: number;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function validateSupplierId(supplierId: string): void {
-  if (!supplierId || supplierId.trim().length === 0) {
-    throw new Error('supplierId is required');
-  }
-}
-
-function validateDate(date: string, fieldName: string): void {
-  if (!date || !ISO_DATE_REGEX.test(date)) {
-    throw new Error(`${fieldName} must be in YYYY-MM-DD format`);
-  }
-}
-
-function validatePagination(limit: number, offset: number): void {
-  if (!Number.isFinite(limit) || limit < 1 || limit > 1000) {
-    throw new Error('limit must be between 1 and 1000');
-  }
-  if (!Number.isFinite(offset) || offset < 0) {
-    throw new Error('offset must be a non-negative number');
-  }
 }
 
 // ---------------------------------------------------------------------------
