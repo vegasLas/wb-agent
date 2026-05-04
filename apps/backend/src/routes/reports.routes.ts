@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import {
   fetchSalesReport,
+  fetchOrdersReport,
   fetchRegionSales,
   fetchReport,
 } from '@/controllers/reports.controller';
@@ -20,6 +21,15 @@ const router = Router();
  * @access  Private
  */
 router.get('/sales', fetchSalesReport);
+
+/**
+ * @route   GET /api/v1/reports/orders
+ * @desc    Get orders report for date range (includes cancelled orders)
+ * @query   dateFrom - Start date (DD.MM.YY or YYYY-MM-DD)
+ * @query   dateTo - End date (DD.MM.YY or YYYY-MM-DD)
+ * @access  Private
+ */
+router.get('/orders', fetchOrdersReport);
 
 /**
  * @route   POST /api/v1/reports/region-sales
