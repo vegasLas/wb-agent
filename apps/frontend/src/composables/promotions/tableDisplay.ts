@@ -4,7 +4,7 @@
  * Display helpers for the promotion participants table.
  */
 
-import type { PromotionExcelItem } from '@/types';
+import type { PromotionGoodsItem } from '@/types';
 
 export function usePromotionTableDisplay() {
   function formatPrice(price: number): string {
@@ -17,7 +17,7 @@ export function usePromotionTableDisplay() {
     }).format(price);
   }
 
-  function getDiscountClass(item: PromotionExcelItem): string {
+  function getDiscountClass(item: PromotionGoodsItem): string {
     const current = Number(item.currentDiscount) || 0;
     const uploaded = Number(item.uploadedDiscount) || 0;
 

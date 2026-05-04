@@ -5,7 +5,7 @@ import { useUserStore } from '@/stores/user';
 import type {
   PromotionItem,
   PromotionDetail,
-  PromotionExcelItem,
+  PromotionGoodsItem,
   ParticipationCounts,
 } from './types';
 
@@ -16,7 +16,7 @@ export const usePromotionsStore = defineStore('promotions', () => {
   const promotions = ref<PromotionItem[]>([]);
   const selectedPromotion = ref<PromotionItem | null>(null);
   const promotionDetail = ref<PromotionDetail | null>(null);
-  const _goodsItems = ref<PromotionExcelItem[]>([]);
+  const _goodsItems = ref<PromotionGoodsItem[]>([]);
   const loading = ref(false);
   const detailLoading = ref(false);
   const goodsLoading = ref(false);

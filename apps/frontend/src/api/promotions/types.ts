@@ -3,7 +3,6 @@ import type {
   PromotionDetailResponse,
   PromotionApiPayload,
   PromotionManageParams,
-  PromotionRecoveryParams,
 } from '../../types';
 
 export interface TimelineParams {
@@ -22,17 +21,9 @@ export interface GoodsParams {
   mode: 'participating' | 'excluded';
 }
 
-/** @deprecated Use GoodsParams instead */
-export interface ExcelParams {
-  periodID: number;
-  isRecovery?: boolean;
-  hasStarted?: boolean;
-}
-
 export {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
   PromotionApiPayload,
   PromotionManageParams,
-  PromotionRecoveryParams,
 };

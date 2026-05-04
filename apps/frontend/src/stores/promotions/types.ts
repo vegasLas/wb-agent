@@ -1,13 +1,13 @@
 import type {
   PromotionItem,
   PromotionDetail,
-  PromotionExcelItem,
+  PromotionGoodsItem,
   ParticipationCounts,
 } from '@/types';
 
 export {
   PromotionItem,
   PromotionDetail,
-  PromotionExcelItem,
+  PromotionGoodsItem,
   ParticipationCounts,
 };
