@@ -1,18 +1,20 @@
 /**
  * Report Service
- * Handles sales report fetching, order management, and Excel parsing
- * Migrated from deprecated project server/api/v1/report/index.get.ts
+ * Handles sales report fetching using the official WB Statistics API.
+ * Replaces the legacy cookie-based XLSX report flow with a single
+ * official-API call to GET /api/v1/supplier/sales.
  */
 
 import { prisma } from '@/config/database';
 import {
-  parseExcelDataNode,
-  FriendlyExcelData,
-} from '@/utils/parseExcelDataNode';
-import * as ordersController from '@/controllers/orders.controller';
+  wbOrdersOfficialService,
+  resolveOfficialSupplierId,
+  mapSaleItemsToSalesReportData,
+  mapOrderItemsToOrdersReportData,
+} from '@/services/external/wb/official';
+import { FriendlyExcelData } from '@/utils/parseExcelDataNode';
 import { logger } from '@/utils/logger';
 import { convertWarehouseName } from '@/utils/warehouseNames';
-import type { ProxyConfig } from '@/utils/wb-request';
 
 export interface OrderSummary {
   id: string;
@@ -36,12 +38,21 @@ export interface ReportRequestParams {
 }
 
 /**
- * Get or create sales report for user
- * Main orchestration function that:
- * 1. Validates user subscription and account
- * 2. Checks for existing reports
- * 3. Creates new report if needed
- * 4. Fetches and parses XLSX data
+ * Convert date format from DD.MM.YY to YYYY-MM-DD for API usage
+ */
+const convertDateFormat = (date: string): string => {
+  if (date.includes('.')) {
+    const [day, month, shortYear] = date.split('.');
+    const fullYear = shortYear?.length === 2 ? `20${shortYear}` : shortYear;
+    return `${fullYear}-${month}-${day}`;
+  }
+  return date;
+};
+
+/**
+ * Get sales report for user using the official WB Statistics API.
+ * Replaces the legacy create-order → poll → download-XLSX flow
+ * with a single `getSalesInInterval` call.
  */
 export const getSalesReport = async ({
   userId,
@@ -55,47 +66,25 @@ export const getSalesReport = async ({
   };
 
   try {
-    // Get user with subscription check
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        accounts: {
-          include: {
-            suppliers: true,
-          },
-        },
-        subscriptions: { orderBy: { startedAt: 'desc' }, take: 1 },
-      },
     });
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Get selected account
-    const account = user.accounts.find((a) => a.id === user.selectedAccountId);
+    // Resolve official supplier ID for the Statistics category
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'STATISTICS',
+    );
 
-    if (!account) {
-      throw new Error('No account selected for user');
+    if (!officialSupplierId) {
+      throw new Error(
+        'No official Statistics API key configured for this account',
+      );
     }
-
-    if (!account) {
-      throw new Error('Selected account not found');
-    }
-
-    const accountId = account.id;
-    const supplierId =
-      account.selectedSupplierId || account.suppliers[0]?.supplierId;
-
-    if (!supplierId) {
-      throw new Error('No supplier found for account');
-    }
-
-    // Get user envInfo for proxy and userAgent
-    const envInfo = user.envInfo as unknown as {
-      userAgent?: string;
-      proxy?: ProxyConfig;
-    } | null;
 
     // Set default date range if not provided (last 30 days)
     const currentDate = new Date();
@@ -109,115 +98,55 @@ export const getSalesReport = async ({
       return `${day}.${month}.${year}`;
     };
 
-    const finalDateFrom = dateFrom || formatShortYear(thirtyDaysAgo);
-    const finalDateTo = dateTo || formatShortYear(currentDate);
+    const rawDateFrom = dateFrom || formatShortYear(thirtyDaysAgo);
+    const rawDateTo = dateTo || formatShortYear(currentDate);
 
-    // Get account environment info for WB requests
-    const userAgent =
-      envInfo?.userAgent ||
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-    const proxy = envInfo?.proxy;
+    // Convert to YYYY-MM-DD for the official API
+    const startDate = convertDateFormat(rawDateFrom);
+    const endDate = convertDateFormat(rawDateTo);
 
-    // Fetch all existing orders
-    const ordersResponse = await ordersController.getAllOrders({
-      accountId,
-      supplierId,
-      userAgent,
-      proxy,
+    logger.info(
+      `Fetching official sales report for user ${userId}, date range: ${startDate} - ${endDate}`,
+    );
+
+    // Single official-API call replaces create + poll + download
+    const sales = await wbOrdersOfficialService.getSalesInInterval({
+      supplierId: officialSupplierId,
+      startDate,
+      endDate,
     });
 
-    // Look for existing report with matching date range
-    let existingOrder: OrderSummary | null = null;
+    // Map upstream sales into aggregated report DTO
+    const reportData = mapSaleItemsToSalesReportData(
+      sales,
+      startDate,
+      endDate,
+    );
 
-    if (ordersResponse?.data?.length > 0) {
-      const requestDateFrom = convertDateFormat(finalDateFrom);
-      const requestDateTo = convertDateFormat(finalDateTo);
+    // Convert warehouse names to Russian (idempotent for already-Russian names)
+    const items = reportData.items.map((item) => ({
+      ...item,
+      warehouse: convertWarehouseName(item.warehouse || ''),
+    }));
 
-      existingOrder =
-        ordersResponse.data.find(
-          (order) =>
-            order.dateFrom === requestDateFrom &&
-            order.dateTo === requestDateTo,
-        ) || null;
-    }
+    const parsedData = {
+      items: items as FriendlyExcelData['items'],
+      meta: {
+        totalItems: items.length,
+        sheetName: 'Sales Report',
+        allSheets: ['Sales Report'],
+        reportInfo: {
+          supplier: '',
+          dateFrom: startDate,
+          dateTo: endDate,
+          generatedAt: reportData.meta.generatedAt,
+          warehouse: '',
+          rawTitle: `Sales report from ${startDate} to ${endDate}`,
+        },
+      },
+    };
 
-    let orderToUse: OrderSummary;
-
-    // Create new order if no matching report found
-    if (!existingOrder) {
-      const orderResponse = await ordersController.createSalesOrder({
-        accountId,
-        supplierId,
-        userAgent,
-        proxy,
-        dateFrom: finalDateFrom,
-        dateTo: finalDateTo,
-      });
-
-      // Wait for report generation to start
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      if (orderResponse?.data?.id) {
-        orderToUse = {
-          id: orderResponse.data.id,
-          createdAt: orderResponse.data.createdAt || new Date().toISOString(),
-          dateFrom: orderResponse.data.dateFrom || finalDateFrom,
-          dateTo: orderResponse.data.dateTo || finalDateTo,
-        };
-      } else {
-        // Fallback to most recent order
-        if (ordersResponse?.data?.length > 0) {
-          const sortedOrders = [...ordersResponse.data].sort(
-            (a: OrderSummary, b: OrderSummary) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          );
-          orderToUse = sortedOrders[0];
-        } else {
-          result.error = 'Failed to create order and no existing orders found';
-          return result;
-        }
-      }
-    } else {
-      orderToUse = existingOrder;
-    }
-
-    // Fetch and parse XLSX data
-    try {
-      result.selectedOrder = orderToUse;
-
-      const xlsxResponse = await ordersController.fetchReportXlsx({
-        accountId,
-        supplierId,
-        userAgent,
-        proxy,
-        reportId: orderToUse.id,
-      });
-
-      if (xlsxResponse?.data) {
-        const parsedData = parseExcelDataNode(xlsxResponse.data);
-
-        // Convert warehouse names to Russian
-        if (parsedData?.items) {
-          parsedData.items = parsedData.items.map((item) => ({
-            ...item,
-            warehouse: convertWarehouseName(item.warehouse || ''),
-          }));
-        }
-
-        result.parsedData = parsedData;
-      } else {
-        result.parsedData = null;
-        result.error = 'Empty response from report API';
-      }
-    } catch (error) {
-      logger.error('Error fetching or parsing XLSX:', error);
-      result.parsedData = null;
-      result.error =
-        'Отчет создается. Пожалуйста, подождите около 30 секунд и попробуйте снова.';
-      result.reportPending = true;
-      result.estimatedWaitTime = 30;
-    }
-
+    result.parsedData = parsedData;
     return result;
   } catch (error) {
     logger.error('Error in getSalesReport:', error);
@@ -227,15 +156,102 @@ export const getSalesReport = async ({
 };
 
 /**
- * Convert date format from DD.MM.YY to YYYY-MM-DD for comparison
+ * Get orders report for user using the official WB Statistics API.
+ * Returns all orders within the date range, including cancelled ones.
  */
-const convertDateFormat = (date: string): string => {
-  if (date.includes('.')) {
-    const [day, month, shortYear] = date.split('.');
-    const fullYear = shortYear?.length === 2 ? `20${shortYear}` : shortYear;
-    return `${fullYear}-${month}-${day}`;
+export const getOrdersReport = async ({
+  userId,
+  dateFrom,
+  dateTo,
+}: ReportRequestParams): Promise<ReportResult> => {
+  const result: ReportResult = {
+    selectedOrder: null,
+    parsedData: null,
+    error: null,
+  };
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const officialSupplierId = await resolveOfficialSupplierId(
+      userId,
+      'STATISTICS',
+    );
+
+    if (!officialSupplierId) {
+      throw new Error(
+        'No official Statistics API key configured for this account',
+      );
+    }
+
+    const currentDate = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+    const formatShortYear = (date: Date): string => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear().toString().substring(2);
+      return `${day}.${month}.${year}`;
+    };
+
+    const rawDateFrom = dateFrom || formatShortYear(thirtyDaysAgo);
+    const rawDateTo = dateTo || formatShortYear(currentDate);
+
+    const startDate = convertDateFormat(rawDateFrom);
+    const endDate = convertDateFormat(rawDateTo);
+
+    logger.info(
+      `Fetching official orders report for user ${userId}, date range: ${startDate} - ${endDate}`,
+    );
+
+    const orders = await wbOrdersOfficialService.getOrdersInInterval({
+      supplierId: officialSupplierId,
+      startDate,
+      endDate,
+    });
+
+    const reportData = mapOrderItemsToOrdersReportData(
+      orders,
+      startDate,
+      endDate,
+    );
+
+    const items = reportData.items.map((item) => ({
+      ...item,
+      warehouse: convertWarehouseName(item.warehouse || ''),
+    }));
+
+    const parsedData = {
+      items: items as unknown as FriendlyExcelData['items'],
+      meta: {
+        totalItems: items.length,
+        sheetName: 'Orders Report',
+        allSheets: ['Orders Report'],
+        reportInfo: {
+          supplier: '',
+          dateFrom: startDate,
+          dateTo: endDate,
+          generatedAt: reportData.meta.generatedAt,
+          warehouse: '',
+          rawTitle: `Orders report from ${startDate} to ${endDate}`,
+        },
+      },
+    };
+
+    result.parsedData = parsedData;
+    return result;
+  } catch (error) {
+    logger.error('Error in getOrdersReport:', error);
+    result.error = (error as Error).message;
+    return result;
   }
-  return date;
 };
 
 /**

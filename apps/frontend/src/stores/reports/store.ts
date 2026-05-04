@@ -69,7 +69,6 @@ export const useReportStore = defineStore('report', () => {
                 orderedSum: acc[key].orderedSum + item.orderedSum,
                 purchasedQty: acc[key].purchasedQty + item.purchasedQty,
                 purchasedSum: acc[key].purchasedSum + item.purchasedSum,
-                stockQty: acc[key].stockQty + item.stockQty,
               };
             } else {
               acc[key] = { ...item };
@@ -143,14 +142,6 @@ export const useReportStore = defineStore('report', () => {
         reportPending.value = response.reportPending || false;
         estimatedWaitTime.value = response.estimatedWaitTime || null;
       } else {
-        // Remove header row if present
-        if (
-          response.parsedData?.items &&
-          response.parsedData.items.length > 0
-        ) {
-          response.parsedData.items.shift();
-        }
-
         data.value = response.parsedData;
         reportPending.value = false;
         estimatedWaitTime.value = null;

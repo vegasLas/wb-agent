@@ -181,8 +181,6 @@ interface TopProduct {
   productName: string;
   brand: string;
   category: string;
-  season: string;
-  collection: string;
   wbArticle: number | string;
   barcode: string;
   size: string;
@@ -190,7 +188,6 @@ interface TopProduct {
   orderedSum: number | string;
   purchasedQty: number | string;
   purchasedSum: number | string;
-  qty: number | string;
 }
 
 const availableColumns: ColumnOption[] = [
@@ -198,8 +195,6 @@ const availableColumns: ColumnOption[] = [
   { key: 'productName', label: 'Название товара' },
   { key: 'brand', label: 'Бренд' },
   { key: 'category', label: 'Категория' },
-  { key: 'season', label: 'Сезон' },
-  { key: 'collection', label: 'Коллекция' },
   { key: 'wbArticle', label: 'Артикул WB' },
   { key: 'barcode', label: 'Баркод' },
   { key: 'size', label: 'Размер' },
@@ -207,7 +202,6 @@ const availableColumns: ColumnOption[] = [
   { key: 'orderedSum', label: 'Заказано (₽)' },
   { key: 'purchasedQty', label: 'Продано (шт)' },
   { key: 'purchasedSum', label: 'Выручка (₽)' },
-  { key: 'qty', label: 'Остаток' },
 ];
 
 const selectedColumns = ref<string[]>([
@@ -215,7 +209,6 @@ const selectedColumns = ref<string[]>([
   'brand',
   'purchasedQty',
   'purchasedSum',
-  'qty',
 ]);
 
 const visibleColumns = computed(() => {
@@ -244,7 +237,6 @@ const numericFields = new Set([
   'orderedSum',
   'purchasedQty',
   'purchasedSum',
-  'qty',
 ]);
 const currencyFields = new Set(['orderedSum', 'purchasedSum']);
 
@@ -263,8 +255,6 @@ const topProducts = computed((): TopProduct[] => {
           productName: item.productName,
           brand: item.brand,
           category: item.category,
-          season: item.season,
-          collection: item.collection,
           wbArticle: item.wbArticle,
           barcode: item.barcode,
           size: item.size,
@@ -272,7 +262,6 @@ const topProducts = computed((): TopProduct[] => {
           orderedSum: 0,
           purchasedQty: 0,
           purchasedSum: 0,
-          qty: 0,
         };
       }
 
@@ -284,7 +273,6 @@ const topProducts = computed((): TopProduct[] => {
         (acc[key].purchasedQty as number) + (item.purchasedQty || 0);
       acc[key].purchasedSum =
         (acc[key].purchasedSum as number) + (item.purchasedSum || 0);
-      acc[key].qty = (acc[key].qty as number) + (item.stockQty || 0);
 
       return acc;
     },
@@ -351,7 +339,6 @@ const summaryStats = computed(() => {
       totalOrdered: 0,
       totalSold: 0,
       totalRevenue: 0,
-      totalStock: 0,
       uniqueItems: 0,
       totalItems: 0,
     };
@@ -365,7 +352,6 @@ const summaryStats = computed(() => {
       (sum, item) => sum + (item.purchasedSum || 0),
       0,
     ),
-    totalStock: items.reduce((sum, item) => sum + (item.stockQty || 0), 0),
     uniqueItems: new Set(items.map((item) => item.vendorCode)).size,
     totalItems: items.length,
   };

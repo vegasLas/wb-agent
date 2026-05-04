@@ -64,41 +64,11 @@
                     </template>
                   </Column>
                   <Column
-                    field="stockQty"
-                    header="Остаток"
-                  >
-                    <template #body="{ data }">
-                      {{ data.stockQty.toLocaleString('ru-RU') }}
-                    </template>
-                  </Column>
-                  <Column
                     field="purchasedQty"
                     header="Продано (30д)"
                   >
                     <template #body="{ data }">
                       {{ data.purchasedQty.toLocaleString('ru-RU') }}
-                    </template>
-                  </Column>
-                  <Column
-                    field="calculatedDaysOfStock"
-                    header="Запас (дн.)"
-                  >
-                    <template #body="{ data }">
-                      {{ formatDaysOfStock(data.calculatedDaysOfStock) }}
-                    </template>
-                  </Column>
-                  <Column header="Рекомендация">
-                    <template #body="{ data }">
-                      <span
-                        :class="{
-                          'font-semibold text-green-600 dark:text-green-400':
-                            data.isReplenishment,
-                          'font-semibold text-orange-600 dark:text-orange-400':
-                            !data.isReplenishment,
-                        }"
-                      >
-                        {{ getRecommendationText(data) }}
-                      </span>
                     </template>
                   </Column>
                 </DataTable>
@@ -180,26 +150,5 @@ const translatePriority = (priority: 'high' | 'medium' | 'low') => {
   return priorityMap[priority] || priority;
 };
 
-// Helper to format days of stock
-const formatDaysOfStock = (days?: number) => {
-  if (days === undefined || days === null) return 'N/A';
-  if (!Number.isFinite(days)) return '∞';
-  return days.toFixed(0);
-};
 
-const getRecommendationText = (item: WarehouseSuggestionItem): string => {
-  if (
-    item.suggestedUnloadQty !== undefined &&
-    item.suggestedUnloadQty > 0 &&
-    item.isReplenishment
-  ) {
-    return `Пополнить: ${item.suggestedUnloadQty.toLocaleString('ru-RU')} шт.`;
-  } else if (
-    item.suggestedUnloadQty !== undefined &&
-    item.suggestedUnloadQty > 0
-  ) {
-    return `Разгрузить: ${item.suggestedUnloadQty.toLocaleString('ru-RU')} шт.`;
-  }
-  return 'Мониторинг';
-};
 </script>
