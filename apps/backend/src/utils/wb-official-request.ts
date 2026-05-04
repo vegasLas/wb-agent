@@ -1,5 +1,5 @@
 import { prisma } from '@/config/database';
-import { withRetry, type ProxyConfig } from '@/utils/wb-request';
+import { withRetry, type ProxyConfig, formatProxyUrl } from '@/utils/wb-request';
 import { safeDecrypt } from '@/utils/encryption';
 import { createLogger } from '@/utils/logger';
 import type { WbApiCategory } from '@prisma/client';
@@ -33,17 +33,6 @@ export interface WbOfficialRequestParams<T = unknown> {
   headers?: Record<string, string>;
   parseResponse?: boolean;
   proxy?: ProxyConfig;
-}
-
-/**
- * Format a ProxyConfig into a proxy URL string.
- */
-function formatProxyUrl(proxy: ProxyConfig): string {
-  const auth =
-    proxy.username && proxy.password
-      ? `${encodeURIComponent(proxy.username)}:${encodeURIComponent(proxy.password)}@`
-      : '';
-  return `http://${auth}${proxy.ip}:${proxy.port}`;
 }
 
 /**
