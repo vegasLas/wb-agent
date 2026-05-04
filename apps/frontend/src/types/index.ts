@@ -433,20 +433,16 @@ export interface WarehouseDistribution {
 export interface ReportItem {
   brand: string;
   category: string;
-  season: string;
-  collection: string;
   productName: string;
   vendorCode: string;
   wbArticle: number;
   barcode: string;
   size: string;
-  contract: string;
   warehouse: string;
   orderedQty: number;
   orderedSum: number;
   purchasedQty: number;
   purchasedSum: number;
-  stockQty: number;
 }
 
 // Corresponds to ReportInfo from server/types/parse.ts
@@ -539,11 +535,7 @@ export interface RegionSaleRequestBody {
 export interface WarehouseSuggestionItem {
   vendorCode: string;
   productName: string;
-  stockQty: number;
   purchasedQty: number;
-  calculatedDaysOfStock?: number;
-  suggestedUnloadQty?: number;
-  isReplenishment?: boolean;
 }
 
 export interface WarehouseSuggestion {
