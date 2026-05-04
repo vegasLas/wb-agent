@@ -720,15 +720,6 @@ export interface PromotionGoodsItem {
   wbStock: number;
 }
 
-/** Backward-compatible alias that includes legacy optional fields */
-export type PromotionExcelItem = PromotionGoodsItem & {
-  wbCode?: string;
-  daysOnSite?: number;
-  turnover?: number;
-  sellerStock?: number;
-  currency?: string;
-};
-
 /** Maps camelCase field names to Russian display headers */
 export const PROMOTION_GOODS_DISPLAY_NAMES: Record<
   keyof PromotionGoodsItem,
@@ -746,9 +737,6 @@ export const PROMOTION_GOODS_DISPLAY_NAMES: Record<
   uploadedDiscount: 'Загружаемая скидка для участия в акции',
   wbStock: 'Остаток товара на складах WB (шт.)',
 };
-
-/** Backward-compatible alias for the old display names constant */
-export const PROMOTION_EXCEL_DISPLAY_NAMES = PROMOTION_GOODS_DISPLAY_NAMES;
 
 export interface PromotionParsedData {
   items: PromotionGoodsItem[];
@@ -774,12 +762,7 @@ export interface PromotionManageParams {
   isRecovery: boolean;
 }
 
-/** Backward-compatible interface for callers that don't supply promoID yet */
-export interface PromotionRecoveryParams {
-  periodID: number;
-  selectedItems: string[];
-  isRecovery: boolean;
-}
+
 
 // -----------------------------------------------------------------------------
 // Adverts Types
