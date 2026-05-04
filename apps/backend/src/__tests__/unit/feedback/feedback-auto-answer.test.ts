@@ -19,7 +19,10 @@ import {
   setupFeedbackAutoPlugin,
 } from '@/plugins/feedback-auto.plugin';
 import { prisma } from '@/config/database';
-import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
+import {
+  wbFeedbackOfficialService,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import { feedbackExampleService } from '@/services/domain/feedback/feedback-example.service';
 import { feedbackRejectedService } from '@/services/domain/feedback/feedback-rejected.service';
 import { feedbackGoodsGroupService } from '@/services/domain/feedback/feedback-goods-group.service';
@@ -73,6 +76,16 @@ jest.mock('../../../services/external/wb/wb-feedback.service', () => ({
     getFeedbackTemplates: jest.fn(),
     answerFeedback: jest.fn(),
   },
+}));
+
+jest.mock('../../../services/external/wb/official', () => ({
+  wbFeedbackOfficialService: {
+    getFeedbacks: jest.fn(),
+    getAllUnansweredFeedbacks: jest.fn(),
+    getAnsweredFeedbackExamples: jest.fn(),
+    answerFeedback: jest.fn(),
+  },
+  resolveOfficialSupplierId: jest.fn(),
 }));
 
 jest.mock('../../../services/domain/feedback/feedback-example.service', () => ({
@@ -207,7 +220,8 @@ function createMockExample(overrides: Partial<FeedbackExample> = {}): FeedbackEx
 // ---------------------------------------------------------------------------
 
 const mockPrisma = prisma as unknown as jest.Mocked<typeof prisma>;
-const mockWbFeedback = wbFeedbackService as unknown as jest.Mocked<typeof wbFeedbackService>;
+const mockWbFeedbackOfficial = wbFeedbackOfficialService as unknown as jest.Mocked<typeof wbFeedbackOfficialService>;
+const mockResolveOfficialSupplierId = resolveOfficialSupplierId as unknown as jest.Mock;
 const mockExampleService = feedbackExampleService as unknown as jest.Mocked<typeof feedbackExampleService>;
 const mockRejectedService = feedbackRejectedService as unknown as jest.Mocked<typeof feedbackRejectedService>;
 const mockGoodsGroupService = feedbackGoodsGroupService as unknown as jest.Mocked<typeof feedbackGoodsGroupService>;
@@ -236,10 +250,16 @@ beforeEach(() => {
   (mockPrisma.feedbackAutoAnswer.update as jest.Mock).mockResolvedValue({});
   (mockPrisma.feedbackAutoAnswer.findUnique as jest.Mock).mockResolvedValue(null);
 
-  // Default: WB API returns empty
-  mockWbFeedback.getFeedbacks.mockResolvedValue({ feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } });
-  mockWbFeedback.getFeedbackTemplates.mockResolvedValue({ templates: [createMockTemplate()] });
-  mockWbFeedback.answerFeedback.mockResolvedValue({ additionalErrors: null, data: {}, error: false, errorText: '' });
+  // Default: official WB API returns empty
+  mockResolveOfficialSupplierId.mockResolvedValue('official-supplier-1');
+  mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([]);
+  mockWbFeedbackOfficial.getFeedbacks.mockResolvedValue({
+    data: { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } },
+    error: false,
+    errorText: '',
+    additionalErrors: null,
+  });
+  mockWbFeedbackOfficial.answerFeedback.mockResolvedValue({ additionalErrors: null, data: {}, error: false, errorText: '' });
 
   // Default: no examples
   mockExampleService.fetchExamplesByValuation.mockResolvedValue(new Map());
@@ -282,13 +302,11 @@ describe('processUnansweredFeedbacks (Batch Flow)', () => {
     const result = await feedbackReviewService.processUnansweredFeedbacks(1, 'supplier-1');
 
     expect(result).toEqual({ processed: 0, posted: 0, skipped: 0, failed: 0 });
-    expect(mockWbFeedback.getFeedbacks).not.toHaveBeenCalled();
+    expect(mockWbFeedbackOfficial.getAllUnansweredFeedbacks).not.toHaveBeenCalled();
   });
 
   it('1.2 should return zeros when no unanswered feedbacks exist', async () => {
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve({ feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } });
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([]);
 
     const result = await feedbackReviewService.processUnansweredFeedbacks(1, 'supplier-1');
 
@@ -302,12 +320,7 @@ describe('processUnansweredFeedbacks (Batch Flow)', () => {
       createMockFeedbackItem({ id: 'fb-3', valuation: 1, productInfo: { ...createMockFeedbackItem().productInfo, wbArticle: 100003 } }),
     ];
 
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks, countUnanswered: feedbacks.length, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue(feedbacks);
 
     // Product 100002 disabled
     (mockPrisma.feedbackProductSetting.findMany as jest.Mock).mockResolvedValue([
@@ -322,7 +335,7 @@ describe('processUnansweredFeedbacks (Batch Flow)', () => {
     const result = await feedbackReviewService.processUnansweredFeedbacks(1, 'supplier-1');
 
     expect(result).toEqual({ processed: 3, posted: 1, skipped: 2, failed: 0 });
-    expect(mockWbFeedback.answerFeedback).toHaveBeenCalledTimes(1);
+    expect(mockWbFeedbackOfficial.answerFeedback).toHaveBeenCalledTimes(1);
     expect(mockGenerateText).toHaveBeenCalledTimes(1);
   });
 
@@ -332,12 +345,7 @@ describe('processUnansweredFeedbacks (Batch Flow)', () => {
       createMockFeedbackItem({ id: 'fb-2', valuation: 5 }),
     ];
 
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks, countUnanswered: feedbacks.length, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue(feedbacks);
 
     // First succeeds, second fails
     let callCount = 0;
@@ -360,12 +368,7 @@ describe('processUnansweredFeedbacks (Batch Flow)', () => {
       createMockFeedbackItem({ id: 'fb-3', valuation: 5 }),
     ];
 
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks, countUnanswered: feedbacks.length, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue(feedbacks);
 
     await feedbackReviewService.processUnansweredFeedbacks(1, 'supplier-1');
 
@@ -386,12 +389,7 @@ describe('processUnansweredFeedbacks (Batch Flow)', () => {
 describe('Rule Evaluation', () => {
   it('2.1 skip rule matches — feedback blocked', async () => {
     const feedback = createMockFeedbackItem({ id: 'fb-skip', valuation: 1 });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ minRating: 1, maxRating: 2, mode: 'skip' }),
@@ -405,12 +403,7 @@ describe('Rule Evaluation', () => {
 
   it('2.2 skip rule does not match — feedback proceeds', async () => {
     const feedback = createMockFeedbackItem({ id: 'fb-ok', valuation: 4 });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ minRating: 1, maxRating: 2, mode: 'skip' }),
@@ -428,12 +421,7 @@ describe('Rule Evaluation', () => {
       valuation: 3,
       feedbackInfo: { ...createMockFeedbackItem().feedbackInfo, feedbackText: 'It is broken' },
     });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ keywords: ['broken'], mode: 'skip' }),
@@ -451,12 +439,7 @@ describe('Rule Evaluation', () => {
       valuation: 3,
       feedbackInfo: { ...createMockFeedbackItem().feedbackInfo, feedbackText: 'Too big for me' },
     });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ keywords: ['broken'], mode: 'skip' }),
@@ -470,12 +453,7 @@ describe('Rule Evaluation', () => {
 
   it('2.5 instruction rule matches — fed to AI prompt', async () => {
     const feedback = createMockFeedbackItem({ id: 'fb-inst', valuation: 1 });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ minRating: 1, maxRating: 2, mode: 'instruction', instruction: 'Offer refund' }),
@@ -490,12 +468,7 @@ describe('Rule Evaluation', () => {
 
   it('2.6 instruction rule does NOT match — NOT fed to AI', async () => {
     const feedback = createMockFeedbackItem({ id: 'fb-no-inst', valuation: 2 });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ minRating: 4, maxRating: 5, mode: 'instruction', instruction: 'Ask referral' }),
@@ -510,12 +483,7 @@ describe('Rule Evaluation', () => {
 
   it('2.7 multiple instruction rules — only matching ones fed', async () => {
     const feedback = createMockFeedbackItem({ id: 'fb-multi', valuation: 1 });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ minRating: 1, maxRating: 2, mode: 'instruction', instruction: 'Offer refund' }),
@@ -538,12 +506,7 @@ describe('Rule Evaluation', () => {
       valuation: 3,
       feedbackInfo: { ...createMockFeedbackItem().feedbackInfo, feedbackText: 'Package arrived late' },
     });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ keywords: ['late'], mode: 'instruction', instruction: 'Explain shipping delays' }),
@@ -561,12 +524,7 @@ describe('Rule Evaluation', () => {
       valuation: 3,
       feedbackInfo: { ...createMockFeedbackItem().feedbackInfo, feedbackText: 'Wrong color' },
     });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ keywords: ['late'], mode: 'instruction', instruction: 'Explain shipping delays' }),
@@ -580,12 +538,7 @@ describe('Rule Evaluation', () => {
 
   it('2.10 disabled rules are ignored', async () => {
     const feedback = createMockFeedbackItem({ id: 'fb-disabled', valuation: 1 });
-    mockWbFeedback.getFeedbacks.mockImplementation(({ isAnswered }: { isAnswered: boolean }) => {
-      return Promise.resolve(isAnswered
-        ? { feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } }
-        : { feedbacks: [feedback], countUnanswered: 1, pages: { last: '', next: '' } }
-      );
-    });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([feedback]);
 
     (mockPrisma.feedbackRule.findMany as jest.Mock).mockResolvedValue([
       createMockRule({ minRating: 1, maxRating: 1, mode: 'skip', enabled: false }),
@@ -744,11 +697,10 @@ describe('acceptAnswer', () => {
 
     await feedbackReviewService.acceptAnswer(1, 'supplier-1', 'fb-acc');
 
-    expect(mockWbFeedback.answerFeedback).toHaveBeenCalledWith(
+    expect(mockWbFeedbackOfficial.answerFeedback).toHaveBeenCalledWith(
       expect.objectContaining({
-        userId: 1,
+        supplierId: 'official-supplier-1',
         feedbackId: 'fb-acc',
-        nmId: 100001,
         answerText: 'Accepted answer',
       }),
     );
@@ -770,7 +722,7 @@ describe('acceptAnswer', () => {
 
     await feedbackReviewService.acceptAnswer(1, 'supplier-1', 'fb-acc');
 
-    expect(mockWbFeedback.answerFeedback).not.toHaveBeenCalled();
+    expect(mockWbFeedbackOfficial.answerFeedback).not.toHaveBeenCalled();
     expect(mockPrisma.feedbackAutoAnswer.update).not.toHaveBeenCalled();
   });
 });
@@ -907,7 +859,7 @@ describe('feedback-auto.plugin.ts (Cron Plugin)', () => {
     setupFeedbackAutoPlugin();
 
     // Mock WB API so processUnansweredFeedbacks doesn't fail
-    mockWbFeedback.getFeedbacks.mockResolvedValue({ feedbacks: [], countUnanswered: 0, pages: { last: '', next: '' } });
+    mockWbFeedbackOfficial.getAllUnansweredFeedbacks.mockResolvedValue([]);
 
     await jobCallback!();
 

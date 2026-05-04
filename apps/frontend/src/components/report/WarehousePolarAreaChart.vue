@@ -50,15 +50,6 @@
                     {{ data.orderedQty.toLocaleString('ru-RU') }}
                   </template>
                 </Column>
-                <Column
-                  field="stockQty"
-                  header="Остаток"
-                  sortable
-                >
-                  <template #body="{ data }">
-                    {{ data.stockQty.toLocaleString('ru-RU') }}
-                  </template>
-                </Column>
               </DataTable>
             </div>
           </template>
@@ -99,10 +90,10 @@ const props = defineProps<Props>();
 const userStore = useUserStore();
 
 // Sorting
-const sortColumn = ref<'vendorCode' | 'orderedQty' | 'stockQty'>('orderedQty');
+const sortColumn = ref<'vendorCode' | 'orderedQty'>('orderedQty');
 const sortDirection = ref<'asc' | 'desc'>('desc');
 
-function sortBy(column: 'vendorCode' | 'orderedQty' | 'stockQty') {
+function sortBy(column: 'vendorCode' | 'orderedQty') {
   if (sortColumn.value === column) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
   } else {

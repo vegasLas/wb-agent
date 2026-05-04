@@ -1,12 +1,12 @@
 <template>
   <DataTable
     v-model:selection="selectedItems"
-    :value="excelItems"
+    :value="goodsItems"
     size="small"
     class="p-datatable-sm"
     scrollable
     scroll-height="flex"
-    :paginator="excelItems.length > 10"
+    :paginator="goodsItems.length > 10"
     :rows="10"
     :rows-per-page-options="[10, 25, 50, 100]"
     striped-rows
@@ -256,20 +256,20 @@
 import { computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import type { PromotionExcelItem } from '@/types';
+import type { PromotionGoodsItem } from '@/types';
 import { usePromotionTableDisplay } from '@/composables/promotions/tableDisplay';
 
 interface Props {
-  excelItems: PromotionExcelItem[];
+  goodsItems: PromotionGoodsItem[];
   canEdit: boolean;
   visibleFields: string[];
-  modelValue: PromotionExcelItem[];
+  modelValue: PromotionGoodsItem[];
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: PromotionExcelItem[]];
+  'update:modelValue': [value: PromotionGoodsItem[]];
 }>();
 
 const selectedItems = computed({

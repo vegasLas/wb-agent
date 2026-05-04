@@ -3,8 +3,8 @@ import { z } from 'zod';
 import {
   getPromotionsTimeline,
   getPromotionDetail,
-  getPromotionExcel,
-  applyPromotionRecovery,
+  getPromotionGoods,
+  managePromotionGoods,
 } from '@/services/domain/promotion/promotions.service';
 import { safeTool, loggedTool, cachedExecute } from './safe-tool.utils';
 
@@ -20,17 +20,8 @@ Response structure:
 - promotions: array of promotion objects.
   - promoID: promotion ID (needed for detail/goods).
   - name: promotion name.
-  - type: promotion type.
-  - startDate / endDate: ISO date strings.
-  - advantages: array of benefit descriptions.
-  - participation.status: participation status text.
-  - participation.counts:
-    - eligible: total eligible goods.
-    - participating: goods currently in the promotion.
-    - available: goods available to join.
-    - participatingOutOfStock: participating but out of stock.
-    - availableOutOfStock: available but out of stock.
-- participationCounts: overall counts (available, participating, skipped, all).`,
+  - type: promotion type ('regular' or 'auto').
+  - startDate / endDate: ISO date strings.`,
       inputSchema: z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
@@ -60,17 +51,15 @@ Call this when the user asks "tell me about promotion X", "details of promo 123"
 Required: promoID (number) — the promotion ID from listPromotions.
 
 Key response fields:
-- periodID: the period ID required for getting goods or managing inclusion/exclusion.
-- name, description, formattedDescription: promotion info.
+- promoID: promotion ID.
+- periodID: same as promoID, used for goods/management operations.
+- name, description, advantages: promotion info.
 - startDt / endDt: promotion dates.
-- status / participationStatus: status codes.
-- isHasRecovery: true if recovery (include/exclude goods) is possible.
+- type: 'regular' or 'auto'.
 - inPromoActionTotal / notInPromoActionTotal: counts of goods in/out of promo.
+- participationPercentage: percentage of goods already participating.
 - ranging: object with levels, boost, currentCoefficient, isMaxLevel, nmToNextLevel, nmToMaxLevel.
-- isParticipateInAutoPromo: whether auto-promo is enabled.
-- isMultiLevels: whether multi-level discount is enabled.
-- calculateProductsCount: number of products with calculations.
-- actionInStock: stock count.`,
+- isParticipateInAutoPromo: whether auto-promo is enabled.`,
       inputSchema: z.object({
         promoID: z.number().int().min(1),
       }),
@@ -93,16 +82,16 @@ Key response fields:
     getPromotionGoods: tool({
       description: `Get the list of goods (products) for a specific promotion.
 Call this when the user asks "what goods are in promotion X", "show excluded items", "which products participate", "товары в акции", or wants to see what can be included/excluded.
+Required: promoID (number) — the promotion ID from listPromotions.
 Required: periodID (number) — from getPromotionDetail.
 Required: mode (enum) — 'participating' or 'excluded'.
   - participating = goods currently IN the promotion (can be excluded).
   - excluded = goods currently OUT of the promotion (can be included back).
-Optional: hasStarted (boolean) — true if promotion already started, false if not.
-Optional: startDate (ISO string) — the promotion start date from getPromotionDetail. If provided and hasStarted is omitted, hasStarted is automatically computed: if startDate <= today (same day counts as started), then hasStarted = true.
-
-Important: This fetches an Excel report from Wildberries and parses it. It may return reportPending: true if the report is still generating. In that case, tell the user to wait about 30 seconds and try again.
+Optional: hasStarted (boolean) — kept for backward compatibility, ignored by the new API.
+Optional: startDate (ISO string) — kept for backward compatibility, ignored by the new API.
 
 Each item in the response contains:
+- nmId: Wildberries article ID (nmID).
 - vendorCode: supplier article code (required for include/exclude operations).
 - name: product name.
 - brand: brand name.
@@ -112,11 +101,9 @@ Each item in the response contains:
 - currentPrice: current retail price.
 - currentDiscount: current discount percentage on the site.
 - uploadedDiscount: discount that will be applied for the promo.
-- wbStock: stock at Wildberries warehouses.
-- sellerStock: stock at seller's warehouse.
-- daysOnSite: how many days the product has been on the site.
-- turnover: inventory turnover metric.`,
+- wbStock: stock at Wildberries warehouses.`,
       inputSchema: z.object({
+        promoID: z.number().int().min(1),
         periodID: z.number().int().min(1),
         mode: z.enum(['participating', 'excluded']),
         hasStarted: z.boolean().optional(),
@@ -124,29 +111,11 @@ Each item in the response contains:
       }),
       execute: safeTool('getPromotionGoods', async (data) => {
         return loggedTool('getPromotionGoods', userId, async () => {
-          // mode 'participating' -> isRecovery: false (show goods in promo)
-          // mode 'excluded' -> isRecovery: true (show goods out of promo)
-          const isRecovery = data.mode === 'excluded';
-
-          let hasStarted = data.hasStarted;
-          if (hasStarted === undefined && data.startDate) {
-            const promoStart = new Date(data.startDate);
-            const now = new Date();
-            // Compare dates only (year, month, day) — same day counts as started
-            hasStarted =
-              promoStart.getFullYear() < now.getFullYear() ||
-              (promoStart.getFullYear() === now.getFullYear() &&
-                promoStart.getMonth() < now.getMonth()) ||
-              (promoStart.getFullYear() === now.getFullYear() &&
-                promoStart.getMonth() === now.getMonth() &&
-                promoStart.getDate() <= now.getDate());
-          }
-
-          return getPromotionExcel({
+          return getPromotionGoods({
             userId,
+            promoID: data.promoID,
             periodID: data.periodID,
-            isRecovery,
-            hasStarted,
+            mode: data.mode,
           });
         });
       }),
@@ -155,6 +124,7 @@ Each item in the response contains:
     managePromotionGoods: tool({
       description: `Include or exclude goods from a Wildberries promotion.
 Call this when the user asks to "exclude goods from promotion", "add products back to promo", "remove ART-123 from promo", "включи товары в акцию", or "исключи товары из акции".
+Required: promoID (number) — the promotion ID from listPromotions.
 Required: periodID (number) — from getPromotionDetail.
 Required: action (enum) — 'include' or 'exclude'.
   - include = ADD goods BACK into the promotion (recover them).
@@ -169,18 +139,18 @@ Critical rules:
 
 Response: { success: true } on success, or { success: false, error: "..." } on failure.`,
       inputSchema: z.object({
+        promoID: z.number().int().min(1),
         periodID: z.number().int().min(1),
         action: z.enum(['include', 'exclude']),
         vendorCodes: z.array(z.string().min(1)).min(1),
       }),
       execute: safeTool('managePromotionGoods', async (data) => {
         return loggedTool('managePromotionGoods', userId, async () => {
-          // action 'include' -> isRecovery: true (recover back)
-          // action 'exclude' -> isRecovery: false (exclude)
           const isRecovery = data.action === 'include';
 
-          const result = await applyPromotionRecovery({
+          const result = await managePromotionGoods({
             userId,
+            promoID: data.promoID,
             periodID: data.periodID,
             selectedItems: data.vendorCodes,
             isRecovery,

@@ -10,8 +10,11 @@ import { feedbackReviewService } from '@/services/domain/feedback/feedback-revie
 import { feedbackRejectedService } from '@/services/domain/feedback/feedback-rejected.service';
 import { feedbackGoodsGroupService } from '@/services/domain/feedback/feedback-goods-group.service';
 import { feedbackSettingsService } from '@/services/domain/feedback/feedback-settings.service';
-import { wbFeedbackService } from '@/services/external/wb/wb-feedback.service';
-import { mapFeedbackItemToDTO } from '@/services/domain/feedback/feedback-mapper';
+import {
+  wbFeedbackOfficialService,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
+import { mapFeedbackItemToDTO } from '@/services/external/wb/official';
 import { successResponse } from '@/utils/response';
 import type { FeedbackItem } from '@/types/wb';
 import { ApiError } from '@/utils/errors';
@@ -151,43 +154,46 @@ export const fetchFeedbacks = async (
     return;
   }
 
-  // Default: unanswered tab
-  // WB API isAnswered filter is unreliable; fetch both and filter client-side
-  const pageCursor = skip === 0 ? '' : String(skip);
+  // Default: unanswered tab — use official API
+  const officialSupplierId = await resolveOfficialSupplierId(
+    userId,
+    'QUESTIONS_AND_REVIEWS',
+  );
 
-  const [answeredRes, unansweredRes] = await Promise.all([
-    wbFeedbackService.getFeedbacks({
-      userId,
-      isAnswered: true,
-      limit: size,
-      cursor: pageCursor,
-      searchText: searchText || '',
-    }),
-    wbFeedbackService.getFeedbacks({
-      userId,
-      isAnswered: false,
-      limit: size,
-      cursor: pageCursor,
-      searchText: searchText || '',
-    }),
-  ]);
-
-  // Merge and deduplicate by id
-  // Unanswered first, then answered — answered wins if a feedback
-  // appears in both (WB API may return stale data after an answer is posted)
-  const merged = new Map<string, FeedbackItem>();
-  for (const f of unansweredRes.feedbacks || []) {
-    merged.set(f.id, f);
-  }
-  for (const f of answeredRes.feedbacks || []) {
-    merged.set(f.id, f);
+  if (!officialSupplierId) {
+    successResponse(res, {
+      feedbacks: [],
+      pagination: {
+        page: currentPage,
+        pageSize: size,
+        totalCount: 0,
+        totalPages: 0,
+        next: null,
+        prev: currentPage > 1 ? currentPage - 1 : null,
+      },
+    });
+    return;
   }
 
-  // Filter: only feedbacks that genuinely have no answer
-  let filteredFeedbacks = Array.from(merged.values())
-    .filter((f) => !f.answer)
-    .sort((a, b) => b.createdDate - a.createdDate)
-    .slice(0, size);
+  const apiRes = await wbFeedbackOfficialService.getFeedbacks({
+    supplierId: officialSupplierId,
+    isAnswered: false,
+    limit: size,
+    offset: skip,
+  });
+
+  let filteredFeedbacks = apiRes.data.feedbacks || [];
+
+  // Apply searchText filter client-side (official API does not support searchText)
+  if (searchText && searchText.trim()) {
+    const st = searchText.trim().toLowerCase();
+    filteredFeedbacks = filteredFeedbacks.filter(
+      (f) =>
+        (f.feedbackInfo?.feedbackText || '').toLowerCase().includes(st) ||
+        (f.productInfo?.name || '').toLowerCase().includes(st) ||
+        (f.productInfo?.supplierArticle || '').toLowerCase().includes(st),
+    );
+  }
 
   // Apply nmId filter for unanswered tab
   if (nmIdFilter) {
@@ -198,8 +204,9 @@ export const fetchFeedbacks = async (
 
   const mappedFeedbacks = filteredFeedbacks.map(mapFeedbackItemToDTO);
 
-  const hasMore = (answeredRes.pages?.next || unansweredRes.pages?.next) !== '';
-  const totalCount = unansweredRes.countUnanswered || 0;
+  const hasMore =
+    (apiRes.data.feedbacks || []).length === size && apiRes.data.pages?.next !== '';
+  const totalCount = apiRes.data.countUnanswered || 0;
   const totalPages = Math.ceil(totalCount / size);
 
   successResponse(res, {
@@ -228,19 +235,19 @@ export const fetchUnansweredSummary = async (
 
   logger.info(`Fetching unanswered summary for user ${userId}`);
 
-  const [answeredRaw, unansweredRaw] = await Promise.all([
-    wbFeedbackService.getAllFeedbacks({ userId, isAnswered: true }),
-    wbFeedbackService.getAllFeedbacks({ userId, isAnswered: false }),
-  ]);
-
-  // Merge: answered overwrites unanswered to avoid stale data from WB API
-  const merged = new Map<string, FeedbackItem>();
-  for (const f of unansweredRaw) merged.set(f.id, f);
-  for (const f of answeredRaw) merged.set(f.id, f);
-
-  const unansweredFeedbacks = Array.from(merged.values()).filter(
-    (f) => !f.answer,
+  const officialSupplierId = await resolveOfficialSupplierId(
+    userId,
+    'QUESTIONS_AND_REVIEWS',
   );
+
+  let unansweredFeedbacks: FeedbackItem[] = [];
+
+  if (officialSupplierId) {
+    unansweredFeedbacks =
+      await wbFeedbackOfficialService.getAllUnansweredFeedbacks({
+        supplierId: officialSupplierId,
+      });
+  }
 
   // Group by nmId
   const groupMap = new Map<
@@ -640,12 +647,11 @@ export const updateProductFeedbackSetting = async (
  * GET /api/v1/feedbacks/templates
  */
 export const fetchFeedbackTemplates = async (
-  req: Request,
+  _req: Request,
   res: Response,
 ): Promise<void> => {
-  const userId = getUserId(req);
-  const data = await wbFeedbackService.getFeedbackTemplates({ userId });
-  successResponse(res, data);
+  // Official WB API does not expose feedback templates
+  successResponse(res, { templates: [] });
 };
 
 /**

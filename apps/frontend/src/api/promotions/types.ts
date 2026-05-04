@@ -2,7 +2,7 @@ import type {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
   PromotionApiPayload,
-  PromotionRecoveryParams,
+  PromotionManageParams,
 } from '../../types';
 
 export interface TimelineParams {
@@ -15,15 +15,15 @@ export interface DetailParams {
   promoID: number;
 }
 
-export interface ExcelParams {
+export interface GoodsParams {
+  promoID: number;
   periodID: number;
-  isRecovery?: boolean; // true = recovery mode, false = exclusion mode (default: true)
-  hasStarted?: boolean; // true = promotion already started, false = not started yet
+  mode: 'participating' | 'excluded';
 }
 
 export {
   PromotionsTimelineResponse,
   PromotionDetailResponse,
   PromotionApiPayload,
-  PromotionRecoveryParams,
+  PromotionManageParams,
 };

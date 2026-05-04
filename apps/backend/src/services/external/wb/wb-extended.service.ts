@@ -80,6 +80,7 @@ async function resolveAccountContext(userId: number): Promise<AccountContext> {
 export class WBExtendedService {
   /**
    * Get region sales by federal district from seller-weekly-report.wildberries.ru
+   * @deprecated Use wbStatisticsOfficialService.getRegionSales() instead.
    * @param userId - User ID
    * @param dateFrom - Start date (DD.MM.YY)
    * @param dateTo - End date (DD.MM.YY)

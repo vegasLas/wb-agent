@@ -2,10 +2,10 @@
 export {
   getPromotionsTimeline,
   getPromotionDetail,
-  getPromotionExcel,
-  applyPromotionRecovery,
-  type PromotionExcelResult,
-  type GetPromotionExcelParams,
+  getPromotionGoods,
+  managePromotionGoods,
+  type PromotionGoodsResult,
+  type GetPromotionGoodsParams,
 } from './promotions.service';
 
 export {

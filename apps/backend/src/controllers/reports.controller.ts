@@ -4,8 +4,12 @@
  */
 
 import { Request, Response } from 'express';
-import { getSalesReport } from '@/services/domain/report/report.service';
-import { wbExtendedService } from '@/services/external/wb';
+import { getSalesReport, getOrdersReport } from '@/services/domain/report/report.service';
+import {
+  wbStatisticsOfficialService,
+  mapRegionSalesToLegacyFormat,
+  resolveOfficialSupplierId,
+} from '@/services/external/wb/official';
 import { logger } from '@/utils/logger';
 
 /**
@@ -88,6 +92,80 @@ export const fetchSalesReport = async (
 };
 
 /**
+ * GET /api/v1/reports/orders
+ * Get orders report for the authenticated user
+ * Query params: dateFrom, dateTo (format: DD.MM.YY or YYYY-MM-DD)
+ */
+export const fetchOrdersReport = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+      return;
+    }
+
+    const { dateFrom, dateTo } = req.query as {
+      dateFrom?: string;
+      dateTo?: string;
+    };
+
+    logger.info(
+      `Fetching orders report for user ${userId}, date range: ${dateFrom || 'default'} - ${dateTo || 'default'}`,
+    );
+
+    const result = await getOrdersReport({
+      userId,
+      dateFrom,
+      dateTo,
+    });
+
+    if (result.error && !result.parsedData) {
+      if (result.reportPending) {
+        res.status(202).json({
+          success: true,
+          data: {
+            parsedData: null,
+            error: result.error,
+            reportPending: true,
+            estimatedWaitTime: result.estimatedWaitTime || 30,
+          },
+        });
+        return;
+      }
+
+      res.status(400).json({
+        success: false,
+        error: result.error,
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        parsedData: result.parsedData,
+        error: null,
+        reportPending: false,
+        estimatedWaitTime: null,
+      },
+    });
+  } catch (error) {
+    logger.error('Error in fetchOrdersReport controller:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message || 'Internal server error',
+    });
+  }
+};
+
+/**
  * GET /api/v1/reports
  * Get user's legacy report data (booking stats)
  * This is kept for backward compatibility
@@ -131,13 +209,28 @@ export const fetchRegionSales = async (
       `Fetching region sales report for user ${userId}, date range: ${dateFrom} - ${dateTo}`,
     );
 
-    const data = await wbExtendedService.getRegionSales({
+    const officialSupplierId = await resolveOfficialSupplierId(
       userId,
+      'ANALYTICS',
+    );
+
+    if (!officialSupplierId) {
+      res.status(400).json({
+        success: false,
+        error: 'No official Analytics API key configured for this account',
+      });
+      return;
+    }
+
+    const raw = await wbStatisticsOfficialService.getRegionSales({
+      supplierId: officialSupplierId,
       dateFrom,
       dateTo,
       limit: limit ?? 10,
       offset: offset ?? 0,
     });
+
+    const data = mapRegionSalesToLegacyFormat(raw);
 
     res.status(200).json({
       success: true,
@@ -200,6 +293,7 @@ export const fetchReport = async (
 
 export default {
   fetchSalesReport,
+  fetchOrdersReport,
   fetchRegionSales,
   fetchReport,
 };

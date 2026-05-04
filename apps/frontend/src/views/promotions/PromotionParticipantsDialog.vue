@@ -11,7 +11,7 @@
     <div class="max-h-[70vh] overflow-auto">
       <!-- Loading State -->
       <div
-        v-if="excelLoading"
+        v-if="goodsLoading"
         class="flex flex-col items-center justify-center py-16"
       >
         <i class="pi pi-refresh animate-spin text-4xl text-orange-500 mb-4" />
@@ -19,13 +19,13 @@
       </div>
 
       <!-- Error State -->
-      <div v-else-if="excelError" class="text-center py-12 px-4">
+      <div v-else-if="goodsError" class="text-center py-12 px-4">
         <div
           class="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
         >
           <i class="pi pi-exclamation-circle text-red-500 text-3xl mb-2" />
           <p class="text-red-600 dark:text-red-400">
-            {{ excelError }}
+            {{ goodsError }}
           </p>
           <Button
             v-if="reportPending"
@@ -40,7 +40,7 @@
       </div>
 
       <!-- Data Content -->
-      <div v-else-if="excelItems.length > 0">
+      <div v-else-if="goodsItems.length > 0">
         <!-- Cannot Edit Warning -->
         <div
           v-if="!canEdit"
@@ -93,7 +93,7 @@
           v-model="selectedColumns"
           :can-edit="canEdit"
           :is-recovery="isRecovery"
-          :total-count="excelItems.length"
+          :total-count="goodsItems.length"
           :participating-count="participatingCount"
           :not-participating-count="notParticipatingCount"
           :available-columns="availableColumns"
@@ -102,7 +102,7 @@
         <!-- Participants Table -->
         <PromotionParticipantsTable
           v-model="selectedItems"
-          :excel-items="excelItems"
+          :goods-items="goodsItems"
           :can-edit="canEdit"
           :visible-fields="selectedColumns"
         />
@@ -154,7 +154,7 @@ import { useLocalStorage } from '@vueuse/core';
 import { usePromotionsStore } from '@/stores/promotions';
 import PromotionParticipantsSummary from '@/components/promotions/PromotionParticipantsSummary.vue';
 import PromotionParticipantsTable from '@/components/promotions/PromotionParticipantsTable.vue';
-import type { PromotionExcelItem } from '../../types';
+import type { PromotionGoodsItem } from '../../types';
 
 const promotionsStore = usePromotionsStore();
 
@@ -169,25 +169,21 @@ const availableColumns: ColumnConfig[] = [
   { field: 'name', header: 'Наименование', defaultVisible: true },
   { field: 'brand', header: 'Бренд', defaultVisible: false },
   { field: 'subject', header: 'Предмет', defaultVisible: false },
-  { field: 'wbCode', header: 'Арт. WB', defaultVisible: true },
+  { field: 'nmId', header: 'ID товара', defaultVisible: false },
   { field: 'currentPrice', header: 'Тек. цена', defaultVisible: true },
   { field: 'promoPrice', header: 'Цена в акции', defaultVisible: true },
   { field: 'currentDiscount', header: 'Тек. скидка', defaultVisible: true },
   { field: 'uploadedDiscount', header: 'Загр. скидка', defaultVisible: true },
   { field: 'inPromo', header: 'В акции', defaultVisible: true },
   { field: 'wbStock', header: 'Остаток WB', defaultVisible: true },
-  { field: 'sellerStock', header: 'Остаток продавца', defaultVisible: false },
-  { field: 'turnover', header: 'Оборачиваемость', defaultVisible: false },
-  { field: 'daysOnSite', header: 'Дней на сайте', defaultVisible: false },
-  { field: 'currency', header: 'Валюта', defaultVisible: false },
 ];
 
 interface Props {
   show: boolean;
   promotionName?: string;
-  excelItems: PromotionExcelItem[];
-  excelLoading: boolean;
-  excelError: string | null;
+  goodsItems: PromotionGoodsItem[];
+  goodsLoading: boolean;
+  goodsError: string | null;
   reportPending: boolean;
   isRecovery: boolean;
   canEdit: boolean;
@@ -200,12 +196,12 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   'update:show': [value: boolean];
   retry: [];
-  'apply-recovery': [selectedItems: string[], isRecovery: boolean];
+  'apply-management': [selectedItems: string[], isRecovery: boolean];
   'switch-mode': [isRecovery: boolean];
 }>();
 
 // Selected items for recovery/exclusion
-const selectedItems = ref<PromotionExcelItem[]>([]);
+const selectedItems = ref<PromotionGoodsItem[]>([]);
 const applying = ref(false);
 
 // Selected columns for display
@@ -246,11 +242,11 @@ const dialogHeader = computed(() => {
 
 // Count participating items
 const participatingCount = computed(() => {
-  return props.excelItems.filter((item) => item.inPromo === 'Да').length;
+  return props.goodsItems.filter((item) => item.inPromo === 'Да').length;
 });
 
 const notParticipatingCount = computed(() => {
-  return props.excelItems.filter((item) => item.inPromo !== 'Да').length;
+  return props.goodsItems.filter((item) => item.inPromo !== 'Да').length;
 });
 
 // Retry fetch
@@ -265,7 +261,7 @@ async function handleApply() {
   applying.value = true;
   try {
     const articleIds = selectedItems.value.map((item) => item.vendorCode);
-    emit('apply-recovery', articleIds, props.isRecovery);
+    emit('apply-management', articleIds, props.isRecovery);
   } finally {
     applying.value = false;
   }

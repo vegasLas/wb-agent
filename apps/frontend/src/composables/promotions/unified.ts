@@ -53,10 +53,10 @@ export interface UsePromotionsUnifiedReturn {
   detailLoading: Ref<boolean>;
   detailError: Ref<string | null>;
 
-  // Excel data
-  excelItems: Ref<readonly Record<string, unknown>[]>;
-  excelLoading: Ref<boolean>;
-  excelError: Ref<string | null>;
+  // Goods data
+  goodsItems: Ref<readonly Record<string, unknown>[]>;
+  goodsLoading: Ref<boolean>;
+  goodsError: Ref<string | null>;
   reportPending: Ref<boolean>;
   estimatedWaitTime: Ref<number | null>;
 
@@ -126,8 +126,8 @@ export interface UsePromotionsUnifiedReturn {
   getPromotionStyle: (promotion: PromotionItem) => { left: string; width?: string };
   /** Group promotions into non-overlapping rows */
   groupPromotionsIntoRows: (promotions: PromotionItem[]) => PromotionItem[][];
-  /** Apply recovery/exclusion for selected items */
-  applyRecovery: (
+  /** Apply management for selected items */
+  applyManagement: (
     selectedItems: string[],
     isRecovery: boolean,
   ) => Promise<boolean>;
@@ -237,10 +237,10 @@ export function usePromotionsUnified(
     detailLoading: promotions.detailLoading,
     detailError: promotions.detailError,
 
-    // Excel
-    excelItems: promotions.excelItems,
-    excelLoading: promotions.excelLoading,
-    excelError: promotions.excelError,
+    // Goods
+    goodsItems: promotions.goodsItems,
+    goodsLoading: promotions.goodsLoading,
+    goodsError: promotions.goodsError,
     reportPending: promotions.reportPending,
     estimatedWaitTime: promotions.estimatedWaitTime,
 
@@ -292,6 +292,6 @@ export function usePromotionsUnified(
     formatDateRange: timeline.formatDateRange,
     getPromotionStyle: timeline.getPromotionStyle,
     groupPromotionsIntoRows: timeline.groupPromotionsIntoRows,
-    applyRecovery: promotions.applyRecovery,
+    applyManagement: promotions.applyManagement,
   };
 }

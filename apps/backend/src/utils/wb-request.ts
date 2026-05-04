@@ -207,7 +207,7 @@ function buildJsonRpcBody(
 /**
  * Formats a Proxy object into a proxy URL string
  */
-function formatProxyUrl(proxy: ProxyConfig): string {
+export function formatProxyUrl(proxy: ProxyConfig): string {
   const auth =
     proxy.username && proxy.password
       ? `${encodeURIComponent(proxy.username)}:${encodeURIComponent(proxy.password)}@`

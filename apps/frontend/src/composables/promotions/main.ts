@@ -62,10 +62,10 @@ export interface UsePromotionsReturn {
   detailLoading: ComputedRef<boolean>;
   detailError: ComputedRef<string | null>;
 
-  // Excel/Participants state
-  excelItems: ComputedRef<readonly Record<string, unknown>[]>;
-  excelLoading: ComputedRef<boolean>;
-  excelError: ComputedRef<string | null>;
+  // Goods/Participants state
+  goodsItems: ComputedRef<readonly Record<string, unknown>[]>;
+  goodsLoading: ComputedRef<boolean>;
+  goodsError: ComputedRef<string | null>;
   reportPending: ComputedRef<boolean>;
   estimatedWaitTime: ComputedRef<number | null>;
 
@@ -87,13 +87,12 @@ export interface UsePromotionsReturn {
   handleShowParticipants: (
     promoID: number,
     isRecovery?: boolean,
-    hasStarted?: boolean,
   ) => Promise<void>;
   handleParticipantsRetry: () => Promise<void>;
   closeDetailDialog: () => void;
   closeParticipantsDialog: () => void;
   clearErrors: () => void;
-  applyRecovery: (
+  applyManagement: (
     selectedItems: string[],
     isRecovery: boolean,
   ) => Promise<boolean>;
@@ -126,9 +125,9 @@ export function usePromotions(
   const promotionDetail = computed(() => promotionsStore.promotionDetail);
   const detailLoading = computed(() => promotionsStore.detailLoading);
   const detailError = computed(() => promotionsStore.detailError);
-  const excelItems = computed(() => promotionsStore.excelItems);
-  const excelLoading = computed(() => promotionsStore.excelLoading);
-  const excelError = computed(() => promotionsStore.excelError);
+  const goodsItems = computed(() => promotionsStore.goodsItems);
+  const goodsLoading = computed(() => promotionsStore.goodsLoading);
+  const goodsError = computed(() => promotionsStore.goodsError);
   const reportPending = computed(() => promotionsStore.reportPending);
   const estimatedWaitTime = computed(() => promotionsStore.estimatedWaitTime);
   const hasPromotions = computed(() => promotionsStore.hasPromotions);
@@ -205,14 +204,12 @@ export function usePromotions(
   async function handleShowParticipants(
     promoID: number,
     isRecovery = true,
-    hasStarted?: boolean,
   ): Promise<void> {
     selectedPromotionId.value = promoID;
     showParticipantsDialog.value = true;
-    await promotionsStore.selectPromotionAndLoadExcel(
+    await promotionsStore.selectPromotionAndLoadGoods(
       promoID,
       isRecovery,
-      hasStarted,
     );
   }
 
@@ -222,8 +219,8 @@ export function usePromotions(
   async function handleParticipantsRetry(): Promise<void> {
     if (!selectedPromotionId.value) return;
     const detail = promotionsStore.promotionDetail;
-    if (detail?.periodID) {
-      await promotionsStore.fetchExcel(detail.periodID);
+    if (detail?.periodID && detail?.promoID) {
+      await promotionsStore.fetchGoods(detail.promoID, detail.periodID, 'participating');
     }
   }
 
@@ -250,7 +247,7 @@ export function usePromotions(
     promotionsStore.$patch({
       error: null,
       detailError: null,
-      excelError: null,
+      goodsError: null,
     });
   }
 
@@ -291,10 +288,10 @@ export function usePromotions(
     detailLoading,
     detailError,
 
-    // Excel
-    excelItems,
-    excelLoading,
-    excelError,
+    // Goods
+    goodsItems,
+    goodsLoading,
+    goodsError,
     reportPending,
     estimatedWaitTime,
 
@@ -318,6 +315,6 @@ export function usePromotions(
     closeDetailDialog,
     closeParticipantsDialog,
     clearErrors,
-    applyRecovery: promotionsStore.applyRecovery,
+    applyManagement: promotionsStore.applyManagement,
   };
 }
